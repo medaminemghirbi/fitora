@@ -1933,6 +1933,10 @@ paths:
                 - bookings
                 - meta
                 - counts
+            text/csv:
+              schema:
+                type: string
+                format: binary
         '401':
           description: Unauthorized
           content:
@@ -1971,6 +1975,11 @@ paths:
                 - error
       parameters:
       - name: date
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: format
         in: query
         required: false
         schema:
@@ -2855,8 +2864,6 @@ paths:
                         type: string
                       checkin:
                         type: string
-                      settings:
-                        type: string
                     required:
                     - clients
                     - activities
@@ -2870,7 +2877,6 @@ paths:
                     - reports
                     - revenue
                     - checkin
-                    - settings
                   subscription:
                     type:
                     - object
@@ -2898,6 +2904,8 @@ paths:
                         type: boolean
                       multi_salle:
                         type: boolean
+                      pro_features:
+                        type: boolean
                     required:
                     - active
                     - locked
@@ -2909,6 +2917,7 @@ paths:
                     - plan
                     - member_app
                     - multi_salle
+                    - pro_features
                   onboarding:
                     type:
                     - object
@@ -3361,6 +3370,10 @@ paths:
                 - clients
                 - meta
                 - counts
+            text/csv:
+              schema:
+                type: string
+                format: binary
         '401':
           description: Unauthorized
           content:
@@ -3419,7 +3432,17 @@ paths:
         required: false
         schema:
           type: string
+      - name: format
+        in: query
+        required: false
+        schema:
+          type: string
       - name: joined_from
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: q
         in: query
         required: false
         schema:
@@ -4072,6 +4095,17 @@ paths:
                     type: string
                 required:
                 - error
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                - error
         '422':
           description: Unprocessable Content
           content:
@@ -4645,7 +4679,9 @@ paths:
                         has_login:
                           type: boolean
                         login_email:
-                          type: 'null'
+                          type:
+                          - string
+                          - 'null'
                       required:
                       - id
                       - company_id
@@ -4818,6 +4854,58 @@ paths:
         schema:
           type: string
       responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  coach:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      company_id:
+                        type: string
+                      first_name:
+                        type: string
+                      last_name:
+                        type: string
+                      full_name:
+                        type: string
+                      email:
+                        type: string
+                      phone:
+                        type: 'null'
+                      bio:
+                        type: 'null'
+                      photo_url:
+                        type: 'null'
+                      birthdate:
+                        type: 'null'
+                      active:
+                        type: boolean
+                      has_login:
+                        type: boolean
+                      login_email:
+                        type: 'null'
+                    required:
+                    - id
+                    - company_id
+                    - first_name
+                    - last_name
+                    - full_name
+                    - email
+                    - phone
+                    - bio
+                    - photo_url
+                    - birthdate
+                    - active
+                    - has_login
+                    - login_email
+                required:
+                - coach
         '401':
           description: Unauthorized
           content:
@@ -4876,6 +4964,22 @@ paths:
                     type: string
                 required:
                 - error
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                required:
+                - error
+                - errors
     put:
       summary: update
       tags:
@@ -5423,6 +5527,8 @@ paths:
                           type: string
                         role_name:
                           type: string
+                        role_key:
+                          type: string
                         active:
                           type: boolean
                         company_ids:
@@ -5434,6 +5540,7 @@ paths:
                       - full_name
                       - email
                       - role_name
+                      - role_key
                       - active
                       - company_ids
                 required:
@@ -5472,6 +5579,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -5551,6 +5660,8 @@ paths:
                           type: string
                         role_name:
                           type: string
+                        role_key:
+                          type: string
                         active:
                           type: boolean
                         company_ids:
@@ -5562,6 +5673,7 @@ paths:
                       - full_name
                       - email
                       - role_name
+                      - role_key
                       - active
                       - company_ids
                 required:
@@ -5840,6 +5952,20 @@ paths:
                     type: string
                 required:
                 - error
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error
+                - message
         '404':
           description: Not Found
           content:
@@ -6103,16 +6229,18 @@ paths:
                 company:
                   type: object
                   properties:
+                    name:
+                      type: string
                     slug:
                       type: string
                     primary_color:
-                      type: string
-                    remove_signature:
                       type: string
                     working_days:
                       type: array
                       items:
                         type: string
+                    remove_signature:
+                      type: string
                     business_hours_start:
                       type: string
                     business_hours_end:
@@ -7196,6 +7324,8 @@ paths:
                   totals:
                     type: object
                     properties:
+                      expiring_soon:
+                        type: integer
                       portfolio_value:
                         type: number
                         format: float
@@ -7205,12 +7335,7 @@ paths:
                       unpaid_value:
                         type: number
                         format: float
-                      expiring_soon:
-                        type: integer
                     required:
-                    - portfolio_value
-                    - average_basket
-                    - unpaid_value
                     - expiring_soon
                 required:
                 - contracts
@@ -9127,6 +9252,20 @@ paths:
                     type: string
                 required:
                 - error
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error
+                - message
         '422':
           description: Unprocessable Content
           content:
@@ -9368,6 +9507,8 @@ paths:
                           type: string
                         issued_by:
                           type: 'null'
+                        paid_at:
+                          type: string
                         notes:
                           type: 'null'
                       required:
@@ -9382,6 +9523,7 @@ paths:
                       - trial
                       - issued_at
                       - issued_by
+                      - paid_at
                       - notes
                 required:
                 - invoices
@@ -10336,6 +10478,103 @@ paths:
         required: false
         schema:
           type: string
+  "/api/v1/mobile_app":
+    get:
+      summary: show
+      tags:
+      - Api::V1::MobileApp
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member_code:
+                    type: string
+                  coach_key:
+                    type: string
+                  member_qr_svg:
+                    type: string
+                  coach_qr_svg:
+                    type: string
+                required:
+                - member_code
+                - coach_key
+                - member_qr_svg
+                - coach_qr_svg
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                - error
+        '402':
+          description: Payment Required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error
+                - message
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error
+  "/api/v1/mobile_app/regenerate":
+    post:
+      summary: regenerate
+      tags:
+      - Api::V1::MobileApp
+      responses:
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                - error
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                required:
+                - error
+                - errors
   "/api/v1/notifications":
     get:
       summary: index
@@ -11572,7 +11811,10 @@ paths:
                 - meta
                 - counts
                 - method_counts
-                - totals
+            text/csv:
+              schema:
+                type: string
+                format: binary
         '401':
           description: Unauthorized
           content:
@@ -11609,6 +11851,12 @@ paths:
                     type: string
                 required:
                 - error
+      parameters:
+      - name: format
+        in: query
+        required: false
+        schema:
+          type: string
     post:
       summary: create
       tags:
@@ -11867,6 +12115,17 @@ paths:
                 - payment
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                - error
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -12247,8 +12506,6 @@ paths:
                         type: string
                       checkin:
                         type: string
-                      settings:
-                        type: string
                     required:
                     - clients
                     - activities
@@ -12262,7 +12519,6 @@ paths:
                     - reports
                     - revenue
                     - checkin
-                    - settings
                 required:
                 - roles
                 - permission_catalog
@@ -12431,23 +12687,6 @@ paths:
         required: true
         schema:
           type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                role:
-                  type: object
-                  properties:
-                    permissions:
-                      type: array
-                      items:
-                        type: string
-                  required:
-                  - permissions
-              required:
-              - role
       responses:
         '200':
           description: OK
@@ -12496,6 +12735,20 @@ paths:
                     type: string
                 required:
                 - error
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error
+                - message
         '422':
           description: Unprocessable Content
           content:
@@ -12507,6 +12760,23 @@ paths:
                     type: string
                 required:
                 - error
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: object
+                  properties:
+                    permissions:
+                      type: array
+                      items:
+                        type: string
+                  required:
+                  - permissions
+              required:
+              - role
     put:
       summary: update
       tags:
@@ -12807,12 +13077,6 @@ paths:
       summary: schedule_pdf
       tags:
       - Api::V1::Session
-      parameters:
-      - name: from
-        in: query
-        required: false
-        schema:
-          type: string
       responses:
         '200':
           description: OK
@@ -12855,8 +13119,16 @@ paths:
                 properties:
                   error:
                     type: string
+                  message:
+                    type: string
                 required:
                 - error
+      parameters:
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
   "/api/v1/sessions/{id}":
     get:
       summary: show
@@ -13467,7 +13739,7 @@ paths:
                           - email
                           - phone
                         coach_id:
-                          type: 'null'
+                          type: string
                       required:
                       - id
                       - role_key
@@ -13867,6 +14139,8 @@ paths:
                         type: boolean
                       multi_salle:
                         type: boolean
+                      pro_features:
+                        type: boolean
                       lock_reason:
                         type:
                         - string
@@ -13887,6 +14161,8 @@ paths:
                         type:
                         - integer
                         - 'null'
+                      due_invoice:
+                        type: 'null'
                     required:
                     - id
                     - active
@@ -13894,12 +14170,14 @@ paths:
                     - plan
                     - member_app
                     - multi_salle
+                    - pro_features
                     - lock_reason
                     - paid_through
                     - current_period_paid
                     - days_before_lock
                     - trial
                     - trial_days_left
+                    - due_invoice
                   invoices:
                     type: array
                     items:
@@ -13928,6 +14206,8 @@ paths:
                           type: string
                         issued_by:
                           type: 'null'
+                        paid_at:
+                          type: string
                         notes:
                           type: 'null'
                       required:
@@ -13942,6 +14222,7 @@ paths:
                       - trial
                       - issued_at
                       - issued_by
+                      - paid_at
                       - notes
                   companies_count:
                     type: integer
@@ -14355,6 +14636,8 @@ paths:
                               type: boolean
                             multi_salle:
                               type: boolean
+                            pro_features:
+                              type: boolean
                             lock_reason:
                               type:
                               - string
@@ -14369,6 +14652,8 @@ paths:
                               type: boolean
                             trial_days_left:
                               type: 'null'
+                            due_invoice:
+                              type: 'null'
                           required:
                           - id
                           - active
@@ -14376,12 +14661,14 @@ paths:
                           - plan
                           - member_app
                           - multi_salle
+                          - pro_features
                           - lock_reason
                           - paid_through
                           - current_period_paid
                           - days_before_lock
                           - trial
                           - trial_days_left
+                          - due_invoice
                         account_companies:
                           type: array
                           items:
@@ -14600,17 +14887,25 @@ paths:
                           active:
                             type: boolean
                           billing_period:
-                            type: string
+                            type:
+                            - string
+                            - 'null'
                           plan:
-                            type: string
+                            type:
+                            - string
+                            - 'null'
                           member_app:
                             type: boolean
                           multi_salle:
                             type: boolean
+                          pro_features:
+                            type: boolean
                           lock_reason:
                             type: 'null'
                           paid_through:
-                            type: 'null'
+                            type:
+                            - string
+                            - 'null'
                           current_period_paid:
                             type: boolean
                           days_before_lock:
@@ -14618,6 +14913,10 @@ paths:
                           trial:
                             type: boolean
                           trial_days_left:
+                            type:
+                            - integer
+                            - 'null'
+                          due_invoice:
                             type: 'null'
                         required:
                         - id
@@ -14626,12 +14925,14 @@ paths:
                         - plan
                         - member_app
                         - multi_salle
+                        - pro_features
                         - lock_reason
                         - paid_through
                         - current_period_paid
                         - days_before_lock
                         - trial
                         - trial_days_left
+                        - due_invoice
                       account_companies:
                         type: array
                         items:
@@ -14662,7 +14963,9 @@ paths:
                           period_end:
                             type: string
                           amount_cents:
-                            type: integer
+                            type:
+                            - integer
+                            - 'null'
                         required:
                         - period_start
                         - period_end
@@ -14944,6 +15247,8 @@ paths:
                         type: string
                       issued_by:
                         type: string
+                      paid_at:
+                        type: string
                       notes:
                         type: 'null'
                     required:
@@ -14958,6 +15263,7 @@ paths:
                     - trial
                     - issued_at
                     - issued_by
+                    - paid_at
                     - notes
                   company:
                     type: object
@@ -15011,12 +15317,16 @@ paths:
                           active:
                             type: boolean
                           billing_period:
-                            type: string
+                            type:
+                            - string
+                            - 'null'
                           plan:
                             type: string
                           member_app:
                             type: boolean
                           multi_salle:
+                            type: boolean
+                          pro_features:
                             type: boolean
                           lock_reason:
                             type: 'null'
@@ -15032,6 +15342,8 @@ paths:
                             type: boolean
                           trial_days_left:
                             type: 'null'
+                          due_invoice:
+                            type: 'null'
                         required:
                         - id
                         - active
@@ -15039,12 +15351,14 @@ paths:
                         - plan
                         - member_app
                         - multi_salle
+                        - pro_features
                         - lock_reason
                         - paid_through
                         - current_period_paid
                         - days_before_lock
                         - trial
                         - trial_days_left
+                        - due_invoice
                       account_companies:
                         type: array
                         items:
@@ -15237,6 +15551,8 @@ paths:
                             type: boolean
                           multi_salle:
                             type: boolean
+                          pro_features:
+                            type: boolean
                           lock_reason:
                             type: 'null'
                           paid_through:
@@ -15249,6 +15565,8 @@ paths:
                             type: boolean
                           trial_days_left:
                             type: 'null'
+                          due_invoice:
+                            type: 'null'
                         required:
                         - id
                         - active
@@ -15256,12 +15574,14 @@ paths:
                         - plan
                         - member_app
                         - multi_salle
+                        - pro_features
                         - lock_reason
                         - paid_through
                         - current_period_paid
                         - days_before_lock
                         - trial
                         - trial_days_left
+                        - due_invoice
                       account_companies:
                         type: array
                         items:
@@ -15629,7 +15949,9 @@ paths:
                         - phone
                         - companies_count
                       plan:
-                        type: string
+                        type:
+                        - string
+                        - 'null'
                       subscription:
                         type: object
                         properties:
@@ -15640,10 +15962,14 @@ paths:
                           billing_period:
                             type: string
                           plan:
-                            type: string
+                            type:
+                            - string
+                            - 'null'
                           member_app:
                             type: boolean
                           multi_salle:
+                            type: boolean
+                          pro_features:
                             type: boolean
                           lock_reason:
                             type:
@@ -15663,6 +15989,52 @@ paths:
                             type:
                             - integer
                             - 'null'
+                          due_invoice:
+                            type:
+                            - object
+                            - 'null'
+                            properties:
+                              id:
+                                type: string
+                              number:
+                                type: string
+                              period_start:
+                                type: string
+                              period_end:
+                                type: string
+                              amount:
+                                type: number
+                                format: float
+                              currency:
+                                type: string
+                              billing_period:
+                                type: string
+                              plan:
+                                type: string
+                              trial:
+                                type: boolean
+                              issued_at:
+                                type: string
+                              issued_by:
+                                type: string
+                              paid_at:
+                                type: 'null'
+                              notes:
+                                type: 'null'
+                            required:
+                            - id
+                            - number
+                            - period_start
+                            - period_end
+                            - amount
+                            - currency
+                            - billing_period
+                            - plan
+                            - trial
+                            - issued_at
+                            - issued_by
+                            - paid_at
+                            - notes
                         required:
                         - id
                         - active
@@ -15670,12 +16042,14 @@ paths:
                         - plan
                         - member_app
                         - multi_salle
+                        - pro_features
                         - lock_reason
                         - paid_through
                         - current_period_paid
                         - days_before_lock
                         - trial
                         - trial_days_left
+                        - due_invoice
                       account_companies:
                         type: array
                         items:
@@ -15704,7 +16078,9 @@ paths:
                           period_end:
                             type: string
                           amount_cents:
-                            type: integer
+                            type:
+                            - integer
+                            - 'null'
                         required:
                         - period_start
                         - period_end
@@ -16592,6 +16968,110 @@ paths:
                 - error
         '402':
           description: Payment Required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error
+                - message
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                - error
+  "/api/v1/tenants/{code}/app_config":
+    get:
+      summary: app_config
+      tags:
+      - Api::V1::Tenant
+      parameters:
+      - name: code
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  audience:
+                    type: string
+                  slug:
+                    type: string
+                  tenant:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      primary_color:
+                        type: 'null'
+                      logo_url:
+                        type: 'null'
+                      locale:
+                        type: string
+                      support_email:
+                        type: 'null'
+                      show_platform_branding:
+                        type: boolean
+                    required:
+                    - name
+                    - primary_color
+                    - logo_url
+                    - locale
+                    - support_email
+                    - show_platform_branding
+                  api_base_url:
+                    type: string
+                  staff:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        first_name:
+                          type: string
+                        last_name:
+                          type: string
+                        full_name:
+                          type: string
+                        email:
+                          type: string
+                        role:
+                          type: string
+                        coach:
+                          type: boolean
+                      required:
+                      - id
+                      - first_name
+                      - last_name
+                      - full_name
+                      - email
+                      - role
+                      - coach
+                required:
+                - audience
+                - slug
+                - tenant
+                - api_base_url
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
