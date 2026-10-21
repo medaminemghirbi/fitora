@@ -1,0 +1,259 @@
+// GENERATED from frontend/src/app/layout/desk-shell/desk-shell.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// The front desk. Counter tablet first: one column, large targets, nothing
+// that only appears on hover. Every value comes from the token layer.
+
+.desk-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-bg);
+}
+
+// ---------------------------------------------------------------------------
+// Top bar — brand, the search, the account menu
+// ---------------------------------------------------------------------------
+.desk-topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky, 100);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.desk-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+  text-decoration: none;
+  flex-shrink: 0;
+
+  &:hover { text-decoration: none; }
+}
+
+.desk-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  overflow: hidden;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.desk-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  font-weight: 600;
+  white-space: nowrap;
+
+  // The name is the least useful thing here — it goes first when space runs out.
+  @media (max-width: 720px) { display: none; }
+}
+
+// Which salle the desk is working for — only shown to a moderator posted
+// to several, who could otherwise not tell.
+.desk-brand-salle {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.desk-menu-label {
+  padding: 0.5rem 0.9rem 0.25rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+// ---------------------------------------------------------------------------
+// Search — the reason this shell exists
+// ---------------------------------------------------------------------------
+.desk-search {
+  position: relative;
+  flex: 1;
+  max-width: 560px;
+  margin-inline: auto;
+}
+
+.desk-search-icon {
+  position: absolute;
+  inset-inline-start: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-muted);
+  pointer-events: none;
+}
+
+.desk-search-input {
+  width: 100%;
+  // 48px: a finger, not a mouse pointer.
+  height: 48px;
+  padding-inline: calc(var(--space-3) * 2 + 1rem) var(--space-3);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--color-surface-sunken);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+
+  &::placeholder { color: var(--color-muted); }
+
+  &:focus {
+    outline: none;
+    background: var(--color-surface);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+
+  // Safari draws its own clear affordance; this shell has its own button.
+  &::-webkit-search-cancel-button { display: none; }
+}
+
+.desk-search-clear {
+  position: absolute;
+  inset-inline-end: var(--space-2);
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+
+  &:hover { background: var(--color-surface-hover); }
+}
+
+.desk-results {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(100% + var(--space-2));
+  z-index: var(--z-dropdown);
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.desk-results-empty {
+  margin: 0;
+  padding: var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.desk-result {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  text-align: start;
+  cursor: pointer;
+
+  &:last-child { border-bottom: none; }
+  &:hover,
+  &:focus-visible { background: var(--color-surface-hover); }
+}
+
+.desk-result-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+
+  strong { color: var(--color-text); font-weight: 600; }
+  small { color: var(--color-text-secondary); font-size: var(--font-size-xs); }
+}
+
+.desk-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+// ---------------------------------------------------------------------------
+// Content + the bottom rail
+// ---------------------------------------------------------------------------
+.desk-content {
+  flex: 1;
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+  padding: var(--space-5) var(--space-4);
+  // Clear of the rail, plus the home indicator on a tablet.
+  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px) + var(--space-5));
+}
+
+.desk-rail {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: var(--z-sticky, 100);
+  display: flex;
+  justify-content: space-around;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+.desk-rail-link {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  // Comfortably above the 44px minimum touch target.
+  min-height: 56px;
+  padding: var(--space-2) var(--space-1);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  text-decoration: none;
+
+  i { font-size: 1.25rem; }
+
+  &:hover { background: var(--color-surface-hover); text-decoration: none; }
+
+  // Colour is not the only marker — the active item is also the bold one.
+  &.active {
+    color: var(--color-primary);
+    font-weight: 600;
+    background: var(--color-primary-soft);
+  }
+}
+
+@media (min-width: 992px) {
+  .desk-content { padding-bottom: calc(76px + var(--space-5)); }
+
+  .desk-rail {
+    justify-content: center;
+    gap: var(--space-2);
+  }
+
+  .desk-rail-link {
+    flex: 0 0 auto;
+    flex-direction: row;
+    gap: var(--space-2);
+    min-width: 132px;
+    font-size: var(--font-size-sm);
+  }
+}

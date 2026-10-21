@@ -1,0 +1,115 @@
+<%# ng: plans %>
+<%# The formule form, blank or filled by the catalogue controller (its
+    price rows, the custom-period field and the session count are shown or
+    taken out as the component's @if blocks do). %>
+<% nothing_to_price = active_activities.empty? && active_packs.empty? %>
+<app-modal data-controller="modal" data-modal-name-value="catalogue-plan" data-action="catalogue-plan:open@window->modal#open catalogue-plan:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("contract_types.new") } do %>
+      <form novalidate data-plan-form>
+        <div class="mb-3">
+          <label for="mp-name"><%= ngt("contract_types.name") %> *</label>
+          <input id="mp-name" class="form-control" name="name" placeholder="<%= ngt("contract_types.name_placeholder") %>" />
+        </div>
+        <div class="mb-3">
+          <label for="mp-desc"><%= ngt("activities.description") %></label>
+          <textarea id="mp-desc" class="form-control" rows="2" name="description"></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="mp-period"><%= ngt("contract_types.billing_period") %> *</label>
+          <select id="mp-period" class="form-select" name="billing_period">
+            <% %w[monthly quarterly semi_annual yearly custom].each do |period| %>
+              <option value="<%= period %>">
+                <%= period == "custom" ? ngt("contract_types.period_option_custom") : ngt("contract_types.period_#{period}") %>
+              </option>
+            <% end %>
+          </select>
+        </div>
+        <div class="mb-3" data-validity-field>
+          <label for="mp-validity"><%= ngt("contract_types.validity_days") %> *</label>
+          <input id="mp-validity" type="number" min="1" max="730" step="1" class="form-control" name="validity_days" />
+          <p class="small text-muted-token mb-0"><%= ngt("contract_types.validity_days_hint") %></p>
+        </div>
+
+        <fieldset class="mb-3">
+          <legend class="form-label mb-1"><%= ngt("contract_types.activity_prices") %> *</legend>
+          <p class="small text-muted-token"><%= ngt("contract_types.activity_prices_hint") %></p>
+          <% if nothing_to_price %>
+            <div class="alert alert-warning mb-0">
+              <%= ngt("contract_types.no_activities") %>
+            </div>
+          <% else %>
+            <div class="fx-price-grid">
+              <% active_activities.each do |activity| %>
+                <div class="fx-price-grid-row">
+                  <label class="mb-0" for="mp-price-<%= activity[:id] %>"><%= activity[:emoji] %> <%= activity[:name] %></label>
+                  <div class="input-group input-group-sm">
+                    <input id="mp-price-<%= activity[:id] %>" type="number" min="0" step="0.01" class="form-control" data-activity-price="<%= activity[:id] %>"
+                           placeholder="<%= ngt("contract_types.not_offered") %>" />
+                  </div>
+                </div>
+              <% end %>
+            </div>
+
+            <% if active_packs.any? %>
+              <p class="plan-form-sub"><%= ngt("catalogue.tab_packs") %></p>
+              <div class="fx-price-grid">
+                <% active_packs.each do |pack| %>
+                  <div class="fx-price-grid-row">
+                    <label class="mb-0" for="mp-pack-<%= pack[:id] %>">
+                      <%= pack[:name] %>
+                      <small class="d-block text-muted-token"><%= pack[:activities].map { |a| a[:name] }.join(" + ") %></small>
+                    </label>
+                    <div class="input-group input-group-sm">
+                      <input id="mp-pack-<%= pack[:id] %>" type="number" min="0" step="0.01" class="form-control" data-pack-price="<%= pack[:id] %>"
+                             placeholder="<%= ngt("contract_types.not_offered") %>" />
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          <% end %>
+        </fieldset>
+        <fieldset class="mb-3">
+          <legend class="form-label mb-1"><%= ngt("contract_types.what_it_includes") %> *</legend>
+
+          <div class="form-check mb-2">
+            <input id="mp-kind-unlimited" type="radio" class="form-check-input" name="plan-kind" value="unlimited" />
+            <label for="mp-kind-unlimited" class="form-check-label">
+              <%= ngt("contract_types.unlimited_bookings") %>
+            </label>
+          </div>
+
+          <div class="form-check">
+            <input id="mp-kind-counted" type="radio" class="form-check-input" name="plan-kind" value="counted" />
+            <label for="mp-kind-counted" class="form-check-label">
+              <%= ngt("contract_types.counted_sessions") %>
+            </label>
+          </div>
+
+          <div class="mt-2" data-sessions-field>
+            <label for="mp-sessions"><%= ngt("contract_types.session_count") %> *</label>
+            <input id="mp-sessions" type="number" min="1" class="form-control" name="session_count" />
+          </div>
+        </fieldset>
+        <div class="mb-3">
+          <label for="mp-color"><%= ngt("contract_types.color") %></label>
+          <div class="d-flex align-items-center gap-2">
+            <input id="mp-color" type="color" class="form-control form-control-color" name="color" />
+            <span class="text-muted-token small" dir="ltr" data-color-value></span>
+          </div>
+        </div>
+        <div class="mb-3 form-check">
+          <input id="mp-active" type="checkbox" class="form-check-input" name="active" />
+          <label for="mp-active" class="form-check-label"><%= ngt("common.active") %></label>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" data-save<%= raw(" disabled") if nothing_to_price %>>
+            <%= ngt("common.save") %>
+          </button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>

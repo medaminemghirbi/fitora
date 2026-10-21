@@ -1,0 +1,6 @@
+<%# The status pills (StatusFilterComponent). %>
+<app-status-filter id="bk-pills">
+  <%= render "web/shared/status_filter", name: "booking-status", legend: ngt("clients.filter_status"), value: filters[:status].to_s,
+             options: booking_statuses.map { |value, label, color| { value: value, label: ngt(label), count: counts[value.presence || "all"] || 0, color: color } },
+             filter: "status", action: "change->bookings-list#setFilter" %>
+</app-status-filter>

@@ -1,0 +1,123 @@
+// GENERATED from frontend/src/app/layout/notifications/notification-bell.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+.notif-bell { display: inline-flex; }
+
+.notif-bell-btn { position: relative; }
+
+.notif-bell-badge {
+  position: absolute;
+  top: 1px;
+  inset-inline-end: 1px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+.notif-panel {
+  width: 380px;
+  max-width: calc(100vw - 2rem);
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+
+  strong { font-size: 0.875rem; }
+}
+
+.notif-panel-clear {
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover { text-decoration: underline; }
+}
+
+.notif-panel-list {
+  max-height: 24rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.notif-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: none;
+  text-align: start;
+  cursor: pointer;
+  position: relative;
+
+  &:hover { background: var(--color-surface-hover); }
+  &.is-unread { background: var(--color-primary-soft); }
+  &.is-unread:hover { background: color-mix(in srgb, var(--color-primary-soft) 70%, var(--color-surface-hover)); }
+  &:last-child { border-bottom: 0; }
+}
+
+.notif-row-body { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; flex: 1; }
+.notif-row-title { font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
+.notif-row-text {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.notif-row-time { font-size: 0.7rem; color: var(--color-muted); margin-top: 0.1rem; }
+
+.notif-row-dot {
+  position: absolute;
+  top: 0.85rem;
+  inset-inline-end: 0.7rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.notif-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2.25rem 1rem;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  i { font-size: 1.5rem; }
+}
+
+.notif-more { padding: 0.7rem; text-align: center; font-size: 0.75rem; color: var(--color-muted); }
+
+.notif-panel-foot {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  background: none;
+  padding: 0.65rem;
+  width: 100%;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  &:hover { background: var(--color-surface-hover); }
+}

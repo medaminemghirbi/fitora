@@ -1,0 +1,13 @@
+<%# One tab per payment method, with how many receipts it holds. %>
+<nav class="fx-cat-tabs" aria-label="<%= ngt("payments.method") %>" id="pay-tabs">
+  <button type="button" class="fx-cat-tab<%= " is-active" if filters[:payment_method].to_s == "" %>" style="--fx-tab-color: var(--color-primary);"
+          data-filter="payment_method" data-value="" data-action="payments-list#setFilter">
+    <%= ngt("common.all") %> (<%= counts["all"] || 0 %>)
+  </button>
+  <% payment_methods.each do |value, label, color| %>
+    <button type="button" class="fx-cat-tab<%= " is-active" if filters[:payment_method].to_s == value %>" style="--fx-tab-color: <%= color %>;"
+            data-filter="payment_method" data-value="<%= value %>" data-action="payments-list#setFilter">
+      <%= ngt(label) %> (<%= method_counts[value] || 0 %>)
+    </button>
+  <% end %>
+</nav>

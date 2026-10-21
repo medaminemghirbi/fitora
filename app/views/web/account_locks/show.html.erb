@@ -1,0 +1,33 @@
+<%# ng: account-locked %>
+<%# ng-host: account-locked %>
+<%# AccountLockedComponent: no shell, no navigation — what the gym owes and
+    its invoices are the only links. %>
+<div class="locked-page">
+  <div class="locked-card">
+    <div class="locked-icon">🔒</div>
+
+    <% if @admin %>
+      <h1><%= ngt("locked.title_#{@copy_key}") %></h1>
+      <p class="locked-body"><%= ngt("locked.body_#{@copy_key}") %></p>
+
+      <a href="/admin/subscription" class="btn btn-primary">
+        <%= ngt(@trial_over ? "locked.choose_plan" : "locked.see_invoices") %>
+      </a>
+
+      <p class="locked-hint"><%= ngt("locked.hint") %></p>
+    <% else %>
+      <h1><%= ngt("locked.staff_title") %></h1>
+      <p class="locked-body"><%= ngt("locked.staff_body") %></p>
+    <% end %>
+
+    <button type="button" class="btn btn-ghost locked-out" data-controller="form-submit" data-form-submit-form-value="locked-sign-out" data-action="form-submit#submit">
+      <i class="bi bi-box-arrow-right"></i> <%= ngt("auth.logout") %>
+    </button>
+  </div>
+</div>
+<% content_for :templates do %>
+  <form id="locked-sign-out" action="<%= web_sign_out_path %>" method="post" hidden data-turbo="false">
+    <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+    <input type="hidden" name="_method" value="delete">
+  </form>
+<% end %>

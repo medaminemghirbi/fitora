@@ -9,35 +9,16 @@ module Api
 
       # GET /api/v1/mobile_app
       def show
-        render json: keys_json(current_company.ensure_app_keys!)
+        render json: MobileAppKeys.as_json(current_company)
       end
 
       # POST /api/v1/mobile_app/regenerate { audience: "member" | "coach" }
       def regenerate
         audience = params[:audience].to_s
-        return render_errors("Unknown audience") unless %w[member coach].include?(audience)
+        return render_errors("Unknown audience") unless MobileAppKeys::AUDIENCES.include?(audience)
 
-        current_company.ensure_app_keys!.regenerate_app_key!(audience)
-        AuditLog.record!(
-          company: current_company, user: current_user, action: "mobile_app.key_regenerated",
-          auditable: current_company, metadata: { audience: audience }
-        )
-        render json: keys_json(current_company)
-      end
-
-      private
-
-      def keys_json(company)
-        {
-          member_code: company.app_code,
-          coach_key: company.coach_key,
-          member_qr_svg: qr_svg(company.app_code),
-          coach_qr_svg: qr_svg(company.coach_key)
-        }
-      end
-
-      def qr_svg(text)
-        RQRCode::QRCode.new(text).as_svg(module_size: 4, standalone: true, use_path: true, viewbox: true)
+        MobileAppKeys.regenerate!(current_company, audience: audience, by: current_user)
+        render json: MobileAppKeys.as_json(current_company)
       end
     end
   end

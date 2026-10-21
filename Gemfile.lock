@@ -124,6 +124,8 @@ GEM
     cronex (0.15.0)
       tzinfo
       unicode (>= 0.4.4.5)
+    cssbundling-rails (1.4.3)
+      railties (>= 6.0.0)
     csv (3.3.6)
     date (3.5.1)
     debug (1.11.1)
@@ -160,6 +162,8 @@ GEM
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     jmespath (1.6.2)
+    jsbundling-rails (1.3.1)
+      railties (>= 6.0.0)
     json (2.21.2)
     jwt (3.2.0)
       base64
@@ -246,6 +250,10 @@ GEM
       prawn (>= 1.3.0, < 3.0.0)
     prettyprint (0.2.0)
     prism (1.9.0)
+    propshaft (1.3.2)
+      actionpack (>= 7.0.0)
+      activesupport (>= 7.0.0)
+      rack
     puma (8.0.2)
       nio4r (~> 2.0)
     raabro (1.5.0)
@@ -284,6 +292,9 @@ GEM
     rails-html-sanitizer (1.7.1)
       loofah (~> 2.25, >= 2.25.2)
       nokogiri (>= 1.15.7, != 1.16.7, != 1.16.6, != 1.16.5, != 1.16.4, != 1.16.3, != 1.16.2, != 1.16.1, != 1.16.0.rc1, != 1.16.0)
+    rails-i18n (8.1.0)
+      i18n (>= 0.7, < 2)
+      railties (>= 8.0.0, < 9)
     railties (8.1.3.1)
       actionpack (= 8.1.3.1)
       activesupport (= 8.1.3.1)
@@ -396,10 +407,15 @@ GEM
       net-sftp (>= 2.1.2)
       net-ssh (>= 2.8.0)
       ostruct
+    stimulus-rails (1.3.4)
+      railties (>= 6.0.0)
     thor (1.5.0)
     timeout (0.6.1)
     tsort (0.2.0)
     ttfunk (1.7.0)
+    turbo-rails (2.0.23)
+      actionpack (>= 7.1.0)
+      railties (>= 7.1.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode (0.4.4.5)
@@ -435,20 +451,24 @@ DEPENDENCIES
   bullet
   bundler-audit
   caxlsx
+  cssbundling-rails
   csv
   debug
   dotenv-rails
   factory_bot_rails
+  jsbundling-rails
   jwt
   kamal
   matrix
   pg (~> 1.1)
   prawn
   prawn-table
+  propshaft
   puma (>= 5.0)
   rack-attack
   rack-cors
   rails (~> 8.1.3)
+  rails-i18n (~> 8.0)
   redis (~> 5)
   rqrcode
   rspec-openapi
@@ -460,6 +480,8 @@ DEPENDENCIES
   sidekiq (~> 7)
   sidekiq-cron (~> 2)
   simplecov
+  stimulus-rails
+  turbo-rails
   tzinfo-data
 
 RUBY VERSION

@@ -10,7 +10,9 @@ module Api
       # GET /api/v1/invoices
       def index
         render json: {
-          invoices: account_invoices.newest_first.map { |i| InvoiceSerializer.new(i).as_json }
+          # What was paid; the bill still to pay is the subscription's
+          # due_invoice (its PDF is :show all the same).
+          invoices: account_invoices.paid.newest_first.map { |i| InvoiceSerializer.new(i).as_json }
         }
       end
 

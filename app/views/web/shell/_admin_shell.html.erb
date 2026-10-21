@@ -1,0 +1,64 @@
+<%# ng: admin-shell %>
+<%# ng-host: admin-shell %>
+<%# AdminShellComponent (layout/admin-shell): one banner at most, the rail,
+    the top bar, the page, the mobile bar. Rendered as a layout around the
+    page, which stays the page's own (it is the router's, not the shell's). %>
+<% sub = bootstrap[:subscription]; admin = nav.admin? %>
+<% trial_days_left = sub && sub[:trial] && sub[:active] && admin ? sub[:trial_days_left] : nil %>
+<% days_to_settle = sub && !sub[:current_period_paid] && !sub[:trial] ? sub[:days_before_lock] : nil %>
+<% email_unverified = bootstrap.dig(:user, :email_verified) == false && cookies[:fitora_email_banner] != "dismissed" %>
+<div class="admin-shell">
+  <% if current_impersonator %>
+    <div class="impersonation-banner">
+      <i class="bi bi-incognito"></i>
+      <span><%= ngt("superadmin.impersonating_banner", company: impersonated_company_name) %></span>
+      <button type="button" class="impersonation-exit-btn" data-controller="form-submit" data-form-submit-form-value="sign-out-form" data-action="form-submit#submit">
+        <i class="bi bi-box-arrow-left"></i> <%= ngt("superadmin.exit_impersonation") %>
+      </button>
+    </div>
+  <% elsif !trial_days_left.nil? %>
+    <a href="<%= nav.path("subscription") %>" class="trial-shell-banner<%= " is-due" if trial_days_left <= 3 %>">
+      <i class="bi bi-gift"></i>
+      <span>
+        <% if trial_days_left > 0 %>
+          <%= ngt("subscription.trial_banner_body", days: trial_days_left) %>
+        <% else %>
+          <%= ngt("subscription.trial_banner_over") %>
+        <% end %>
+      </span>
+      <span class="trial-shell-banner-link"><%= ngt("subscription.trial_banner_cta") %></span>
+    </a>
+  <% elsif !days_to_settle.nil? %>
+    <a href="<%= nav.path("subscription") %>" class="trial-shell-banner is-due">
+      <i class="bi bi-cash-coin"></i>
+      <span><%= ngt("subscription.due_banner_body", days: days_to_settle) %></span>
+      <span class="trial-shell-banner-link"><%= ngt("subscription.due_banner_cta") %></span>
+    </a>
+  <% elsif email_unverified %>
+    <div class="verify-email-banner" data-controller="email-banner" data-email-banner-url-value="<%= "/admin/#{salle.id}/email_verification" %>" data-email-banner-resent-value="<%= ngt("auth.verify_email_banner_resent") %>">
+      <i class="bi bi-envelope-exclamation"></i>
+      <span data-email-banner-target="body"><%= ngt("auth.verify_email_banner_body") %></span>
+      <button type="button" class="verify-email-banner-link" data-email-banner-target="resend" data-action="email-banner#resend">
+        <%= ngt("auth.verify_email_banner_cta") %>
+      </button>
+      <button type="button" class="verify-email-banner-dismiss" data-action="email-banner#dismiss" aria-label="<%= ngt("common.cancel") %>">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  <% end %>
+
+  <div class="admin-shell-body">
+    <app-rail><%= render "web/shell/rail" %></app-rail>
+
+    <div class="admin-shell-main">
+      <app-navbar><%= render "web/shell/navbar" %></app-navbar>
+
+      <main class="app-content">
+        <router-outlet></router-outlet>
+        <%= yield %>
+      </main>
+
+      <app-mobile-bar><%= render "web/shell/mobile_bar" %></app-mobile-bar>
+    </div>
+  </div>
+</div>

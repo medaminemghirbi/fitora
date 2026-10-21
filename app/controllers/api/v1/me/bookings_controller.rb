@@ -15,13 +15,8 @@ module Api
 
         # GET /api/v1/me/bookings?when=upcoming|past&company_id=
         def index
-          upcoming = params[:when] != "past"
-          scope = current_client.bookings.joins(:session)
-                                 .where(sessions: { company_id: member_company ? [ member_company.id ] : member_companies.map(&:id) })
-                                 .where(upcoming ? "sessions.starts_at >= ?" : "sessions.starts_at < ?", Time.current)
-                                 .order("sessions.starts_at #{upcoming ? 'asc' : 'desc'}")
-
-          render json: { bookings: scope.map { |b| BookingSerializer.new(b).as_json } }
+          company_ids = member_company ? [ member_company.id ] : member_companies.map(&:id)
+          render json: { bookings: MemberApp.bookings(current_client, company_ids, upcoming: params[:when] != "past") }
         end
 
         # POST /api/v1/me/bookings { session_id: }

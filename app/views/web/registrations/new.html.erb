@@ -1,0 +1,79 @@
+<%# ng: register %>
+<%# ng-host: register %>
+<%# RegisterComponent (features/b2b/auth/register.component.html). %>
+<% content_for :auth_panel do %>
+  <div authPanel class="auth-panel">
+    <p class="auth-panel-title">
+      <%= ngt("auth.register_panel_title_1") %>
+      <em><%= ngt("auth.register_panel_title_2") %></em>
+    </p>
+    <div class="auth-panel-card">
+      <span class="auth-panel-kicker"><%= ngt("auth.register_panel_kicker") %></span>
+      <ul class="auth-panel-list">
+        <% %w[auth.pitch_point_booking auth.pitch_point_one_place auth.pitch_point_receipts auth.pitch_point_any_gym].each do |key| %>
+          <li><i class="bi bi-check-lg" aria-hidden="true"></i><%= ngt(key) %></li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+<% end %>
+<app-auth-pro-shell>
+  <%= render layout: "web/shared/auth_pro_shell", locals: { aside_text: ngt("auth.have_account"), aside_link_text: ngt("auth.sign_in"), aside_link: "/connexion" } do %>
+    <h1 class="auth-title"><%= ngt("auth.register_title") %></h1>
+    <p class="auth-subtitle"><%= ngt("auth.register_subtitle") %></p>
+
+    <ol class="auth-steps" aria-label="<%= ngt("auth.register_title") %>">
+      <li aria-current="step"><span>1</span> <%= ngt("auth.step_account") %></li>
+      <li><span>2</span> <%= ngt("auth.step_email") %></li>
+      <li><span>3</span> <%= ngt("auth.step_gym") %></li>
+    </ol>
+
+    <form action="/inscription" method="post" novalidate data-controller="form-checks" data-form-checks-scope-value="register" data-form-checks-busy-value="prepend:18"
+          data-action="submit->form-checks#submit turbo:submit-start->form-checks#busy turbo:submit-end->form-checks#idle">
+      <% if @error %>
+        <div class="alert alert-danger" role="alert"><%= @error %></div>
+      <% end %>
+
+      <div class="row g-3 mb-3">
+        <div class="col-6">
+          <label for="reg-first"><%= ngt("coaches.first_name") %></label>
+          <input id="reg-first" name="first_name" class="form-control" autocomplete="given-name" value="<%= @values[:first_name] %>" data-checks="required" />
+        </div>
+        <div class="col-6">
+          <label for="reg-last"><%= ngt("coaches.last_name") %></label>
+          <input id="reg-last" name="last_name" class="form-control" autocomplete="family-name" value="<%= @values[:last_name] %>" data-checks="required" />
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="reg-email"><%= ngt("auth.email") %></label>
+        <input id="reg-email" name="email" type="email" class="form-control" autocomplete="email" dir="ltr" value="<%= @values[:email] %>"
+               data-checks="required email" data-check-message="<%= ngt("auth.email_invalid") %>" />
+        <% if @email_invalid %>
+          <div class="invalid-feedback d-block" data-check-error="reg-email"><%= ngt("auth.email_invalid") %></div>
+        <% end %>
+      </div>
+
+      <div class="mb-3">
+        <label for="reg-password"><%= ngt("auth.password") %></label>
+        <div class="auth-password">
+          <input id="reg-password" name="password" type="password" class="form-control" autocomplete="new-password" dir="ltr" aria-describedby="reg-password-hint"
+                 data-password data-checks="required minlength:8" />
+          <button type="button" class="auth-eye" data-action="form-checks#togglePassword" data-form-checks-target="eye"
+                  data-show-label="<%= ngt("auth.show_password") %>" data-hide-label="<%= ngt("auth.hide_password") %>"
+                  aria-label="<%= ngt("auth.show_password") %>" aria-pressed="false">
+            <i class="bi bi-eye" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div id="reg-password-hint" class="form-text"><%= ngt("auth.password_min") %></div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100 mt-2" data-form-checks-target="submit">
+        <%= ngt("auth.register_cta") %>
+      </button>
+
+      <p class="form-text text-center mt-3"><%= ngt("auth.register_trial_note") %></p>
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+    </form>
+  <% end %>
+</app-auth-pro-shell>

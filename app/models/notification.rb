@@ -2,6 +2,7 @@ class Notification < ApplicationRecord
   # The admin's and the superadmin's kinds, then a member's own.
   KINDS = %w[
     contract_expiring employee_birthday system_update invoice_issued
+    plan_changed access_suspended access_restored
     session_cancelled waitlist_promoted subscription_expiring session_reminder
   ].freeze
 
@@ -63,6 +64,12 @@ class Notification < ApplicationRecord
 
   def read?
     read_at.present?
+  end
+
+  # Every unread notification of this recipient, read — and the bell told.
+  def self.read_all!(recipient)
+    recipient.notifications.unread.update_all(read_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
+    NotificationChannel.broadcast_to(recipient, { type: "unread_count", count: 0 })
   end
 
   def mark_read!

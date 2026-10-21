@@ -1,0 +1,27 @@
+<%# ng: activities %>
+<%# ActivitiesComponent, embedded: the toolbar once there is a list, the
+    list (searched and paged), and its two dialogs — the form and the
+    platform's catalogue. %>
+<% activities = catalogue[:activities] %>
+<div class="fx-stack">
+  <% if activities.any? %>
+    <div class="fx-toolbar act-toolbar">
+      <div class="fx-input-icon">
+        <i class="bi bi-search"></i>
+        <input type="search" class="form-control form-control-sm" value="<%= search_term %>" placeholder="<%= ngt("activities.search_placeholder") %>"
+               data-action="input->catalogue#search" />
+      </div>
+      <button type="button" class="btn btn-outline-secondary btn-sm ms-auto" data-action="catalogue#openActivityForm">
+        <i class="bi bi-pencil"></i> <%= ngt("activity_catalogue.from_scratch") %>
+      </button>
+      <button type="button" class="btn btn-primary btn-sm" data-action="catalogue#openPicker">
+        <i class="bi bi-grid-3x3-gap"></i> <%= ngt("activity_catalogue.from_catalogue") %>
+      </button>
+    </div>
+  <% end %>
+
+  <%= render "web/admin/catalogue/activities_list", activities: activities %>
+</div>
+
+<%= render "web/admin/catalogue/activity_modal" %>
+<%= render "web/admin/catalogue/picker_modal" %>

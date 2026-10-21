@@ -1,0 +1,130 @@
+<%# ng: desk-dashboard %>
+<%# ng-host: desk-dashboard %>
+<%# DeskDashboardComponent: on now, two counts, still to come, expiring soon,
+    new members. "Now" is the gym's clock, which the Angular page reads from
+    the browser's (the same moment in every parity run). %>
+<% if @error %>
+  <app-error-state data-controller="page-reload"><%= render "web/shared/error_state", retry_action: "page-reload#reload", body: @error %></app-error-state>
+<% else %>
+  <% now = Time.current %>
+  <% started = ->(s) { Time.zone.parse(s[:starts_at]) <= now } %>
+  <% ended = ->(s) { Time.zone.parse(s[:ends_at]) <= now } %>
+  <% spots_left = ->(s) { [ s[:capacity] - s[:confirmed_count], 0 ].max } %>
+  <% current = @stats[:todays_schedule].find { |s| started.(s) && !ended.(s) && s[:status] == "scheduled" } %>
+  <% upcoming = @stats[:todays_schedule].select { |s| !started.(s) && s[:status] == "scheduled" } %>
+  <section class="desk-section">
+    <h2 class="desk-section-title"><%= ngt("desk.on_now") %></h2>
+
+    <% if current %>
+      <article class="desk-now">
+        <div class="desk-now-head">
+          <span class="desk-now-time"><%= ng_date(current[:starts_at], "HH:mm") %> – <%= ng_date(current[:ends_at], "HH:mm") %></span>
+          <span class="desk-now-fill<%= " is-full" if spots_left.(current).zero? %>">
+            <%= current[:confirmed_count] %> / <%= current[:capacity] %>
+          </span>
+        </div>
+
+        <h3 class="desk-now-activity">
+          <% if current[:activity_emoji].present? %>
+            <span aria-hidden="true"><%= current[:activity_emoji] %></span>
+          <% end %>
+          <%= current[:activity_name] %>
+        </h3>
+
+        <% if current[:coach_name].present? %>
+          <p class="desk-now-coach"><%= current[:coach_name] %></p>
+        <% end %>
+
+        <a class="btn btn-primary btn-lg" href="<%= desk_path("checkin", session: current[:id]) %>">
+          <i class="bi bi-check2-square"></i> <%= ngt("desk.check_people_in") %>
+        </a>
+      </article>
+    <% else %>
+      <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("desk.nothing_on_title"), body: ngt("desk.nothing_on_body"), icon: "bi-cup-hot" } do %><% end %></app-empty-state>
+    <% end %>
+  </section>
+
+  <section class="desk-counts">
+    <div class="desk-count">
+      <span class="desk-count-value"><%= @stats[:todays_bookings] %></span>
+      <span class="desk-count-label"><%= ngt("desk.booked_today") %></span>
+    </div>
+    <div class="desk-count">
+      <span class="desk-count-value"><%= @stats[:todays_attendance] %></span>
+      <span class="desk-count-label"><%= ngt("desk.checked_in_today") %></span>
+    </div>
+  </section>
+
+  <section class="desk-section">
+    <h2 class="desk-section-title"><%= ngt("desk.still_to_come") %></h2>
+
+    <% if upcoming.empty? %>
+      <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("desk.day_done_title"), body: ngt("desk.day_done_body"), icon: "bi-calendar-check" } do %><% end %></app-empty-state>
+    <% else %>
+      <ul class="desk-list">
+        <% upcoming.each do |session| %>
+          <li class="desk-list-row">
+            <span class="desk-list-time"><%= ng_date(session[:starts_at], "HH:mm") %></span>
+            <span class="desk-list-body">
+              <strong><%= session[:activity_name] %></strong>
+              <% if session[:coach_name].present? %>
+                <small><%= session[:coach_name] %></small>
+              <% end %>
+            </span>
+            <span class="desk-list-fill<%= " is-full" if spots_left.(session).zero? %>">
+              <% if spots_left.(session).zero? %>
+                <%= ngt("desk.full") %>
+              <% else %>
+                <%= ngt("desk.spots_left", count: spots_left.(session)) %>
+              <% end %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+
+  <% if @stats[:contracts_expiring].any? %>
+    <section class="desk-section">
+      <h2 class="desk-section-title"><%= ngt("desk.expiring_soon") %></h2>
+
+      <ul class="desk-list">
+        <% @stats[:contracts_expiring].each do |item| %>
+          <% days = desk_days_until(item[:expires_at]) %>
+          <li class="desk-list-row">
+            <span class="desk-list-body">
+              <strong><%= item[:client_name] %></strong>
+              <small><%= item[:plan_name] %></small>
+            </span>
+            <span class="desk-chip<%= " is-urgent" if days <= 3 %>">
+              <% if days.negative? %>
+                <%= ngt("desk.expired") %>
+              <% elsif days.zero? %>
+                <%= ngt("desk.expires_today") %>
+              <% else %>
+                <%= ngt("desk.expires_in_days", count: days) %>
+              <% end %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <% if @stats[:recent_clients].any? %>
+    <section class="desk-section">
+      <h2 class="desk-section-title"><%= ngt("desk.new_members") %></h2>
+
+      <ul class="desk-list">
+        <% @stats[:recent_clients].each do |client| %>
+          <li class="desk-list-row">
+            <a class="desk-list-body desk-list-link" href="<%= served_path("/admin/#{salle.id}/clients/#{client[:id]}") %>">
+              <strong><%= client[:full_name] %></strong>
+              <small><%= ng_date(client[:joined_at], "d MMM") %></small>
+            </a>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+<% end %>

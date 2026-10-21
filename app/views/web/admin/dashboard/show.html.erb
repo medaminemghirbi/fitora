@@ -1,0 +1,54 @@
+<%# ng: dashboard %>
+<%# ng-host: dashboard %>
+<%# DashboardComponent: the header, the setup card while the guide is
+    unfinished, the body (_body: what needs the gym, the figures, the day,
+    revenue, the occasional tasks), and the check-in dialog (dashboard-page). %>
+<% onboarding = bootstrap[:onboarding] %>
+<div class="fx-page dash" data-controller="dashboard-page"
+     data-dashboard-page-url-value="<%= admin_page_path("dashboard") %>"
+     data-dashboard-page-dismiss-url-value="<%= admin_page_path("onboarding/dismiss") %>"
+     data-dashboard-page-labels-value="<%= { error: ngt("common.error_generic") }.to_json %>"
+     data-action="modal:opened@window->dashboard-page#fillCheckin modal:closed@window->dashboard-page#checkinClosed">
+  <header class="dash-head">
+    <div class="dash-head-title">
+      <h1><%= ngt("dashboard.today") %></h1>
+      <p>
+        <%= @data.dig(:company, :name) %> ·
+        <%= ng_date(Time.current, "EEEE d MMMM") %>
+      </p>
+    </div>
+    <a href="<%= admin_page_path("payments", action: "new") %>" class="btn btn-outline-secondary d-none d-sm-inline-flex">
+      <i class="bi bi-cash-coin"></i> <%= ngt("payments.record") %>
+    </a>
+    <a href="<%= admin_page_path("clients", action: "new") %>" class="btn btn-primary">
+      <i class="bi bi-person-plus"></i> <%= ngt("clients.new") %>
+    </a>
+  </header>
+
+  <% if onboarding && !onboarding[:complete] && !onboarding[:dismissed] && current_user.admin? %>
+    <div class="app-card" data-setup-card>
+      <div class="app-card-header">
+        <h2><%= ngt("onboarding.card_title") %></h2>
+        <a href="<%= admin_page_path("onboarding") %>" class="btn btn-sm btn-outline-secondary">
+          <%= ngt("onboarding.open_flow") %>
+        </a>
+      </div>
+      <div class="app-card-body">
+        <app-onboarding-steps><%= render "web/shared/onboarding_steps", state: onboarding, compact: true %></app-onboarding-steps>
+        <button type="button" class="btn btn-link ob-card-leave" data-action="dashboard-page#dismissSetup">
+          <%= ngt("onboarding.leave") %>
+        </button>
+      </div>
+    </div>
+  <% end %>
+
+  <%= render "web/admin/dashboard/body", d: @data, audit_logs: @audit_logs %>
+</div>
+
+<app-modal data-controller="modal" data-modal-name-value="dashboard-checkin" data-action="dashboard-checkin:open@window->modal#open dashboard-checkin:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("checkin.title") } do %>
+      <%= render "web/shared/checkin_panel", url: admin_page_path("attendance") %>
+    <% end %>
+  </template>
+</app-modal>

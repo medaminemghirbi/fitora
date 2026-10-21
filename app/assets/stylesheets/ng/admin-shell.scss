@@ -1,0 +1,121 @@
+// GENERATED from frontend/src/app/layout/admin-shell/admin-shell.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+:host { display: contents; }
+
+.min-w-0 { min-width: 0; }
+
+.admin-shell {
+  min-height: 100vh;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-shell-body {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.admin-shell-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-shell .app-content { flex: 1; }
+
+// The bottom bar is fixed, so the last thing on a page would sit under it.
+@media (max-width: 767.98px) {
+  .admin-shell .app-content { padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px)); }
+}
+
+// ---------- Banners (impersonation / trial) ----------
+.impersonation-banner,
+.trial-shell-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.impersonation-banner {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  span { flex: 1; }
+}
+
+.impersonation-exit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  border-radius: var(--radius-sm);
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { background: var(--color-warning); color: #fff; border-color: var(--color-warning); }
+}
+
+.trial-shell-banner {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+
+  span:first-of-type { flex: 1; color: var(--color-text); font-weight: 500; }
+  &:hover { text-decoration: none; .trial-shell-banner-link { text-decoration: underline; } }
+}
+
+.trial-shell-banner-link { color: var(--color-primary); font-weight: 700; white-space: nowrap; }
+
+.verify-email-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background: var(--color-surface-secondary, var(--color-surface));
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+
+  span { flex: 1; }
+}
+
+.verify-email-banner-link {
+  border: none;
+  background: transparent;
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  padding: 0;
+
+  &:hover { text-decoration: underline; }
+  &:disabled { opacity: 0.6; }
+}
+
+.verify-email-banner-dismiss {
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  padding: 0.2rem;
+  line-height: 1;
+
+  &:hover { color: var(--color-text); }
+}
+
+// The month is unpaid and the clock is running. Warmer than the trial
+// banner it sits in place of, because this one closes the door.
+.trial-shell-banner.is-due {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}

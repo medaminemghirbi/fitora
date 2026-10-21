@@ -1,0 +1,424 @@
+// GENERATED from frontend/src/app/features/admin/settings/settings-roles.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// Rôles & permissions as one matrix (2026-10-10, mockup "1 — Matrice"):
+// rows = permissions by group, columns = roles, a tick box where they cross.
+
+.rm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.rm-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.rm-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 280px;
+  height: 42px;
+  margin: 0;
+  padding: 0 0.875rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 12px;
+  background: var(--color-surface);
+
+  i { color: var(--color-text-secondary); }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 0.875rem;
+    color: var(--color-text);
+  }
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+}
+
+.rm-legend {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+}
+
+.rm-new {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+// ---------- The matrix ------------------------------------------------------
+.rm-card {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: var(--color-surface);
+}
+
+.rm-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  th,
+  td {
+    padding: 0;
+    border-bottom: 1px solid var(--color-border);
+    text-align: center;
+    vertical-align: middle;
+    font-weight: inherit;
+  }
+
+  tbody tr:last-child > * {
+    border-bottom: 0;
+  }
+
+  // The permission column stays put while the roles scroll sideways.
+  th:first-child {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 1;
+    background: inherit;
+    text-align: start;
+  }
+
+  thead th {
+    background: var(--color-surface);
+  }
+}
+
+.rm-perm-head {
+  padding: 1rem 1.5rem !important;
+  font-size: 0.6875rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  vertical-align: bottom !important;
+}
+
+.rm-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 132px;
+  padding: 1rem 0.75rem 0.875rem;
+}
+
+.rm-col-ic {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 0.25rem;
+  border-radius: 10px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+
+  &.is-admin {
+    background: var(--color-text);
+    color: var(--color-surface);
+  }
+}
+
+.rm-col-name {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.rm-col-meta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.rm-col-badge {
+  margin-top: 0.25rem;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.rm-col-actions {
+  display: flex;
+  gap: 2px;
+  margin-top: 0.125rem;
+}
+
+.rm-icon-btn {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+
+  &.is-danger:hover {
+    color: var(--color-danger);
+  }
+}
+
+.rm-add-head {
+  width: 120px;
+  padding: 1rem 0.75rem 0.875rem !important;
+}
+
+.rm-add {
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  margin-bottom: 0.25rem;
+  border: 1.5px dashed var(--color-border-strong);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  cursor: pointer;
+
+  &:hover { border-color: var(--color-primary); }
+}
+
+.rm-add-head .rm-col-meta {
+  display: block;
+}
+
+.rm-group {
+  > * { background: var(--color-bg) !important; }
+}
+
+.rm-group-label {
+  padding: 0.75rem 1.5rem !important;
+  font-size: 0.8125rem;
+  font-weight: 800 !important;
+  color: var(--color-text);
+
+  span {
+    margin-inline-start: 0.5rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+  }
+}
+
+.rm-row:hover > * {
+  background: var(--color-surface-hover);
+}
+
+.rm-perm {
+  display: flex !important;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 260px;
+  padding: 0.75rem 1.5rem !important;
+  background: var(--color-surface);
+
+  b {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  small {
+    font-size: 0.78125rem;
+    color: var(--color-text-secondary);
+  }
+}
+
+.rm-sensitive {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+// The tick box. 44px of target around a 26px box.
+.rm-box {
+  width: 26px;
+  height: 26px;
+  margin: 9px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-on-primary);
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+
+  &:hover:not(:disabled) { border-color: var(--color-primary); }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  &.is-on {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+
+  &.is-mixed {
+    background: var(--color-primary-soft);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  // The admin's column: always ticked, never edited.
+  &.is-locked {
+    background: var(--color-text);
+    border-color: var(--color-text);
+    color: var(--color-surface);
+    cursor: not-allowed;
+    opacity: 0.8;
+  }
+
+  // Changed since the last save — until it is saved.
+  &.is-changed {
+    box-shadow: 0 0 0 3px var(--color-lime-soft), 0 0 0 4px var(--color-lime);
+  }
+
+  &--mini {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    font-size: 0.6875rem;
+    cursor: default;
+  }
+}
+
+.rm-empty {
+  padding: 2rem !important;
+  color: var(--color-text-secondary);
+}
+
+// ---------- Below the matrix ----------------------------------------------
+.rm-foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.rm-reserved-title {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.rm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.rm-chip {
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.rm-accounts {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.rm-savebar {
+  position: sticky;
+  bottom: var(--space-4);
+  z-index: 5;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: min(100%, 620px);
+  padding: 0.625rem 0.625rem 0.625rem 1.25rem;
+  border-radius: 16px;
+  background: var(--color-night);
+  color: #fff;
+  box-shadow: 0 24px 48px -20px rgb(29 21 51 / 50%);
+
+  > span {
+    flex: 1;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+}
+
+.rm-savebar-ghost {
+  border: 1px solid rgb(255 255 255 / 30%);
+  color: #fff;
+
+  &:hover { color: #fff; background: rgb(255 255 255 / 8%); }
+}
+
+.rm-dialog-hint {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.rm-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 767.98px) {
+  .rm-search { min-width: 0; flex: 1 1 100%; }
+  .rm-new { margin-inline-start: 0; }
+}

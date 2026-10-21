@@ -161,6 +161,53 @@ RSpec.describe Subscription do
     end
   end
 
+  describe "#bill! — a change of plan's invoice to pay" do
+    it "bills the next period at the plan's tariff, and opens or covers nothing until paid" do
+      subscription = described_class.start_trial!(company.admin, currency: "TND")
+      subscription.update!(plan: :pro, billing_period: :monthly)
+      paid_through = subscription.paid_through
+
+      invoice = subscription.bill!(issued_by: nil)
+      expect(invoice).to be_due
+      expect(invoice.plan).to eq("pro")
+      expect(invoice.amount_cents).to eq(subscription.period_cents)
+      expect(invoice.period_start).to eq(paid_through + 1)
+      expect(subscription.reload.paid_through).to eq(paid_through)
+      expect(subscription).to be_trial
+      expect(subscription).not_to be_pro_features
+      expect(subscription.ever_paid?).to be(false)
+    end
+
+    it "keeps one bill: a second change re-prices the one waiting" do
+      subscription = create(:subscription, company: company, plan: :starter)
+      first = subscription.bill!(issued_by: nil)
+      subscription.update!(plan: :pro, billing_period: :yearly)
+      second = subscription.bill!(issued_by: nil)
+
+      expect(second.id).to eq(first.id)
+      expect(second.number).to eq(first.number)
+      expect(second.reload.plan).to eq("pro")
+      expect(second.amount_cents).to eq(subscription.annual_cents)
+      expect(subscription.invoices.due.count).to eq(1)
+    end
+
+    it "is settled by the payment: the same invoice, paid, for the period due now, and the door open" do
+      subscription = described_class.start_trial!(company.admin, currency: "TND")
+      subscription.update!(plan: :starter, billing_period: :monthly, active: false)
+      bill = subscription.bill!(issued_by: nil)
+
+      paid = subscription.issue_invoice!(issued_by: nil)
+      expect(paid.id).to eq(bill.id)
+      expect(paid).to be_paid
+      expect(paid.amount_cents).to eq(bill.amount_cents)
+      expect(subscription.reload).to be_active
+      expect(subscription).not_to be_trial
+      expect(subscription.paid_through).to eq(paid.period_end)
+      expect(subscription.due_invoice).to be_nil
+      expect(subscription.invoices.count).to eq(2)
+    end
+  end
+
   describe "#multi_salle? — opening another salle" do
     it "is Pro's" do
       expect(create(:subscription, :pro, company: company)).to be_multi_salle

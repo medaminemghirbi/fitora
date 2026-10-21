@@ -1,0 +1,51 @@
+<%# ng: verify-email %>
+<%# ng-host: verify-email %>
+<%# VerifyEmailComponent (features/auth/verify-email.component.html). The
+    page arrives "checking"; the verify-email controller spends the token and
+    puts in the outcome — the same three states, from <template>s. %>
+<% content_for :auth_panel do %>
+  <div authPanel class="auth-panel">
+    <span class="auth-panel-icon" aria-hidden="true"><i class="bi bi-envelope-check"></i></span>
+    <p class="auth-panel-title">
+      <%= ngt("auth.verify_panel_title_1") %>
+      <em><%= ngt("auth.verify_panel_title_2") %></em>
+    </p>
+    <p class="auth-panel-lead"><%= ngt("auth.verify_panel_lead") %></p>
+  </div>
+<% end %>
+<app-auth-pro-shell>
+  <%= render layout: "web/shared/auth_pro_shell", locals: { tone: "soft" } do %>
+    <app-mail-stage data-controller="verify-email" data-verify-email-token-value="<%= params[:token] %>"
+                    data-verify-email-authenticated-value="<%= @authenticated %>" data-verify-email-delay-value="3600"><%= render "web/shared/mail_stage", state: "waiting" %></app-mail-stage>
+    <h1 class="auth-title"><%= ngt("auth.verify_email_checking") %></h1>
+  <% end %>
+</app-auth-pro-shell>
+<% content_for :templates do %>
+  <% %w[confirmed error].each do |state| %>
+    <template data-ve="stage-<%= state %>"><%= render "web/shared/mail_stage", state: state %></template>
+  <% end %>
+  <template data-ve="success-in">
+    <h1 class="auth-title"><%= ngt("auth.confirm_done_title") %></h1>
+    <p class="auth-subtitle" role="status"><%= ngt("auth.confirm_done_body") %></p>
+    <app-setup-progress><%= render "web/shared/setup_progress", duration: 3600 %></app-setup-progress>
+    <button type="button" class="btn btn-primary w-100" data-ve-continue>
+      <%= ngt("auth.continue") %> <i class="bi bi-arrow-right" aria-hidden="true"></i>
+    </button>
+  </template>
+  <template data-ve="success-elsewhere">
+    <h1 class="auth-title"><%= ngt("auth.confirm_done_title") %></h1>
+    <p class="auth-subtitle" role="status"><%= ngt("auth.verify_done_elsewhere") %></p>
+    <a href="/connexion" class="btn btn-primary w-100"><%= ngt("auth.sign_in") %></a>
+  </template>
+  <template data-ve="error-in">
+    <h1 class="auth-title"><%= ngt("auth.verify_email_error_title") %></h1>
+    <p class="auth-subtitle" role="alert"><%= ngt("auth.verify_email_invalid_link") %></p>
+    <a href="/connexion" class="btn btn-primary w-100" data-ve-continue-link><%= ngt("auth.verify_new_link") %></a>
+  </template>
+  <template data-ve="error-out">
+    <h1 class="auth-title"><%= ngt("auth.verify_email_error_title") %></h1>
+    <p class="auth-subtitle" role="alert"><%= ngt("auth.verify_email_invalid_link") %></p>
+    <p class="form-text"><%= ngt("auth.verify_sign_in_for_new_link") %></p>
+    <a href="/connexion" class="auth-btn-outline"><%= ngt("auth.sign_in") %></a>
+  </template>
+<% end %>

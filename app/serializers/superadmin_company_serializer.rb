@@ -59,8 +59,10 @@ class SuperadminCompanySerializer
     subscription = company.subscription
     return nil if subscription.nil?
 
+    # With a bill waiting, the payment settles it: its amount, today's period.
     period = subscription.next_period
-    { period_start: period.first, period_end: period.last, amount_cents: subscription.period_cents }
+    due = subscription.due_invoice
+    { period_start: period.first, period_end: period.last, amount_cents: due ? due.amount_cents : subscription.period_cents }
   end
 
   def account_companies

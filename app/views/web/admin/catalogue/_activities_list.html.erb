@@ -1,0 +1,82 @@
+<%# ng: activities %>
+<%# The card: the empty state, "no results", or a page of the list. %>
+<% filtered = catalogue_filter(activities, search_term) { |a| [ a[:name] ] }
+   paged, meta = catalogue_page(filtered, list_page) %>
+<div class="app-card" data-catalogue-list>
+  <% if activities.empty? %>
+    <div class="app-card-body">
+      <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("activities.empty_title"), body: ngt("activities.empty_body"), icon: "bi-lightning-charge" } do %>
+        <button type="button" class="btn btn-primary" data-action="catalogue#openPicker">
+          <i class="bi bi-grid-3x3-gap"></i> <%= ngt("activity_catalogue.from_catalogue") %>
+        </button>
+        <button type="button" class="btn btn-outline-secondary" data-action="catalogue#openActivityForm">
+          <%= ngt("activity_catalogue.from_scratch") %>
+        </button>
+      <% end %></app-empty-state>
+    </div>
+  <% elsif filtered.empty? %>
+    <div class="app-card-body"><app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("common.no_results"), body: "", icon: "bi-search" } do %><% end %></app-empty-state></div>
+  <% else %>
+    <ul class="act-list">
+      <% paged.each do |activity| %>
+        <% prices = catalogue_prices_for(:activity, activity[:id])
+           packs = catalogue_packs_with(activity[:id]) %>
+        <li class="act-item<%= " is-off" unless activity[:active] %>" data-activity="<%= activity.slice(:id, :name, :emoji, :description, :session_format, :duration, :capacity).to_json %>">
+          <span class="act-emoji" aria-hidden="true"><%= activity[:emoji].presence || "•" %></span>
+
+          <div class="act-body">
+            <div class="act-title">
+              <span class="fx-strong"><%= ng_highlight(activity[:name], search_term) %></span>
+              <% unless activity[:active] %>
+                <app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: "inactive" } do %><%= ngt("common.inactive") %><% end %></app-status-badge>
+              <% end %>
+            </div>
+
+            <p class="act-meta">
+              <span><%= ngt("activities.format_#{activity[:session_format]}") %></span>
+              <span><%= activity[:duration] %> min</span>
+              <% if activity[:capacity].to_i > 1 %>
+                <span><%= activity[:capacity] %> <%= ngt("activities.capacity_short") %></span>
+              <% end %>
+            </p>
+
+            <% if prices.empty? %>
+              <p class="act-noprice"><i class="bi bi-exclamation-circle"></i> <%= ngt("activities.no_price") %></p>
+            <% else %>
+              <ul class="act-prices">
+                <% prices.each do |tariff| %>
+                  <li>
+                    <span class="act-price-name"><%= tariff[:plan][:name] %></span>
+                    <span class="act-price-value"><%= ng_money(tariff[:price], activity[:currency]) %></span>
+                  </li>
+                <% end %>
+              </ul>
+            <% end %>
+
+            <% if packs.any? %>
+              <p class="act-packs">
+                <i class="bi bi-collection" aria-hidden="true"></i>
+                <%= ngt("activities.in_packs") %>
+                <% packs.each_with_index do |pack, i| %><strong><%= pack[:name] %></strong><% if i < packs.size - 1 %>, <% end %><% end %>
+              </p>
+            <% end %>
+          </div>
+
+          <%= render layout: "web/shared/action_menu" do %>
+            <button type="button" class="fx-menu-item" data-action="catalogue#openActivityForm">
+              <i class="bi bi-pencil"></i> <%= ngt("common.edit") %>
+            </button>
+            <% if activity[:active] %>
+              <div class="fx-menu-divider"></div>
+              <button type="button" class="fx-menu-item is-danger" data-action="catalogue#deactivateActivity">
+                <i class="bi bi-slash-circle"></i> <%= ngt("common.deactivate") %>
+              </button>
+            <% end %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+
+    <app-pagination><%= render "web/shared/pagination", meta: meta, action: "catalogue#goToPage" %></app-pagination>
+  <% end %>
+</div>

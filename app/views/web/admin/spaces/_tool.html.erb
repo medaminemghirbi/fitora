@@ -1,0 +1,72 @@
+<%# ng: spaces %>
+<%# SpacesComponent: the rooms, searched and paged in the browser
+    (client-list), created, edited and removed from the page (spaces-page). %>
+<% activity_names = activities.to_h { |a| [ a[:id], a[:name] ] } %>
+<div class="fx-stack" data-controller="client-list spaces-page" data-action="modal:opened@window->spaces-page#fill"
+     data-client-list-scope-value="spaces"
+     data-client-list-labels-value="<%= { unit: ngt("common.results"), page: ngt("common.page"), of: ngt("common.of") }.to_json %>"
+     data-spaces-page-url-value="<%= admin_page_path("spaces") %>"
+     <%= raw(%(data-spaces-page-fragment-value="#{admin_page_path("spaces", fragment: 1)}")) if embedded %>
+     data-spaces-page-labels-value="<%= { new: ngt("spaces.new"), edit: ngt("spaces.edit"), delete_title: ngt("spaces.delete_title"), deactivate_title: ngt("spaces.deactivate_title"), delete_message: Web::Translations.translate("spaces.delete_message", {}, locale: I18n.locale), deactivate_message: Web::Translations.translate("spaces.deactivate_message", {}, locale: I18n.locale), delete: ngt("common.delete"), deactivate: ngt("common.deactivate"), saving: ngt("common.saving"), save: ngt("common.save") }.to_json %>">
+  <% unless embedded %>
+    <app-page-header><%= render layout: "web/shared/page_header", locals: { title: ngt("spaces.title"), description: ngt("spaces.subtitle") } do %><% end %></app-page-header>
+  <% end %>
+
+  <% if spaces.any? %>
+    <div class="fx-toolbar">
+      <div class="fx-input-icon">
+        <i class="bi bi-search"></i>
+        <input type="search" class="form-control form-control-sm" placeholder="<%= ngt("spaces.search_placeholder") %>" data-action="input->client-list#search" />
+      </div>
+      <button type="button" class="btn btn-primary ms-auto" data-action="spaces-page#openCreate">
+        <i class="bi bi-plus-lg"></i> <%= ngt("spaces.new") %>
+      </button>
+    </div>
+  <% end %>
+
+  <div class="app-card" data-client-list-target="card" data-spaces-page-target="card">
+    <% if spaces.empty? %>
+      <div class="app-card-body">
+        <app-empty-state>
+          <%= render layout: "web/shared/empty_state", locals: { title: ngt("spaces.empty_title"), body: ngt("spaces.empty_body"), icon: "bi-door-open" } do %>
+            <button type="button" class="btn btn-primary" data-action="spaces-page#openCreate">
+              <i class="bi bi-plus-lg"></i> <%= ngt("spaces.new") %>
+            </button>
+          <% end %>
+        </app-empty-state>
+      </div>
+    <% else %>
+      <div class="fx-table-scroll" data-client-list-target="tableWrap">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th><%= ngt("spaces.name") %></th>
+              <th><%= ngt("spaces.kind") %></th>
+              <th><%= ngt("spaces.capacity") %></th>
+              <th><%= ngt("spaces.restricted_to") %></th>
+              <th><%= ngt("common.status") %></th>
+              <th class="text-end"><%= ngt("common.actions") %></th>
+            </tr>
+          </thead>
+          <tbody data-client-list-target="body">
+            <% spaces.first(25).each do |space| %>
+              <%= render "web/admin/spaces/row", space: space, activity_names: activity_names %>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <app-pagination><%= render "web/shared/pagination", meta: { page: 1, total: spaces.size, total_pages: (spaces.size / 25.0).ceil.clamp(1..) }, action: "client-list#goToPage" %></app-pagination>
+    <% end %>
+  </div>
+
+  <template data-client-list-target="rows">
+    <% spaces.each do |space| %>
+      <%= render "web/admin/spaces/row", space: space, activity_names: activity_names %>
+    <% end %>
+  </template>
+  <template data-client-list-target="noResultsTemplate">
+    <div class="app-card-body"><app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("common.no_results"), body: "", icon: "bi-search" } do %><% end %></app-empty-state></div>
+  </template>
+</div>
+
+<%= render "web/admin/spaces/modal", activities: activities %>

@@ -1,0 +1,19 @@
+<%# ng: modal %>
+<%# ModalComponent, open. The caller writes the <app-modal> host (with the
+    modal controller) and keeps this inside a <template> until it opens: as
+    in Angular, nothing is in the DOM while the modal is closed. The block is
+    the projected content. The focus trap's two anchors are added by the
+    controller, as CDK adds them, so they carry no scope attribute. %>
+<div class="modal-backdrop-custom" data-action="click->modal#backdropClick">
+  <div class="modal-panel<%= " modal-panel--wide" if local_assigns[:size] == "wide" %>" role="dialog" aria-modal="true" aria-label="<%= title %>" data-modal-target="panel">
+    <div class="modal-panel-header">
+      <h3><%= title %></h3>
+      <button type="button" class="icon-btn" data-action="modal#close" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="modal-panel-body">
+      <%= yield %>
+    </div>
+  </div>
+</div>

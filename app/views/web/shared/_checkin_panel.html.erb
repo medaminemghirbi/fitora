@@ -1,0 +1,9 @@
+<%# CheckinPanelComponent's host, with the checkin-panel controller: the
+    skeleton while the roster is fetched (it genuinely loads separately, D5),
+    then the roster (_checkin_roster). `url`: the attendance endpoint of the
+    page's shell; `session`: the session, when the page knows it already
+    (the desk) — otherwise it is set when the panel opens. Unscoped: it is
+    dropped into pages of every shell. %>
+<app-checkin-panel data-controller="checkin-panel" data-checkin-panel-url-value="<%= url %>"<%= raw(%( data-checkin-panel-session-value="#{h(local_assigns[:session])}")) if local_assigns[:session] %>
+                   data-checkin-panel-labels-value="<%= { error: ngt("common.error_generic") }.to_json %>"><%= render "web/shared/checkin_skeleton" %></app-checkin-panel>
+<template data-checkin-error><app-error-state><%= render "web/shared/error_state", retry_action: "" %></app-error-state></template>

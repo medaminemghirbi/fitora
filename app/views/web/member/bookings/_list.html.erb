@@ -1,0 +1,32 @@
+<%# ng: member-bookings %>
+<%# The member's bookings, upcoming or past (`timing`): each with its session
+    and its time, and — while it is still to come — the way to give it back.
+    `bookings` is nil when no gym of theirs has the app: the error state. %>
+<% if bookings.nil? %>
+  <app-error-state data-controller="page-reload"><%= render "web/shared/error_state", retry_action: "page-reload#reload" %></app-error-state>
+<% elsif bookings.empty? %>
+  <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt(timing == "upcoming" ? "member.no_upcoming_title" : "member.no_past_title"), body: timing == "upcoming" ? ngt("member.no_upcoming_body") : "", icon: "bi-calendar-check" } do %><% end %></app-empty-state>
+<% else %>
+  <ul class="mb-list">
+    <% bookings.each do |b| %>
+      <li class="mb-slot">
+        <span class="mb-slot-main">
+          <span class="mb-slot-name">
+            <%= b.dig(:session, :activity_emoji).present? ? "#{b.dig(:session, :activity_emoji)} " : "" %><%= b.dig(:session, :activity_name) %>
+          </span>
+          <span class="mb-slot-sub"><%= ng_date(b.dig(:session, :starts_at), "EEEE d MMMM, HH:mm") %></span>
+        </span>
+
+        <% if timing == "upcoming" && b[:status] == "confirmed" %>
+          <button type="button" class="btn btn-sm btn-outline-secondary mb-slot-cta" data-action="member-bookings#cancel" data-booking-id="<%= b[:id] %>" data-activity="<%= b.dig(:session, :activity_name) %>">
+            <%= ngt("member.cancel") %>
+          </button>
+        <% else %>
+          <app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: b[:status] } do %>
+            <%= ngt("bookings.status_#{b[:status]}") %>
+          <% end %></app-status-badge>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

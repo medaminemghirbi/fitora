@@ -1,0 +1,167 @@
+// GENERATED from frontend/src/app/features/admin/packs/packs.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// A pack card: what it opens, then what it costs under each formule.
+// Same shape as a formule card, so the two tabs read alike.
+
+.pk-toolbar {
+  margin-bottom: 0; // the stack spaces it
+
+  .fx-input-icon { flex: 0 1 24rem; min-width: 0; }
+}
+
+.pk-needs {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.pk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.pk-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+
+  &.is-off { opacity: 0.7; }
+}
+
+.pk-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  h3 {
+    margin: 0;
+    font-size: var(--font-size-md);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}
+
+.pk-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.pk-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-sunken);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+  }
+}
+
+.pk-desc {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.pk-prices {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-border);
+
+  li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+
+  li:last-child { border-bottom: 0; }
+}
+
+.pk-price {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+
+.pk-warn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.pk-card-foot {
+  margin-top: auto;
+  padding-top: var(--space-1);
+}
+
+// The activity picker: toggles rather than a column of checkboxes, so the
+// pack reads as the set it is while it is being built.
+.pk-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.pk-pick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+
+  &:hover { background: var(--color-surface-hover); }
+
+  &.is-on {
+    background: var(--color-primary-soft);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+}
+
+.pk-period,
+.pk-sep {
+  display: block;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}

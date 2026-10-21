@@ -1,0 +1,4 @@
+<%= turbo_stream.replace "bk-count", partial: "web/admin/bookings/count", locals: { meta: @meta }, method: :morph %>
+<%= turbo_stream.replace "bk-tabs", partial: "web/admin/bookings/tabs", locals: { counts: @counts, filters: @filters }, method: :morph %>
+<%= turbo_stream.replace "bk-pills", partial: "web/admin/bookings/pills", locals: { counts: @counts, filters: @filters }, method: :morph %>
+<%= turbo_stream.replace "bk-card", partial: "web/admin/bookings/card", locals: { bookings: @bookings, meta: @meta, filters: @filters }, method: :morph %>

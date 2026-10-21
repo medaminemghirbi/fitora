@@ -114,8 +114,15 @@ module Receipts
 
     def settled(pdf)
       pdf.fill_color GREY
-      lines = [ "Facture réglée — paiement confirmé le #{fr_date(invoice.issued_at.to_date)}." ]
-      lines << "Confirmée par #{invoice.issued_by.full_name}." if invoice.issued_by
+      lines =
+        if invoice.paid?
+          [ "Facture réglée — paiement confirmé le #{fr_date(invoice.paid_at.to_date)}." ].tap do |l|
+            l << "Confirmée par #{invoice.issued_by.full_name}." if invoice.issued_by
+          end
+        else
+          # A change of plan's bill, waiting for the money.
+          [ "Facture à régler — en attente de paiement." ]
+        end
       lines << invoice.notes if invoice.notes.present?
       pdf.text lines.join(" "), size: 9, leading: 3
       pdf.fill_color "000000"

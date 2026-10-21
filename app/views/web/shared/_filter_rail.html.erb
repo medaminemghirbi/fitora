@@ -1,0 +1,14 @@
+<%# FilterRailComponent (no styles of its own): the left filter column; below
+    lg, behind a "Filtres" toggle with how many filters are on. The caller
+    writes the <app-filter-rail> host; the block is the rail's content. %>
+<button type="button" class="fx-rail-toggle d-lg-none" aria-expanded="false" data-controller="filter-rail" data-action="filter-rail#toggle">
+  <i class="bi bi-funnel"></i>
+  <%= ngt("common.filters") %>
+  <% if active_count > 0 %>
+    <span class="fx-rail-toggle-count"><%= active_count %></span>
+  <% end %>
+  <i class="bi bi-chevron-down"></i>
+</button>
+<aside class="fx-rail" aria-label="<%= ngt("common.filters") %>">
+  <%= yield %>
+</aside>

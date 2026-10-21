@@ -1,0 +1,48 @@
+<%# ng: admin-support %>
+<%# ng-host: admin-support %>
+<%# AdminSupportComponent: the form (support-form controller: the files,
+    the button, the sending) and the history. %>
+<div class="fx-page">
+  <header class="lst-head">
+    <h1><%= ngt("nav.support") %></h1>
+  </header>
+  <p class="fx-muted mb-4"><%= ngt("modules_page.contact.form_hint") %></p>
+
+  <div class="contact-layout">
+    <div class="app-card" data-controller="support-form" data-support-form-url-value="<%= admin_page_path("support") %>"
+         data-support-form-labels-value="<%= { too_many: Web::Translations.translate("modules_page.contact.too_many_files", { max: 5 }, locale: I18n.locale), invalid: Web::Translations.translate("modules_page.contact.invalid_file", {}, locale: I18n.locale), cancel: ngt("common.cancel") }.to_json %>">
+      <div class="app-card-header">
+        <h2><%= ngt("modules_page.contact.form_title") %></h2>
+      </div>
+      <div class="app-card-body">
+        <div class="mb-3">
+          <label class="form-label" for="ticket-subject"><%= ngt("modules_page.contact.subject_label") %></label>
+          <input id="ticket-subject" type="text" class="form-control" placeholder="<%= ngt("modules_page.contact.subject_placeholder") %>"
+                 data-support-form-target="subject" data-action="input->support-form#changed" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="ticket-message"><%= ngt("modules_page.contact.message_label") %></label>
+          <textarea id="ticket-message" class="form-control" rows="5" placeholder="<%= ngt("modules_page.contact.message_placeholder") %>"
+                    data-support-form-target="message" data-action="input->support-form#changed"></textarea>
+        </div>
+        <div class="mb-3" data-support-form-target="files">
+          <div class="form-label"><%= ngt("modules_page.contact.attachments_label") %></div>
+          <label class="contact-file-drop" for="ticket-files">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <span><%= ngt("modules_page.contact.attachments_hint") %></span>
+          </label>
+          <input id="ticket-files" type="file" class="visually-hidden" multiple
+                 accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,video/mp4,video/quicktime,video/webm"
+                 data-action="change->support-form#picked" />
+        </div>
+
+        <button type="button" class="btn btn-primary" disabled data-support-form-target="submit" data-action="support-form#submit">
+          <i class="bi bi-send-check"></i>
+          <%= ngt("modules_page.contact.send") %>
+        </button>
+      </div>
+    </div>
+
+    <%= render "web/admin/support/history", tickets: @tickets %>
+  </div>
+</div>

@@ -1,0 +1,21 @@
+<%# ng: pagination %>
+<%# PaginationComponent. The caller writes the <app-pagination> host. %>
+<% unit = local_assigns.fetch(:unit, "common.results") %>
+<% if meta %>
+  <div class="app-pagination">
+    <span class="app-pagination-count"><%= meta[:total] %> <%= ngt(unit) %></span>
+    <% if meta[:total_pages] > 1 %>
+      <div class="app-pagination-controls">
+        <span class="text-muted-token">
+          <%= ngt("common.page") %> <%= meta[:page] %> <%= ngt("common.of") %> <%= meta[:total_pages] %>
+        </span>
+        <button type="button" class="btn btn-outline-secondary btn-sm"<%= raw(" disabled") if meta[:page] <= 1 %> data-action="<%= action %>" data-page="<%= meta[:page] - 1 %>">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm"<%= raw(" disabled") if meta[:page] >= meta[:total_pages] %> data-action="<%= action %>" data-page="<%= meta[:page] + 1 %>">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    <% end %>
+  </div>
+<% end %>

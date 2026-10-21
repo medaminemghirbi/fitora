@@ -17,7 +17,8 @@ module RuboCop
       # single missed check on one future endpoint is exactly the failure
       # mode this cop exists to make impossible to merge.
       #
-      # Exempt: app/controllers/api/v1/superadmin/** — Fitora's own console is
+      # Exempt: app/controllers/api/v1/superadmin/** and its web twin,
+      # app/controllers/web/superadmin/** — Fitora's own console is
       # deliberately cross-tenant by design (it manages every company).
       class UnscopedTenantQuery < RuboCop::Cop::Base
         MSG = "%<receiver>s.%<method>s is unscoped — a cross-tenant data leak waiting to happen if nothing else " \
@@ -72,7 +73,8 @@ module RuboCop
         end
 
         def superadmin_namespace?
-          processed_source.path.to_s.include?("/controllers/api/v1/superadmin/")
+          path = processed_source.path.to_s
+          path.include?("/controllers/api/v1/superadmin/") || path.include?("/controllers/web/superadmin/")
         end
       end
     end

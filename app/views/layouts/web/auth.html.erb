@@ -1,0 +1,18 @@
+<%# The frame of the account screens (sign in…): index.html + AppComponent,
+    with the routed page in place of <router-outlet>'s sibling. %>
+<!doctype html>
+<html lang="<%= locale_code %>" data-theme="<%= theme %>" dir="<%= rtl? ? "rtl" : "ltr" %>">
+<head>
+  <%= render "layouts/web/head" %>
+</head>
+<body>
+  <app-root>
+    <router-outlet></router-outlet>
+    <%= yield %>
+    <%= render "web/shared/app_root_tail" %>
+  </app-root>
+  <%= render "layouts/web/locale_form" %>
+  <%# Markup a page puts in later (a state it moves to), kept outside the page. %>
+  <%= yield :templates %>
+</body>
+</html>

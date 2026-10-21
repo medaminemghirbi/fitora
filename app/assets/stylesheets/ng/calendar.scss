@@ -1,0 +1,218 @@
+// GENERATED from frontend/src/app/features/admin/calendar/calendar.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+.calendar-card {
+  --fc-border-color: var(--color-border);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: var(--color-bg);
+  --fc-list-event-hover-bg-color: var(--color-primary-soft);
+  --fc-today-bg-color: var(--color-primary-soft);
+  --fc-event-bg-color: var(--color-primary);
+  // Deliberately the page background, not the event color: back-to-back
+  // bookings in the same column butt up against each other with zero gap
+  // (FullCalendar positions each by time, not by flow), so a border that
+  // matched the fill would be invisible right where it matters most —
+  // between two same-color events — making the boundary between them
+  // disappear entirely.
+  --fc-event-border-color: var(--color-surface);
+  --fc-event-text-color: #fff;
+  --fc-button-bg-color: var(--color-primary);
+  --fc-button-border-color: var(--color-primary);
+
+  ::ng-deep .fc {
+    color: var(--color-text);
+    font-family: var(--font-family);
+  }
+
+  ::ng-deep .fc-col-header-cell-cushion,
+  ::ng-deep .fc-timegrid-slot-label-cushion,
+  ::ng-deep .fc-list-day-cushion {
+    color: var(--color-text-secondary);
+  }
+
+  ::ng-deep .fc-event {
+    border-radius: var(--radius-sm);
+    border-width: 2px;
+    padding: 2px 5px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    // A short (e.g. 30-45min) slot isn't tall enough for every line the
+    // block renders — clip inside it instead of bleeding into the row below.
+    overflow: hidden;
+  }
+
+  // The block's own layout: time, activity, coach, how full it is. The count
+  // is pinned to the bottom so it stays put whether or not a coach is shown.
+  ::ng-deep .fx-ev {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    line-height: 1.25;
+  }
+
+  ::ng-deep .fx-ev-time { font-size: 0.65rem; font-weight: 700; opacity: 0.85; font-variant-numeric: tabular-nums; }
+
+  // A short session says its time and what it is, on one line, and nothing
+  // else. Four stacked lines in twenty pixels read as a smear.
+  ::ng-deep .fx-ev-line {
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::ng-deep .fx-ev-count.is-hidden { display: none; }
+
+  // Short blocks are centred rather than top-aligned: with one line, the
+  // padding that gives a tall block its shape leaves a short one lopsided.
+  ::ng-deep .fx-ev--compact { justify-content: center; }
+  ::ng-deep .fx-ev-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  ::ng-deep .fx-ev-coach {
+    font-size: 0.68rem;
+    opacity: 0.85;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    // Says "sans coach" rather than leaving a gap where a name would be.
+    // Weight as well as colour, since the block is already coloured.
+    &.is-missing { font-weight: 700; opacity: 1; }
+  }
+
+  // A session nobody is running. Amber on the block itself, so it is
+  // findable while scanning a week rather than only once clicked.
+  ::ng-deep .fx-ev.is-uncoached {
+    background: var(--color-warning-soft);
+    border-inline-start: 3px solid var(--color-warning);
+    // Amber text on an amber ground does not carry at this size; the ink
+    // stays dark and the ground does the signalling.
+    color: var(--color-text);
+  }
+
+  // An open one-to-one slot: an hour still for sale. Dashed, so it reads as a
+  // place to fill rather than a session that is happening.
+  ::ng-deep .fx-ev.is-open {
+    outline: 1px dashed currentColor;
+    outline-offset: -3px;
+    opacity: 0.85;
+  }
+
+  // Happening now: the accent, matching the dashboard's live row.
+  ::ng-deep .fx-ev.is-now {
+    box-shadow: inset 0 0 0 2px var(--color-accent);
+  }
+
+  ::ng-deep .fx-ev-count {
+    margin-top: auto;
+    align-self: flex-start;
+    font-size: 0.65rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-pill);
+    padding: 0 0.35rem;
+
+    &.is-full { background: rgba(0, 0, 0, 0.28); }
+  }
+
+  // Month view: one line, no room for anything else.
+  ::ng-deep .fx-ev--compact {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.3rem;
+
+    .fx-ev-count { margin-top: 0; margin-inline-start: auto; }
+  }
+
+  // FullCalendar makes the title `position: sticky` so it stays visible while
+  // scrolling inside a tall event; on a descendant that defeats the
+  // `overflow: hidden` above, letting a line escape the block.
+  ::ng-deep .fc-event-title.fc-sticky { position: static; }
+
+  // Slot rows tall enough for the three lines a block renders.
+  ::ng-deep .fc-timegrid-slot { height: 2.35rem; }
+  ::ng-deep .fc-col-header-cell { padding: 0.45rem 0; font-weight: 600; }
+
+  ::ng-deep .fc-event.fc-status-cancelled {
+    --fc-event-bg-color: var(--color-border);
+    --fc-event-border-color: var(--color-border);
+    --fc-event-text-color: var(--color-text-secondary);
+    text-decoration: line-through;
+  }
+
+  // Ended but never cancelled (e.g. yesterday's booking) — greyed out like
+  // a cancelled session, but no strikethrough since nothing was cancelled.
+  ::ng-deep .fc-event.fc-session-ended {
+    --fc-event-bg-color: var(--color-border);
+    --fc-event-border-color: var(--color-border);
+    --fc-event-text-color: var(--color-text-secondary);
+  }
+
+  ::ng-deep .fc-event.fc-status-completed {
+    --fc-event-bg-color: var(--color-success);
+    --fc-event-border-color: var(--color-success);
+  }
+
+  ::ng-deep .fc-daygrid-day.fc-day-today,
+  ::ng-deep .fc-timegrid-col.fc-day-today {
+    background: var(--color-primary-soft);
+  }
+
+  // Applied to the exact cell clicked to open the "new session" modal —
+  // stays highlighted while the modal is open so it's clear which date/time
+  // it was bound from, and removed as soon as the modal closes.
+  ::ng-deep .fc-cell-selected {
+    background: var(--color-primary-soft) !important;
+    box-shadow: inset 0 0 0 2px var(--color-primary);
+  }
+}
+
+.session-detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+
+  i {
+    width: 1.1rem;
+    display: inline-block;
+    color: var(--color-primary);
+  }
+}
+
+.session-ended-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+// "Imprimer le planning" on Starter and the trial: a Pro tool, so the button
+// leads to the plan and says so.
+.fx-cal-print-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.fx-pro-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--color-text);
+  color: var(--color-surface);
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}

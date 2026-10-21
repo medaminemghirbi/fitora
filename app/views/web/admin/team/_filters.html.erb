@@ -1,0 +1,29 @@
+<%# ng: team %>
+<%# Two questions, two rows: which kind of person (the tabs), and what they
+    can sign in to (the pills). Only for a team with someone in it. As
+    rendered: no tab but "Tous" and no pill but "Tous" chosen; team-page
+    marks the current ones. %>
+<% if members.any? %>
+  <% tabs = [ [ "all", ngt("team.tab_all"), "var(--color-primary)", members.size ],
+              [ "coaches", team_role_name("coach"), "var(--color-info)", members.count { |m| m[:coach] } ] ]
+     tabs << [ "backoffice", ngt("team.tab_backoffice"), "var(--color-success)", members.count { |m| m[:staff] } ] if current_user.admin? %>
+  <nav class="fx-cat-tabs" aria-label="<%= ngt("team.title") %>">
+    <% tabs.each do |id, label, color, count| %>
+      <button type="button" class="fx-cat-tab<%= " is-active" if id == "all" %>" style="--fx-tab-color: <%= color %>;" data-tab="<%= id %>" data-action="team-page#setTab">
+        <%= label %> <span class="fx-cat-tab-count"><%= count %></span>
+      </button>
+    <% end %>
+  </nav>
+
+  <div class="lst-filters">
+    <app-status-filter>
+      <%= render "web/shared/status_filter", name: "team-access", legend: ngt("team.filter_access"), value: "", action: "change->team-page#setAccess",
+                 options: [
+                   { value: "", label: ngt("common.all"), count: members.size, color: "var(--color-primary)" },
+                   { value: "mobile", label: ngt("team.access_mobile"), count: members.count { |m| m[:has_mobile] }, color: "var(--color-info)" },
+                   { value: "web", label: ngt("team.access_web"), count: members.count { |m| m[:has_web] }, color: "var(--color-success)" },
+                   { value: "none", label: ngt("team.access_none"), count: members.count { |m| !m[:has_mobile] && !m[:has_web] }, color: "var(--color-muted)" }
+                 ] %>
+    </app-status-filter>
+  </div>
+<% end %>

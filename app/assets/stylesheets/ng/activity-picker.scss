@@ -1,0 +1,235 @@
+// GENERATED from frontend/src/app/shared/ui/activity-picker.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+.ap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ap-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ap-search {
+  flex: 1 1 240px;
+}
+
+.ap-count {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+
+  strong { color: var(--color-primary); }
+}
+
+/* ---- the catalogue ------------------------------------------------------ */
+.ap-family {
+  min-width: 0;
+}
+
+.ap-family-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.ap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-2);
+}
+
+.ap-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-height: 112px;
+  padding: var(--space-3);
+  text-align: start;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-primary-border);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+  }
+
+  &.is-on {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+
+    .ap-check { opacity: 1; transform: scale(1); }
+  }
+}
+
+.ap-check {
+  position: absolute;
+  top: var(--space-2);
+  inset-inline-end: var(--space-2);
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-on-primary);
+  font-size: 0.8rem;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.ap-emoji {
+  font-size: 1.9rem;
+  line-height: 1.1;
+  margin-bottom: 0.15rem;
+}
+
+.ap-name {
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  line-height: 1.25;
+}
+
+.ap-meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.ap-adopted {
+  margin-top: auto;
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.ap-empty {
+  margin: 0;
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* ---- what the gym names itself ------------------------------------------ */
+.ap-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ap-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.35rem 0.3rem 0.75rem;
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.ap-chip-x {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-secondary);
+
+  &:hover { background: var(--color-surface-hover); color: var(--color-text); }
+}
+
+.ap-other {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  text-align: start;
+
+  > i { font-size: 1.2rem; color: var(--color-primary); }
+
+  span { display: flex; flex-direction: column; }
+  small { color: var(--color-text-secondary); font-size: var(--font-size-xs); }
+
+  &:hover { border-color: var(--color-primary); background: var(--color-surface-hover); }
+}
+
+.ap-custom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+
+  label { font-size: 0.8125rem; font-weight: 600; margin: 0; }
+}
+
+.ap-emojis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.ap-emoji-btn {
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 1.15rem;
+  line-height: 1;
+
+  &:hover { border-color: var(--color-primary-border); }
+  &.is-on { border-color: var(--color-primary); background: var(--color-primary-soft); }
+}
+
+.ap-custom-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+@media (max-width: 480px) {
+  .ap-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ap-tile { min-height: 104px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ap-tile, .ap-check { transition: none; }
+  .ap-tile:hover { transform: none; }
+}

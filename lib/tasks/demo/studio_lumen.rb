@@ -210,7 +210,7 @@ module Demo
       slot&.book!(chiraz, trial: true)
 
       fixtures = {
-        app: "http://localhost:4200",
+        app: "http://localhost:3000",
         admin: { email: admin.email, password: password, name: admin.full_name },
         coach: { email: amine.email, password: password, name: amine.full_name },
         member: { email: salma.email, password: password, name: salma.full_name },

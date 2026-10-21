@@ -1,0 +1,100 @@
+// GENERATED from frontend/src/app/features/member/profile/member-profile.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+@use "ng/member-schedule";
+
+.mb-contact {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  margin-top: -0.75rem;
+  margin-bottom: var(--space-5);
+}
+
+.mb-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.mb-card-head {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.mb-sub-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.mb-muted {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+}
+
+.mb-rate {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.2rem;
+}
+
+.mb-list--flush {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  margin-top: var(--space-3);
+}
+
+// What a member opens their own page to find out: how many sessions are
+// left. It was a muted line under two other muted lines.
+.mb-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: var(--space-6) var(--space-4);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-xl);
+  background: var(--color-primary-active);
+  color: #fff;
+  text-align: center;
+}
+
+.mb-hero-value {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.mb-hero-label {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.mb-hero-plan {
+  margin-top: var(--space-3);
+  font-size: var(--font-size-base);
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.mb-hero-until {
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.64);
+}
+
+.mb-card--danger {
+  border-color: var(--color-danger-soft);
+}
+
+.mb-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}

@@ -19,6 +19,8 @@ class InvoiceSerializer
       trial: invoice.trial,
       issued_at: invoice.issued_at,
       issued_by: invoice.issued_by&.full_name,
+      # nil while the invoice is still to pay.
+      paid_at: invoice.paid_at,
       notes: invoice.notes
     }
   end

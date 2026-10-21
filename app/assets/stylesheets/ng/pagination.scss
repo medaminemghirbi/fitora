@@ -1,0 +1,21 @@
+// GENERATED from frontend/src/app/shared/components/pagination.component.ts by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+
+    .app-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem var(--space-5, 1.5rem);
+      font-size: 0.85rem;
+    }
+    .app-pagination-count {
+      color: var(--color-text-secondary);
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+    .app-pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  

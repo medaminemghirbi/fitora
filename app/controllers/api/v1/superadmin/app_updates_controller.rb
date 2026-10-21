@@ -17,11 +17,8 @@ module Api
 
         # POST /api/v1/superadmin/app_updates (multipart/form-data — media[] are uploads)
         def create
-          update = AppUpdate.new(update_params.merge(created_by: current_user))
-          update.media.attach(params[:media]) if params[:media].present?
-
-          if update.save
-            notify_recipients(update)
+          update = ReleaseNotes.publish(update_params, media: params[:media], by: current_user)
+          if update.persisted?
             render json: { app_update: AppUpdateSerializer.new(update).as_json }, status: :created
           else
             render_errors(update)
@@ -32,26 +29,6 @@ module Api
 
         def update_params
           params.require(:app_update).permit(:version, :title, :description)
-        end
-
-        def notify_recipients(update)
-          data = { version: update.version, title: update.title, published_by: current_user.full_name }
-
-          User.superadmin.active.where.not(id: current_user.id).find_each do |superadmin|
-            Notification.push(
-              recipient: superadmin, kind: "system_update", data: data, url: "/superadmin/updates",
-              dedup_key: "system_update-#{update.id}-#{superadmin.id}", subject: update
-            )
-          end
-
-          # Every customer sees the release notes too, on their own read-only
-          # page — superadmins get the editable /superadmin/updates instead.
-          User.admin.active.find_each do |admin|
-            Notification.push(
-              recipient: admin, kind: "system_update", data: data, url: "/admin/updates",
-              dedup_key: "system_update-#{update.id}-#{admin.id}", subject: update
-            )
-          end
         end
       end
     end

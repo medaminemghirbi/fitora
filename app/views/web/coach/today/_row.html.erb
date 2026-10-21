@@ -1,0 +1,24 @@
+<%# ng: coach-today %>
+<%# One booked person in the coach's roster, and the statuses to mark them
+    with (CoachTodayComponent#statuses), the one they have filled in. %>
+<% status = booking.dig(:attendance, :status) %>
+<tr data-booking-id="<%= booking[:booking_id] %>">
+  <td><%= booking.dig(:client, :full_name) %></td>
+  <td><%= booking.dig(:client, :phone).presence || "—" %></td>
+  <td>
+    <% if status %>
+      <app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: status } do %><%= ngt("coach.attendance_#{status}") %><% end %></app-status-badge>
+    <% else %>
+      <span class="text-muted-token small"><%= ngt("coach.not_marked") %></span>
+    <% end %>
+  </td>
+  <td>
+    <div class="d-flex gap-1 flex-wrap justify-content-end">
+      <% %w[present absent late no_show].each do |option| %>
+        <button type="button" class="btn btn-sm <%= status == option ? "btn-primary" : "btn-outline-secondary" %>" data-action="coach-today#mark" data-coach-today-status-param="<%= option %>">
+          <%= ngt("coach.attendance_#{option}") %>
+        </button>
+      <% end %>
+    </div>
+  </td>
+</tr>

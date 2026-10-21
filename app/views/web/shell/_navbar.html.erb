@@ -1,0 +1,188 @@
+<%# ng: navbar %>
+<%# NavbarComponent as the admin shell uses it: no brand and no desktop nav
+    (the rail has them), the actions, and the mobile panel. What Angular
+    adds only while it is open — a menu, the mobile panel — is a <template>
+    the navbar controller inserts and removes the same way. %>
+<% user = bootstrap[:user]; companies = shell_switchable_companies; active = shell_active_company %>
+<header class="app-navbar app-navbar-menu" data-controller="navbar">
+  <div class="app-navbar-inner">
+    <a href="<%= nav.path(nav.home_page) %>" class="app-navbar-brand d-lg-none">
+      <span class="app-navbar-mark">
+        <% if bootstrap.dig(:branding, :logo_url).present? %>
+          <img src="<%= bootstrap.dig(:branding, :logo_url) %>" alt="" />
+        <% else %>
+          <i class="bi bi-lightning-charge-fill"></i>
+        <% end %>
+      </span>
+      <span class="d-none d-sm-inline">Fitora<% if (version = shell_version) %><small data-app-version="<%= version %>">v<%= version %></small><% end %></span>
+    </a>
+
+    <button type="button" class="app-navbar-burger d-lg-none" data-action="navbar#toggleMobile" data-navbar-target="burger"
+            aria-expanded="false" aria-label="<%= ngt("common.toggle_menu") %>">
+      <i class="bi bi-list"></i>
+    </button>
+    <% if (label_key = shell_page_label_key) %>
+      <span class="app-navbar-mobile-title d-lg-none"><%= ngt(label_key) %></span>
+    <% end %>
+
+    <span class="app-navbar-spacer d-none d-lg-block"></span>
+
+    <button type="button" class="app-navbar-search" data-palette-open>
+      <i class="bi bi-search"></i>
+      <span class="d-none d-md-inline"><%= ngt("palette.trigger") %></span>
+      <kbd class="d-none d-md-inline">⌘K</kbd>
+    </button>
+
+    <% if nav.admin? %>
+      <a href="<%= nav.path("support") %>" class="app-navbar-support d-none d-md-inline-flex<%= " is-active" if request.path.start_with?(nav.path("support")) %>">
+        <i class="bi bi-headset"></i>
+        <span><%= ngt("nav.support") %></span>
+      </a>
+    <% end %>
+
+    <app-notification-bell><%= render "web/shell/notification_bell" %></app-notification-bell>
+
+    <button type="button" class="icon-btn" data-action="navbar#toggleTheme" aria-label="<%= ngt("common.toggle_theme") %>">
+      <i class="bi <%= theme == "light" ? "bi-moon-stars" : "bi-sun" %>"></i>
+    </button>
+
+    <% if companies %>
+      <div class="dropdown-wrap d-none d-md-block">
+        <button type="button" class="app-company-switcher-trigger" data-action="navbar#toggle" data-navbar-menu-param="switcher" aria-expanded="false">
+          <% if active&.dig(:logo_url).present? %>
+            <img src="<%= active[:logo_url] %>" alt="" class="app-company-switcher-logo" />
+          <% else %>
+            <i class="bi bi-building"></i>
+          <% end %>
+          <span class="app-company-switcher-name"><%= active&.dig(:name) %></span>
+          <% if shell_switch_locked? %>
+            <i class="bi bi-lock-fill app-company-switcher-lock" aria-label="<%= ngt("nav.switch_needs_pro") %>"></i>
+          <% end %>
+          <i class="bi bi-chevron-down"></i>
+        </button>
+        <template data-navbar-target="menu" data-menu="switcher">
+          <div class="dropdown-menu-custom">
+            <div class="dropdown-user-info">
+              <strong><%= ngt("nav.switch_company") %></strong>
+            </div>
+            <% companies.each do |c| %>
+              <button type="button" class="dropdown-item-custom app-company-switcher-item<%= " is-active" if c[:active] %>"<%= raw(" disabled") if !c[:active] && !shell_can_switch? %> data-action="navbar#switch" data-navbar-url-param="<%= c[:active] ? "" : "/admin/#{salle.id}/switch/#{c[:id]}" %>">
+                <% if c[:logo_url].present? %>
+                  <img src="<%= c[:logo_url] %>" alt="" class="app-company-switcher-logo" />
+                <% else %>
+                  <i class="bi bi-building"></i>
+                <% end %>
+                <span class="app-company-switcher-name"><%= c[:name] %></span>
+                <% if c[:active] %>
+                  <i class="bi bi-check-lg ms-auto"></i>
+                <% elsif !shell_can_switch? %>
+                  <i class="bi bi-lock ms-auto" aria-hidden="true"></i>
+                <% end %>
+              </button>
+            <% end %>
+            <% if shell_switch_locked? %>
+              <% if nav.admin? %>
+                <a href="<%= nav.path("subscription") %>" class="app-company-switcher-locked">
+                  <i class="bi bi-lock-fill" aria-hidden="true"></i> <%= ngt("nav.switch_needs_pro") %>
+                </a>
+              <% else %>
+                <p class="app-company-switcher-locked">
+                  <i class="bi bi-lock" aria-hidden="true"></i> <%= ngt("nav.switch_needs_pro_staff") %>
+                </p>
+              <% end %>
+            <% end %>
+            <% if nav.admin? && nav.pro_features? %>
+              <a href="<%= nav.path("salles") %>" class="dropdown-item-custom app-company-switcher-manage">
+                <i class="bi bi-buildings"></i> <%= ngt("nav.manage_salles") %>
+              </a>
+            <% end %>
+          </div>
+        </template>
+      </div>
+    <% end %>
+
+    <div class="dropdown-wrap">
+      <button type="button" class="user-menu-trigger" data-action="navbar#toggle" data-navbar-menu-param="user"
+              aria-label="<%= user[:full_name] %>" aria-expanded="false">
+        <app-avatar><%= render "web/shared/avatar", name: user[:full_name].to_s, size: 32 %></app-avatar>
+      </button>
+      <template data-navbar-target="menu" data-menu="user">
+        <div class="dropdown-menu-custom dropdown-menu-end">
+          <div class="dropdown-user-info">
+            <strong><%= user[:full_name] %></strong>
+            <span><%= user[:email] %></span>
+          </div>
+          <% nav.secondary.each do |item| %>
+            <a href="<%= nav.path(item) %>" class="dropdown-item-custom">
+              <i class="bi <%= item.icon %>"></i> <%= ngt(item.label_key) %>
+            </a>
+          <% end %>
+          <button type="button" class="dropdown-item-custom" data-controller="form-submit" data-form-submit-form-value="sign-out-form" data-action="form-submit#submit">
+            <i class="bi bi-box-arrow-right"></i> <%= ngt("auth.logout") %>
+          </button>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <template data-navbar-target="mobile">
+    <div class="app-navbar-mobile d-lg-none">
+      <% if companies %>
+        <div class="app-navbar-m-group d-md-none"><%= ngt("nav.switch_company") %></div>
+        <% companies.each do |c| %>
+          <button type="button" class="app-navbar-m-item d-md-none<%= " is-active" if c[:active] %>"<%= raw(" disabled") if !c[:active] && !shell_can_switch? %> data-action="navbar#switch" data-navbar-url-param="<%= c[:active] ? "" : "/admin/#{salle.id}/switch/#{c[:id]}" %>">
+            <i class="bi bi-building"></i> <%= c[:name] %>
+            <% if c[:active] %>
+              <i class="bi bi-check-lg ms-auto"></i>
+            <% elsif !shell_can_switch? %>
+              <i class="bi bi-lock ms-auto" aria-hidden="true"></i>
+            <% end %>
+          </button>
+        <% end %>
+        <% if shell_switch_locked? %>
+          <% if nav.admin? %>
+            <a href="<%= nav.path("subscription") %>" class="app-navbar-m-item app-company-switcher-locked d-md-none">
+              <i class="bi bi-lock-fill" aria-hidden="true"></i> <%= ngt("nav.switch_needs_pro") %>
+            </a>
+          <% else %>
+            <p class="app-company-switcher-locked d-md-none">
+              <i class="bi bi-lock" aria-hidden="true"></i> <%= ngt("nav.switch_needs_pro_staff") %>
+            </p>
+          <% end %>
+        <% end %>
+      <% end %>
+      <% if (dash = nav.dashboard) %>
+        <a href="<%= nav.path(dash) %>" class="app-navbar-m-item<%= " is-active" if shell_active?(dash) %>">
+          <%= ngt(dash.label_key) %>
+        </a>
+      <% end %>
+      <% nav.groups.each do |group| %>
+        <% unless nav.solo(group) %>
+          <div class="app-navbar-m-group"><%= ngt(group.label_key) %></div>
+        <% end %>
+        <% group.items.each do |item| %>
+          <a href="<%= nav.path(item) %>" class="app-navbar-m-item<%= " is-active" if shell_active?(item) %>">
+            <i class="bi <%= item.icon %>"></i>
+            <%= ngt(item.label_key) %>
+            <% if item.coming_soon %>
+              <span class="app-navbar-soon"><%= ngt("nav.coming_soon") %></span>
+            <% end %>
+          </a>
+        <% end %>
+      <% end %>
+      <% if nav.admin? %>
+        <a href="<%= nav.path("support") %>" class="app-navbar-m-item<%= " is-active" if request.path.start_with?(nav.path("support")) %>">
+          <i class="bi bi-headset"></i> <%= ngt("nav.support") %>
+        </a>
+      <% end %>
+      <% if nav.secondary.any? %>
+        <div class="app-navbar-m-group"><%= ngt("nav.settings") %></div>
+        <% nav.secondary.each do |item| %>
+          <a href="<%= nav.path(item) %>" class="app-navbar-m-item<%= " is-active" if shell_active?(item) %>">
+            <i class="bi <%= item.icon %>"></i> <%= ngt(item.label_key) %>
+          </a>
+        <% end %>
+      <% end %>
+    </div>
+  </template>
+</header>

@@ -1,0 +1,411 @@
+// GENERATED from frontend/src/styles/_shell.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// APP SHELL CHROME
+// ----------------------------------------------------------------------------
+// The frame an authenticated area is rendered inside: the sidebar, the top
+// bar, the content well, and the small controls that live in them (icon
+// buttons, dropdown menus, the user menu).
+//
+// Was _adminlte.scss. The name was left over from the superadmin template this
+// started as, and had stopped describing the contents — nothing here is
+// SuperadminLTE any more, and the product should not look like a superadmin template.
+// The shell-specific rules will move into the shell components themselves in
+// the redesign; the shared controls will become primitives.
+// ============================================================================
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar — dark navy, always (does not follow the light/dark toggle)
+// ---------------------------------------------------------------------------
+.app-sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  display: flex;
+  flex-direction: column;
+  border-inline-end: 1px solid var(--sidebar-border);
+  transition: width var(--transition-base), transform var(--transition-base);
+  z-index: var(--z-sidebar);
+
+  &.is-collapsed {
+    width: var(--sidebar-width-collapsed);
+
+    .sidebar-brand-text,
+    .nav-link-label,
+    .sidebar-section-label,
+    .sidebar-soon,
+    .sidebar-link,
+    .sidebar-header { justify-content: center; }
+  }
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: var(--topbar-height);
+  padding: 0 var(--space-4);
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--sidebar-border);
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  color: var(--sidebar-text-strong);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+
+  &:hover { color: #fff; text-decoration: none; }
+}
+
+.sidebar-brand-mark {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+
+  &:has(img) { background: transparent; }
+  img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: var(--radius-sm); }
+}
+
+.sidebar-brand-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  small { font-weight: 500; opacity: 0.6; font-size: 0.7rem; }
+}
+
+.sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-3) var(--space-3) var(--space-4);
+
+  // slim scrollbar
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 3px; }
+}
+
+.sidebar-section { margin-top: var(--space-4); }
+.sidebar-section:first-child { margin-top: 0; }
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-sm);
+  color: var(--sidebar-text);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  position: relative;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  > i:first-child {
+    font-size: 1.05rem;
+    width: 1.25rem;
+    text-align: center;
+    flex-shrink: 0;
+    opacity: 0.9;
+  }
+
+  .nav-link-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:hover { background: var(--sidebar-hover-bg); color: var(--sidebar-text-strong); text-decoration: none; }
+
+  &.active {
+    background: var(--sidebar-active-bg);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+    > i:first-child { opacity: 1; }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Topbar
+// ---------------------------------------------------------------------------
+.app-topbar {
+  height: var(--topbar-height);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-topbar);
+  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+  backdrop-filter: saturate(180%) blur(8px);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-5);
+  gap: var(--space-4);
+}
+
+.app-topbar-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.05rem;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  flex-shrink: 0;
+
+  &:hover { background: var(--color-surface-hover); color: var(--color-text); }
+}
+
+// ---------------------------------------------------------------------------
+// Dropdown menus (topbar user / language)
+// ---------------------------------------------------------------------------
+.dropdown-wrap { position: relative; }
+
+.dropdown-menu-custom {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-start: 0;
+  min-width: 210px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 0.35rem;
+  z-index: var(--z-dropdown);
+  animation: fx-pop var(--transition-fast);
+}
+.dropdown-menu-end { inset-inline-start: auto; inset-inline-end: 0; }
+
+.dropdown-item-custom {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  text-align: start;
+  border: none;
+  background: none;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  text-decoration: none;
+  cursor: pointer;
+
+  i { font-size: 0.95rem; color: var(--color-text-secondary); width: 1rem; text-align: center; }
+  &:hover { background: var(--color-surface-hover); text-decoration: none; }
+  &.active { color: var(--color-primary); font-weight: 600; i { color: var(--color-primary); } }
+}
+
+.dropdown-user-info {
+  display: flex;
+  flex-direction: column;
+  padding: 0.6rem 0.6rem 0.7rem;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 0.35rem;
+
+  strong { font-size: 0.875rem; color: var(--color-text); }
+  span { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+}
+
+.user-menu-trigger {
+  background: none;
+  border: none;
+  padding: 0.15rem;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+  &:hover { background: var(--color-surface-hover); }
+}
+
+// ---------------------------------------------------------------------------
+// Content workspace
+// ---------------------------------------------------------------------------
+.app-content {
+  flex: 1;
+  padding: var(--space-6) var(--space-6) var(--space-8);
+  // `clip` (not `hidden`) contains stray horizontal overflow without
+  // becoming a scroll container — keeps `position: sticky` descendants
+  // working relative to the viewport.
+  overflow-x: clip;
+}
+
+@media (max-width: 767.98px) {
+  .app-content { padding: var(--space-4) var(--space-4) var(--space-7); }
+}
+
+// Legacy page-header used by not-yet-migrated pages — kept in sync with .fx-page-header
+.content-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+
+  h1 { font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-text); margin: 0; letter-spacing: -0.02em; }
+  p { color: var(--color-text-secondary); margin: 0.35rem 0 0; }
+}
+
+// ---------------------------------------------------------------------------
+// Cards
+// ---------------------------------------------------------------------------
+.app-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  margin-bottom: var(--space-5);
+  overflow: hidden;
+}
+
+.app-card-header {
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+
+  h2, h3 { font-size: 1.0625rem; font-weight: 600; color: var(--color-text); margin: 0; }
+}
+
+.app-card-body { padding: var(--space-5); }
+.app-card-body--flush { padding: 0; }
+
+.app-card > .table:first-child thead th,
+.app-card-body--flush .table thead th { border-top: 0; }
+
+// ---------------------------------------------------------------------------
+// Legacy stat-box (still used until every page moves to .fx-kpi)
+// ---------------------------------------------------------------------------
+.stat-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 100%;
+}
+.stat-box-value { font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-text); line-height: 1.15; letter-spacing: -0.02em; }
+.stat-box-label { font-size: 0.8125rem; color: var(--color-text-secondary); }
+.stat-box-icon {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem;
+  background: var(--color-primary-soft); color: var(--color-primary);
+  flex-shrink: 0;
+}
+.stat-box--success .stat-box-icon { background: var(--color-success-soft); color: var(--color-success); }
+.stat-box--warning .stat-box-icon { background: var(--color-warning-soft); color: var(--color-warning); }
+.stat-box--info .stat-box-icon { background: var(--color-info-soft); color: var(--color-info); }
+.stat-box--danger .stat-box-icon { background: var(--color-danger-soft); color: var(--color-danger); }
+
+// ---------------------------------------------------------------------------
+// App pagination (used by app-pagination component)
+// ---------------------------------------------------------------------------
+.app-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-border);
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+.app-pagination-controls { display: flex; gap: 0.5rem; }
+
+// ---------------------------------------------------------------------------
+// Mobile / responsive sidebar
+// ---------------------------------------------------------------------------
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  z-index: calc(var(--z-sidebar) - 1);
+  animation: fx-fade var(--transition-base);
+}
+
+@media (max-width: 991.98px) {
+  .app-sidebar {
+    position: fixed;
+    inset-inline-start: 0;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    transform: translateX(-100%);
+
+    [dir="rtl"] & { transform: translateX(100%); }
+    &.is-open { transform: translateX(0); box-shadow: var(--shadow-lg); }
+    &.is-collapsed { width: var(--sidebar-width); }
+  }
+}

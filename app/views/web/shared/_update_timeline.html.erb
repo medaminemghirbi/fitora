@@ -1,0 +1,46 @@
+<%# ng: update-timeline %>
+<%# UpdateTimelineComponent: the release notes, newest first. The caller
+    writes the <app-update-timeline> host. %>
+<% date_format = local_assigns.fetch(:date_format, "dd/MM/yyyy") %>
+<div class="updates-timeline">
+  <% updates.each_with_index do |u, i| %>
+    <div class="update-entry" style="animation-delay: <%= i * 40 %>ms;">
+      <div class="update-entry-rail">
+        <span class="update-entry-dot<%= " is-latest" if i.zero? %>"></span>
+        <% if i < updates.size - 1 %><span class="update-entry-line"></span><% end %>
+      </div>
+      <div class="update-entry-card">
+        <div class="update-entry-head">
+          <span class="update-entry-version" dir="ltr">v<%= u[:version] %></span>
+          <% if i.zero? %><span class="update-entry-badge"><%= ngt("updates.latest") %></span><% end %>
+          <span class="update-entry-date"><%= ng_date(u[:published_at], date_format) %></span>
+        </div>
+        <h3><%= u[:title] %></h3>
+        <% if u[:description].present? %><p class="update-entry-desc"><%= u[:description] %></p><% end %>
+
+        <% if u[:media].present? %>
+          <div class="update-entry-media">
+            <% u[:media].each do |m| %>
+              <% if m[:content_type].to_s.start_with?("image/") %>
+                <a href="<%= m[:url] %>" target="_blank" rel="noopener" class="update-media-tile">
+                  <img src="<%= m[:url] %>" alt="<%= m[:filename] %>" />
+                </a>
+              <% else %>
+                <a href="<%= m[:url] %>" target="_blank" rel="noopener" class="update-media-tile">
+                  <video src="<%= m[:url] %>" muted preload="metadata"></video>
+                  <span class="update-media-play"><i class="bi bi-play-fill"></i></span>
+                </a>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+
+        <% if local_assigns[:show_author] %>
+          <span class="update-entry-author">
+            <i class="bi bi-person-check"></i> <%= u.dig(:created_by, :full_name) %>
+          </span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

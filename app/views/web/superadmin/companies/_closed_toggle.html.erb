@@ -1,0 +1,9 @@
+<%# ng: superadmin-companies %>
+<%# How many gyms have their access shut, and the way to list only them —
+    shown whether or not the list is narrowed to them. %>
+<% if closed_count > 0 || closed %>
+  <button type="button" class="btn btn-sm ms-auto <%= closed ? "btn-outline-secondary" : "btn-warning" %>" data-superadmin-companies-target="toggle" data-action="superadmin-companies#toggleClosed">
+    <i class="bi bi-lock-fill"></i>
+    <%= ngt("superadmin.closed_access", count: closed_count) %>
+  </button>
+<% end %>

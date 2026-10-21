@@ -1,0 +1,41 @@
+<%# The folded-away filters (plan, activity, gender, joined between). %>
+<div class="fx-advanced" id="cl-advanced">
+  <div class="fx-advanced-field">
+    <label for="cl-f-activity"><%= ngt("clients.abo_activity") %></label>
+    <select id="cl-f-activity" class="form-select form-select-sm" data-filter="activity_id" data-action="change->clients-list#advancedChanged">
+      <option value=""><%= ngt("common.all") %></option>
+      <% catalogue[:activities].each do |a| %>
+        <option value="<%= a[:id] %>"<%= raw(" selected") if filters[:activity_id] == a[:id] %>><%= a[:emoji].present? ? "#{a[:emoji]} " : "" %><%= a[:name] %></option>
+      <% end %>
+    </select>
+  </div>
+
+  <div class="fx-advanced-field">
+    <label for="cl-f-plan"><%= ngt("contract_types.plan") %></label>
+    <select id="cl-f-plan" class="form-select form-select-sm" data-filter="contract_type_id" data-action="change->clients-list#advancedChanged">
+      <option value=""><%= ngt("common.all") %></option>
+      <% catalogue[:plans].each do |p| %>
+        <option value="<%= p[:id] %>"<%= raw(" selected") if filters[:contract_type_id] == p[:id] %>><%= p[:name] %></option>
+      <% end %>
+    </select>
+  </div>
+
+  <div class="fx-advanced-field">
+    <label for="cl-f-gender"><%= ngt("clients.gender") %></label>
+    <select id="cl-f-gender" class="form-select form-select-sm" data-filter="gender" data-action="change->clients-list#advancedChanged">
+      <option value=""><%= ngt("common.all") %></option>
+      <option value="male"<%= raw(" selected") if filters[:gender] == "male" %>><%= ngt("clients.gender_male") %></option>
+      <option value="female"<%= raw(" selected") if filters[:gender] == "female" %>><%= ngt("clients.gender_female") %></option>
+    </select>
+  </div>
+
+  <div class="fx-advanced-field">
+    <label for="cl-f-from"><%= ngt("clients.joined_from") %></label>
+    <input id="cl-f-from" type="date" class="form-control form-control-sm" value="<%= filters[:joined_from] %>" data-filter="joined_from" data-action="change->clients-list#advancedChanged" />
+  </div>
+
+  <div class="fx-advanced-field">
+    <label for="cl-f-to"><%= ngt("clients.joined_to") %></label>
+    <input id="cl-f-to" type="date" class="form-control form-control-sm" value="<%= filters[:joined_to] %>" data-filter="joined_to" data-action="change->clients-list#advancedChanged" />
+  </div>
+</div>

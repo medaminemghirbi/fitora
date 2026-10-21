@@ -1,0 +1,24 @@
+<%# ng: plans %>
+<%# PlansComponent, embedded: the toolbar once there is a list, the cards
+    (searched and paged), and the formule form (inside the stack, as in
+    Angular). %>
+<% plans = catalogue[:plans] %>
+<div class="fx-stack">
+  <%# The toolbar only once there is a list to search. %>
+  <% if plans.any? %>
+    <div class="fx-toolbar plan-toolbar">
+      <div class="fx-input-icon">
+        <i class="bi bi-search"></i>
+        <input type="search" class="form-control form-control-sm" value="<%= search_term %>" placeholder="<%= ngt("contract_types.search_placeholder") %>"
+               data-action="input->catalogue#search" />
+      </div>
+      <button type="button" class="btn btn-primary btn-sm ms-auto" data-action="catalogue#openPlanForm">
+        <i class="bi bi-plus-lg"></i> <%= ngt("contract_types.new") %>
+      </button>
+    </div>
+  <% end %>
+
+  <%= render "web/admin/catalogue/plans_list", plans: plans %>
+
+  <%= render "web/admin/catalogue/plan_modal" %>
+</div>

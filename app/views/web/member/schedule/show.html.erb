@@ -1,0 +1,28 @@
+<%# ng: member-schedule %>
+<%# ng-host: member-schedule %>
+<%# MemberScheduleComponent: the gym's upcoming sessions by day, each
+    bookable in one tap (member-schedule). @sessions is nil when no gym of
+    theirs has the app: the error state. %>
+<div class="mb-page" data-controller="member-schedule page-reload"
+     data-member-schedule-url-value="<%= web_member_bookings_path %>"
+     data-member-schedule-labels-value="<%= { booked: ngt("member.booked"), error: ngt("common.error_generic") }.to_json %>">
+  <h1 class="mb-title"><%= ngt("member.schedule_title") %></h1>
+
+  <% if @sessions.nil? %>
+    <app-error-state><%= render "web/shared/error_state", retry_action: "page-reload#reload" %></app-error-state>
+  <% elsif @sessions.empty? %>
+    <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("member.no_sessions_title"), body: ngt("member.no_sessions_body"), icon: "bi-calendar-week" } do %><% end %></app-empty-state>
+  <% else %>
+    <% @sessions.group_by { |s| s[:starts_at][0, 10] }.each do |date, sessions| %>
+      <section class="mb-day">
+        <h2 class="mb-day-head"><%= ng_date(date, "EEEE d MMMM") %></h2>
+
+        <ul class="mb-list">
+          <% sessions.each do |s| %>
+            <%= render "web/member/schedule/slot", s: s %>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  <% end %>
+</div>

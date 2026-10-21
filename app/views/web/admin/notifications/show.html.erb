@@ -1,0 +1,24 @@
+<%# ng: notification-detail %>
+<%# ng-host: notification-detail %>
+<%# NotificationDetailComponent: one notification, read on opening, with the
+    way to what it is about. %>
+<% text = notification_text(@item) %>
+<div class="fx-page">
+  <a href="<%= admin_page_path("notifications") %>" class="notif-detail-back">
+    <i class="bi bi-chevron-left"></i> <%= ngt("notifications.detail_back") %>
+  </a>
+
+  <div class="app-card notif-detail-card">
+    <div class="app-card-body">
+      <app-notification-art><%= render "web/shared/notification_art", kind: @item[:kind] %></app-notification-art>
+      <h1><%= text[:title] %></h1>
+      <p class="notif-detail-body"><%= text[:body] %></p>
+      <p class="notif-detail-date"><%= ng_date(@item[:created_at], "EEEE d MMMM y, HH:mm") %></p>
+
+      <a href="<%= @item[:url] %>" class="btn btn-primary notif-detail-cta">
+        <%= ngt(Web::NotificationText.cta_key(@item)) %>
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+</div>

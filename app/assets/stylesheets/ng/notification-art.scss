@@ -1,0 +1,46 @@
+// GENERATED from frontend/src/app/layout/notifications/notification-art.component.ts by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+
+      .art {
+        position: relative;
+        width: 92px;
+        height: 92px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .art--mini { width: 40px; height: 40px; border-radius: 11px; }
+      .art[data-kind="employee_birthday"] { background: linear-gradient(150deg, #fef3c7, #fde68a); }
+      .art[data-kind="contract_expiring"] { background: linear-gradient(150deg, #e0e7ff, #c7d2fe); }
+      .art[data-kind="invoice_issued"] { background: linear-gradient(150deg, #dcfce7, #bbf7d0); }
+      .art[data-kind="session_cancelled"] { background: linear-gradient(150deg, #fee2e2, #fecaca); }
+      .art[data-kind="waitlist_promoted"] { background: linear-gradient(150deg, #dcfce7, #bbf7d0); }
+      .art[data-kind="subscription_expiring"] { background: linear-gradient(150deg, #e0e7ff, #c7d2fe); }
+      .art-svg { width: 76%; height: 76%; }
+      .art-emoji {
+        position: absolute;
+        bottom: 4px;
+        right: 5px;
+        font-size: 18px;
+        line-height: 1;
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+      }
+      .art--mini .art-emoji { font-size: 12px; bottom: 2px; right: 3px; }
+
+      .flame { animation: flicker 0.9s ease-in-out infinite alternate; transform-origin: 32px 15px; }
+      .confetti rect { animation: fall 1.8s linear infinite; }
+      .confetti rect:nth-child(2) { animation-delay: 0.4s; }
+      .confetti rect:nth-child(3) { animation-delay: 0.8s; }
+      .confetti rect:nth-child(4) { animation-delay: 1.2s; }
+      .pulse { animation: pulse 1.6s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+
+      @keyframes flicker { from { transform: scale(0.9) translateY(1px); opacity: 0.85; } to { transform: scale(1.1) translateY(-1px); opacity: 1; } }
+      @keyframes fall { 0% { transform: translateY(-6px) rotate(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(46px) rotate(220deg); opacity: 0; } }
+      @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.95; } 50% { transform: scale(1.12); opacity: 0.7; } }
+
+      @media (prefers-reduced-motion: reduce) {
+        .flame, .confetti rect, .pulse { animation: none; }
+        .confetti rect { opacity: 1; }
+      }
+    

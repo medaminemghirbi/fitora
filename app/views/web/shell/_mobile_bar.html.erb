@@ -1,0 +1,13 @@
+<%# ng: mobile-bar %>
+<%# MobileBarComponent: the three shortcuts at the foot of a phone screen. %>
+<% items = nav.mobile %>
+<% if items.any? %>
+  <nav class="app-mobilebar" aria-label="<%= ngt("nav.primary") %>">
+    <% items.each do |item| %>
+      <a href="<%= nav.path(item) %>" class="app-mobilebar-item<%= " is-active" if shell_active?(item) %>">
+        <i class="bi <%= item.icon %>"></i>
+        <span><%= ngt(item.label_key) %></span>
+      </a>
+    <% end %>
+  </nav>
+<% end %>

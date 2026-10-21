@@ -1,0 +1,6 @@
+<%# ng: member-profile %>
+<%# "Your details", closed: the address is the login; the button opens the form. %>
+<p class="mb-muted"><%= ngt("account.email_is_login") %></p>
+<button type="button" class="btn btn-outline-secondary" data-action="member-profile#editDetails">
+  <i class="bi bi-pencil"></i> <%= ngt("account.edit_details") %>
+</button>

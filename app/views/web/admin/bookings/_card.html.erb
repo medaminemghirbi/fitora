@@ -1,0 +1,74 @@
+<%# The chips, then the table (or the empty state) and the pagination. %>
+<% chips = bookings_chips(filters) %>
+<div class="app-card" id="bk-card" data-bookings-list-target="card">
+  <% if chips.any? %>
+    <div class="fx-active-filters p-3 pb-0" data-bookings-list-target="chips">
+      <% chips.each do |chip| %>
+        <span class="fx-active-chip">
+          <%= chip[:label] %>
+          <button type="button" data-action="bookings-list#clearChip" data-chip="<%= chip[:clear] %>" aria-label="<%= ngt("common.reset") %>">
+            <i class="bi bi-x"></i>
+          </button>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if bookings.empty? %>
+    <div class="app-card-body">
+      <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("bookings.empty_title"), body: ngt("bookings.empty_body"), icon: "bi-journal-check" } do %><% end %></app-empty-state>
+    </div>
+  <% else %>
+    <div class="fx-table-scroll">
+      <table class="table table-hover fx-grid">
+        <thead>
+          <tr>
+            <th><%= ngt("bookings.client") %></th>
+            <th><%= ngt("bookings.activity") %></th>
+            <th><%= ngt("bookings.location") %></th>
+            <th><%= ngt("bookings.coach") %></th>
+            <th><%= ngt("bookings.date") %></th>
+            <th><%= ngt("bookings.time") %></th>
+            <th><%= ngt("common.status") %></th>
+            <th class="text-end"><%= ngt("common.actions") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% bookings.each do |b| %>
+            <tr data-booking-id="<%= b[:id] %>">
+              <td>
+                <div class="fx-cell-lead">
+                  <app-avatar><%= render "web/shared/avatar", name: b.dig(:client, :full_name).to_s, size: 34 %></app-avatar>
+                  <div class="fx-cell-lead-text"><div class="fx-cell-lead-title"><%= ng_highlight(b.dig(:client, :full_name), filters[:q]) %></div></div>
+                </div>
+              </td>
+              <td><%= b.dig(:session, :activity_emoji).present? ? "#{b.dig(:session, :activity_emoji)} " : "" %><span><%= ng_highlight(b.dig(:session, :activity_name), filters[:q]) %></span></td>
+              <td><%= b.dig(:session, :company_name) %></td>
+              <td><%= b.dig(:session, :coach_name).presence || "—" %></td>
+              <td><%= ng_date(b.dig(:session, :starts_at), "mediumDate") %></td>
+              <td><%= ng_date(b.dig(:session, :starts_at), "HH:mm") %></td>
+              <td><app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: b[:status] } do %><%= ngt("bookings.status_#{b[:status]}") %><% end %></app-status-badge></td>
+              <td class="text-end">
+                <% if b[:status] == "confirmed" %>
+                  <%= render layout: "web/shared/action_menu" do %>
+                    <button type="button" class="fx-menu-item" data-action="bookings-list#remind">
+                      <i class="bi bi-bell"></i> <%= ngt("bookings.remind_client") %>
+                    </button>
+                    <div class="fx-menu-divider"></div>
+                    <button type="button" class="fx-menu-item is-danger" data-action="bookings-list#cancel">
+                      <i class="bi bi-x-circle"></i> <%= ngt("bookings.status_cancelled") %>
+                    </button>
+                  <% end %>
+                <% else %>
+                  <span class="fx-muted">—</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <app-pagination><%= render "web/shared/pagination", meta: meta, action: "bookings-list#goToPage" %></app-pagination>
+  <% end %>
+</div>

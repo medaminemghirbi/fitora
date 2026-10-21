@@ -1,0 +1,32 @@
+<%# The row under the title: the status pills, the advanced-filters toggle
+    (with how many of them are set), and "reset" when anything is set. %>
+<% options = [
+     [ "", "clients.filter_all", "all", "var(--color-primary)" ],
+     [ "active", "common.active", "active", "var(--color-success)" ],
+     [ "inactive", "common.inactive", "inactive", "var(--color-muted)" ],
+     [ "contract_active", "clients.filter_contract_active", "contract_active", "var(--color-info)" ],
+     [ "contract_expired", "clients.filter_contract_expired", "contract_expired", "var(--color-danger)" ],
+     [ "no_contract", "clients.filter_no_contract", "no_contract", "var(--color-warning)" ]
+   ].map { |value, label, count, color| { value: value, label: ngt(label), count: counts[count] || 0, color: color } } %>
+<% advanced_count = %i[contract_type_id activity_id gender joined_from joined_to].count { |k| filters[k].present? } %>
+<% any_filter = filters[:search].present? || filters[:status].present? || advanced_count > 0 %>
+<div class="lst-filters" id="cl-filters">
+  <app-status-filter>
+    <%= render "web/shared/status_filter", name: "client-status", legend: ngt("clients.filter_status"), value: filters[:status].to_s, options: options, action: "change->clients-list#statusChanged" %>
+  </app-status-filter>
+
+  <button type="button" class="btn btn-sm btn-outline-secondary fx-adv-toggle<%= " is-on" if advanced_open %>" aria-expanded="<%= advanced_open %>"
+          aria-controls="cl-advanced" data-action="clients-list#toggleAdvanced" data-clients-list-target="advancedToggle">
+    <i class="bi bi-sliders"></i>
+    <%= ngt("common.filters") %>
+    <% if advanced_count > 0 %>
+      <span class="fx-adv-count"><%= advanced_count %></span>
+    <% end %>
+  </button>
+
+  <% if any_filter %>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-action="clients-list#clearFilters">
+      <i class="bi bi-arrow-counterclockwise"></i> <%= ngt("common.reset") %>
+    </button>
+  <% end %>
+</div>

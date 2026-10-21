@@ -1,0 +1,34 @@
+<%# ng: notifications-inbox %>
+<%# The inbox's rows (and "more"); also what "more" fetches for the next page. %>
+<% if notifications.empty? && local_assigns.fetch(:first_page, true) && @page.to_i <= 1 %>
+  <div class="app-card"><div class="app-card-body">
+    <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("notifications.empty"), body: "", icon: "bi-bell-slash" } do %><% end %></app-empty-state>
+  </div></div>
+<% else %>
+  <div class="notif-inbox" data-notifications-inbox-target="list">
+    <% notifications.each do |n| %>
+      <% text = notification_text(n) %>
+      <a class="notif-item<%= " is-unread" unless n[:read] %>" href="<%= admin_page_path("notifications/#{n[:id]}") %>" data-notification-id="<%= n[:id] %>">
+        <app-notification-art><%= render "web/shared/notification_art", kind: n[:kind], mini: true %></app-notification-art>
+        <span class="notif-item-body">
+          <span class="notif-item-title"><%= text[:title] %></span>
+          <span class="notif-item-text"><%= text[:body] %></span>
+          <span class="notif-item-time"><%= Web::NotificationText.time_ago(n[:created_at]) %></span>
+        </span>
+        <% unless n[:read] %>
+          <button type="button" class="notif-item-read" data-action="notifications-inbox#markRead" aria-label="<%= ngt("notifications.mark_read") %>">
+            <i class="bi bi-check2"></i>
+          </button>
+        <% end %>
+      </a>
+    <% end %>
+  </div>
+
+  <% if has_more %>
+    <div class="notif-inbox-more" data-notifications-inbox-target="more" data-next-page="<%= @page.to_i + 1 %>">
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-action="notifications-inbox#loadMore">
+        <%= ngt("notifications.load_more") %>
+      </button>
+    </div>
+  <% end %>
+<% end %>

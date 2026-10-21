@@ -1,0 +1,21 @@
+<%# What the gym has taken in is `revenue`: without it the strip is not drawn. %>
+<div class="fx-stats-bar" id="pay-stats">
+  <dl class="fx-stats">
+    <div>
+      <dt><%= ngt("payments.collected_this_month") %></dt>
+      <dd class="text-success-token"><%= ng_money(totals[:collected_this_month], currency) %></dd>
+    </div>
+    <div>
+      <dt><%= ngt("payments.collected_total") %></dt>
+      <dd><%= ng_money(totals[:collected_total], currency) %></dd>
+    </div>
+    <div>
+      <dt><%= ngt("payments.average_payment") %></dt>
+      <dd><%= ng_money(totals[:average_payment], currency) %></dd>
+    </div>
+    <div>
+      <dt><%= ngt("payments.status_refunded") %></dt>
+      <dd><%= ng_money(totals[:refunded_value], currency) %></dd>
+    </div>
+  </dl>
+</div>

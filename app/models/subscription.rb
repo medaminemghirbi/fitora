@@ -70,6 +70,8 @@ class Subscription < ApplicationRecord
       # The column wants one; a free period is not billed on any.
       billing_period: :monthly,
       issued_at: Time.current,
+      # Free, so settled the moment it is given.
+      paid_at: Time.current,
       notes: "Période d'essai — #{TRIAL_DAYS} jours offerts"
     )
     subscription
@@ -136,9 +138,15 @@ class Subscription < ApplicationRecord
   end
 
   # ---- what the invoices say ----------------------------------------------
+  # The PAID ones: an invoice still to pay opens nothing and covers nothing.
 
   def latest_invoice
-    invoices.newest_first.first
+    invoices.paid.newest_first.first
+  end
+
+  # The invoice a change of plan issued, waiting for the money. At most one.
+  def due_invoice
+    invoices.due.newest_first.first
   end
 
   # The last day covered by an invoice, or nil when none was ever issued.
@@ -237,11 +245,29 @@ class Subscription < ApplicationRecord
 
   # Whether any period was ever paid for (the trial's free one aside).
   def ever_paid?
-    persisted? && invoices.where(trial: false).exists?
+    persisted? && invoices.paid.where(trial: false).exists?
   end
 
-  # Records that money arrived: one invoice for the next period the account
-  # has not paid for, at its plan's price, and access opened again for every
+  # Bills the account for its plan as it now stands: the invoice to pay for
+  # the next period, at today's tariff — a new one, or the one already
+  # waiting brought up to date (a second change before the money arrives
+  # replaces the bill rather than adding to it). Returns the invoice.
+  def bill!(issued_by:)
+    raise PlanNotChosen, "Choose a plan before billing the account." if plan.nil?
+
+    period = next_period
+    invoice = due_invoice || invoices.new(number: Invoice.next_number)
+    invoice.update!(
+      period_start: period.first, period_end: period.last, amount_cents: period_cents,
+      plan: plan, currency: currency, billing_period: billing_period || :monthly,
+      issued_at: Time.current, issued_by: issued_by, paid_at: nil
+    )
+    invoice
+  end
+
+  # Records that money arrived: the invoice a change of plan left to pay,
+  # settled — or else one new invoice for the next period the account has
+  # not paid for, at its plan's price — and access opened again for every
   # salle it covers. Returns the invoice.
   #
   # The amount is frozen here, at the tariff of the day. A price change later
@@ -250,21 +276,30 @@ class Subscription < ApplicationRecord
   def issue_invoice!(issued_by:, notes: nil)
     raise PlanNotChosen, "Choose a plan before recording a payment." if plan.nil?
 
-    period = next_period
-
     transaction do
-      invoice = invoices.create!(
-        number: Invoice.next_number,
-        period_start: period.first,
-        period_end: period.last,
-        amount_cents: period_cents,
-        plan: plan,
-        currency: currency,
-        billing_period: billing_period || :monthly,
-        issued_at: Time.current,
-        issued_by: issued_by,
-        notes: notes
-      )
+      # The bill a change of plan left waiting is the one this pays. Its
+      # dates move to the period due now (the trial may have run out in the
+      # meantime); its amount stays what the bill said.
+      invoice = due_invoice
+      period = next_period
+      if invoice
+        invoice.update!(period_start: period.first, period_end: period.last, paid_at: Time.current,
+                        notes: notes || invoice.notes)
+      else
+        invoice = invoices.create!(
+          number: Invoice.next_number,
+          period_start: period.first,
+          period_end: period.last,
+          amount_cents: period_cents,
+          plan: plan,
+          currency: currency,
+          billing_period: billing_period || :monthly,
+          issued_at: Time.current,
+          issued_by: issued_by,
+          paid_at: Time.current,
+          notes: notes
+        )
+      end
 
       # Paying is what reopens the door; there is nothing else to do.
       update!(active: true)

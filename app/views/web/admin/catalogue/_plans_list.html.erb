@@ -1,0 +1,79 @@
+<%# ng: plans %>
+<%# The empty state, "no results", or a page of cards and the pagination. %>
+<% filtered = catalogue_filter(plans, search_term) { |p| [ p[:name], p[:description] ] }
+   paged, meta = catalogue_page(filtered, list_page)
+   nothing_to_price = active_activities.empty? && active_packs.empty? %>
+<% if plans.empty? %>
+  <div class="app-card" data-catalogue-list><div class="app-card-body">
+    <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("contract_types.empty_title"), body: ngt("contract_types.empty_body"), icon: "bi-award" } do %>
+      <% if nothing_to_price %>
+        <p class="plan-needs"><%= ngt("contract_types.no_activities") %></p>
+        <button type="button" class="btn btn-primary" data-kind="activity" data-action="catalogue#start">
+          <i class="bi bi-plus-lg"></i> <%= ngt("activities.new") %>
+        </button>
+      <% else %>
+        <button type="button" class="btn btn-primary" data-action="catalogue#openPlanForm">
+          <i class="bi bi-plus-lg"></i> <%= ngt("contract_types.new") %>
+        </button>
+      <% end %>
+    <% end %></app-empty-state>
+  </div></div>
+<% elsif filtered.empty? %>
+  <div class="app-card" data-catalogue-list><div class="app-card-body">
+    <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("common.no_results"), body: "", icon: "bi-search" } do %><% end %></app-empty-state>
+  </div></div>
+<% else %>
+  <div class="plan-grid" data-catalogue-list>
+    <% paged.each do |plan| %>
+      <article class="plan-card" style="--plan-color: <%= plan[:color] %>;" data-plan="<%= plan[:id] %>">
+        <header class="plan-card-head">
+          <h3><%= ng_highlight(plan[:name], search_term) %></h3>
+          <app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: plan[:active] ? "active" : "inactive" } do %><%= ngt(plan[:active] ? "common.active" : "common.inactive") %><% end %></app-status-badge>
+        </header>
+
+        <% if plan[:description].present? %>
+          <p class="plan-desc"><%= plan[:description] %></p>
+        <% end %>
+
+        <div class="plan-chips">
+          <span class="plan-chip"><i class="bi bi-calendar3"></i> <%= ngt("contract_types.period_#{plan[:billing_period]}", days: plan[:validity_days]) %></span>
+          <% if plan[:session_count].present? && plan[:session_count].to_i != 0 %>
+            <span class="plan-chip"><i class="bi bi-ticket-perforated"></i> <%= plan[:session_count] %> <%= ngt("contract_types.sessions") %></span>
+          <% else %>
+            <span class="plan-chip"><i class="bi bi-infinity"></i> <%= ngt("contract_types.unlimited_bookings") %></span>
+          <% end %>
+        </div>
+
+        <% if plan[:activity_prices].empty? && Array(plan[:pack_prices]).empty? %>
+          <p class="plan-warn"><i class="bi bi-exclamation-triangle"></i> <%= ngt("contract_types.no_prices_yet") %></p>
+        <% else %>
+          <ul class="plan-prices">
+            <% plan[:activity_prices].each do |row| %>
+              <li>
+                <span class="plan-price-name"><%= row[:activity_emoji] %> <%= row[:activity_name] %></span>
+                <span class="plan-price-value"><%= ng_money(row[:price], plan[:currency]) %></span>
+              </li>
+            <% end %>
+            <% Array(plan[:pack_prices]).each do |row| %>
+              <li>
+                <span class="plan-price-name">
+                  <span class="plan-pack-tag"><%= ngt("packs.tag") %></span> <%= row[:pack_name] %>
+                  <small><%= row[:activity_names].join(" + ") %></small>
+                </span>
+                <span class="plan-price-value"><%= ng_money(row[:price], plan[:currency]) %></span>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+
+        <footer class="plan-card-foot">
+          <button type="button" class="btn btn-sm btn-outline-secondary w-100" data-action="catalogue#openPlanForm">
+            <i class="bi bi-pencil"></i> <%= ngt("common.edit") %>
+          </button>
+        </footer>
+      </article>
+    <% end %>
+  </div>
+
+  <app-pagination data-catalogue-list><%= render "web/shared/pagination", meta: meta, action: "catalogue#goToPage" %></app-pagination>
+<% end %>

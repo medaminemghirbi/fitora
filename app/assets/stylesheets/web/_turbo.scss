@@ -1,0 +1,9 @@
+// Turbo's page-load bar, made to look like the ngx-progressbar the Angular
+// app shows (app.config.ts: 3 px, brand colour, a soft glow, above
+// everything). Its timing differs — see MIGRATION_AUDIT §10, M-04.
+.turbo-progress-bar {
+  height: 3px;
+  background: var(--color-primary);
+  box-shadow: 0 0 10px var(--color-primary), 0 0 5px var(--color-primary);
+  z-index: 999999;
+}

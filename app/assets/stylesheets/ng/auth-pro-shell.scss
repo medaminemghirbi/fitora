@@ -1,0 +1,280 @@
+// GENERATED from frontend/src/app/shared/ui/auth-pro-shell.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// The account screens' frame — "Fitora × Shoot" (2026-10-09), after the
+// landing page: a night panel with lime rings, heavy sans headlines.
+// The panel sets --apro-* for the content each page projects into it; the
+// page styles that content in features/auth/auth.component.scss.
+
+:host { display: contents; }
+
+.apro {
+  // Tone "dark": the landing page's night, fixed in both themes; lime highlights.
+  --apro-bg: var(--color-night);
+  --apro-ink: #ffffff;
+  --apro-ink-soft: #c9bee3;
+  --apro-em: var(--color-lime);
+  --apro-card-bg: rgba(255, 255, 255, 0.06);
+  --apro-card-border: rgba(255, 255, 255, 0.09);
+  --apro-mark-bg: var(--color-lime);
+  --apro-mark-ink: var(--color-on-lime);
+  --apro-tile-bg: var(--color-lime);
+  --apro-tile-ink: var(--color-on-lime);
+  --apro-ring: color-mix(in srgb, var(--color-lime) 24%, transparent);
+
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  background: var(--color-bg);
+  color: var(--color-text);
+
+  // Tone "soft": lavender, for getting an account back.
+  &.is-soft {
+    --apro-bg: var(--color-primary-soft);
+    --apro-ink: var(--color-text);
+    --apro-ink-soft: var(--color-text-secondary);
+    --apro-em: var(--color-primary);
+    --apro-card-bg: var(--color-surface);
+    --apro-card-border: var(--color-border);
+    --apro-mark-bg: var(--color-night);
+    --apro-mark-ink: var(--color-lime);
+    --apro-tile-bg: var(--color-night);
+    --apro-tile-ink: var(--color-lime);
+    --apro-ring: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  }
+
+  @media (max-width: 991.98px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+// ---------- The panel -------------------------------------------------------
+.apro-panel {
+  position: relative;
+  margin: 20px;
+  min-height: calc(100vh - 40px);
+  box-sizing: border-box;
+  padding: 3rem 3.5rem;
+  border-radius: 32px;
+  background: var(--apro-bg);
+  color: var(--apro-ink);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2.5rem;
+  overflow: hidden;
+
+  // Two thin rings in the far corner — the page's only decoration.
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid var(--apro-ring);
+    pointer-events: none;
+  }
+
+  &::before {
+    inset-inline-end: -180px;
+    bottom: -180px;
+    width: 560px;
+    height: 560px;
+  }
+
+  &::after {
+    inset-inline-end: -80px;
+    bottom: -80px;
+    width: 360px;
+    height: 360px;
+  }
+
+  @media (max-width: 1199.98px) {
+    padding: 2.5rem;
+  }
+
+  @media (max-width: 991.98px) {
+    display: none;
+  }
+}
+
+.apro-panel-body,
+.apro-panel-foot,
+.apro-panel .apro-brand {
+  position: relative;
+  z-index: 1;
+}
+
+.apro-panel-foot {
+  font-size: 0.875rem;
+  color: var(--apro-ink-soft);
+}
+
+.apro-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  align-self: flex-start;
+  font-family: var(--font-display);
+  font-size: 1.4375rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--apro-ink);
+  text-decoration: none;
+
+  &:hover { color: var(--apro-ink); text-decoration: none; }
+}
+
+.apro-mark {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--apro-mark-bg);
+  color: var(--apro-mark-ink);
+}
+
+// The bar's own brand only shows once the panel is gone.
+.apro-brand--bar {
+  display: none;
+  font-size: 1.375rem;
+  color: var(--color-text);
+
+  &:hover { color: var(--color-text); }
+
+  .apro-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: var(--color-night);
+    color: var(--color-lime);
+  }
+
+  @media (max-width: 991.98px) {
+    display: inline-flex;
+  }
+}
+
+// ---------- The form half ---------------------------------------------------
+.apro-side {
+  min-width: 0;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 2.5rem clamp(1.5rem, 6vw, 6rem);
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 991.98px) {
+    padding: 1.25rem 1rem 1.5rem;
+  }
+}
+
+.apro-bar {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+.apro-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-decoration: none;
+
+  &:hover { color: var(--color-primary-hover); text-decoration: none; }
+
+  // The arrow points back, which is the other way in Arabic.
+  :host-context([dir="rtl"]) & i { transform: scaleX(-1); }
+}
+
+.apro-bar-end {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.apro-aside {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+
+  a { font-weight: 700; }
+
+  @media (max-width: 575.98px) {
+    display: none;
+  }
+}
+
+.apro-lang {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+
+  button {
+    min-width: 40px;
+    height: 36px;
+    padding: 0 0.625rem;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-muted);
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+
+    &:hover { color: var(--color-text); }
+
+    &.is-active {
+      background: var(--color-lime);
+      color: var(--color-on-lime);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.apro-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 2.5rem 0;
+
+  @media (max-width: 991.98px) {
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem 0;
+  }
+}
+
+.apro-col {
+  width: 100%;
+  max-width: 440px;
+
+  &.is-wide { max-width: 520px; }
+}
+
+.apro-foot {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+
+  a {
+    color: inherit;
+    font-weight: 600;
+  }
+
+  @media (max-width: 991.98px) {
+    text-align: center;
+  }
+}

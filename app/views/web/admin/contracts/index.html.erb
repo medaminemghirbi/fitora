@@ -1,0 +1,68 @@
+<%# ng-host: contracts %>
+<%# ContractsComponent (no styles of its own): the plan tabs, the portfolio
+    strip, the status pills, the table — re-asked on every change
+    (contracts-list controller) — and the renewal dialog. %>
+<% labels = {
+     statuses: contract_statuses.to_h { |value, label, *| [ value, ngt(label) ] },
+     plans: @plans.to_h { |p| [ p[:id], p[:name] ] },
+     unpaid: ngt("contracts.filter_unpaid"), reset: ngt("common.reset"), error: ngt("common.error_generic"),
+     renewed: ngt("contracts.renewed"), paused_done: ngt("contracts.paused_done"), resumed_done: ngt("contracts.resumed_done"),
+     recorded: ngt("payments.recorded"), pause_title: ngt("contracts.pause_confirm_title"), pause_body: ngt("contracts.pause_confirm_body"),
+     renew_body: ngt("contracts.renew_confirm_body_for"), formula: ngt("clients.abo_formula"), item: ngt("clients.abo_activity_or_pack"),
+     other_hint: ngt("contracts.renew_other_formule_hint"), no_price: ngt("clients.abo_no_price"), no_price_link: ngt("clients.abo_no_price_link"),
+     total: ngt("clients.abo_total"), cancel: ngt("common.cancel"), renew: ngt("contracts.renew"),
+     periods: %w[monthly quarterly semi_annual yearly custom].to_h { |period| [ period, ngt("contract_types.period_#{period}") ] }
+   } %>
+<div class="fx-listpage" data-controller="contracts-list"
+     data-contracts-list-url-value="<%= admin_page_path("contracts") %>"
+     data-contracts-list-filters-value="<%= { q: @filters[:q].to_s, status: @filters[:status].to_s, payment: @filters[:payment].to_s, contract_type_id: @filters[:contract_type_id].to_s }.to_json %>"
+     data-contracts-list-page-value="<%= @page %>"
+     data-contracts-list-plans-value="<%= @plans.to_json %>"
+     data-contracts-list-currency-value="<%= currency %>"
+     data-contracts-list-symbols-value="<%= ([ currency ] + @plans.map { |p| p[:currency] }).uniq.to_h { |code| [ code, Web::Currency.symbol(code) ] }.to_json %>"
+     data-contracts-list-catalogue-value="<%= admin_page_path("catalogue") %>"
+     data-contracts-list-labels-value="<%= labels.to_json %>"
+     data-action="modal:opened@window->contracts-list#fillRenew">
+  <div class="fx-listpage-main">
+    <header class="lst-head">
+      <h1><%= ngt("nav.subscriptions") %></h1>
+      <%= render "web/admin/contracts/count", counts: @counts %>
+      <div class="lst-head-search fx-input-icon">
+        <i class="bi bi-search"></i>
+        <input type="search" class="form-control form-control-sm" value="<%= @filters[:q] %>"
+               placeholder="<%= ngt("contracts.search_placeholder") %>" aria-label="<%= ngt("contracts.search_placeholder") %>"
+               data-contracts-list-target="search" data-action="input->contracts-list#searchChanged" />
+      </div>
+    </header>
+
+    <%= render "web/admin/contracts/tabs", plans: @plans, counts: @counts, plan_counts: @plan_counts, filters: @filters %>
+
+    <%= render "web/admin/contracts/stats", totals: @totals %>
+
+    <div class="lst-filters" data-contracts-list-target="rail">
+      <%= render "web/admin/contracts/pills", counts: @counts, filters: @filters %>
+      <% if contracts_filtered?(@filters) %>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-action="contracts-list#reset" data-contracts-reset>
+          <i class="bi bi-arrow-counterclockwise"></i> <%= ngt("common.reset") %>
+        </button>
+      <% end %>
+    </div>
+
+    <%= render "web/admin/contracts/card", contracts: @contracts, meta: @meta, filters: @filters, plans: @plans %>
+
+    <template data-contracts-list-target="loadingTemplate">
+      <div class="app-card-body"><app-skeleton><%= render "web/shared/skeleton_table", rows: 8, cols: 7 %></app-skeleton></div>
+    </template>
+    <template data-contracts-list-target="errorTemplate">
+      <div class="app-card-body"><app-error-state><%= render "web/shared/error_state", retry_action: "contracts-list#retry" %></app-error-state></div>
+    </template>
+  </div>
+</div>
+
+<%# The renewal dialog: its body is written by the contracts-list controller
+    for the contract it opens on, as the component's @if (renewing()) does. %>
+<app-modal data-controller="modal" data-modal-name-value="contracts-renew" data-action="contracts-renew:open@window->modal#open contracts-renew:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("contracts.renew_title") } do %><% end %>
+  </template>
+</app-modal>

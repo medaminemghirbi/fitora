@@ -44,14 +44,42 @@ module Backend
     # can never point at different domains.
     config.x.app_host = ENV.fetch("APP_HOST", "app.fitora.com")
     config.x.frontend_url = ENV.fetch("FRONTEND_URL") do
-      Rails.env.production? ? "https://#{config.x.app_host}" : "http://localhost:4200"
+      Rails.env.production? ? "https://#{config.x.app_host}" : "http://localhost:3000"
     end
     # config.eager_load_paths << Rails.root.join("extras")
 
-    # Only loads a smaller set of middleware suitable for API only apps.
-    # Middleware like session, flash, cookies can be added back manually.
-    # Skip views, helpers and assets when generating a new resource.
-    config.api_only = true
+    # Not API-only any more: the server-rendered web UI (app/controllers/web)
+    # needs cookies, the session and flash. /api/v1 is unaffected — its
+    # controllers still inherit ActionController::API, which never reads the
+    # session, and they authenticate with the bearer JWT as before.
+    config.api_only = false
+
+    # The web UI's session cookie: encrypted, HttpOnly, never sent cross-site
+    # on a POST, HTTPS-only in production. It outlives the browser, as the
+    # Angular app's JWT in localStorage does; the 7 days themselves are
+    # enforced by Web::Authentication against the sign-in time it carries,
+    # not by the cookie's own (sliding) expiry.
+    config.session_store :cookie_store, key: "_fitora_session", same_site: :lax,
+                                        secure: Rails.env.production?, httponly: true,
+                                        expire_after: 7.days
+
+    # The web UI speaks fr / en / ar (the Angular app's three). The default
+    # stays English so the API's validation messages are unchanged. Its
+    # words are the Angular app's own translation files, read as they are
+    # (config/locales/web/ng.rb, Web::Translations).
+    config.i18n.available_locales = %i[en fr ar]
+    config.i18n.load_path += [ Rails.root.join("config/locales/web/ng.rb") ]
+
+    # bootstrap-icons' font files, which its stylesheet asks for as
+    # url("./fonts/bootstrap-icons.woff2") — served by Propshaft from here.
+    config.assets.paths << Rails.root.join("node_modules/bootstrap-icons/font")
+
+    # Which shells the Rails web UI serves (MIGRATION_AUDIT §9.2): a shell
+    # left out falls through to the Angular SPA, exactly as before. Off in
+    # production until a shell is switched over on purpose; development and
+    # test serve every migrated shell.
+    config.x.web_ui_shells = ENV.fetch("WEB_UI_SHELLS") { Rails.env.production? ? "" : "admin,desk,coach,member,superadmin" }
+                                .split(",").map(&:strip).reject(&:empty?).freeze
 
     # Background jobs run on Sidekiq (see config/initializers/sidekiq.rb and
     # config/sidekiq_cron.yml). The default :async adapter is not persistent.

@@ -73,7 +73,8 @@ class JwtService
 
     {
       user_id: payload["user_id"], client_id: payload["client_id"],
-      impersonator_id: payload["impersonator_id"], token_version: payload["tv"].to_i
+      impersonator_id: payload["impersonator_id"], token_version: payload["tv"].to_i,
+      expires_at: Time.zone.at(payload["exp"].to_i)
     }
   rescue JWT::DecodeError, JWT::ExpiredSignature
     raise DecodeError

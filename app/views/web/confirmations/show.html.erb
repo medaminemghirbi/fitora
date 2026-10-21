@@ -1,0 +1,113 @@
+<%# ng: confirm-email %>
+<%# ng-host: confirm-email %>
+<%# ConfirmEmailComponent (features/auth/confirm-email.component.html). The
+    confirm-email controller asks the server every 4 s (and at once when the
+    tab comes back, or another tab says the link was clicked), counts the
+    resend down, and moves on by itself once the address is confirmed. %>
+<% mailbox = Web::Mailbox.for(@email); dev_inbox = Rails.env.production? ? nil : "http://localhost:1080" %>
+<% content_for :auth_panel do %>
+  <div authPanel class="auth-panel">
+    <span class="auth-panel-icon" aria-hidden="true"><i class="bi bi-envelope-paper-heart"></i></span>
+    <p class="auth-panel-title">
+      <%= ngt("auth.confirm_panel_title_1") %>
+      <em><%= ngt("auth.confirm_panel_title_2") %></em>
+    </p>
+    <p class="auth-panel-lead"><%= ngt("auth.confirm_panel_lead") %></p>
+  </div>
+<% end %>
+<app-auth-pro-shell>
+  <%= render layout: "web/shared/auth_pro_shell", locals: { tone: "soft" } do %>
+    <ol class="auth-steps" aria-label="<%= ngt("auth.register_title") %>">
+      <li class="is-done"><span><i class="bi bi-check-lg" aria-hidden="true"></i></span> <%= ngt("auth.step_account") %></li>
+      <li aria-current="step" data-ce-step="email">
+        <span>
+          2
+        </span>
+        <%= ngt("auth.step_email") %>
+      </li>
+      <li data-ce-step="gym"><span>3</span> <%= ngt("auth.step_gym") %></li>
+    </ol>
+
+    <app-mail-stage data-controller="confirm-email"
+                    data-confirm-email-resend-in-value="<%= @resend_in %>"
+                    data-confirm-email-delay-value="3600"
+                    data-confirm-email-labels-value="<%= { resend: ngt("auth.confirm_resend"), resend_in: Web::Translations.translate("auth.confirm_resend_in", {}, locale: I18n.locale) }.to_json %>"><%= render "web/shared/mail_stage", state: "waiting" %></app-mail-stage>
+
+    <h1 class="auth-title" data-ce-waiting><%= ngt("auth.confirm_title") %></h1>
+    <p class="auth-subtitle" data-ce-waiting>
+      <%= ngt("auth.confirm_body_1") %>
+      <b dir="ltr"><%= @email %></b>.
+      <%= ngt("auth.confirm_body_2") %>
+    </p>
+
+    <p class="ce-live" role="status" data-ce-waiting>
+      <span class="ce-live-dot" aria-hidden="true"></span>
+      <%= ngt("auth.confirm_waiting") %>
+    </p>
+
+    <div class="ce-actions" data-ce-waiting>
+      <% if mailbox %>
+        <a class="btn btn-primary w-100" href="<%= mailbox[:url] %>" target="_blank" rel="noopener">
+          <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+          <%= ngt("auth.confirm_open_mailbox", name: mailbox[:name]) %>
+        </a>
+      <% end %>
+      <% if dev_inbox %>
+        <a class="auth-btn-outline ce-dev" href="<%= dev_inbox %>" target="_blank" rel="noopener">
+          <i class="bi bi-bug" aria-hidden="true"></i>
+          <%= ngt("auth.confirm_open_dev_inbox") %>
+        </a>
+      <% end %>
+
+      <button type="button" class="<%= mailbox || dev_inbox ? "auth-btn-outline" : "btn btn-primary w-100" %>"<%= raw(" disabled") if @resend_in > 0 %> data-ce-resend>
+        <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+        <% if @resend_in > 0 %>
+          <%= ngt("auth.confirm_resend_in", seconds: @resend_in) %>
+        <% else %>
+          <%= ngt("auth.confirm_resend") %>
+        <% end %>
+      </button>
+    </div>
+
+    <details class="ce-help" data-ce-waiting>
+      <summary><%= ngt("auth.confirm_help_title") %></summary>
+      <ul>
+        <li><%= ngt("auth.confirm_help_spam") %></li>
+        <li><%= ngt("auth.confirm_help_other_device") %></li>
+        <li><%= ngt("auth.confirm_help_expiry") %></li>
+      </ul>
+    </details>
+
+    <p class="ce-foot" data-ce-waiting>
+      <%= ngt("auth.confirm_wrong_address") %>
+      <button type="button" class="ce-link" data-controller="form-submit" data-form-submit-form-value="ce-restart" data-action="form-submit#submit"><%= ngt("auth.confirm_restart") %></button>
+      ·
+      <button type="button" class="ce-link" data-controller="form-submit" data-form-submit-form-value="ce-logout" data-action="form-submit#submit"><%= ngt("auth.logout") %></button>
+    </p>
+  <% end %>
+</app-auth-pro-shell>
+<% content_for :templates do %>
+  <% %w[sending confirmed].each do |state| %>
+    <template data-ce="stage-<%= state %>"><%= render "web/shared/mail_stage", state: state %></template>
+  <% end %>
+  <template data-ce="stage-waiting"><%= render "web/shared/mail_stage", state: "waiting" %></template>
+  <template data-ce="notice-sent"><p class="ce-notice is-ok" role="status" data-ce-waiting data-ce-notice><i class="bi bi-send-check" aria-hidden="true"></i> <%= ngt("auth.confirm_resent") %></p></template>
+  <template data-ce="notice-error"><p class="ce-notice is-error" role="alert" data-ce-waiting data-ce-notice><%= ngt("common.error_generic") %></p></template>
+  <template data-ce="done">
+    <h1 class="auth-title"><%= ngt("auth.confirm_done_title") %></h1>
+    <p class="auth-subtitle" role="status"><%= ngt("auth.confirm_done_body") %></p>
+    <app-setup-progress><%= render "web/shared/setup_progress", duration: 3600 %></app-setup-progress>
+    <button type="button" class="btn btn-primary w-100" data-ce-continue>
+      <%= ngt("auth.confirm_done_cta") %>
+      <i class="bi bi-arrow-right" aria-hidden="true"></i>
+    </button>
+  </template>
+  <template data-ce="check"><i class="bi bi-check-lg" aria-hidden="true"></i></template>
+  <% %w[restart logout].each do |kind| %>
+    <form id="ce-<%= kind %>" action="<%= web_sign_out_path %>" method="post" hidden data-turbo="false">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <input type="hidden" name="_method" value="delete">
+      <% if kind == "restart" %><input type="hidden" name="to" value="/inscription"><% end %>
+    </form>
+  <% end %>
+<% end %>

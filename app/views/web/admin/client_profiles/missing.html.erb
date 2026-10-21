@@ -1,0 +1,8 @@
+<%# ng: client-profile %>
+<%# ng-host: client-profile %>
+<%# ClientProfileComponent when GET /clients/:id is refused: the way back and
+    the error state (its retry loads the page again). %>
+<div class="fx-page" data-controller="page-reload">
+  <a href="<%= admin_page_path("clients") %>" class="fx-profile-header-back"><i class="bi bi-arrow-left"></i> <%= ngt("nav.clients") %></a>
+  <div class="app-card"><div class="app-card-body"><app-error-state><%= render "web/shared/error_state", retry_action: "page-reload#reload" %></app-error-state></div></div>
+</div>

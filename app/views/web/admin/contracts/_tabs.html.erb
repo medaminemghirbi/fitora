@@ -1,0 +1,13 @@
+<%# One tab per plan, with how many contracts it holds for the current search. %>
+<nav class="fx-cat-tabs" aria-label="<%= ngt("contract_types.plan") %>" id="ct-tabs">
+  <button type="button" class="fx-cat-tab<%= " is-active" if filters[:contract_type_id].to_s == "" %>" style="--fx-tab-color: var(--color-primary);"
+          data-filter="contract_type_id" data-value="" data-action="contracts-list#setFilter">
+    <%= ngt("clients.filter_all") %> (<%= counts["all"] || 0 %>)
+  </button>
+  <% plans.each do |plan| %>
+    <button type="button" class="fx-cat-tab<%= " is-active" if filters[:contract_type_id].to_s == plan[:id] %>" style="--fx-tab-color: <%= plan[:color] %>;"
+            data-filter="contract_type_id" data-value="<%= plan[:id] %>" data-action="contracts-list#setFilter">
+      <%= plan[:name] %> (<%= plan_counts[plan[:id]] || 0 %>)
+    </button>
+  <% end %>
+</nav>

@@ -1,0 +1,170 @@
+<%# ng: client-profile %>
+<%# ng-host: client-profile %>
+<%# ClientProfileComponent: the file (_body) and the four dialogs the desk
+    opens from it — a subscription, a booking, a payment, the health file
+    (client-profile). %>
+<% plans_json = @plans.map { |pl| pl.slice(:id, :name, :currency, :billing_period, :validity_days, :activity_prices, :pack_prices) } %>
+<div class="fx-page" data-controller="client-profile"
+     data-client-profile-url-value="<%= admin_page_path("clients/#{@client.id}") %>"
+     data-client-profile-payments-url-value="<%= admin_page_path("payments") %>"
+     data-client-profile-attendance-url-value="<%= admin_page_path("attendance") %>"
+     data-client-profile-contracts-url-value="<%= admin_page_path("contracts") %>"
+     data-client-profile-clients-url-value="<%= admin_page_path("clients") %>"
+     data-client-profile-plans-value="<%= plans_json.to_json %>"
+     data-client-profile-drop-in-value="<%= bootstrap.dig(:features, :drop_in) != false %>"
+     data-client-profile-today-value="<%= Date.current.iso8601 %>"
+     data-client-profile-labels-value="<%= client_profile_labels.to_json %>"
+     data-action="modal:opened@window->client-profile#fill">
+  <%= render "web/admin/client_profiles/body", p: @profile %>
+</div>
+
+<app-modal data-controller="modal" data-modal-name-value="profile-contract" data-action="profile-contract:open@window->modal#open profile-contract:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("clients.add_subscription") } do %>
+      <form novalidate data-profile-form="contract">
+        <div class="mb-3">
+          <label for="ms-plan"><%= ngt("clients.abo_formula") %> *</label>
+          <select id="ms-plan" class="form-select" name="contract_type_id">
+            <option value="" disabled selected>—</option>
+            <% @plans.each do |plan| %>
+              <option value="<%= plan[:id] %>"><%= plan[:name] %> — <%= ngt("contract_types.period_#{plan[:billing_period]}", days: plan[:validity_days]) %></option>
+            <% end %>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="ms-activity"><%= ngt("clients.abo_activity_or_pack") %> *</label>
+          <select id="ms-activity" class="form-select" name="item">
+            <option value="" disabled selected><%= ngt("clients.abo_pick_formula_first") %></option>
+            <optgroup label="<%= ngt("nav.activities") %>"></optgroup>
+          </select>
+        </div>
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label for="ms-starts"><%= ngt("schedule.starts_on") %> *</label>
+            <input id="ms-starts" type="date" class="form-control" name="starts_on" />
+          </div>
+          <div class="col-6 mb-3">
+            <label for="ms-discount"><%= ngt("clients.abo_discount") %></label>
+            <input id="ms-discount" type="number" min="0" step="0.01" class="form-control" name="discount" value="0" />
+          </div>
+        </div>
+
+        <template data-plan-extras>
+          <div class="alert alert-warning" data-no-price>
+            <%= ngt("clients.abo_no_price") %>
+            <a href="<%= admin_page_path("catalogue") %>"><%= ngt("clients.abo_no_price_link") %></a>
+          </div>
+          <div class="abo-total-line mb-3" data-total>
+            <span><%= ngt("clients.abo_total") %></span>
+            <strong></strong>
+          </div>
+          <div class="abo-collect mb-3" data-collect>
+            <label class="form-check">
+              <input type="checkbox" class="form-check-input" name="collect_payment" />
+              <span class="form-check-label"><%= ngt("clients.abo_collect_now") %></span>
+            </label>
+          </div>
+          <p class="fx-muted mb-0" style="font-size: 0.8125rem" data-collect-hint></p>
+        </template>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" disabled data-save><%= ngt("clients.abo_create") %></button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>
+
+<app-modal data-controller="modal" data-modal-name-value="profile-booking" data-action="profile-booking:open@window->modal#open profile-booking:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("clients.add_booking") } do %>
+      <form novalidate data-profile-form="booking">
+        <div class="mb-3">
+          <label for="bk-activity"><%= ngt("activities.title") %> *</label>
+          <select id="bk-activity" class="form-select" name="activity_id">
+            <option value="" disabled selected>—</option>
+            <% @activities.each do |a| %>
+              <option value="<%= a[:id] %>"><%= a[:emoji].to_s != "" ? "#{a[:emoji]} " : "" %><%= a[:name] %></option>
+            <% end %>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="bk-date"><%= ngt("bookings.date") %> *</label>
+          <input id="bk-date" type="date" class="form-control" name="date" />
+        </div>
+        <div class="mb-3">
+          <label for="bk-session"><%= ngt("schedule.title") %> *</label>
+          <select id="bk-session" class="form-select" name="session_id">
+            <option value="" disabled selected>—</option>
+          </select>
+          <div class="form-text mt-1" data-no-sessions><%= ngt("clients.no_sessions_available") %></div>
+        </div>
+        <% if bootstrap.dig(:features, :drop_in) != false %>
+          <fieldset class="mb-3">
+            <legend class="form-label mb-1"><%= ngt("bookings.kind_label") %></legend>
+            <% %w[contract trial drop_in].each do |kind| %>
+              <div class="form-check">
+                <input id="bk-kind-<%= kind %>" type="radio" class="form-check-input" name="kind" value="<%= kind %>" />
+                <label for="bk-kind-<%= kind %>" class="form-check-label"><%= ngt("bookings.kind_#{kind}") %></label>
+              </div>
+            <% end %>
+            <p class="form-text mb-0" data-kind-hint></p>
+          </fieldset>
+        <% end %>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" data-save><%= ngt("common.save") %></button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>
+
+<app-modal data-controller="modal" data-modal-name-value="profile-payment" data-action="profile-payment:open@window->modal#open profile-payment:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("clients.add_payment") } do %>
+      <form novalidate data-profile-form="payment">
+        <div class="mb-3">
+          <label for="pm-payable"><%= ngt("payments.for") %> *</label>
+          <select id="pm-payable" class="form-select" name="payable_key">
+            <option value="" disabled selected>—</option>
+          </select>
+          <div class="form-text mt-1" data-nothing-outstanding><%= ngt("payments.nothing_outstanding") %></div>
+        </div>
+        <p class="fx-muted" style="font-size: 0.8125rem"><%= ngt("clients.abo_pay_full_hint") %></p>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" data-save>
+            <%= ngt("common.save") %>
+          </button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>
+
+<app-modal data-controller="modal" data-modal-name-value="profile-health" data-action="profile-health:open@window->modal#open profile-health:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("clients.health_title") } do %>
+      <form novalidate data-profile-form="health">
+        <div class="mb-3">
+          <label for="hl-notes"><%= ngt("clients.health_notes") %></label>
+          <textarea id="hl-notes" class="form-control" rows="4" name="health_notes" placeholder="<%= ngt("clients.health_notes_placeholder") %>"></textarea>
+          <p class="form-text mb-0"><%= ngt("clients.health_notes_hint") %></p>
+        </div>
+        <div class="mb-3">
+          <label for="hl-waiver"><%= ngt("clients.waiver_signed_on") %></label>
+          <div class="d-flex gap-2">
+            <input id="hl-waiver" type="date" class="form-control" name="waiver_signed_on" />
+            <button type="button" class="btn btn-outline-secondary prof-waiver-today" data-waiver-today><%= ngt("clients.waiver_today") %></button>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" data-save><%= ngt("common.save") %></button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>

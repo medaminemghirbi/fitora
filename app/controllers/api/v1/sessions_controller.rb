@@ -41,51 +41,20 @@ module Api
       # Prints the week containing `from` (defaults to today), one page per
       # coach. `base_scope` already keeps a coach login to their own sessions.
       def schedule_pdf
-        week_start = (params[:from].present? ? Date.parse(params[:from]) : Date.current).beginning_of_week(:monday)
-        week_end = week_start + 6.days
-
-        scope = base_scope.where(starts_at: week_start.beginning_of_day..week_end.end_of_day)
-        sessions = scope.includes(:activity, :coach).order(:starts_at)
-
-
-        pdf = Schedule::WeeklyPdf.call(company: current_company, week_start: week_start, sessions: sessions)
+        pdf, week_start = planner.weekly_pdf(params[:from])
         send_data pdf, filename: "planning-#{week_start.strftime('%Y-%m-%d')}.pdf", type: "application/pdf", disposition: "inline"
       end
 
-      # POST /api/v1/sessions
       def create
-        activity = current_company.activities
-                            .find_by(id: session_params[:activity_id])
-        return render json: { error: "Activity not found" }, status: :not_found if activity.nil?
-
-        client_id = params.require(:session).permit(:client_id)[:client_id]
-        client = client_id.present? ? current_company.clients.find_by(id: client_id) : nil
-        return render json: { error: "Client not found" }, status: :not_found if client_id.present? && client.nil?
-
-        # The activity's capacity unless one is given. No activity-level
-        # price to fall back to — booking is settled against the member's
-        # contract — so a blank price leaves the column default (0).
-        attributes = session_params.to_h.symbolize_keys
-        attributes[:capacity] = attributes[:capacity].presence || activity.capacity
-        attributes.delete(:price) if attributes[:price].blank?
-        session = current_company.sessions.new(attributes)
-
-        # An individual session is scheduled *for* one member, who is booked
-        # into it in the same transaction: if the booking cannot go through,
-        # the session never existed.
-        ActiveRecord::Base.transaction do
-          session.save!
-          if client
-            booking = params.require(:session).permit(:drop_in, :trial)
-            session.book!(client, drop_in: ActiveModel::Type::Boolean.new.cast(booking[:drop_in]) || false,
-                                  trial: ActiveModel::Type::Boolean.new.cast(booking[:trial]) || false)
-          end
-        end
-
+        booking = params.require(:session).permit(:client_id, :drop_in, :trial)
+        session = planner.create(session_params, client_id: booking[:client_id],
+                                                 drop_in: ActiveModel::Type::Boolean.new.cast(booking[:drop_in]) || false,
+                                                 trial: ActiveModel::Type::Boolean.new.cast(booking[:trial]) || false)
         render json: { session: SessionSerializer.new(session).as_json }, status: :created
+      rescue Sessions::Planner::NotFound => e
+        render json: { error: e.message }, status: :not_found
       end
 
-      # PATCH /api/v1/sessions/:id
       def update
         if @session.update(session_params)
           render json: { session: SessionSerializer.new(@session).as_json }
@@ -96,27 +65,24 @@ module Api
 
       # POST /api/v1/sessions/:id/cancel
       def cancel
-        cancelled = @session.cancel!
-        AuditLog.record!(
-          company: current_company, user: current_user, action: "session.cancelled",
-          auditable: @session,
-          metadata: { activity: @session.activity.name, starts_at: @session.starts_at, bookings_cancelled: cancelled }
-        )
+        cancelled = planner.cancel(@session, by: current_user)
         render json: { session: SessionSerializer.new(@session).as_json, bookings_cancelled: cancelled }
       end
 
       private
 
+      def planner
+        @planner ||= Sessions::Planner.new(company: current_company, staff_member: current_staff_member)
+      end
+
       def serialize_sessions(sessions)
-        counts = SessionSerializer.confirmed_counts(sessions)
-        sessions.map { |s| SessionSerializer.new(s, confirmed_count: counts.fetch(s.id, 0)).as_json }
+        Sessions::Planner.serialize(sessions)
       end
 
       # Coach-role staff only ever see/touch their own sessions; everyone
       # else with the `sessions` capability sees the whole company.
       def base_scope
-        scope = current_company.sessions
-        current_staff_member&.coach? ? scope.where(coach_id: current_staff_member.coach_id) : scope
+        planner.scope
       end
 
       # Creating/editing/cancelling sessions is an operational (admin/superadmin/

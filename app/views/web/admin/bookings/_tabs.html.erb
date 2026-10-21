@@ -1,0 +1,9 @@
+<%# The status tabs, with their counts. %>
+<nav class="fx-cat-tabs" aria-label="<%= ngt("common.status") %>" id="bk-tabs">
+  <% booking_statuses.each do |value, label, color| %>
+    <button type="button" class="fx-cat-tab<%= " is-active" if filters[:status].to_s == value %>" style="--fx-tab-color: <%= color %>;"
+            data-filter="status" data-value="<%= value %>" data-action="bookings-list#setFilter">
+      <%= ngt(label) %> (<%= counts[value.presence || "all"] || 0 %>)
+    </button>
+  <% end %>
+</nav>

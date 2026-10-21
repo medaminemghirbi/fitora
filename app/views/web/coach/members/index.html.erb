@@ -1,0 +1,15 @@
+<%# ng: coach-members %>
+<%# CoachMembersComponent, its host written here for its controller
+    (coach-members): the search, and the list (_list) it redraws — the
+    skeleton while a search is out. %>
+<app-coach-members data-controller="coach-members" data-coach-members-url-value="<%= coach_path("members") %>">
+  <div class="coach-members-search">
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <input type="search" class="form-control" autocomplete="off" aria-label="<%= ngt("coach.members.search_label") %>" placeholder="<%= ngt("coach.members.search_placeholder") %>"
+           value="<%= @query %>" data-action="input->coach-members#search" />
+  </div>
+
+  <%= render "web/coach/members/list", members: @members, total: @total, query: @query %>
+  <template data-coach-members-target="skeleton"><app-skeleton><%= render "web/shared/skeleton_table", rows: 6, cols: 2 %></app-skeleton></template>
+  <template data-coach-members-target="error"><app-error-state><%= render "web/shared/error_state", retry_action: "coach-members#retry" %></app-error-state></template>
+</app-coach-members>

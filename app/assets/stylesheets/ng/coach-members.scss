@@ -1,0 +1,88 @@
+// GENERATED from frontend/src/app/features/coach/members/coach-members.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// A coach reads this on a phone, between sessions.
+
+.coach-members-search {
+  position: relative;
+  margin-bottom: var(--space-4);
+
+  i {
+    position: absolute;
+    inset-inline-start: var(--space-3);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-muted);
+    pointer-events: none;
+  }
+
+  .form-control {
+    height: 44px;
+    padding-inline-start: calc(var(--space-3) * 2 + 1rem);
+  }
+}
+
+.coach-members-count {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.coach-member-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.coach-member {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 64px;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child { border-bottom: none; }
+}
+
+.coach-member-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+
+  strong { font-weight: 600; }
+
+  small {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+  }
+}
+
+.coach-member-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+// Someone who has stopped coming. Stated in words, not just a colour.
+.coach-member-health {
+  margin: 2px 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-warning);
+  white-space: pre-line;
+}
+
+.coach-member-flag {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill, 999px);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}

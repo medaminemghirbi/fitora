@@ -1,0 +1,4 @@
+<%# ng: status-badge %>
+<%# StatusBadgeComponent. The caller writes the <app-status-badge> host; the
+    block is its projected label. %>
+<span class="status-badge status-badge--<%= Web::StatusTone.for(status) %>"><%= yield %></span>

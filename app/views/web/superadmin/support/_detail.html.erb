@@ -1,0 +1,38 @@
+<%# ng: superadmin-support-tickets %>
+<%# A ticket in its dialog: the gym, who wrote and how to reach them, when,
+    the message, its attachments (opened through this session, B-14), and
+    — while it is open — the way to resolve it. %>
+<div class="ticket-detail">
+  <div class="ticket-detail-meta">
+    <span><i class="bi bi-building"></i> <%= t.dig(:company, :name) %></span>
+    <span><i class="bi bi-person"></i> <%= t.dig(:created_by, :full_name) %> · <%= t.dig(:created_by, :email) %></span>
+    <% if t[:contact_phone].present? %>
+      <span>
+        <i class="bi bi-telephone"></i>
+        <a class="ticket-phone" href="<%= support_tel_href(t[:contact_phone]) %>" dir="ltr"><%= t[:contact_phone] %></a>
+        <% if t[:kind] == "upgrade" %> · <%= ngt("superadmin.support.call_back") %> <% end %>
+      </span>
+    <% end %>
+    <span><i class="bi bi-clock"></i> <%= ng_date(t[:created_at], "dd/MM/yyyy HH:mm") %></span>
+  </div>
+  <p class="ticket-detail-message"><%= t[:message] %></p>
+
+  <% if t[:attachments].any? %>
+    <div class="ticket-attachments">
+      <% t[:attachments].each do |att| %>
+        <a href="/superadmin/support/<%= t[:id] %>/attachments/<%= att[:id] %>" target="_blank" rel="noopener" class="ticket-attachment">
+          <i class="bi<%= support_file_icon(att[:content_type]) %>"></i>
+          <%= att[:filename] %>
+        </a>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if t[:status] == "open" %>
+    <div class="ticket-detail-actions">
+      <button type="button" class="btn btn-primary" data-resolve="<%= t[:id] %>">
+        <i class="bi bi-check-lg"></i> <%= ngt("superadmin.support.mark_resolved") %>
+      </button>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,23 @@
+<%# ng: packs %>
+<%# PacksComponent: the toolbar once there is a list, the cards (searched
+    and paged), and the pack form. %>
+<% packs = catalogue[:packs]
+   can_create = active_activities.size >= 2 %>
+<div class="fx-stack">
+  <% if packs.any? %>
+    <div class="fx-toolbar pk-toolbar">
+      <div class="fx-input-icon">
+        <i class="bi bi-search"></i>
+        <input type="search" class="form-control form-control-sm" value="<%= search_term %>" placeholder="<%= ngt("packs.search_placeholder") %>"
+               data-action="input->catalogue#search" />
+      </div>
+      <button type="button" class="btn btn-primary btn-sm ms-auto" data-action="catalogue#openPackForm"<%= raw(" disabled") unless can_create %>>
+        <i class="bi bi-plus-lg"></i> <%= ngt("packs.new") %>
+      </button>
+    </div>
+  <% end %>
+
+  <%= render "web/admin/catalogue/packs_list", packs: packs, can_create: can_create %>
+</div>
+
+<%= render "web/admin/catalogue/pack_modal" %>

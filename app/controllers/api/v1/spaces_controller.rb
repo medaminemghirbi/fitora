@@ -32,10 +32,9 @@ module Api
 
       # POST /api/v1/spaces
       def create
-        space = current_company.spaces.new(space_params)
+        space = current_company.spaces.new
 
-        if space.save
-          sync_activities(space)
+        if RoomEditor.save(space, space_params, activity_ids: activity_ids)
           render json: { space: SpaceSerializer.new(space.reload).as_json }, status: :created
         else
           render_errors(space)
@@ -44,8 +43,7 @@ module Api
 
       # PATCH /api/v1/spaces/:id
       def update
-        if @space.update(space_params)
-          sync_activities(@space)
+        if RoomEditor.save(@space, space_params, activity_ids: activity_ids)
           render json: { space: SpaceSerializer.new(@space.reload).as_json }
         else
           render_errors(@space)
@@ -59,12 +57,7 @@ module Api
       # of what happened in it. Once nothing upcoming needs it, it goes for
       # real — and past sessions keep their history with the room unset.
       def destroy
-        if @space.deletable?
-          @space.destroy!
-        else
-          @space.update!(active: false)
-        end
-
+        RoomEditor.remove(@space)
         render json: { space: SpaceSerializer.new(@space).as_json }
       end
 
@@ -77,11 +70,9 @@ module Api
       # Replaces the set of activities restricted to this room. Scoped to the
       # company's own activities, so a foreign id is dropped rather than
       # linked.
-      def sync_activities(space)
-        return unless params[:space].key?(:activity_ids)
-
-        ids = current_company.activities.where(id: Array(params[:space][:activity_ids])).pluck(:id)
-        space.activity_ids = ids
+      # Only when sent: an update that leaves the restrictions out keeps them.
+      def activity_ids
+        params[:space].key?(:activity_ids) ? params[:space][:activity_ids] : :unchanged
       end
 
       def space_params

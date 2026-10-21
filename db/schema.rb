@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_10_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -355,6 +355,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_090000) do
     t.uuid "issued_by_id"
     t.string "notes"
     t.string "number", null: false
+    t.datetime "paid_at"
     t.date "period_end", null: false
     t.date "period_start", null: false
     t.string "plan"
@@ -363,6 +364,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_090000) do
     t.datetime "updated_at", null: false
     t.index ["issued_by_id"], name: "index_invoices_on_issued_by_id"
     t.index ["number"], name: "index_invoices_on_number", unique: true
+    t.index ["subscription_id", "paid_at"], name: "index_invoices_on_subscription_id_and_paid_at"
     t.index ["subscription_id", "period_start"], name: "index_invoices_on_subscription_id_and_period_start"
     t.index ["subscription_id"], name: "index_invoices_on_subscription_id"
   end

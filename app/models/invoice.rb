@@ -1,9 +1,14 @@
-# One period of Fitora access, paid for and recorded.
+# One period of Fitora access, billed and — once the money is in — paid.
 #
-# Payment happens off-app, so an invoice is not a demand — it is the proof
-# that money arrived. A Fitora superadmin confirms it, the invoice is issued, and
-# it lands in the admin's account to download. It covers the account — every
-# salle the admin runs — not one gym.
+# Payment happens off-app. A paid invoice (paid_at set) is the proof that
+# money arrived: a Fitora superadmin confirms it, and it lands in the
+# admin's account to download. A change of plan bills the account at once
+# with an invoice to pay (paid_at nil, at most one per account), which the
+# same confirmation then settles (Subscription#bill!, #issue_invoice!). It
+# covers the account — every salle the admin runs — not one gym.
+#
+# Only paid invoices say anything about access: "paid until", the trial and
+# arrears read them alone (Subscription#latest_invoice).
 #
 # Everything about the subscription that used to be stored is read from
 # these: "paid until" is the latest period_end, arrears are the periods
@@ -27,12 +32,22 @@ class Invoice < ApplicationRecord
 
   delegate :admin, :billing_company, to: :subscription
 
+  scope :paid, -> { where.not(paid_at: nil) }
+  scope :due, -> { where(paid_at: nil) }
   scope :chronological, -> { order(:period_start) }
   scope :newest_first, -> { order(period_start: :desc) }
   scope :covering, ->(date) { where(period_start: ..date).where(period_end: date..) }
 
   def amount
     amount_cents / 100.0
+  end
+
+  def paid?
+    paid_at.present?
+  end
+
+  def due?
+    !paid?
   end
 
   def covers?(date)

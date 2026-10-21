@@ -1,0 +1,115 @@
+// GENERATED from frontend/src/styles/components/_page.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// PAGE
+// ----------------------------------------------------------------------------
+// The frame a page is laid out in: width, stack rhythm, header, stats.
+//
+// Split out of _fitora.scss, which had grown to 1208 lines and was the reason
+// screens drifted: nobody could see what was already there.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// Page shell utilities
+// ---------------------------------------------------------------------------
+.fx-page { max-width: var(--content-max-width); margin-inline: auto; }
+
+// Active-filter chips above a list
+.fx-active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: var(--space-3);
+}
+.fx-active-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 0.2rem 0.4rem 0.2rem 0.7rem;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+
+  button {
+    border: 0;
+    background: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+    display: inline-flex;
+    padding: 0.1rem;
+    border-radius: 50%;
+    &:hover { color: var(--color-danger); }
+  }
+}
+
+.fx-stack > * + * { margin-top: var(--space-5); }
+.fx-stack-sm > * + * { margin-top: var(--space-3); }
+.fx-stack > .app-card { margin-bottom: 0; }
+
+// ---------------------------------------------------------------------------
+// Page header
+// ---------------------------------------------------------------------------
+.fx-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+
+  &-titles { min-width: 0; }
+  &-title { font-size: var(--font-size-2xl); font-weight: 700; margin: 0; letter-spacing: -0.02em; }
+  &-desc { color: var(--color-text-secondary); font-size: 0.9375rem; margin: 0.35rem 0 0; max-width: 60ch; }
+  &-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+}
+
+@media (max-width: 575.98px) {
+  .fx-page-header-actions { width: 100%; }
+  .fx-page-header-actions .btn { flex: 1; }
+}
+
+// ---------------------------------------------------------------------------
+// Stats strip — label/value pairs above the table, plus the page's actions
+// ---------------------------------------------------------------------------
+.fx-stats-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+// Figures as tiles, label over value. They were rows of "label ......... value"
+// in a three-wide grid: with four figures the fourth wrapped alone, and
+// `space-between` threw each value at the far edge of its column, so the
+// last one sat against the edge of the page reading like a clipped number.
+.fx-stats {
+  flex: 1;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+
+  > div {
+    flex: 1 1 150px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.55rem 0.85rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  dt { font-size: var(--font-size-xs); font-weight: 600; color: var(--color-text-secondary); }
+  dd { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--color-text); font-variant-numeric: tabular-nums; }
+}
+
+.fx-stats-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+
+@media (max-width: 767.98px) {
+  .fx-stats > div { flex-basis: 120px; }
+  .fx-stats-actions { width: 100%; }
+  .fx-stats-actions .btn { flex: 1; }
+}

@@ -1,0 +1,36 @@
+<%# ng: settings-mobile-app %>
+<%# SettingsMobileAppComponent: the salle's two keys, each with its QR code
+    (drawn by the backend), a copy button and a way to replace it
+    (settings-mobile-app, on the host). Keys read in capitals. %>
+<div class="ma-grid">
+  <% [ [ "member", "bi-people", "settings.mobile_member_title", "settings.mobile_member_hint", keys[:member_code], keys[:member_qr_svg] ],
+       [ "coach", "bi-person-badge", "settings.mobile_coach_title", "settings.mobile_coach_hint", keys[:coach_key], keys[:coach_qr_svg] ] ].each do |audience, icon, title, hint, key, qr| %>
+    <article class="app-card ma-card" data-audience="<%= audience %>">
+      <div class="app-card-body">
+        <header class="ma-head">
+          <span class="ma-ic"><i class="bi <%= icon %>" aria-hidden="true"></i></span>
+          <div>
+            <h2><%= ngt(title) %></h2>
+            <p><%= ngt(hint) %></p>
+          </div>
+        </header>
+        <div class="ma-body">
+          <div class="ma-qr" role="img" aria-label="<%= ngt("settings.mobile_qr_label") %>" data-qr><%= ng_inner_html(qr) %></div>
+          <div class="ma-key-col">
+            <span class="ma-key-label"><%= ngt("settings.mobile_key_label") %></span>
+            <code class="ma-key" dir="ltr" data-key><%= key.to_s.upcase %></code>
+            <div class="ma-actions">
+              <button type="button" class="btn btn-primary btn-sm" data-action="settings-mobile-app#copy">
+                <i class="bi bi-clipboard" aria-hidden="true"></i> <%= ngt("settings.mobile_copy") %>
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-action="settings-mobile-app#regenerate">
+                <i class="bi bi-arrow-repeat" aria-hidden="true"></i> <%= ngt("settings.mobile_regenerate") %>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  <% end %>
+</div>
+<p class="ma-note"><i class="bi bi-info-circle" aria-hidden="true"></i> <%= ngt("settings.mobile_note") %></p>

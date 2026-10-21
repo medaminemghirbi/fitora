@@ -1,0 +1,20 @@
+<%# ng: catalogue %>
+<%# ng-host: catalogue %>
+<%# CatalogueComponent: the page header, one tab per kind of thing (in the
+    URL, ?tab=), and the tab's panel — searched, paged and refreshed in
+    place by the catalogue controller. %>
+<div class="fx-page" data-controller="catalogue"
+     data-catalogue-url-value="<%= admin_page_path("catalogue") %>"
+     data-catalogue-tab-value="<%= tab %>"
+     data-catalogue-open-value="<%= @open %>"
+     data-catalogue-data-value="<%= catalogue.slice(:activities, :plans, :packs).to_json %>"
+     data-catalogue-labels-value="<%= catalogue_labels.to_json %>"
+     data-action="modal:opened@window->catalogue#modalOpened">
+  <app-page-header><%= render layout: "web/shared/page_header", locals: { title: ngt("catalogue.title"), description: ngt("catalogue.subtitle") } do %><% end %></app-page-header>
+
+  <%= render "web/admin/catalogue/tabs" %>
+
+  <div role="tabpanel" id="cat-panel">
+    <%= render "web/admin/catalogue/panel" %>
+  </div>
+</div>

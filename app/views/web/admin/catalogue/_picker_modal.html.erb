@@ -1,0 +1,17 @@
+<%# ng: activities %>
+<%# The platform's catalogue as tiles (ActivityPickerComponent, no custom
+    entries here), and "add n". %>
+<app-modal data-controller="modal" data-modal-name-value="catalogue-picker" data-action="catalogue-picker:open@window->modal#open catalogue-picker:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("activity_catalogue.title"), size: "wide" } do %>
+      <app-activity-picker data-action="activity-picker:change->catalogue#pickerChanged"><%= render "web/shared/activity_picker", templates: catalogue[:templates], adopted: catalogue[:activities].filter_map { |a| a[:activity_template_id] }, allow_custom: false %></app-activity-picker>
+      <div class="act-catalogue-actions">
+        <button type="button" class="btn btn-link" data-action="catalogue#pickerToForm"><%= ngt("activity_catalogue.not_listed") %></button>
+        <button type="button" class="btn btn-outline-secondary ms-auto" data-action="modal#close"><%= ngt("common.cancel") %></button>
+        <button type="button" class="btn btn-primary" disabled data-adopt data-action="catalogue#adopt">
+          <%= ngt("activity_catalogue.add_n", count: 0) %>
+        </button>
+      </div>
+    <% end %>
+  </template>
+</app-modal>

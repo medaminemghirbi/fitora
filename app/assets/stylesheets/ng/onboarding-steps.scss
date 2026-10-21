@@ -1,0 +1,152 @@
+// GENERATED from frontend/src/app/shared/ui/onboarding-steps.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+.obs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.obs-progress {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.obs-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-surface-sunken);
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--color-primary);
+    transition: width 0.3s ease;
+  }
+}
+
+.obs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.obs-item {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+
+// The step being asked for is the only one that looks asked-for.
+.obs-current {
+  border-color: var(--color-primary-border);
+  background: var(--color-primary-soft);
+}
+
+.obs-skipped {
+  opacity: 0.6;
+}
+
+.obs-compact .obs-item {
+  padding: 0.6rem 0.8rem;
+}
+
+.obs-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-surface-sunken);
+  color: var(--color-primary);
+}
+
+.obs-done .obs-mark {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.obs-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.obs-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.obs-desc {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+.obs-end {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.obs-state {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.obs-state-done {
+  color: var(--color-success);
+}
+
+.obs-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.obs-skip {
+  border: 0;
+  background: none;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text);
+    text-decoration: underline;
+  }
+}
+
+@media (max-width: 560px) {
+  .obs-item {
+    flex-wrap: wrap;
+  }
+
+  .obs-end {
+    margin-inline-start: calc(32px + 0.9rem);
+  }
+}

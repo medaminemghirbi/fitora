@@ -1,0 +1,132 @@
+<%# The chips, then the table (or the empty state) and the pagination. %>
+<% chips = contracts_chips(filters, plans) %>
+<div class="app-card" id="ct-card" data-contracts-list-target="card">
+  <% if chips.any? %>
+    <div class="fx-active-filters p-3 pb-0" data-contracts-list-target="chips">
+      <% chips.each do |chip| %>
+        <span class="fx-active-chip">
+          <%= chip[:label] %>
+          <button type="button" data-action="contracts-list#clearChip" data-chip="<%= chip[:clear] %>" aria-label="<%= ngt("common.reset") %>">
+            <i class="bi bi-x"></i>
+          </button>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if contracts.empty? %>
+    <div class="app-card-body">
+      <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("contracts.empty_title"), body: ngt("contracts.empty_body"), icon: "bi-file-earmark-text" } do %><% end %></app-empty-state>
+    </div>
+  <% else %>
+    <div class="fx-table-scroll">
+      <table class="table table-hover fx-grid">
+        <thead>
+          <tr>
+            <th><%= ngt("bookings.client") %></th>
+            <th><%= ngt("contract_types.plan") %></th>
+            <th class="text-end"><%= ngt("clients.abo_total") %></th>
+            <th><%= ngt("contracts.period") %></th>
+            <th><%= ngt("common.status") %></th>
+            <th><%= ngt("payments.status_paid") %></th>
+            <th class="text-end"><%= ngt("common.actions") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% contracts.each do |m| %>
+            <% currency = m.dig(:plan, :currency) %>
+            <tr style="--fx-row-color: <%= contract_row_color(m) %>;" data-contract="<%= { id: m[:id], name: m.dig(:client, :full_name), plan_id: m.dig(:plan, :id), item: contract_item_key(m), all_access: m[:all_access], paused: m[:paused], ref: m[:invoice_ref] }.to_json %>">
+              <td>
+                <div class="fx-cell-lead">
+                  <app-avatar><%= render "web/shared/avatar", name: m.dig(:client, :full_name).to_s, size: 34 %></app-avatar>
+                  <div class="fx-cell-lead-text">
+                    <div class="fx-cell-lead-title"><%= ng_highlight(m.dig(:client, :full_name), filters[:q]) %></div>
+                    <% if m.dig(:client, :phone).present? %><div class="fx-cell-lead-sub" dir="ltr"><%= m.dig(:client, :phone) %></div><% end %>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="fx-plan-tag">
+                  <span class="fx-dot" style="background: <%= m.dig(:plan, :color) %>;"></span>
+                  <span><%= ng_highlight(m.dig(:plan, :name), filters[:q]) %></span>
+                </span>
+                <div class="fx-muted" style="font-size: var(--font-size-xs)">
+                  <%= m.dig(:activity, :emoji).present? ? "#{m.dig(:activity, :emoji)} " : "" %><%= m[:activity_label] %>
+                </div>
+                <div class="fx-contract-ref" dir="ltr"><%= ng_highlight(m[:invoice_ref], filters[:q]) %></div>
+              </td>
+              <%# What they pay, and only when it differs from the catalogue
+                  price, what it was before the discount. %>
+              <td class="text-end fx-num fw-semibold">
+                <%= ng_money(m[:final_price], currency) %>
+                <% if m[:discount].to_f > 0 %>
+                  <div class="fx-cell-sub text-warning-token">
+                    <%= ng_money(m[:base_price], currency) %> − <%= ng_money(m[:discount], currency) %>
+                  </div>
+                <% end %>
+              </td>
+              <%# The term's dates, and under them how it links to the next. %>
+              <td class="fx-num fx-cell-period">
+                <%= ng_date(m[:starts_at], "dd/MM/yy").presence || "—" %>
+                <span class="fx-muted">→</span>
+                <%= ng_date(m[:expires_at], "dd/MM/yy").presence || "—" %>
+                <% if m[:renewal] %>
+                  <div class="fx-cell-sub fx-renewal-queued">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <%= ngt("contracts.renewed_until", date: ng_date(m.dig(:renewal, :expires_at), "dd/MM/yy")) %>
+                  </div>
+                <% elsif contract_queued_renewal?(m) %>
+                  <div class="fx-cell-sub fx-renewal-queued">
+                    <i class="bi bi-hourglass-split"></i>
+                    <%= ngt("contracts.queued_renewal") %>
+                  </div>
+                <% end %>
+              </td>
+              <td>
+                <% if m[:paused] %>
+                  <app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: "paused" } do %><%= ngt("contract.status_paused") %><% end %></app-status-badge>
+                <% else %>
+                  <app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: m[:status] } do %><%= ngt("contract.status_#{m[:status]}") %><% end %></app-status-badge>
+                <% end %>
+              </td>
+              <td><app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: m[:payment_status] } do %><%= ngt("payments.status_#{m[:payment_status]}") %><% end %></app-status-badge></td>
+              <td class="text-end">
+                <div class="fx-row-actions">
+                  <% if m[:amount_due].to_f > 0 && m[:status] != "cancelled" %>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-row-busy data-action="contracts-list#collect">
+                      <%= ngt("payments.collect") %>
+                    </button>
+                  <% end %>
+                  <% if m[:renewable] %>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-row-busy data-action="contracts-list#renew">
+                      <%= ngt("contracts.renew") %>
+                    </button>
+                  <% end %>
+                  <%= render layout: "web/shared/action_menu" do %>
+                    <button type="button" class="fx-menu-item" data-action="contracts-list#downloadAgreement">
+                      <i class="bi bi-file-earmark-text"></i> <%= ngt("contracts.download_agreement") %>
+                    </button>
+                    <button type="button" class="fx-menu-item" data-action="contracts-list#downloadInvoice">
+                      <i class="bi bi-receipt"></i> <%= ngt("contracts.download_invoice") %>
+                    </button>
+                    <a class="fx-menu-item" href="<%= admin_page_path("clients/#{m.dig(:client, :id)}") %>">
+                      <i class="bi bi-person"></i> <%= ngt("contracts.view_client") %>
+                    </a>
+                    <% if m[:status] == "active" %>
+                      <button type="button" class="fx-menu-item" data-row-busy data-action="contracts-list#togglePause">
+                        <i class="bi <%= m[:paused] ? "bi-play-circle" : "bi-pause-circle" %>"></i>
+                        <%= ngt(m[:paused] ? "contracts.resume" : "contracts.pause") %>
+                      </button>
+                    <% end %>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <app-pagination><%= render "web/shared/pagination", meta: meta, action: "contracts-list#goToPage" %></app-pagination>
+  <% end %>
+</div>

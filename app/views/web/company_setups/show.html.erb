@@ -1,0 +1,133 @@
+<%# ng: company-setup %>
+<%# ng-host: company-setup %>
+<%# CompanySetupComponent: the salle's details, then what it teaches (the
+    picker, custom entries allowed), then — once it is created — the
+    "getting your account ready" moment. The steps swap in the browser
+    (company-setup controller), as the component's @if blocks do. %>
+<% steps = [ ngt("company_setup.step_details"), ngt("company_setup.step_activities") ] %>
+<div class="setup-page" data-controller="company-setup"
+     data-company-setup-url-value="<%= web_company_setup_path %>"
+     data-company-setup-labels-value="<%= { create_with: ngt("company_setup.create_with"), error: ngt("common.error_generic"), select_country: ngt("company_setup.select_country"), search: ngt("common.search"), no_results: ngt("common.no_results"), prep_steps: (1..4).map { |i| ngt("company_setup.prep_step_#{i}") }, currencies: Web::Currency::SYMBOLS.keys.to_h { |code| [ code, ngt("currency.#{code}") ] } }.to_json %>">
+  <div class="setup-card" data-company-setup-target="card">
+    <div class="setup-brand">fitora</div>
+
+    <app-wizard-steps id="cs-wizard-steps"><%= render "web/shared/wizard_steps", steps: steps, current: 0, label: ngt("company_setup.details_title") %></app-wizard-steps>
+
+    <h1><%= ngt("company_setup.details_title") %></h1>
+    <p class="text-muted-token small mb-3"><%= ngt("company_setup.subtitle") %></p>
+
+    <form novalidate data-company-setup-target="form" data-action="submit->company-setup#next">
+      <div class="mb-3">
+        <label for="org-name"><%= ngt("settings.company_name") %> *</label>
+        <input id="org-name" class="form-control" name="name" />
+      </div>
+
+      <div class="row">
+        <div class="col-6 mb-3">
+          <label for="org-city"><%= ngt("settings.company_city") %></label>
+          <input id="org-city" class="form-control" name="city" />
+        </div>
+        <div class="col-6 mb-3">
+          <label for="org-country"><%= ngt("company_setup.country") %></label>
+          <app-searchable-select data-controller="searchable-select" data-searchable-select-id-value="org-country"
+                                 data-searchable-select-placeholder-value="<%= ngt("company_setup.select_country") %>"
+                                 data-searchable-select-search-value="<%= ngt("common.search") %>"
+                                 data-searchable-select-empty-value="<%= ngt("common.no_results") %>"
+                                 data-company-setup-target="country"></app-searchable-select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-6 mb-3">
+          <label for="org-phone"><%= ngt("auth.phone") %></label>
+          <input id="org-phone" class="form-control" name="phone" />
+        </div>
+        <div class="col-6 mb-3">
+          <label for="org-email"><%= ngt("auth.email") %></label>
+          <input id="org-email" type="email" class="form-control" name="email" />
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="org-address"><%= ngt("company_setup.gym_address") %></label>
+        <input id="org-address" class="form-control" name="address" placeholder="<%= ngt("company_setup.gym_address_hint") %>" />
+      </div>
+
+      <div class="row">
+        <div class="col-6 mb-3">
+          <label for="org-timezone"><%= ngt("company_setup.timezone") %> *</label>
+          <select id="org-timezone" class="form-select" name="timezone"></select>
+        </div>
+        <div class="col-6 mb-3">
+          <label for="org-currency"><%= ngt("company_setup.currency") %> *</label>
+          <select id="org-currency" class="form-select" name="currency"></select>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">
+        <%= ngt("company_setup.continue") %> <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </button>
+    </form>
+  </div>
+
+  <%# Step 2, put in place of step 1's heading and form. %>
+  <template data-company-setup-target="activitiesStep">
+    <h1><%= ngt("company_setup.activities_title") %></h1>
+    <p class="text-muted-token small mb-3"><%= ngt("company_setup.activities_subtitle") %></p>
+    <app-activity-picker data-action="activity-picker:change->company-setup#picked"><%= render "web/shared/activity_picker", templates: @templates, allow_custom: true %></app-activity-picker>
+    <div class="setup-actions">
+      <button type="button" class="btn btn-outline-secondary" data-saving data-action="company-setup#back">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i> <%= ngt("common.back") %>
+      </button>
+      <button type="button" class="btn btn-link setup-skip" data-saving data-action="company-setup#skip">
+        <%= ngt("company_setup.skip_activities") %>
+      </button>
+      <button type="button" class="btn btn-primary" disabled data-create data-action="company-setup#create">
+        <%= ngt("company_setup.create_with", count: 0) %>
+      </button>
+    </div>
+  </template>
+  <template data-company-setup-target="stepsTemplate" data-step="1">
+    <%= render "web/shared/wizard_steps", steps: steps, current: 1, label: ngt("company_setup.details_title") %>
+  </template>
+  <template data-company-setup-target="stepsTemplate" data-step="0">
+    <%= render "web/shared/wizard_steps", steps: steps, current: 0, label: ngt("company_setup.details_title") %>
+  </template>
+</div>
+
+<%# The "getting your account ready" moment, in place of the page. %>
+<template data-company-setup-target-prep id="cs-prep">
+  <div class="prep">
+    <div class="prep-scene" aria-hidden="true">
+      <span class="prep-orbit prep-orbit--1"></span>
+      <span class="prep-orbit prep-orbit--2"></span>
+      <div class="prep-window">
+        <div class="prep-bar">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="prep-body">
+          <div class="prep-side">
+            <i></i><i></i><i></i><i></i>
+          </div>
+          <div class="prep-main">
+            <div class="prep-block b1"></div>
+            <div class="prep-block b2"></div>
+            <div class="prep-block b3"></div>
+            <div class="prep-block b4"></div>
+            <div class="prep-block b5"></div>
+          </div>
+        </div>
+      </div>
+      <svg class="prep-gear" viewBox="0 0 24 24" fill="none">
+        <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="1.6" />
+        <path d="M12 2v3m0 14v3M4.2 4.2l2.1 2.1m11.4 11.4 2.1 2.1M2 12h3m14 0h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"
+              stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+      </svg>
+    </div>
+
+    <h1 class="prep-title"><%= ngt("company_setup.prep_title") %></h1>
+    <p class="prep-step" data-prep-step></p>
+
+    <div class="prep-progress"><span></span></div>
+  </div>
+</template>

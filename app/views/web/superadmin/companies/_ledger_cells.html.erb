@@ -1,0 +1,14 @@
+<%# ng: superadmin-company-detail %>
+<%# A year's twelve months (Web::PaymentLedger): paid, free (the trial),
+    missed, this month, to come, or before the gym existed. %>
+<% cells.each do |cell| %>
+  <div class="ac-cell" data-state="<%= cell.state %>">
+    <span class="ac-cell-month"><%= cell.label %></span>
+    <span class="ac-cell-mark">
+      <% if cell.state == "paid" %> ✓ <% elsif cell.state == "trial" %> <i class="bi bi-gift"></i> <% elsif cell.state == "future" %> · <% elsif cell.state == "before" %><% else %> ✕ <% end %>
+    </span>
+    <span class="ac-cell-foot">
+      <% if cell.state == "trial" %> <%= ngt("superadmin.trial") %> <% else %> <%= cell.invoice ? cell.invoice[:number].to_s[-4..] : "" %> <% end %>
+    </span>
+  </div>
+<% end %>

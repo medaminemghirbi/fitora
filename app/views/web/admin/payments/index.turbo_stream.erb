@@ -1,0 +1,7 @@
+<%= turbo_stream.replace "pay-count", partial: "web/admin/payments/count", locals: { counts: @counts }, method: :morph %>
+<%= turbo_stream.replace "pay-tabs", partial: "web/admin/payments/tabs", locals: { counts: @counts, method_counts: @method_counts, filters: @filters }, method: :morph %>
+<% if @totals %>
+  <%= turbo_stream.replace "pay-stats", partial: "web/admin/payments/stats", locals: { totals: @totals }, method: :morph %>
+<% end %>
+<%= turbo_stream.replace "pay-pills", partial: "web/admin/payments/pills", locals: { counts: @counts, filters: @filters }, method: :morph %>
+<%= turbo_stream.replace "pay-card", partial: "web/admin/payments/card", locals: { payments: @payments, meta: @meta, filters: @filters }, method: :morph %>

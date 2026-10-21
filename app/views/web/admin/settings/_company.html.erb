@@ -1,0 +1,69 @@
+<%# SettingsCompanyComponent (no styles of its own, so no scope): the
+    salle's profile, its country and timezone (filled in by
+    settings-company), and the currency and language Fitora manages. %>
+<div class="app-card" data-controller="settings-company"
+     data-settings-company-url-value="<%= admin_page_path("settings/company") %>"
+     data-settings-company-country-value="<%= company[:country] %>"
+     data-settings-company-timezone-value="<%= company[:timezone] %>"
+     data-settings-company-labels-value="<%= { saved: ngt("common.save"), save: ngt("common.save"), saving: ngt("common.saving"), error: ngt("common.error_generic") }.to_json %>">
+  <div class="app-card-header">
+    <h2><%= ngt("settings.company_profile") %></h2>
+  </div>
+  <div class="app-card-body">
+    <form novalidate data-settings-company-target="form" data-action="submit->settings-company#submit">
+      <div class="mb-3">
+        <label for="org-name"><%= ngt("settings.company_name") %> *</label>
+        <input id="org-name" class="form-control" name="name" value="<%= company[:name] %>" />
+      </div>
+      <div class="mb-3">
+        <label for="org-description"><%= ngt("activities.description") %></label>
+        <textarea id="org-description" class="form-control" rows="2" name="description"><%= company[:description] %></textarea>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="org-phone"><%= ngt("auth.phone") %></label>
+          <input id="org-phone" class="form-control" name="phone" value="<%= company[:phone] %>" />
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="org-email"><%= ngt("auth.email") %></label>
+          <input id="org-email" type="email" class="form-control" name="email" value="<%= company[:email] %>" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="org-city"><%= ngt("settings.company_city") %></label>
+          <input id="org-city" class="form-control" name="city" value="<%= company[:city] %>" />
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="org-country"><%= ngt("company_setup.country") %></label>
+          <app-searchable-select data-controller="searchable-select" data-searchable-select-id-value="org-country"
+                                 data-searchable-select-placeholder-value="<%= ngt("company_setup.select_country") %>"
+                                 data-searchable-select-search-value="<%= ngt("common.search") %>"
+                                 data-searchable-select-empty-value="<%= ngt("common.no_results") %>"
+                                 data-settings-company-target="country"></app-searchable-select>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="org-address"><%= ngt("company_setup.gym_address") %></label>
+        <input id="org-address" class="form-control" name="address" value="<%= company[:address] %>" placeholder="<%= ngt("company_setup.gym_address_hint") %>" />
+      </div>
+      <div class="mb-3">
+        <label for="org-timezone"><%= ngt("company_setup.timezone") %> *</label>
+        <select id="org-timezone" class="form-select" name="timezone"></select>
+      </div>
+
+      <button type="submit" class="btn btn-primary" data-save>
+        <%= ngt("common.save") %>
+      </button>
+    </form>
+
+    <hr class="my-4" />
+    <dl class="row mb-0">
+      <dt class="col-sm-4 text-muted-token fw-normal"><%= ngt("settings.currency") %></dt>
+      <dd class="col-sm-8"><%= ngt("currency.#{company[:currency]}") %> — <%= company[:currency_symbol] %> (<%= company[:currency] %>)</dd>
+      <dt class="col-sm-4 text-muted-token fw-normal"><%= ngt("settings.company_language") %></dt>
+      <dd class="col-sm-8"><%= ngt("language.#{company[:locale]}") %></dd>
+    </dl>
+    <p class="form-text mt-1"><%= ngt("settings.currency_language_managed") %></p>
+  </div>
+</div>

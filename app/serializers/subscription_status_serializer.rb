@@ -13,7 +13,8 @@ class SubscriptionStatusSerializer
 
     {
       subscription: SubscriptionSerializer.new(subscription).as_json,
-      invoices: subscription ? subscription.invoices.newest_first.map { |i| InvoiceSerializer.new(i).as_json } : [],
+      # What was paid; the bill still to pay is subscription.due_invoice.
+      invoices: subscription ? subscription.invoices.paid.newest_first.map { |i| InvoiceSerializer.new(i).as_json } : [],
       # The account's usage, across every salle the plan covers.
       companies_count: admin.companies.count,
       clients_used: admin.salle_memberships.distinct.count(:client_id),

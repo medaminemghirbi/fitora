@@ -1,0 +1,38 @@
+// GENERATED from frontend/src/app/layout/mobile-bar/mobile-bar.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+.app-mobilebar {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .app-mobilebar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 1030;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    // Clear of the home indicator on a phone with no hardware button.
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .app-mobilebar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    min-height: 3.25rem;
+    padding: 0.35rem 0.25rem;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-size: 0.68rem;
+    font-weight: 600;
+
+    > i { font-size: 1.15rem; }
+
+    &.is-active { color: var(--color-primary); }
+  }
+}

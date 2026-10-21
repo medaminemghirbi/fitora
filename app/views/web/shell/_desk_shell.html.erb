@@ -1,0 +1,87 @@
+<%# ng: desk-shell %>
+<%# ng-host: desk-shell %>
+<%# DeskShellComponent (layout/desk-shell): the top bar with the search every
+    desk screen starts from, the page, and the bottom rail. The search's
+    results and the user menu are put in when they open (desk-search,
+    shell-menu), as Angular's @if puts them in. Members, the schedule,
+    subscriptions and payments are the admin shell's pages. %>
+<% user = bootstrap[:user]; salles = desk_salles; active = salles&.find { |c| c[:active] }; logo = bootstrap.dig(:branding, :logo_url).presence %>
+<div class="desk-shell" data-controller="shell-menu" data-shell-menu-escape-value="menus">
+  <header class="desk-topbar">
+    <a href="<%= desk_path("dashboard") %>" class="desk-brand">
+      <span class="desk-brand-mark">
+        <% if logo %>
+          <img src="<%= logo %>" alt="" />
+        <% else %>
+          <i class="bi bi-lightning-charge-fill"></i>
+        <% end %>
+      </span>
+      <span class="desk-brand-text">
+        <%= ngt("desk.title") %>
+        <% if active %> <small class="desk-brand-salle"><%= active[:name] %></small> <% end %>
+      </span>
+    </a>
+
+    <div class="desk-search" data-controller="desk-search"
+         data-desk-search-url-value="<%= desk_path("clients") %>"
+         data-desk-search-no-match-value="<%= ngt("desk.no_match", term: "%TERM%") %>">
+      <i class="bi bi-search desk-search-icon" aria-hidden="true"></i>
+      <input type="search" class="desk-search-input" autocomplete="off" aria-label="<%= ngt("desk.search_label") %>" placeholder="<%= ngt("desk.search_placeholder") %>"
+             data-desk-search-target="input" data-action="input->desk-search#search" />
+      <template data-desk-search-target="clear">
+        <button type="button" class="desk-search-clear" data-action="desk-search#clear" aria-label="<%= ngt("common.clear") %>">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </template>
+      <template data-desk-search-target="panel"><div class="desk-results"></div></template>
+      <template data-desk-search-target="loading"><p class="desk-results-empty"><%= ngt("common.loading") %></p></template>
+      <template data-desk-search-target="empty"><p class="desk-results-empty"></p></template>
+    </div>
+
+    <div class="desk-topbar-actions">
+      <button type="button" class="icon-btn" data-action="shell-menu#toggleTheme" aria-label="<%= ngt("common.toggle_theme") %>">
+        <i class="bi <%= theme == "light" ? "bi-moon-stars" : "bi-sun" %>"></i>
+      </button>
+
+      <div class="dropdown-wrap">
+        <button type="button" class="user-menu-trigger" data-action="shell-menu#toggle" data-shell-menu-menu-param="user" aria-label="<%= user[:full_name] %>">
+          <app-avatar><%= render "web/shared/avatar", name: user[:full_name].to_s, size: 32 %></app-avatar>
+        </button>
+        <template data-shell-menu-target="menu" data-menu="user">
+          <div class="dropdown-menu-custom dropdown-menu-end">
+            <div class="dropdown-user-info">
+              <strong><%= user[:full_name] %></strong>
+              <span><%= user[:email] %></span>
+            </div>
+            <% if salles %>
+              <div class="desk-menu-label"><%= ngt("nav.switch_company") %></div>
+              <% salles.each do |c| %>
+                <button type="button" class="dropdown-item-custom<%= " is-active" if c[:active] %>" data-action="shell-menu#switchSalle" data-shell-menu-url-param="<%= c[:active] ? "" : desk_path("switch/#{c[:id]}") %>">
+                  <i class="bi bi-building"></i> <%= c[:name] %>
+                  <% if c[:active] %> <i class="bi bi-check-lg ms-auto"></i> <% end %>
+                </button>
+              <% end %>
+            <% end %>
+            <button type="button" class="dropdown-item-custom" data-controller="form-submit" data-form-submit-form-value="sign-out-form" data-action="form-submit#submit">
+              <i class="bi bi-box-arrow-right"></i> <%= ngt("auth.logout") %>
+            </button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </header>
+
+  <main class="desk-content">
+    <router-outlet></router-outlet>
+    <%= yield %>
+  </main>
+
+  <nav class="desk-rail" aria-label="<%= ngt("desk.nav.label") %>">
+    <% desk_nav.each do |item| %>
+      <a href="<%= item[:href] %>" class="desk-rail-link<%= " active" if item[:active] %>">
+        <i class="bi <%= item[:icon] %>"></i>
+        <span><%= ngt(item[:label_key]) %></span>
+      </a>
+    <% end %>
+  </nav>
+</div>

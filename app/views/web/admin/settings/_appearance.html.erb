@@ -1,0 +1,26 @@
+<%# ng: settings-appearance %>
+<%# SettingsAppearanceComponent: the language (the page comes back in it,
+    D6) and the theme (switched in place). %>
+<div class="app-card">
+  <div class="app-card-body sa-body">
+    <div class="sa-row">
+      <span class="sa-label"><%= ngt("settings.language") %></span>
+      <div class="fx-segmented" data-controller="locale-switch">
+        <% [ %w[fr Français], %w[en English], %w[ar العربية] ].each do |code, label| %>
+          <button type="button"<%= raw(' class="is-active"') if locale_code == code %> data-action="locale-switch#choose" data-locale-switch-locale-param="<%= code %>"><%= label %></button>
+        <% end %>
+      </div>
+    </div>
+    <div class="sa-row">
+      <span class="sa-label"><%= ngt("settings.theme") %></span>
+      <div class="fx-segmented" data-controller="theme-switch">
+        <button type="button"<%= raw(' class="is-active"') if theme == "light" %> data-theme-value="light" data-action="theme-switch#choose">
+          <i class="bi bi-sun"></i> <%= ngt("settings.theme_light") %>
+        </button>
+        <button type="button"<%= raw(' class="is-active"') if theme == "dark" %> data-theme-value="dark" data-action="theme-switch#choose">
+          <i class="bi bi-moon"></i> <%= ngt("settings.theme_dark") %>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

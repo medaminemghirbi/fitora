@@ -1,0 +1,15 @@
+<%# ng: pro-lock %>
+<%# ProLockComponent: a Pro tool on a Starter account (or the trial) — what
+    it does, that it comes with Pro, the way to the subscription. The
+    caller writes the <app-pro-lock> host. %>
+<div class="pro-lock<%= " is-compact" if local_assigns[:compact] %>" role="note">
+  <span class="pro-lock-ic" aria-hidden="true"><i class="bi bi-lock-fill"></i></span>
+  <div class="pro-lock-body">
+    <span class="pro-lock-chip"><i class="bi bi-lock-fill"></i> Pro</span>
+    <h2 class="pro-lock-title"><%= ngt("pro_lock.#{feature}_title") %></h2>
+    <p class="pro-lock-text"><%= ngt("pro_lock.#{feature}_body") %></p>
+    <a href="<%= admin_page_path("subscription") %>" class="btn btn-primary pro-lock-cta">
+      <i class="bi bi-stars" aria-hidden="true"></i> <%= ngt("pro_lock.cta") %>
+    </a>
+  </div>
+</div>

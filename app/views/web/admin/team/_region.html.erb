@@ -1,0 +1,25 @@
+<%# ng: team %>
+<%# What sits under the filters as the page first arrives: nobody yet, or
+    the first page of cards. team-page redraws it (data-team-region) on
+    every filter, search and page, and as load() does after a save. %>
+<% if members.empty? %>
+  <div class="app-card" data-team-region>
+    <div class="app-card-body">
+      <app-empty-state>
+        <%= render layout: "web/shared/empty_state", locals: { title: ngt("team.empty_title"), body: ngt("team.empty_body"), icon: "bi-person-vcard" } do %>
+          <button type="button" class="btn btn-primary" data-action="team-page#openCreate" data-kind="coach">
+            <i class="bi bi-plus-lg"></i> <%= ngt("team.new") %>
+          </button>
+        <% end %>
+      </app-empty-state>
+    </div>
+  </div>
+<% else %>
+  <div class="fx-people-grid" data-team-region>
+    <% members.first(25).each do |member| %>
+      <%= render "web/admin/team/card", member: member %>
+    <% end %>
+  </div>
+
+  <app-pagination data-team-region><%= render "web/shared/pagination", meta: { page: 1, total: members.size, total_pages: (members.size / 25.0).ceil.clamp(1..) }, action: "team-page#goToPage" %></app-pagination>
+<% end %>

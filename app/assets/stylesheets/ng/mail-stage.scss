@@ -1,0 +1,185 @@
+// GENERATED from frontend/src/app/features/auth/mail-stage.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// The envelope above the confirmation screens. Every keyframe runs FROM its
+// first frame TO the resting look, so `animation: none` (reduced motion)
+// leaves the final picture in place rather than a half-drawn one.
+
+:host {
+  display: block;
+  margin: 0 0 var(--space-5);
+}
+
+.ms {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  display: grid;
+  place-items: center;
+}
+
+// ---- waiting: listening for the click -------------------------------------
+.ms-ring {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary);
+  opacity: 0;
+  animation: ms-ring 2.8s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+
+.ms-ring--late { animation-delay: 1.4s; }
+
+.ms-envelope {
+  position: relative;
+  width: 104px;
+  height: 84px;
+  overflow: visible;
+  filter: drop-shadow(0 10px 18px color-mix(in srgb, var(--color-primary) 22%, transparent));
+}
+
+.ms-back,
+.ms-flap {
+  fill: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface));
+  stroke: var(--color-primary);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.ms-front {
+  fill: color-mix(in srgb, var(--color-primary) 9%, var(--color-surface));
+  stroke: var(--color-primary);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.ms-paper {
+  fill: var(--color-surface);
+  stroke: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  stroke-width: 2;
+}
+
+.ms-line { fill: color-mix(in srgb, var(--color-primary) 22%, transparent); }
+.ms-line--strong { fill: var(--color-primary); }
+
+[data-state="waiting"] {
+  .ms-envelope { animation: ms-float 3.2s ease-in-out infinite; }
+  .ms-letter { animation: ms-peek 3.2s ease-in-out infinite; }
+}
+
+// ---- sending: a fresh link goes out --------------------------------------
+[data-state="sending"] .ms-envelope {
+  animation: ms-fly 1.05s cubic-bezier(0.55, 0, 0.35, 1) both;
+}
+
+// ---- confirmed: the envelope gives way to a check -------------------------
+[data-state="confirmed"] .ms-envelope {
+  opacity: 0;
+  transform: scale(0.6);
+  animation: ms-out 0.28s ease-in both;
+}
+
+.ms-check {
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  background: var(--color-success);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--color-success) 35%, transparent);
+  animation: ms-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+
+  svg { width: 62%; height: 62%; }
+}
+
+.ms-check-path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 0;
+  animation: ms-draw 0.42s ease-out 0.5s both;
+}
+
+// Twelve dots thrown out from behind the check, alternating three colours.
+.ms-dot {
+  --angle: calc(var(--i) * 30deg);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  opacity: 0;
+  animation: ms-burst 0.75s cubic-bezier(0.2, 0.7, 0.3, 1) 0.4s both;
+
+  &:nth-child(3n) { background: var(--color-success); }
+  &:nth-child(3n + 1) { background: var(--color-warning); width: 6px; height: 6px; }
+}
+
+// ---- error: the link did not work -----------------------------------------
+[data-state="error"] {
+  .ms-envelope {
+    filter: grayscale(1);
+    opacity: 0.7;
+    animation: ms-shake 0.5s ease-in-out both;
+  }
+}
+
+@keyframes ms-ring {
+  0% { transform: scale(0.55); opacity: 0.55; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+
+@keyframes ms-float {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-7px) rotate(-1.5deg); }
+}
+
+@keyframes ms-peek {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+
+@keyframes ms-fly {
+  0% { transform: none; opacity: 1; }
+  42% { transform: translate(120px, -90px) rotate(22deg) scale(0.55); opacity: 0; }
+  58% { transform: translate(0, 46px) scale(0.8); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+
+@keyframes ms-out {
+  from { opacity: 1; transform: none; }
+}
+
+@keyframes ms-pop {
+  from { transform: scale(0); }
+}
+
+@keyframes ms-draw {
+  from { stroke-dashoffset: 40; }
+}
+
+// Invisible on the first frame, so the dots do not sit in a clump over the
+// check while their delay runs.
+@keyframes ms-burst {
+  0% { transform: rotate(var(--angle)) translateY(0) scale(1); opacity: 0; }
+  12% { opacity: 1; }
+  100% { transform: rotate(var(--angle)) translateY(-74px) scale(0.2); opacity: 0; }
+}
+
+@keyframes ms-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-7px); }
+  40%, 80% { transform: translateX(7px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ms *,
+  .ms *::before,
+  .ms *::after {
+    animation: none !important;
+  }
+}

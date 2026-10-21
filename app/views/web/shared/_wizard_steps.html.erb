@@ -1,0 +1,14 @@
+<%# ng: wizard-steps %>
+<%# WizardStepsComponent. The caller writes the <app-wizard-steps> host; the
+    wizard controller moves is-current / is-done and the dots as Angular
+    re-renders them (it keeps both forms of each dot to swap between). %>
+<ol class="fx-wiz" aria-label="<%= label %>">
+  <% steps.each_with_index do |step, i| %>
+    <li class="fx-wiz-step<%= " is-current" if i == current %><%= " is-done" if i < current %>"<%= raw(%( aria-current="step")) if i == current %> data-wizard-step="<%= i %>">
+      <span class="fx-wiz-dot">
+        <% if i < current %><i class="bi bi-check-lg"></i><% else %> <%= i + 1 %> <% end %>
+      </span>
+      <span class="fx-wiz-label"><%= step %></span>
+    </li>
+  <% end %>
+</ol>

@@ -1,0 +1,81 @@
+<%# ng: reset-password %>
+<%# ng-host: reset-password %>
+<%# ResetPasswordComponent (features/auth/reset-password.component.html), for
+    both links that lead to it — a reset and a member's invitation (@copy).
+    The strength bar and the two rules follow what is typed (new-password
+    controller); the done state moves on to /connexion after 2.5 s. %>
+<% content_for :auth_panel do %>
+  <div authPanel class="auth-panel">
+    <span class="auth-panel-icon" aria-hidden="true"><i class="bi bi-shield-lock"></i></span>
+    <p class="auth-panel-title">
+      <%= ngt(@copy[:panel_title_1]) %>
+      <em><%= ngt(@copy[:panel_title_2]) %></em>
+    </p>
+    <p class="auth-panel-lead"><%= ngt(@copy[:panel_lead]) %></p>
+  </div>
+<% end %>
+<app-auth-pro-shell>
+  <%= render layout: "web/shared/auth_pro_shell", locals: { tone: "soft", back_link_text: ngt("auth.back_to_login") } do %>
+    <% if @done %>
+      <span class="auth-request-mark" aria-hidden="true" data-controller="redirect" data-redirect-url-value="/connexion" data-redirect-after-value="2500"><i class="bi bi-check-lg"></i></span>
+      <h1 class="auth-title"><%= ngt(@copy[:done_title]) %></h1>
+      <p class="auth-subtitle"><%= ngt(@copy[:done_body]) %></p>
+      <a href="/connexion" class="btn btn-primary w-100"><%= ngt("auth.back_to_login") %></a>
+    <% else %>
+      <h1 class="auth-title"><%= ngt(@copy[:title]) %></h1>
+      <p class="auth-subtitle"><%= ngt(@copy[:subtitle]) %></p>
+
+      <form action="<%= request.path %>" method="post" novalidate data-turbo="false" data-controller="form-checks new-password" data-form-checks-scope-value="reset-password"
+            data-new-password-labels-value="<%= { 1 => ngt("auth.strength_short"), 2 => ngt("auth.strength_fair"), 3 => ngt("auth.strength_good"), 4 => ngt("auth.strength_strong") }.to_json %>"
+            data-action="submit->form-checks#submit turbo:submit-start->form-checks#busy turbo:submit-end->form-checks#idle">
+        <% if @error %>
+          <div class="alert alert-danger" role="alert"><%= @error %></div>
+        <% end %>
+
+        <div class="mb-3">
+          <label for="password"><%= ngt("auth.new_password") %></label>
+          <div class="auth-password">
+            <input id="password" name="password" type="password" class="form-control" autocomplete="new-password" dir="ltr" aria-describedby="password-strength"
+                   data-password data-checks="required minlength:8" data-new-password-target="password" data-action="input->new-password#update" />
+            <button type="button" class="auth-eye" data-action="form-checks#togglePassword" data-form-checks-target="eye"
+                    data-show-label="<%= ngt("auth.show_password") %>" data-hide-label="<%= ngt("auth.hide_password") %>"
+                    aria-label="<%= ngt("auth.show_password") %>" aria-pressed="false">
+              <i class="bi bi-eye" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="password_confirmation"><%= ngt("auth.confirm_password") %></label>
+          <div class="auth-password">
+            <input id="password_confirmation" name="password_confirmation" type="password" class="form-control" autocomplete="new-password" dir="ltr"
+                   data-password data-checks="required matches:#password" data-new-password-target="confirmation" data-action="input->new-password#update" />
+            <button type="button" class="auth-eye" data-action="form-checks#togglePassword" data-form-checks-target="eye"
+                    data-show-label="<%= ngt("auth.show_password") %>" data-hide-label="<%= ngt("auth.hide_password") %>"
+                    aria-label="<%= ngt("auth.show_password") %>" aria-pressed="false">
+              <i class="bi bi-eye" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <ul class="auth-rules">
+          <li data-new-password-target="longEnough">
+            <i class="bi bi-circle" aria-hidden="true"></i>
+            <%= ngt("auth.password_min_length") %>
+          </li>
+          <li data-new-password-target="matches">
+            <i class="bi bi-circle" aria-hidden="true"></i>
+            <%= ngt("auth.passwords_match") %>
+          </li>
+        </ul>
+
+        <button type="submit" class="btn btn-primary w-100" data-form-checks-target="submit">
+          <%= ngt(@copy[:label]) %>
+        </button>
+        <input type="hidden" name="_method" value="patch">
+        <input type="hidden" name="token" value="<%= @token %>">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      </form>
+    <% end %>
+  <% end %>
+</app-auth-pro-shell>

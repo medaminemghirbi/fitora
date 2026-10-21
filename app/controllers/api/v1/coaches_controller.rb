@@ -46,23 +46,12 @@ module Api
       end
 
       # POST /api/v1/coaches/:id/login — provisions (or resets) the coach's
-      # own login. Reached through the :coaches capability, which moderators
-      # hold. It resets whatever login is attached to the coach, so below the
-      # admin it only touches a login on the coach role: an admin can link a
-      # coach to a moderator's or a full-access login, and resetting that one
-      # would hand its access to whoever did it.
+      # own login (Team::Actions.set_coach_login!).
       def set_login
-        attached = @coach.staff_member
-        if attached && !current_user.admin? && attached.role_key != "coach"
-          return render_forbidden("Only the admin can change this login.")
-        end
-
-        @coach.set_login!(email: params[:email], password: params[:password])
-        AuditLog.record!(
-          company: current_company, user: current_user, action: "coach.login_set",
-          auditable: @coach, metadata: { email: params[:email] }
-        )
+        Team::Actions.set_coach_login!(@coach, company: current_company, by: current_user, email: params[:email], password: params[:password])
         render json: { coach: CoachSerializer.new(@coach.reload).as_json }
+      rescue Team::Actions::Forbidden => e
+        render_forbidden(e.message)
       end
 
       private

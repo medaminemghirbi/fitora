@@ -1,0 +1,91 @@
+// GENERATED from frontend/src/styles/components/_feedback.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// FEEDBACK
+// ----------------------------------------------------------------------------
+// What the app says when it is loading, empty, broken, or has news.
+//
+// Split out of _fitora.scss, which had grown to 1208 lines and was the reason
+// screens drifted: nobody could see what was already there.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// Alerts
+// ---------------------------------------------------------------------------
+.alert {
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  border: 1px solid transparent;
+  padding: 0.75rem 1rem;
+}
+.alert-danger { background: var(--color-danger-soft); border-color: transparent; color: var(--color-danger); }
+.alert-warning { background: var(--color-warning-soft); border-color: transparent; color: var(--color-warning); }
+.alert-success { background: var(--color-success-soft); border-color: transparent; color: var(--color-success); }
+.alert-info { background: var(--color-info-soft); border-color: transparent; color: var(--color-info); }
+
+// ---------------------------------------------------------------------------
+// Badges — subtle, not saturated
+// ---------------------------------------------------------------------------
+.badge {
+  // inline-flex, not the inline a <span> defaults to: vertical padding on an
+  // inline box spills out of the line rather than growing it. Bootstrap's
+  // base gave this inline-block; nothing did after it left.
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28em 0.62em;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.badge.text-bg-secondary { background: var(--color-surface-sunken) !important; color: var(--color-text-secondary) !important; }
+
+// ---------------------------------------------------------------------------
+// Skeleton loaders
+// ---------------------------------------------------------------------------
+.fx-skeleton {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg,
+    var(--color-surface-sunken) 25%,
+    var(--color-surface-hover) 37%,
+    var(--color-surface-sunken) 63%);
+  background-size: 400% 100%;
+  animation: fx-shimmer 1.4s ease infinite;
+}
+.fx-skeleton--text { height: 0.85rem; margin: 0.3rem 0; }
+.fx-skeleton--circle { border-radius: 50%; }
+
+@keyframes fx-shimmer {
+  from { background-position: 100% 50%; }
+  to { background-position: 0 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-skeleton, .btn, .form-control, .form-select { animation: none !important; transition: none !important; }
+}
+
+// ---------------------------------------------------------------------------
+// Empty / error states
+// ---------------------------------------------------------------------------
+.fx-state {
+  text-align: center;
+  padding: var(--space-7) var(--space-5);
+  color: var(--color-text-secondary);
+
+  &-icon {
+    width: 52px; height: 52px;
+    border-radius: var(--radius-lg);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.35rem;
+    margin: 0 auto var(--space-4);
+  }
+  &--danger .fx-state-icon { background: var(--color-danger-soft); color: var(--color-danger); }
+
+  &-title { font-size: 1rem; font-weight: 600; color: var(--color-text); margin: 0 0 0.35rem; }
+  &-body { font-size: 0.875rem; margin: 0 auto var(--space-4); max-width: 42ch; }
+}

@@ -1,0 +1,7 @@
+<%# ng: toast-container %>
+<div class="toast-stack" role="status" aria-live="polite" id="toasts" data-controller="toasts">
+  <% flash.each do |kind, message| %>
+    <% next unless %w[success error info warning].include?(kind.to_s) %>
+    <%= render "web/shared/toast", kind: kind, message: message %>
+  <% end %>
+</div>

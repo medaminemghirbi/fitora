@@ -1,0 +1,76 @@
+// GENERATED from frontend/src/app/shared/ui/searchable-select.component.ts by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+
+    .ss { position: relative; }
+
+    .ss-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: start;
+      cursor: pointer;
+      font: inherit;
+    }
+    .ss.is-disabled .ss-trigger { cursor: not-allowed; opacity: 0.6; }
+    .ss-value { display: inline-flex; align-items: center; gap: 0.4rem; min-width: 0; }
+    .ss-value, .ss-placeholder { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ss-placeholder { color: var(--color-muted); }
+    .ss-chevron { color: var(--color-muted); font-size: 0.8rem; flex-shrink: 0; transition: transform var(--transition-fast); }
+    .ss.is-open .ss-chevron { transform: rotate(180deg); }
+    .ss-prefix { font-size: 1.05em; line-height: 1; }
+
+    .ss-panel {
+      position: absolute;
+      z-index: var(--z-dropdown);
+      inset-inline: 0;
+      top: calc(100% + 4px);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+
+    .ss-search {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--color-border);
+
+      i { color: var(--color-muted); font-size: 0.85rem; }
+      input {
+        flex: 1;
+        border: 0;
+        background: none;
+        color: var(--color-text);
+        font: inherit;
+        font-size: 0.9rem;
+        outline: none;
+      }
+    }
+
+    .ss-list {
+      list-style: none;
+      margin: 0;
+      padding: 0.25rem;
+      max-height: 15rem;
+      overflow-y: auto;
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.6rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        cursor: pointer;
+      }
+      li.is-active { background: var(--color-surface-hover); }
+      li.is-selected { color: var(--color-primary); font-weight: 600; }
+      li span:not(.ss-prefix) { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
+    .ss-check { color: var(--color-primary); font-size: 0.9rem; }
+    .ss-empty { color: var(--color-muted); font-size: 0.85rem; padding: 0.6rem; cursor: default; }
+  

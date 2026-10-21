@@ -1,0 +1,29 @@
+<%# Rails → Angular (Web::HandoffsController#show): the Angular app's storage
+    for this session, then its route. `storage`: key → value (nil removes
+    the key); nil when nobody is signed in, and the Angular guards decide. %>
+<!doctype html>
+<html lang="<%= locale_code %>" data-theme="<%= theme %>" dir="<%= rtl? ? "rtl" : "ltr" %>">
+<head>
+  <meta charset="utf-8">
+  <title>Fitora</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <script>
+    (() => {
+      const storage = <%= raw(json_escape(storage.to_json)) %>
+      const salle = <%= raw(json_escape(salle.to_json)) %>
+      try {
+        for (const [key, value] of Object.entries(storage || {})) {
+          if (value === null) localStorage.removeItem(key)
+          else localStorage.setItem(key, value)
+        }
+        if (salle) sessionStorage.setItem("fitora_company_id", salle)
+      } catch {
+        // Blocked storage: the Angular app asks for a sign-in instead.
+      }
+      location.replace(<%= raw(json_escape(path.to_json)) %>)
+    })()
+  </script>
+</body>
+</html>

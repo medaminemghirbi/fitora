@@ -1,0 +1,143 @@
+<%# ng: settings-shell %>
+<%# ng-host: settings-shell %>
+<%# SettingsShellComponent: the everyday sections on one row of tabs, the
+    Pro tools behind the "Outils Pro" menu (locked below paid Pro), a
+    picker in their place on a phone, and the section the URL names. %>
+<% pro = nav.pro_features? %>
+<% roles_labels = { saved: ngt("settings.role_saved"), deleted: ngt("common.delete"), error: ngt("common.error_generic"), save: ngt("common.save"), saving: ngt("common.saving"),
+                   create: ngt("settings.role_create"), rename: ngt("settings.role_rename"), new: ngt("settings.role_new"), name_required: ngt("settings.role_name_required"),
+                   changes_one: ngt("settings.role_changes_one"), changes_many: Web::Translations.translate("settings.role_changes_many", {}, locale: I18n.locale),
+                   perm_count: Web::Translations.translate("settings.role_perm_count", {}, locale: I18n.locale),
+                   discard_title: ngt("settings.role_discard_title"), discard_body: ngt("settings.role_discard_body"), discard_confirm: ngt("settings.role_discard_confirm"),
+                   delete_title: Web::Translations.translate("settings.role_delete_title", {}, locale: I18n.locale), delete_body: ngt("settings.role_delete_body"),
+                   groups: %w[front planning sales insights other].to_h { |g| [ g, ngt("settings.role_group_#{g}") ] } }.to_json %>
+<% data_exchange_labels = { error: ngt("common.error_generic"), preview_empty: ngt("data_exchange.preview_empty"), preview_rows: Web::Translations.translate("data_exchange.preview_rows", {}, locale: I18n.locale),
+                            truncated: Web::Translations.translate("data_exchange.preview_truncated", {}, locale: I18n.locale), created: Web::Translations.translate("data_exchange.import_created", {}, locale: I18n.locale),
+                            failed: ngt("data_exchange.import_failed"), row: ngt("data_exchange.row") }.to_json %>
+<% branding_labels = { saved: ngt("common.save"), save: ngt("common.save"), saving: ngt("common.saving"), error: ngt("common.error_generic"), type_error: ngt("settings.signature_type_error"), will_replace: ngt("settings.signature_will_replace"), replace_hint: ngt("settings.signature_replace_hint"), signature: ngt("settings.signature") }.to_json %>
+<div class="settings" data-controller="settings-shell">
+  <header class="settings-head">
+    <div>
+      <h1><%= ngt("settings.title") %></h1>
+      <p><%= ngt("settings.hub_subtitle") %></p>
+    </div>
+    <% if current_user.admin? %>
+      <a href="<%= admin_page_path("onboarding") %>" class="settings-start">
+        <i class="bi bi-compass" aria-hidden="true"></i>
+        <%= ngt("onboarding.card_title") %>
+      </a>
+    <% end %>
+  </header>
+
+  <div class="settings-bar">
+    <nav class="settings-tabs" aria-label="<%= ngt("settings.title") %>">
+      <% sections.core.each do |s| %>
+        <% active = s.path == section.path %>
+        <a href="<%= admin_page_path("settings/#{s.path}") %>" class="settings-tab<%= " is-active" if active %>"<%= raw(' aria-current="page"') if active %>>
+          <i class="bi <%= s.icon %>"></i>
+          <span><%= ngt(s.label_key) %></span>
+        </a>
+      <% end %>
+    </nav>
+
+    <% if sections.pro.any? %>
+      <div class="settings-pro" data-settings-shell-target="pro">
+        <button type="button" class="settings-pro-btn<%= " is-active" if section.pro %>" aria-expanded="false" aria-haspopup="menu" data-action="settings-shell#toggleProMenu">
+          <% unless pro %>
+            <i class="bi bi-lock-fill" aria-hidden="true"></i>
+          <% end %>
+          <%= ngt("settings.pro_tools") %>
+          <span class="settings-pro-count"><%= sections.pro.size %></span>
+          <i class="bi bi-chevron-down settings-pro-caret" aria-hidden="true"></i>
+        </button>
+        <template data-settings-shell-target="menu">
+          <div class="settings-pro-menu" role="menu">
+            <span class="settings-pro-head">
+              <%= ngt(pro ? "settings.pro_tools_yours" : "settings.pro_tools_locked") %>
+            </span>
+            <% sections.pro.each do |s| %>
+              <a role="menuitem" href="<%= admin_page_path("settings/#{s.path}") %>" class="settings-pro-item<%= " is-active" if s.path == section.path %>">
+                <span class="settings-pro-ic"><i class="bi <%= s.icon %>" aria-hidden="true"></i></span>
+                <span>
+                  <b>
+                    <%= ngt(s.label_key) %>
+                    <% unless pro %>
+                      <i class="bi bi-lock-fill settings-pro-lock" aria-label="<%= ngt("settings.pro_tools_locked") %>"></i>
+                    <% end %>
+                  </b>
+                  <small><%= ngt(s.short_key) %></small>
+                </span>
+              </a>
+            <% end %>
+            <% unless pro %>
+              <a href="<%= admin_page_path("subscription") %>" class="settings-pro-cta">
+                <i class="bi bi-stars" aria-hidden="true"></i> <%= ngt("pro_lock.cta") %>
+              </a>
+            <% end %>
+          </div>
+        </template>
+      </div>
+    <% end %>
+  </div>
+
+  <select class="settings-picker" aria-label="<%= ngt("settings.title") %>" data-action="settings-shell#pick">
+    <% sections.groups.each do |group| %>
+      <optgroup label="<%= ngt(group.label_key) %>">
+        <% group.sections.each do |s| %>
+          <option value="<%= admin_page_path("settings/#{s.path}") %>"<%= raw(" selected") if s.path == section.path %>>
+            <%= ngt(s.label_key) %><%= s.pro && !pro ? " · Pro" : "" %>
+          </option>
+        <% end %>
+      </optgroup>
+    <% end %>
+  </select>
+
+  <section class="settings-body" aria-labelledby="settings-sec-h">
+    <header class="settings-body-head">
+      <h2 id="settings-sec-h"><%= ngt(section.label_key) %></h2>
+      <p><%= ngt(section.desc_key) %></p>
+    </header>
+
+    <% if section.path == "company" %>
+      <app-settings-company><%= render "web/admin/settings/company", company: @company %></app-settings-company>
+    <% elsif section.path == "branding" %>
+      <% if pro %>
+        <app-settings-branding data-controller="settings-branding" data-settings-branding-url-value="<%= admin_page_path("settings/company") %>" data-settings-branding-labels-value="<%= branding_labels %>"><%= render "web/admin/settings/branding", company: @company, part: "brand" %></app-settings-branding>
+      <% else %>
+        <app-pro-lock><%= render "web/shared/pro_lock", feature: "branding" %></app-pro-lock>
+      <% end %>
+    <% elsif section.path == "contracts" %>
+      <app-settings-branding data-controller="settings-branding" data-settings-branding-url-value="<%= admin_page_path("settings/company") %>" data-settings-branding-labels-value="<%= branding_labels %>"><%= render "web/admin/settings/branding", company: @company, part: "contracts" %></app-settings-branding>
+    <% elsif section.path == "planning" %>
+      <app-settings-planning><%= render "web/admin/settings/planning", company: @company %></app-settings-planning>
+    <% elsif section.path == "booking" %>
+      <app-settings-booking data-controller="settings-booking" data-settings-booking-url-value="<%= admin_page_path("settings/company") %>"
+                            data-settings-booking-labels-value="<%= { saved: ngt("common.saved"), error: ngt("common.error_generic") }.to_json %>"><%= render "web/admin/settings/booking", company: @company %></app-settings-booking>
+    <% elsif section.path == "roles" %>
+      <% if pro %>
+        <app-settings-roles data-controller="settings-roles" data-settings-roles-url-value="<%= admin_page_path("settings/roles") %>"
+                            data-settings-roles-labels-value="<%= roles_labels %>"><%= render "web/admin/settings/roles", data: @roles %></app-settings-roles>
+      <% else %>
+        <app-pro-lock><%= render "web/shared/pro_lock", feature: "roles" %></app-pro-lock>
+      <% end %>
+    <% elsif section.path == "mobile-app" %>
+      <% if pro %>
+        <app-settings-mobile-app data-controller="settings-mobile-app" data-settings-mobile-app-url-value="<%= admin_page_path("settings/mobile-app/regenerate") %>"
+                                 data-settings-mobile-app-labels-value="<%= { copied: ngt("settings.mobile_copied"), error: ngt("common.error_generic"), title: ngt("settings.mobile_regenerate_title"), body: ngt("settings.mobile_regenerate_body"), done: ngt("settings.mobile_regenerated") }.to_json %>"><%= render "web/admin/settings/mobile_app", keys: @keys %></app-settings-mobile-app>
+      <% else %>
+        <app-pro-lock><%= render "web/shared/pro_lock", feature: "mobile_app" %></app-pro-lock>
+      <% end %>
+    <% elsif section.path == "data-exchange" %>
+      <% if pro %>
+        <app-data-exchange data-controller="data-exchange" data-data-exchange-url-value="<%= admin_page_path("settings/data-exchange") %>"
+                           data-data-exchange-labels-value="<%= data_exchange_labels %>"><%= render "web/admin/settings/data_exchange" %></app-data-exchange>
+      <% else %>
+        <app-pro-lock><%= render "web/shared/pro_lock", feature: "data_exchange" %></app-pro-lock>
+      <% end %>
+    <% elsif section.path == "appearance" %>
+      <app-settings-appearance><%= render "web/admin/settings/appearance" %></app-settings-appearance>
+    <% elsif section.path == "account" %>
+      <app-change-password><%= render "web/shared/change_password" %></app-change-password>
+    <% end %>
+  </section>
+</div>

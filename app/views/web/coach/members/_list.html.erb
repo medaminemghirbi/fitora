@@ -1,0 +1,50 @@
+<%# ng: coach-members %>
+<%# CoachMembersComponent's list: who this coach trains — the count, then
+    each with their contraindications, when they next come or last came,
+    and a way to call them. `query`: what was searched. %>
+<% if members.empty? %>
+  <% if query.present? %>
+    <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("coach.members.no_match_title"), body: ngt("coach.members.no_match_body", term: query), icon: "bi-search" } do %><% end %></app-empty-state>
+  <% else %>
+    <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("coach.members.none_title"), body: ngt("coach.members.none_body"), icon: "bi-people" } do %><% end %></app-empty-state>
+  <% end %>
+<% else %>
+  <p class="coach-members-count"><%= ngt("coach.members.count", count: total) %></p>
+
+  <ul class="coach-member-list">
+    <% members.each do |member| %>
+      <li class="coach-member">
+        <app-avatar><%= render "web/shared/avatar", name: member[:full_name].to_s, size: 40 %></app-avatar>
+
+        <div class="coach-member-body">
+          <strong><%= member[:full_name] %></strong>
+          <% if member[:health_notes].present? %>
+            <span class="coach-member-health">
+              <i class="bi bi-heart-pulse" aria-hidden="true"></i> <%= member[:health_notes] %>
+            </span>
+          <% end %>
+          <small>
+            <% if member[:next_session_at] %>
+              <%= ngt("coach.members.next", when: ng_date(member[:next_session_at], "EEE d MMM, HH:mm")) %>
+            <% elsif member[:last_seen_at] %>
+              <%= ngt("coach.members.last_seen", when: ng_date(member[:last_seen_at], "d MMM")) %>
+            <% else %>
+              <%= ngt("coach.members.not_yet") %>
+            <% end %>
+          </small>
+        </div>
+
+        <div class="coach-member-actions">
+          <% if coach_member_lapsed?(member) %>
+            <span class="coach-member-flag"><%= ngt("coach.members.lapsed") %></span>
+          <% end %>
+          <% if member[:phone].present? %>
+            <a class="icon-btn" href="tel:<%= member[:phone] %>" aria-label="<%= ngt("coach.members.call", name: member[:full_name]) %>">
+              <i class="bi bi-telephone"></i>
+            </a>
+          <% end %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

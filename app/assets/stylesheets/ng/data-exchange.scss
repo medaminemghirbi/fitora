@@ -1,0 +1,130 @@
+// GENERATED from frontend/src/app/features/admin/data-exchange/data-exchange.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+.data-exchange-selector {
+  margin-bottom: var(--space-4);
+  max-width: 320px;
+
+  label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.35rem;
+  }
+}
+
+.app-card-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+
+  i { color: var(--color-primary); }
+}
+
+.app-card-body { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.data-exchange-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.data-exchange-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: 0.86rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+
+  &:hover { border-color: var(--color-primary-border); background: var(--color-primary-soft); color: var(--color-primary); }
+  &.is-busy { cursor: default; pointer-events: none; opacity: 0.7; }
+}
+
+.data-exchange-preview-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-danger);
+  font-size: 0.84rem;
+  margin: 0;
+}
+
+.data-exchange-preview {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.data-exchange-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 0.86rem;
+
+  i { color: var(--color-primary); margin-inline-end: 0.35rem; }
+}
+
+.data-exchange-preview-scroll {
+  overflow: auto;
+  max-height: 300px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  table { margin: 0; font-size: 0.8rem; white-space: nowrap; }
+  th { position: sticky; top: 0; background: var(--color-surface-sunken); }
+}
+
+.data-exchange-preview-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.data-exchange-result {
+  border-radius: var(--radius-md);
+  background: var(--color-success-soft);
+  padding: var(--space-3);
+}
+
+.data-exchange-result-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-success);
+  font-weight: 600;
+  font-size: 0.86rem;
+
+  i { flex-shrink: 0; }
+}
+
+.data-exchange-result.has-errors {
+  background: var(--color-warning-soft);
+
+  .data-exchange-result-summary { color: var(--color-warning); }
+}
+
+.data-exchange-errors {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  max-height: 160px;
+  overflow-y: auto;
+
+  strong { color: var(--color-text); }
+}

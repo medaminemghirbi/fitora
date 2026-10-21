@@ -1,0 +1,8 @@
+<%# ng: client-profile %>
+<%# The booking dialog's sessions for an activity on a day: each one's time,
+    coach and fill, the ones that cannot take a booking greyed out. %>
+<% sessions.each do |s| %>
+  <option value="<%= s[:id] %>"<%= raw(" disabled") if s[:availability] != "available" %>>
+    <%= ng_date(s[:starts_at], "HH:mm") %> — <%= s[:coach_name].presence || "—" %> (<span dir="ltr"><%= s[:confirmed_count] %>/<%= s[:capacity] %></span>)
+  </option>
+<% end %>

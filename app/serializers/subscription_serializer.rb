@@ -26,7 +26,10 @@ class SubscriptionSerializer
       # Still on the free days (or just past them): nothing paid yet, so no
       # plan chosen yet either.
       trial: subscription.trial?,
-      trial_days_left: subscription.trial_days_left
+      trial_days_left: subscription.trial_days_left,
+      # The bill a change of plan issued, waiting for the money (or nil).
+      # Apart from `invoices`, which list what was paid.
+      due_invoice: InvoiceSerializer.new(subscription.due_invoice).as_json
     }
   end
 

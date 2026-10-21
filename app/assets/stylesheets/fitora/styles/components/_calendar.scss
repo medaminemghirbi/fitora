@@ -1,0 +1,207 @@
+// GENERATED from frontend/src/styles/components/_calendar.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// CALENDAR
+// ----------------------------------------------------------------------------
+// The schedule: its toolbar, and the card that previews a session.
+//
+// Split out of _fitora.scss, which had grown to 1208 lines and was the reason
+// screens drifted: nobody could see what was already there.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// Calendar toolbar — period nav, view switch and the page's actions in one row
+// ---------------------------------------------------------------------------
+.fx-cal-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.fx-cal-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.fx-cal-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+}
+
+.fx-cal-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+
+// The row under the toolbar: what to show, then what the colours mean.
+// It replaced the left rail — five days of grid need the width more than
+// two selects do.
+.fx-cal-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.fx-cal-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  label {
+    margin: 0;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+  }
+
+  .form-select { width: auto; min-width: 150px; max-width: 220px; }
+}
+
+// Colour key for a grid (calendar statuses today). It sits at the end of
+// the filter row, pushed to the far edge: a key is read once, not chosen.
+.fx-legend {
+  list-style: none;
+  margin: 0 0 0 auto;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+
+  li { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--color-text-secondary); }
+}
+
+:dir(rtl) .fx-legend { margin: 0 auto 0 0; }
+
+.fx-legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+@media (max-width: 767.98px) {
+  .fx-cal-toolbar { gap: var(--space-2); }
+  .fx-cal-title { font-size: 1rem; flex-basis: 100%; }
+  .fx-cal-filter { flex: 1 1 100%; }
+  .fx-cal-filter .form-select { flex: 1; max-width: none; }
+  .fx-legend { margin-inline-start: 0; }
+}
+
+// ---------------------------------------------------------------------------
+// Session hover card — the calendar's preview on hovering an event
+
+// ---------------------------------------------------------------------------
+// Pinned to the viewport next to the hovered block. `pointer-events: none` is
+// what keeps it an accelerator: it can never intercept the click that opens
+// the real detail modal, and it can never trap the cursor and flicker.
+.fx-session-tip {
+  position: fixed;
+  z-index: var(--z-dropdown);
+  width: 268px;
+  pointer-events: none;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  animation: fx-pop var(--transition-fast);
+}
+
+.fx-session-tip-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.fx-session-tip-title {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.fx-session-tip-meta {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+
+  li { display: flex; align-items: center; gap: 0.45rem; }
+  i { width: 0.95rem; text-align: center; color: var(--color-muted); flex-shrink: 0; }
+  .fx-muted { margin-inline-start: auto; font-size: 0.75rem; }
+}
+
+.fx-session-tip-fill-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+
+  strong { font-size: 0.85rem; color: var(--color-text); font-variant-numeric: tabular-nums; }
+}
+
+.fx-session-tip-bar {
+  margin-top: 0.3rem;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  overflow: hidden;
+
+  > div {
+    height: 100%;
+    border-radius: var(--radius-pill);
+    background: var(--color-success);
+
+    &.is-full { background: var(--color-warning); }
+  }
+}
+
+.fx-session-tip-hint {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--color-muted);
+}
+
+// No hover on touch: the card never appears there, and tapping opens the
+// detail modal, which is the real path anyway.
+@media (hover: none) {
+  .fx-session-tip { display: none; }
+}
+
+.fx-section-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: var(--space-5) 0 var(--space-3);
+}
+
+.fx-gym-activities,
+.fx-gym-activities li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child { border-bottom: 0; padding-bottom: 0; }
+}
+
+@media (max-width: 575.98px) {
+}
+
+@media (max-width: 575.98px) {
+}
