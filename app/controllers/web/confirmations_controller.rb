@@ -41,7 +41,7 @@ module Web
     # ConfirmEmailComponent#continue: naming the gym, or home for an admin
     # who already has one.
     def continue_url
-      served_path(current_user.current_company.nil? ? "/admin/setup-company" : home_path)
+      current_user.current_company.nil? ? "/admin/setup-company" : home_path
     end
 
     def rate_limited

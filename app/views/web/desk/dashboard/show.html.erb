@@ -118,7 +118,7 @@
       <ul class="desk-list">
         <% @stats[:recent_clients].each do |client| %>
           <li class="desk-list-row">
-            <a class="desk-list-body desk-list-link" href="<%= served_path("/admin/#{salle.id}/clients/#{client[:id]}") %>">
+            <a class="desk-list-body desk-list-link" href="<%= "/admin/#{salle.id}/clients/#{client[:id]}" %>">
               <strong><%= client[:full_name] %></strong>
               <small><%= ng_date(client[:joined_at], "d MMM") %></small>
             </a>

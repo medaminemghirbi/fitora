@@ -12,7 +12,7 @@ gem "csv"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 
-# The server-rendered web UI that replaces the Angular SPA shell by shell
+# The server-rendered web UI, which replaced the Angular SPA
 # (MIGRATION_AUDIT_2026-10-15.md). Assets are built by npm (esbuild + sass,
 # see package.json) and served by Propshaft; Turbo and Stimulus drive the
 # pages. rails-i18n supplies the date and number words for fr / ar.
@@ -29,7 +29,7 @@ gem "bcrypt", "~> 3.1.7"
 # JWT encode/decode for API authentication
 gem "jwt"
 
-# Cross-Origin Resource Sharing, needed for the Angular dev server
+# Cross-Origin Resource Sharing, for the mobile app's Expo web dev server
 gem "rack-cors"
 
 # Rate-limits POST /api/v1/auth/login (see config/initializers/rack_attack.rb)

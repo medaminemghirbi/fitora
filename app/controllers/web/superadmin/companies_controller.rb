@@ -71,7 +71,7 @@ module Web
         return render_refusal("This company has no admin account") if admin.nil?
 
         start_impersonation(admin, company_name: @company.name)
-        render json: { next: served_path("/admin/#{admin.current_company&.id || @company.id}/dashboard") }
+        render json: { next: "/admin/#{admin.current_company&.id || @company.id}/dashboard" }
       end
 
       def create_invoice

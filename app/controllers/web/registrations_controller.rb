@@ -20,7 +20,7 @@ module Web
       return render_form(I18n.with_locale(:en) { user.errors.full_messages.first }) unless user.persisted?
 
       sign_in(user)
-      redirect_to served_path("/confirmation-email"), status: :see_other
+      redirect_to "/confirmation-email", status: :see_other
     end
 
     private

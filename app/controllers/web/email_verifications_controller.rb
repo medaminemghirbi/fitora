@@ -29,12 +29,11 @@ module Web
 
       user = current_user
       user&.reload
-      path = if user&.admin? && user.current_company.nil? && user.email_verified?
+      if user&.admin? && user.current_company.nil? && user.email_verified?
         "/admin/setup-company"
       else
         home_path
       end
-      served_path(path)
     end
 
     def rate_limited

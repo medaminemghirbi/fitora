@@ -12,8 +12,8 @@ Rails.application.configure do
   # Full error reports are disabled.
   config.consider_all_requests_local = false
 
-  # Serve the baked-in Angular SPA (the Dockerfile copies it into public/) and
-  # cache its digest-stamped assets for far-future expiry.
+  # Serve public/ — the web UI's digest-stamped assets in public/assets
+  # among it — with far-future expiry.
   config.public_file_server.enabled = true
   config.public_file_server.headers = { "cache-control" => "public, max-age=#{1.year.to_i}" }
 
@@ -29,10 +29,10 @@ Rails.application.configure do
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
 
-  # Origins allowed to open the /cable WebSocket. Set FRONTEND_ORIGINS to the
-  # deployed front-end URL(s), comma-separated.
+  # Origins allowed to open the /cable WebSocket: the web UI's own, unless
+  # FRONTEND_ORIGINS lists others (comma-separated).
   config.action_cable.allowed_request_origins =
-    ENV.fetch("FRONTEND_ORIGINS", "https://app.fitora.io").split(",")
+    ENV.fetch("FRONTEND_ORIGINS") { "https://#{config.x.app_host}" }.split(",")
 
   # Log to STDOUT with the current request id as a default log tag.
   config.log_tags = [ :request_id ]

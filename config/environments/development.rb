@@ -66,15 +66,13 @@ Rails.application.configure do
   # config.i18n.raise_on_missing_translations = true
 
   # Annotate rendered view with file names.
-  # Off: the web UI's pages are compared with the Angular app's DOM, and the
-  # annotation comments would add nodes Angular never renders — the first one
-  # even lands before <!doctype html>, which puts the page in quirks mode.
+  # Off: the annotation comments would add DOM nodes the pages never render
+  # in production — the first one even lands before <!doctype html>, which
+  # puts the page in quirks mode.
   config.action_view.annotate_rendered_view_with_filenames = false
 
-  # The Angular dev server opens the /cable WebSocket cross-origin. The JWT in
-  # the connection URL is the real auth (ApplicationCable::Connection); the
-  # handshake origin check is redundant here.
-  config.action_cable.disable_request_forgery_protection = true
+  # The /cable WebSocket from any local port (the page's own origin is
+  # always allowed).
   config.action_cable.allowed_request_origins = [
     %r{http://localhost:\d+},
     %r{http://127\.0\.0\.1:\d+}

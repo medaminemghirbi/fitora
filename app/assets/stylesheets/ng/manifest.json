@@ -1,5 +1,5 @@
 {
-  "//": "Angular components whose styles the Rails pages reuse, keyed by the id the build scopes them with (_ngcontent-<id> / _nghost-<id>). `source` is relative to ../frontend/src/app (a list when the component has several styleUrls). `inline` means the styles live in the component's TypeScript (styles: [`…`]). test/parity/sync-from-angular.mjs copies each into ng/<id>.scss and checks the copies have not drifted; bin/build-css compiles and scopes them the way Angular's emulated encapsulation does.",
+  "//": "Angular components whose styles the Rails pages reuse, keyed by the id the build scopes them with (_ngcontent-<id> / _nghost-<id>). `source` is relative to ../frontend/src/app (a list when the component has several styleUrls). `inline` means the styles live in the component's TypeScript (styles: [`…`]). Each was copied into ng/<id>.scss, which is the source now; bin/build-css compiles and scopes them the way Angular's emulated encapsulation does.",
   "components": {
     "account-locked": {
       "source": "features/account-locked/account-locked.component.scss"

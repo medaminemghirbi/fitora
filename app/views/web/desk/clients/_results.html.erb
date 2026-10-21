@@ -6,7 +6,7 @@
   <p class="desk-results-empty"><%= ngt("desk.no_match", term: term) %></p>
 <% else %>
   <% clients.each do |client| %>
-    <button type="button" class="desk-result" data-action="desk-search#open" data-href="<%= served_path("/admin/#{salle.id}/clients/#{client[:id]}") %>">
+    <button type="button" class="desk-result" data-action="desk-search#open" data-href="<%= "/admin/#{salle.id}/clients/#{client[:id]}" %>">
       <app-avatar><%= render "web/shared/avatar", name: client[:full_name].to_s, size: 36 %></app-avatar>
       <span class="desk-result-body">
         <strong><%= client[:full_name] %></strong>

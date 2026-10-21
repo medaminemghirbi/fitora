@@ -13,7 +13,7 @@ module Web
         current_user.switch_active_company!(target)
         current_user.active_company_id = target.id
         @current_company = @current_staff_member = nil
-        render json: { next: served_path(home_path) }
+        render json: { next: home_path }
       end
     end
   end

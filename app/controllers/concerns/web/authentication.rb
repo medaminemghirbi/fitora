@@ -41,16 +41,14 @@ module Web
       current_user.present? || current_client.present?
     end
 
-    # `expires_at`: a session carried over from an Angular token keeps that
-    # token's own end (Web::HandoffsController#exchange), never a fresh 7 days.
-    def sign_in(account, impersonator: nil, expires_at: nil)
+    def sign_in(account, impersonator: nil)
       reset_session # never carry a pre-sign-in session id across the door
       lifetime = impersonator ? JwtService::IMPERSONATION_EXPIRATION : JwtService::EXPIRATION
       session[SESSION_KEY] = {
         "kind" => account.is_a?(Client) ? "client" : "user",
         "id" => account.id,
         "tv" => account.token_version,
-        "exp" => (expires_at || lifetime.from_now).to_i
+        "exp" => lifetime.from_now.to_i
       }
       session[SESSION_KEY]["imp"] = impersonator.id if impersonator
       @session_loaded = false

@@ -4,9 +4,9 @@
 #   bin/kamal setup            # first time (installs Docker, boots accessories)
 #   bin/kamal deploy           # subsequent releases
 #
-# One box runs everything: the Rails app (API + baked-in Angular SPA on one
-# origin), a Sidekiq worker, plus Postgres and Redis as accessories, and a
-# backup accessory that ships a nightly dump off the box.
+# One box runs everything: the Rails app (web UI + API on one origin), a
+# Sidekiq worker, plus Postgres and Redis as accessories, and a backup
+# accessory that ships a nightly dump off the box.
 
 service: fitora
 
@@ -36,10 +36,10 @@ registry:
   password:
     - KAMAL_REGISTRY_PASSWORD
 
+# Builds the Dockerfile here, from a clean checkout of the current commit:
+# commit before deploying.
 builder:
   arch: amd64
-  context: ..                # repo root — Dockerfile builds backend/ + frontend/
-  dockerfile: backend/Dockerfile
 
 env:
   clear:
@@ -48,7 +48,6 @@ env:
     RAILS_MAX_THREADS: 5
     RAILS_LOG_LEVEL: info
     APP_HOST: <APP_DOMAIN>
-    FRONTEND_ORIGINS: https://<APP_DOMAIN>
     MAIL_FROM: "Fitora <no-reply@<APP_DOMAIN>>"
     REDIS_URL: redis://fitora-redis:6379/1
     # The password comes from BACKEND_DATABASE_PASSWORD (config/database.yml).

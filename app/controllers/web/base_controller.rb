@@ -25,7 +25,7 @@ module Web
     # subclasses' callbacks run.
     before_action :rate_limited, if: -> { request.env[Web::RateLimit::ENV_KEY] }
 
-    helper_method :locale_code, :rtl?, :theme, :bootstrap, :home_path, :served_path, :live_notifications_for
+    helper_method :locale_code, :rtl?, :theme, :bootstrap, :home_path, :live_notifications_for
 
     private
 
@@ -59,7 +59,7 @@ module Web
       Time.use_zone(current_company&.time_zone || Time.zone, &action)
     end
 
-    # What the shell knows about this login — the same payload the Angular
+    # What the shell knows about this login — the same payload the mobile
     # app loads from /api/v1/bootstrap.
     def bootstrap
       @bootstrap ||= current_user && SessionBootstrap.new(current_user, current_company).as_json
@@ -69,20 +69,14 @@ module Web
       Web::HomePath.for(user: current_user, client: current_client, impersonating: current_impersonator.present?)
     end
 
-    # Sends the person home — through the session hand-off when their home is
-    # a shell still on Angular (MIGRATION_AUDIT §9.3).
     def go_home
-      redirect_to served_path(home_path)
+      redirect_to home_path
     end
 
     # No session: the sign-in page, as the Angular guards send there (no
-    # return address, §8.3). While some shells are still Angular's, the
-    # person may be signed in over there instead: the exchange page carries
-    # that session across first (Web::HandoffsController#exchange).
+    # return address, §8.3).
     def sign_in_first
-      return redirect_to(web_sign_in_path) unless Web::Routing.transition? && request.get? && request.format.html?
-
-      render "web/handoffs/exchange", layout: false, locals: { to: request.fullpath }
+      redirect_to web_sign_in_path
     end
 
     # The account a page's live notifications follow, or nil: a member, an
@@ -98,12 +92,6 @@ module Web
     # A page with a form overrides this to show the form refused.
     def rate_limited
       head :too_many_requests
-    end
-
-    # A path to send the browser to: as it is when Rails serves it, through
-    # the hand-off to the Angular app when it does not.
-    def served_path(path)
-      Web::Routing.served?(path) ? path : web_handoff_path(to: path)
     end
   end
 end

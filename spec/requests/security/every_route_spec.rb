@@ -28,12 +28,12 @@ RSpec.describe "Every route is closed by default", type: :request do
     # salle's member code or coach key in the URL is the credential (long,
     # random, regeneratable, throttled — Api::V1::TenantsController).
     %r{\A/api/v1/tenants/[^/]+/app_config\z},
-    # Health check and the SPA's own HTML.
+    # Health check.
     %r{\A/up\z}
   ].freeze
 
   # Not part of the API surface: Sidekiq's dashboard has its own HTTP basic
-  # auth, and the SPA catch-all serves index.html by design.
+  # auth, and the catch-all only redirects to the landing page.
   IGNORED = [ %r{\A/sidekiq}, /\*path/ ].freeze
 
   # Every concrete (verb, path) the router will answer, with an id in place

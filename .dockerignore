@@ -1,0 +1,43 @@
+# See https://docs.docker.com/engine/reference/builder/#dockerignore-file for more about ignoring files.
+
+# Git, CI, editors.
+/.git/
+/.gitignore
+/.github/
+/.ruby-lsp/
+/.venv/
+.DS_Store
+
+# Environment files and secrets.
+/.env*
+!/.env.example
+/config/master.key
+/config/credentials/*.key
+/.kamal/secrets*
+
+# Logs, temp files, uploads — the directories stay, empty.
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+/tmp/pids/*
+!/tmp/pids/.keep
+/storage/*
+!/storage/.keep
+
+# Built in the image: npm packages and the web UI's assets.
+/node_modules/
+/app/assets/builds/*
+!/app/assets/builds/.keep
+/public/assets/
+
+# Not needed at runtime.
+/spec/
+/.rspec
+/coverage/
+/load_test/
+/docs/
+/doc/
+/README.md
+/Dockerfile
+/.dockerignore

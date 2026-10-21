@@ -21,7 +21,7 @@ module Web
       # check people in AND book them — not a coach (who has check-in alone),
       # not the admin (whose shell is a superset of this one).
       def desk_area!
-        return redirect_to(served_path("/account-locked")) if locking_subscription.present?
+        return redirect_to("/account-locked") if locking_subscription.present?
         return go_home unless current_user.staff? && !current_staff_member&.coach?
 
         go_home unless capability?(:checkin) && capability?(:bookings)

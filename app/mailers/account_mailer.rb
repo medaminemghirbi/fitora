@@ -3,7 +3,7 @@
 # shared by User (admin/staff — never superadmin, see
 # Api::V1::PasswordResetsController) and Client.
 class AccountMailer < ApplicationMailer
-  # The Angular SPA's own origin — see config.x.frontend_url, the one place
+  # The web UI's origin — see config.x.frontend_url, the one place
   # it is decided, which production's host list reads too.
   FRONTEND_URL = Rails.configuration.x.frontend_url
 
