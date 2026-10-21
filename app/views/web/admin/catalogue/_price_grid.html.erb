@@ -1,0 +1,113 @@
+<%# ng: price-grid %>
+<%# PriceGridComponent: a row per activity and per pack, a column per active
+    formule, the price where they cross — each cell edited where it stands
+    (the catalogue controller saves it on blur). %>
+<% plans = active_plans
+   activities = active_activities
+   packs = active_packs %>
+<div class="pg-head">
+  <p class="pg-hint">
+    <i class="bi bi-pencil-square" aria-hidden="true"></i>
+    <%= ngt("catalogue.grid_hint", currency: grid_currency) %>
+  </p>
+  <div class="pg-actions">
+    <% if packs_enabled? %>
+      <button type="button" class="btn btn-outline-secondary btn-sm" data-kind="pack" data-action="catalogue#start"<%= raw(" disabled") if activities.size < 2 %>>
+        <i class="bi bi-collection"></i> <%= ngt("packs.new") %>
+      </button>
+    <% end %>
+    <button type="button" class="btn btn-primary btn-sm" data-kind="plan" data-action="catalogue#start">
+      <i class="bi bi-plus-lg"></i> <%= ngt("contract_types.new") %>
+    </button>
+  </div>
+</div>
+
+<div class="app-card pg-card">
+  <div class="pg-scroll">
+    <table class="pg">
+      <thead>
+        <tr>
+          <th scope="col" class="pg-corner"><%= ngt("catalogue.grid_corner") %></th>
+          <% plans.each do |plan| %>
+            <th scope="col" class="pg-plan" style="--plan-color: <%= plan[:color] %>;">
+              <span class="pg-plan-name"><%= plan[:name] %></span>
+              <span class="pg-plan-meta">
+                <%= ngt("catalogue.length_#{plan[:billing_period]}", days: plan[:validity_days]) %> ·
+                <% if plan[:session_count].present? && plan[:session_count].to_i != 0 %>
+                  <%= plan[:session_count] %> <%= ngt("contract_types.sessions") %>
+                <% else %>
+                  <%= ngt("catalogue.unlimited_short") %>
+                <% end %>
+              </span>
+            </th>
+          <% end %>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr class="pg-group">
+          <th scope="rowgroup" colspan="<%= plans.size + 1 %>"><%= ngt("nav.activities") %></th>
+        </tr>
+        <% activities.each do |activity| %>
+          <tr data-row="activity:<%= activity[:id] %>">
+            <th scope="row" class="pg-row">
+              <span class="pg-row-name">
+                <span class="pg-emoji" aria-hidden="true"><%= activity[:emoji].presence || "•" %></span>
+                <%= activity[:name] %>
+              </span>
+              <% if plans.none? { |plan| grid_price(plan, :activity, activity[:id]) } %>
+                <span class="pg-unsold"><%= ngt("catalogue.not_sold") %></span>
+              <% end %>
+            </th>
+            <% plans.each do |plan| %>
+              <%= render "web/admin/catalogue/grid_cell", plan: plan, kind: "activity", id: activity[:id], label: "#{activity[:name]} — #{plan[:name]}", price: grid_price(plan, :activity, activity[:id]) %>
+            <% end %>
+          </tr>
+        <% end %>
+
+        <%# Packs only exist for a gym that turned them on (Settings). %>
+        <% if packs_enabled? %>
+          <tr class="pg-group">
+            <th scope="rowgroup" colspan="<%= plans.size + 1 %>"><%= ngt("catalogue.tab_packs") %></th>
+          </tr>
+          <% packs.each do |pack| %>
+            <tr data-row="pack:<%= pack[:id] %>">
+              <th scope="row" class="pg-row">
+                <span class="pg-row-name">
+                  <span class="pg-emoji" aria-hidden="true"><i class="bi bi-collection"></i></span>
+                  <%= pack[:name] %>
+                </span>
+                <span class="pg-row-sub">
+                  <% pack[:activities].each_with_index do |a, i| %>
+                    <%= a[:emoji].present? ? "#{a[:emoji]} " : "" %><%= a[:name] %><% if i < pack[:activities].size - 1 %> + <% end %>
+                  <% end %>
+                </span>
+                <% if plans.none? { |plan| grid_price(plan, :pack, pack[:id]) } %>
+                  <span class="pg-unsold"><%= ngt("catalogue.not_sold") %></span>
+                <% end %>
+              </th>
+              <% plans.each do |plan| %>
+                <%= render "web/admin/catalogue/grid_cell", plan: plan, kind: "pack", id: pack[:id], label: "#{pack[:name]} — #{plan[:name]}", price: grid_price(plan, :pack, pack[:id]) %>
+              <% end %>
+            </tr>
+          <% end %>
+          <% if packs.empty? %>
+            <tr class="pg-nopack">
+              <td colspan="<%= plans.size + 1 %>">
+                <span><%= ngt("catalogue.grid_no_pack") %></span>
+                <% if activities.size >= 2 %>
+                  <button type="button" class="btn btn-link btn-sm p-0" data-kind="pack" data-action="catalogue#start"><%= ngt("packs.new") %></button>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<% hidden = catalogue[:plans].size - plans.size %>
+<% if hidden > 0 %>
+  <p class="pg-foot"><%= ngt("catalogue.grid_hidden_plans", count: hidden) %></p>
+<% end %>

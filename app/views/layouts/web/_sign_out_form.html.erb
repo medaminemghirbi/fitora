@@ -1,0 +1,5 @@
+<%# What every shell's "Se déconnecter" submits (Web::SessionsController#destroy). %>
+<form id="sign-out-form" action="<%= web_sign_out_path %>" method="post" hidden data-turbo="false">
+  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+  <input type="hidden" name="_method" value="delete">
+</form>

@@ -1,0 +1,96 @@
+// GENERATED from frontend/src/app/features/superadmin/companies/companies.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+.companies-table {
+  margin-bottom: 0;
+
+  th {
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+  }
+
+  td { vertical-align: middle; }
+}
+
+.companies-row {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover { background: var(--color-surface-sunken); }
+}
+
+.company-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.company-ico {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+  color: var(--color-accent);
+  font-size: 1rem;
+}
+
+.company-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.company-total {
+  font-weight: 700;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fx-num { text-align: right; }
+
+// A gym waiting on an answer, marked in the list so it is noticed without
+// opening anything.
+.fx-pill-waiting {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+// The account's plan — Pro stands out, since it is what sells the app.
+.company-plan {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+
+  &[data-plan="pro"] {
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
+}
+
+.company-total-note {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}

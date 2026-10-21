@@ -1,0 +1,9 @@
+<%# The language switch's form, outside the page's markup so it changes
+    nothing on screen; the locale-switch controller adds the language and
+    submits it. The page comes back in that language at the same URL, query
+    string included (MIGRATION_AUDIT D6). %>
+<form id="locale-form" action="<%= web_locale_path %>" method="post" hidden data-turbo="false">
+  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+  <input type="hidden" name="_method" value="patch">
+  <input type="hidden" name="return_to" value="<%= request.fullpath %>">
+</form>

@@ -1,0 +1,13 @@
+<%# ng: team %>
+<%# What team-page redraws from: every card, the people as data, and the
+    create drawer's markup as it stands for them (which roles are free). The
+    same partial is the ?fragment=1 answer load() reads after a save. %>
+<% moderator = team_moderator(members) %>
+<template data-team-part="filters"><%= render "web/admin/team/filters", members: members %></template>
+<template data-team-part="cards">
+  <% members.each do |member| %>
+    <%= render "web/admin/team/card", member: member %>
+  <% end %>
+</template>
+<template data-team-part="drawer"><%= render "web/admin/team/create_drawer", members: members, moderator: moderator %></template>
+<script type="application/json" data-team-part="members"><%= raw json_escape({ members: members, moderator_key: moderator&.dig(:key) }.to_json) %></script>

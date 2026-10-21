@@ -39,8 +39,7 @@ module Api
 
       # POST /api/v1/notifications/read_all
       def read_all
-        recipient.notifications.unread.update_all(read_at: Time.current)
-        NotificationChannel.broadcast_to(recipient, { type: "unread_count", count: 0 })
+        Notification.read_all!(recipient)
         head :no_content
       end
 

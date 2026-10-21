@@ -1,0 +1,152 @@
+<%# ng: settings-branding %>
+<%# SettingsBrandingComponent, one half of it: "brand" (logo, colour,
+    identifier — Pro) or "contracts" (signature, signatory, terms — every
+    plan). One form underneath, saved by settings-branding (on the host,
+    which the shell writes); the half not shown is left as it is. %>
+<% brand = part != "contracts" %>
+<% contracts = part != "brand" %>
+<% logo = company[:logo_url] %>
+<% signature = company[:signature_url] %>
+<div class="row g-3">
+  <div class="col-12<%= " col-lg-8" if brand %>">
+    <div class="app-card">
+      <div class="app-card-body" data-settings-branding-target="body">
+        <form novalidate data-settings-branding-target="form" data-action="submit->settings-branding#submit">
+          <% if brand %>
+            <div class="mb-4">
+              <label for="br-logo"><%= ngt("settings.branding_logo") %></label>
+              <div class="d-flex align-items-center gap-3">
+                <div class="branding-logo-preview" data-settings-branding-target="logoBox">
+                  <% if logo.present? %><img src="<%= logo %>" alt="" /><% else %><i class="bi bi-image"></i><% end %>
+                </div>
+                <div>
+                  <input id="br-logo" type="file" class="form-control" accept="image/png,image/jpeg,image/webp,image/svg+xml" data-action="settings-branding#logoPicked" />
+                  <div class="form-text"><%= ngt("settings.branding_logo_hint") %> <%= ngt("settings.branding_logo_pdf_hint") %></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label for="br-color"><%= ngt("settings.branding_primary_color") %></label>
+              <div class="d-flex align-items-center gap-2">
+                <input id="br-color" type="color" class="form-control form-control-color" name="primary_color" value="<%= company[:primary_color].presence || "#4a2a8f" %>" data-action="input->settings-branding#colorChanged" />
+                <span class="text-muted-token small" dir="ltr" data-settings-branding-target="colorText"><%= company[:primary_color].presence || "#4a2a8f" %></span>
+              </div>
+              <div class="form-text"><%= ngt("settings.branding_primary_color_hint") %></div>
+            </div>
+
+            <div class="mb-4">
+              <label for="br-slug"><%= ngt("settings.branding_slug") %> (<%= ngt("common.optional") %>)</label>
+              <input id="br-slug" class="form-control" name="slug" value="<%= company[:slug] %>" dir="ltr" placeholder="power-gym" />
+              <div class="form-text"><%= ngt("settings.branding_slug_hint") %></div>
+            </div>
+          <% end %>
+
+          <% if contracts %>
+            <section class="branding-docs<%= " is-alone" if part == "contracts" %>">
+              <% if part != "contracts" %>
+                <h2 class="branding-docs-title"><%= ngt("settings.contracts_title") %></h2>
+              <% end %>
+              <p class="text-muted-token small"><%= ngt("settings.contracts_hint") %></p>
+
+              <div class="mb-4" data-settings-branding-target="signatureBlock">
+                <div class="branding-signature-head">
+                  <span class="branding-label" id="br-signature-label"><%= ngt("settings.signature") %></span>
+                  <div class="fx-segmented" role="tablist" aria-labelledby="br-signature-label">
+                    <button type="button" role="tab" class="is-active" aria-selected="true" data-mode="draw" data-action="settings-branding#setMode">
+                      <i class="bi bi-pen" aria-hidden="true"></i> <%= ngt("settings.signature_draw") %>
+                    </button>
+                    <button type="button" role="tab" aria-selected="false" data-mode="upload" data-action="settings-branding#setMode">
+                      <i class="bi bi-upload" aria-hidden="true"></i> <%= ngt("settings.signature_upload") %>
+                    </button>
+                  </div>
+                </div>
+
+                <% if signature.present? %>
+                  <div class="branding-signature-current" data-settings-branding-target="current">
+                    <div class="branding-signature-preview">
+                      <img src="<%= signature %>" alt="<%= ngt("settings.signature") %>" />
+                    </div>
+                    <div class="small">
+                      <div class="fw-semibold"><%= ngt("settings.signature_current") %></div>
+                      <div class="text-muted-token" data-settings-branding-target="currentHint">
+                        <%= ngt("settings.signature_replace_hint") %>
+                      </div>
+                      <button type="button" class="btn btn-link btn-sm px-0" data-action="settings-branding#clearSignature">
+                        <%= ngt("settings.signature_remove") %>
+                      </button>
+                    </div>
+                  </div>
+                <% end %>
+
+                <app-signature-pad data-controller="signature-pad" data-action="signature-pad:signed->settings-branding#drawn"><%= render "web/shared/signature_pad" %></app-signature-pad>
+                <div class="form-text"><%= ngt("settings.signature_draw_hint") %></div>
+              </div>
+
+              <div class="mb-4">
+                <label for="br-signatory"><%= ngt("settings.signatory_name") %></label>
+                <input id="br-signatory" class="form-control" name="signatory_name" maxlength="120" value="<%= company[:signatory_name] %>" placeholder="<%= ngt("settings.signatory_name_placeholder") %>" />
+              </div>
+
+              <div class="mb-4">
+                <label for="br-terms"><%= ngt("settings.contract_terms") %> (<%= ngt("common.optional") %>)</label>
+                <textarea id="br-terms" class="form-control" rows="6" name="contract_terms" placeholder="<%= ngt("settings.contract_terms_placeholder") %>"><%= company[:contract_terms] %></textarea>
+                <div class="form-text"><%= ngt("settings.contract_terms_hint") %></div>
+              </div>
+            </section>
+          <% end %>
+
+          <button type="submit" class="btn btn-primary" data-save>
+            <%= ngt("common.save") %>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <% if brand %>
+    <div class="col-12 col-lg-4">
+      <div class="app-card">
+        <div class="app-card-header">
+          <h2><%= ngt("settings.branding_preview") %></h2>
+        </div>
+        <div class="app-card-body">
+          <p class="text-muted-token small"><%= ngt("settings.branding_preview_hint") %></p>
+          <div class="branding-preview-bar" style="--preview-color: <%= company[:primary_color].presence || "#4a2a8f" %>;" data-settings-branding-target="previewBar">
+            <span class="branding-preview-mark" data-settings-branding-target="previewMark">
+              <% if logo.present? %><img src="<%= logo %>" alt="" /><% else %><i class="bi bi-lightning-charge-fill"></i><% end %>
+            </span>
+            <span class="fw-semibold small"><%= ngt("settings.branding_preview_label") %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<%# The upload mode's controls, put in place of the pad by settings-branding;
+    and the signature on file, for when the first one is saved. %>
+<template data-settings-branding-target="uploadTemplate">
+  <div class="d-flex align-items-center gap-3 flex-wrap">
+    <div class="flex-grow-1">
+      <input id="br-signature" type="file" class="form-control" accept="image/png,image/jpeg" aria-labelledby="br-signature-label" data-action="settings-branding#signaturePicked" />
+      <div class="form-text"><%= ngt("settings.signature_hint") %></div>
+    </div>
+  </div>
+</template>
+<template data-settings-branding-target="currentTemplate">
+  <div class="branding-signature-current">
+    <div class="branding-signature-preview">
+      <img src="" alt="<%= ngt("settings.signature") %>" />
+    </div>
+    <div class="small">
+      <div class="fw-semibold"><%= ngt("settings.signature_current") %></div>
+      <div class="text-muted-token" data-settings-branding-target="currentHint">
+        <%= ngt("settings.signature_replace_hint") %>
+      </div>
+      <button type="button" class="btn btn-link btn-sm px-0" data-action="settings-branding#clearSignature">
+        <%= ngt("settings.signature_remove") %>
+      </button>
+    </div>
+  </div>
+</template>

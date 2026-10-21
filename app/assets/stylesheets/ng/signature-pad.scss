@@ -1,0 +1,51 @@
+// GENERATED from frontend/src/app/shared/ui/signature-pad.component.ts by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+
+      :host { display: block; }
+
+      .sp-paper {
+        position: relative;
+        height: var(--sp-height, 170px);
+        border: 1.5px solid var(--color-border-strong);
+        border-radius: var(--radius-md);
+        /* Paper white in both themes: the ink has to read as it will print. */
+        background: #fff;
+        overflow: hidden;
+        cursor: crosshair;
+      }
+
+      .sp-paper:focus-within { box-shadow: var(--shadow-focus); }
+
+      .sp-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        /* No page scroll or zoom while a finger is signing. */
+        touch-action: none;
+      }
+
+      .sp-hint {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: #8c84a3;
+        font-size: var(--font-size-sm);
+        pointer-events: none;
+      }
+
+      .sp-baseline {
+        position: absolute;
+        left: 8%;
+        right: 8%;
+        bottom: 28%;
+        border-bottom: 1px dashed #d9d2e6;
+        pointer-events: none;
+      }
+
+      .sp-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 0.25rem;
+      }
+    

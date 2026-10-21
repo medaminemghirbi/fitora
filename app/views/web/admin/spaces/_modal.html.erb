@@ -1,0 +1,49 @@
+<%# ng: spaces %>
+<%# The room form (SpacesComponent's <app-modal>), blank or filled by the
+    spaces-page controller when it opens. %>
+<app-modal data-controller="modal" data-modal-name-value="spaces" data-action="spaces-modal:open@window->modal#open spaces-modal:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("spaces.new") } do %>
+      <form novalidate data-spaces-form>
+        <div class="row">
+          <div class="col-7 mb-3">
+            <label for="space-name"><%= ngt("spaces.name") %> *</label>
+            <input id="space-name" class="form-control" name="name" />
+          </div>
+          <div class="col-5 mb-3">
+            <label for="space-kind"><%= ngt("spaces.kind") %></label>
+            <input id="space-kind" class="form-control" name="kind" placeholder="<%= ngt("spaces.kind_placeholder") %>" />
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="space-capacity"><%= ngt("spaces.capacity") %></label>
+          <input id="space-capacity" type="number" min="1" class="form-control" name="capacity" />
+          <div class="form-text"><%= ngt("spaces.capacity_hint") %></div>
+        </div>
+
+        <% if activities.any? %>
+          <fieldset class="sp-restrict mb-3">
+            <legend><%= ngt("spaces.restricted_to") %></legend>
+            <p class="form-text"><%= ngt("spaces.restricted_to_hint") %></p>
+            <div class="sp-restrict-list">
+              <% activities.each do |activity| %>
+                <label class="sp-restrict-item">
+                  <input type="checkbox" class="form-check-input" value="<%= activity[:id] %>" data-activity />
+                  <span><%= activity[:emoji].present? ? "#{activity[:emoji]} " : "" %><%= activity[:name] %></span>
+                </label>
+              <% end %>
+            </div>
+          </fieldset>
+        <% end %>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" data-save>
+            <%= ngt("common.save") %>
+          </button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>

@@ -1,0 +1,130 @@
+<%# ng: salles %>
+<%# The salles as cards, then — kept aside — each salle's moderator picker
+    as the assign modal shows it for that salle. The page's first paint and
+    the redraw after posting moderators (?fragment=1, PUT …/moderators). %>
+<% multi = bootstrap.dig(:subscription, :multi_salle) != false %>
+<% moderators_by_id = network[:moderators].index_by { |m| m[:id] } %>
+<% salle_names = network[:companies].to_h { |c| [ c[:id], c[:name] ] } %>
+<div class="sl-grid">
+  <% network[:companies].each do |salle| %>
+    <article class="sl-card<%= " is-active" if salle[:active] %>" data-salle-id="<%= salle[:id] %>" data-salle-name="<%= salle[:name] %>">
+      <header class="sl-card-head">
+        <span class="sl-logo" aria-hidden="true">
+          <% if salle[:logo_url].present? %><img src="<%= salle[:logo_url] %>" alt="" /><% else %><i class="bi bi-building"></i><% end %>
+        </span>
+        <div class="sl-card-titles">
+          <h2><%= salle[:name] %></h2>
+          <span><%= salle[:city].presence || ngt("salles.no_city") %></span>
+        </div>
+        <% if salle[:active] %>
+          <span class="sl-here"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> <%= ngt("salles.here") %></span>
+        <% end %>
+      </header>
+
+      <dl class="sl-stats">
+        <div>
+          <dt><%= ngt("salles.members") %></dt>
+          <dd><%= salle[:members_count] %></dd>
+        </div>
+        <div>
+          <dt><%= ngt("salles.moderators") %></dt>
+          <dd><%= salle[:moderator_ids].size %></dd>
+        </div>
+      </dl>
+
+      <div class="sl-mods">
+        <% posted = salle[:moderator_ids].filter_map { |id| moderators_by_id[id] } %>
+        <% posted.each do |moderator| %>
+          <span class="sl-mod<%= " is-inactive" unless moderator[:active] %>">
+            <app-avatar><%= render "web/shared/avatar", name: moderator[:full_name], size: 22 %></app-avatar>
+            <%= moderator[:full_name] %>
+          </span>
+        <% end %>
+        <% if posted.empty? %>
+          <span class="sl-mods-empty"><%= ngt("salles.no_moderator") %></span>
+        <% end %>
+      </div>
+
+      <footer class="sl-card-foot">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-action="salles-page#openAssign">
+          <i class="bi bi-person-gear"></i> <%= ngt("salles.assign") %>
+        </button>
+        <% unless salle[:active] %>
+          <% if multi %>
+            <button type="button" class="btn btn-sm btn-primary" data-salles-switch data-action="salles-page#switchTo">
+              <i class="bi bi-arrow-left-right"></i>
+              <%= ngt("salles.switch") %>
+            </button>
+          <% else %>
+            <a href="<%= admin_page_path("subscription") %>" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-lock"></i> <%= ngt("salles.switch_needs_pro") %>
+            </a>
+          <% end %>
+        <% end %>
+      </footer>
+    </article>
+  <% end %>
+
+  <% if multi %>
+    <button type="button" class="sl-card sl-card--add" data-action="salles-page#openCreate">
+      <i class="bi bi-plus-circle" aria-hidden="true"></i>
+      <strong><%= ngt("salles.new") %></strong>
+      <span><%= ngt("salles.new_hint") %></span>
+    </button>
+  <% else %>
+    <a href="<%= admin_page_path("subscription") %>" class="sl-card sl-card--add is-locked">
+      <i class="bi bi-lock" aria-hidden="true"></i>
+      <strong><%= ngt("salles.needs_pro") %></strong>
+      <span><%= ngt("salles.needs_pro_hint") %></span>
+    </a>
+  <% end %>
+</div>
+
+<% network[:companies].each do |salle| %>
+  <template data-salle-assign="<%= salle[:id] %>" data-moderator-ids="<%= salle[:moderator_ids].to_json %>">
+    <% if network[:moderators].empty? %>
+      <app-empty-state>
+        <%= render layout: "web/shared/empty_state", locals: { title: ngt("salles.no_moderators_title"), body: ngt("salles.no_moderators_body"), icon: "bi-person-badge" } do %>
+          <a href="<%= admin_page_path("team") %>" class="btn btn-primary"><%= ngt("salles.go_to_team") %></a>
+        <% end %>
+      </app-empty-state>
+    <% else %>
+      <p class="fx-muted"><%= ngt("salles.assign_hint") %></p>
+      <ul class="sl-pick">
+        <% network[:moderators].each do |moderator| %>
+          <% only = moderator[:company_ids] == [ salle[:id] ] %>
+          <li>
+            <label class="sl-pick-item<%= " is-locked" if only %>">
+              <input type="checkbox" class="form-check-input" value="<%= moderator[:id] %>" data-role-key="<%= moderator[:role_key] %>"<%= raw(" checked") if salle[:moderator_ids].include?(moderator[:id]) %><%= raw(" disabled data-only-salle") if only %> />
+              <app-avatar><%= render "web/shared/avatar", name: moderator[:full_name], size: 32 %></app-avatar>
+              <span class="sl-pick-body">
+                <strong>
+                  <%= moderator[:full_name] %>
+                  <% unless moderator[:active] %><span class="badge text-bg-secondary"><%= ngt("common.inactive") %></span><% end %>
+                </strong>
+                <small><%= moderator[:role_name] %> · <span dir="ltr"><%= moderator[:email] %></span></small>
+                <span class="sl-pick-salles">
+                  <% moderator[:company_ids].each do |id| %>
+                    <span class="sl-tag"><%= salle_names[id].to_s %></span>
+                  <% end %>
+                </span>
+                <% if only %>
+                  <small class="sl-pick-lock"><%= ngt("salles.only_salle") %></small>
+                <% end %>
+              </span>
+            </label>
+          </li>
+        <% end %>
+      </ul>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-outline-secondary" data-assign-cancel>
+          <%= ngt("common.cancel") %>
+        </button>
+        <button type="button" class="btn btn-primary" disabled data-assign-save>
+          <%= ngt("common.save") %>
+        </button>
+      </div>
+    <% end %>
+  </template>
+<% end %>

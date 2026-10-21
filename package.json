@@ -1,0 +1,30 @@
+{
+  "name": "fitora-web",
+  "private": true,
+  "description": "Assets for Fitora's server-rendered web UI (jsbundling-rails + cssbundling-rails), and the Angular parity harness.",
+  "scripts": {
+    "build": "esbuild app/javascript/application.js --bundle --minify --sourcemap --format=esm --target=es2020 --outdir=app/assets/builds --public-path=/assets",
+    "build:css": "node bin/build-css.mjs",
+    "check:angular-sync": "node test/parity/sync-from-angular.mjs",
+    "parity": "node test/parity/run.mjs"
+  },
+  "dependencies": {
+    "@angular/compiler": "17.3.12",
+    "@fullcalendar/core": "6.1.21",
+    "@fullcalendar/daygrid": "6.1.21",
+    "@fullcalendar/interaction": "6.1.21",
+    "@fullcalendar/list": "6.1.21",
+    "@fullcalendar/timegrid": "6.1.21",
+    "@hotwired/stimulus": "3.2.2",
+    "@hotwired/turbo-rails": "8.0.23",
+    "@rails/actioncable": "8.1.400",
+    "bootstrap-icons": "1.13.1",
+    "esbuild": "0.28.2",
+    "sass": "1.71.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "pixelmatch": "7.2.0",
+    "pngjs": "7.0.0"
+  }
+}

@@ -1,0 +1,8 @@
+<%# ng: superadmin-company-detail %>
+<%# The ledger's line: months paid this year, and what came in — each
+    invoice once (a yearly one paints twelve months but was paid once). %>
+<% paid = cells.select { |cell| cell.state == "paid" } %>
+<% collected = paid.filter_map(&:invoice).uniq { |i| i[:id] }.sum { |i| i[:amount].to_f } %>
+<p class="fx-muted mb-0" style="font-size: 0.8125rem">
+  <%= ngt("superadmin.ledger_summary", count: paid.size, amount: ng_money(collected, currency)) %>
+</p>

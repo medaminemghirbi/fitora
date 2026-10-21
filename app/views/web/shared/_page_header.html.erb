@@ -1,0 +1,13 @@
+<%# PageHeaderComponent (no styles of its own): the title, the description,
+    and the block as its actions. The caller writes the <app-page-header> host. %>
+<header class="fx-page-header">
+  <div class="fx-page-header-titles">
+    <h1 class="fx-page-header-title"><%= title %></h1>
+    <% if local_assigns[:description].present? %>
+      <p class="fx-page-header-desc"><%= description %></p>
+    <% end %>
+  </div>
+  <div class="fx-page-header-actions">
+    <%= yield %>
+  </div>
+</header>

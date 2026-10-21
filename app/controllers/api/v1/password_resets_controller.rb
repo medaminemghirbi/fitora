@@ -8,39 +8,16 @@ module Api
       # whether or not the email matches an account, so this can't be used
       # to enumerate registered emails.
       def create
-        record = find_recoverable(params[:email])
-
-        if record
-          raw = record.generate_password_reset_token!
-          AccountMailer.password_reset(record, raw).deliver_later
-        end
-
+        AccountRecovery.request_password_reset(params[:email])
         head :no_content
       end
 
       # PATCH /api/v1/password_resets/:token — { password: }
       def update
-        record = User.active.where.not(role: :superadmin).find_by_reset_password_token(params[:token]) ||
-                 Client.active.find_by_reset_password_token(params[:token])
+        record = AccountRecovery.reset_password(params[:token], params[:password])
+        return render(json: { error: "invalid_or_expired_token" }, status: :unprocessable_content) if record == :invalid_token
 
-        return render(json: { error: "invalid_or_expired_token" }, status: :unprocessable_content) if record.nil?
-
-        if record.update(password: params[:password])
-          record.clear_password_reset_token!
-          head :no_content
-        else
-          render_errors(record)
-        end
-      end
-
-      private
-
-      def find_recoverable(email)
-        normalized = email.to_s.downcase.strip
-        return nil if normalized.blank?
-
-        User.active.where.not(role: :superadmin).find_by(email: normalized) ||
-          Client.active.where.not(password_digest: nil).find_by(email: normalized)
+        record.errors.empty? ? head(:no_content) : render_errors(record)
       end
     end
   end

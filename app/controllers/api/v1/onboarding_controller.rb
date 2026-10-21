@@ -25,25 +25,23 @@ module Api
       # the company still has no activities would be a lie the flow would
       # then have to tell the admin.
       def update
-        save_onboarding(completed: current_settings[:completed] | [ @step.key ],
-                        skipped: current_settings[:skipped] - [ @step.key ])
+        OnboardingProgress.complete!(current_company, @step)
+        render_state
       end
 
       # POST /api/v1/onboarding/skip — "I do not need this one."
       def skip
-        unless @step.skippable?
-          return render json: { error: "This step cannot be skipped" }, status: :unprocessable_content
-        end
-
-        save_onboarding(completed: current_settings[:completed] - [ @step.key ],
-                        skipped: current_settings[:skipped] | [ @step.key ])
+        OnboardingProgress.skip!(current_company, @step)
+        render_state
+      rescue OnboardingProgress::NotSkippable => e
+        render json: { error: e.message }, status: :unprocessable_content
       end
 
       # POST /api/v1/onboarding/dismiss — leave the flow. The steps that
       # remain stay remaining; this only stops the app asking. The page is
       # still reachable from Settings, which is why nothing is cleared.
       def dismiss
-        current_company.update!(setup_dismissed_at: Time.current)
+        OnboardingProgress.dismiss!(current_company)
         render_state
       end
 
@@ -52,16 +50,6 @@ module Api
       def load_step
         @step = OnboardingStep.find(params[:step])
         render json: { error: "Unknown step" }, status: :unprocessable_content if @step.nil?
-      end
-
-      def current_settings
-        current_company.settings.onboarding
-      end
-
-      def save_onboarding(completed:, skipped:)
-        current_company.settings = { onboarding: { completed: completed, skipped: skipped } }
-        current_company.save!
-        render_state
       end
 
       def render_state

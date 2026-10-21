@@ -66,14 +66,16 @@ Rails.application.routes.draw do
         post :skip
         post :dismiss
       end
-      resources :activities do
+      # except: the API never had new/edit forms (it was api_only until the
+      # web UI arrived); the route set stays exactly what it was.
+      resources :activities, except: %i[new edit] do
         collection { post :adopt }
       end
       # The platform's catalogue a salle picks its activities from — readable
       # before the salle exists, at signup.
       resources :activity_templates, only: [ :index ]
-      resources :spaces
-      resources :coaches do
+      resources :spaces, except: %i[new edit]
+      resources :coaches, except: %i[new edit] do
         member do
           post :login, to: "coaches#set_login"
         end
@@ -195,10 +197,309 @@ Rails.application.routes.draw do
     end
   end
 
+  # ---- The server-rendered web UI (MIGRATION_AUDIT_2026-10-15.md §8–§9) ----
+  # Routed only while WEB_UI_SHELLS lists the shell; otherwise every path
+  # below falls through to the Angular SPA, exactly as before (rollback is
+  # removing the shell from the list).
+  #
+  # What every served shell shares: signing out, the language, and the
+  # session's crossings to and from the Angular shells (§9.3).
+  constraints(->(_request) { Web::Routing.shells.any? }) do
+    scope module: :web do
+      delete "deconnexion", to: "sessions#destroy", as: :web_sign_out
+      patch "locale", to: "locales#update", as: :web_locale
+      get "session/handoff", to: "handoffs#show", as: :web_handoff
+      post "session/exchange", to: "handoffs#exchange", as: :web_session_exchange
+      delete "session", to: "handoffs#destroy"
+    end
+  end
+
+  constraints(->(_request) { Web::Routing.shell?("admin") }) do
+    scope module: :web do
+      get "connexion", to: "sessions#new", as: :web_sign_in
+      post "connexion", to: "sessions#create"
+
+      # The account pages (module 1).
+      get "inscription", to: "registrations#new"
+      post "inscription", to: "registrations#create"
+      get "mot-de-passe-oublie", to: "password_resets#new"
+      post "mot-de-passe-oublie", to: "password_resets#create"
+      get "auth/reset-password", to: "password_resets#edit"
+      patch "auth/reset-password", to: "password_resets#update"
+      get "auth/accept-invitation", to: "invitations#edit"
+      patch "auth/accept-invitation", to: "invitations#update"
+      get "verify-email", to: "email_verifications#show"
+      patch "verify-email", to: "email_verifications#update"
+      get "confirmation-email", to: "confirmations#show"
+      get "confirmation-email/status", to: "confirmations#status"
+      post "confirmation-email/resend", to: "confirmations#resend"
+      get "account-locked", to: "account_locks#show"
+
+      # The first salle (module 4).
+      get "admin/setup-company", to: "company_setups#show", as: :web_company_setup
+      post "admin/setup-company", to: "company_setups#create"
+      # The landing page (module 11).
+      get "/", to: "landing#show", as: :web_landing, format: false
+      # Where the earlier layouts put these (app.routes.ts), with the query
+      # kept as redirectTo keeps it.
+      {
+        "trial-expired" => "/account-locked", "pro" => "/", "pro/connexion" => "/connexion",
+        "pro/mot-de-passe-oublie" => "/mot-de-passe-oublie", "auth/login" => "/connexion",
+        "auth/register" => "/inscription", "auth/forgot-password" => "/mot-de-passe-oublie"
+      }.each do |old_path, to|
+        get old_path, format: false, to: redirect(status: 302) { |_, req| [ to, req.query_string.presence ].compact.join("?") }
+      end
+      # A gym is joined, never found: the old directory goes to the landing page.
+      get "gyms(/*rest)", to: redirect("/", status: 302), format: false
+
+      # The admin shell, in the salle the URL names (§8.1).
+      scope "admin/:salle_id", module: :admin, as: :web_admin, constraints: { salle_id: Web::Routing::SALLE } do
+        get "clients", to: "clients#index", as: :clients
+        post "clients", to: "clients#create"
+        post "email_verification", to: "email_verifications#create", as: :email_verification
+        post "switch/:id", to: "salles#switch", as: :switch_salle
+        get "salles", to: "salles#network", as: :salles
+        post "salles", to: "salles#create"
+        put "salles/:id/moderators", to: "salles#update_moderators"
+        # Module 2.
+        get "updates", to: "updates#index", as: :updates
+        get "notifications", to: "notifications#index", as: :notifications
+        post "notifications/read_all", to: "notifications#read_all"
+        get "notifications/:id", to: "notifications#show", as: :notification
+        patch "notifications/:id/read", to: "notifications#read"
+        get "support", to: "support#index", as: :support
+        post "support", to: "support#create"
+        get "support/:id/attachments/:attachment_id", to: "support#attachment", as: :support_attachment
+        resources :spaces, only: %i[index create update destroy]
+        resources :bookings, only: :index do
+          member do
+            post :cancel
+            post :remind
+          end
+        end
+        # Module 3.
+        resources :contracts, only: :index do
+          member do
+            post :renew
+            post :pause
+            post :resume
+            post :collect
+            get :agreement
+            get :receipt
+          end
+        end
+        # The plan and activity lists moved into the catalogue (admin.routes.ts).
+        # A 302 with the query kept, as redirectTo keeps it (and a rollback
+        # leaves no cached 301 behind, §9.4).
+        %w[plans activities].each do |old_list|
+          get "contracts/#{old_list}", to: redirect(status: 302) { |p, req|
+            [ "/admin/#{p[:salle_id]}/catalogue", req.query_string.presence ].compact.join("?")
+          }
+        end
+        resources :payments, only: %i[index create] do
+          post :refund, on: :member
+          collection do
+            get :clients
+            get :payables
+          end
+        end
+        # Module 4.
+        scope "catalogue", controller: :catalogue do
+          get "/", action: :show, as: :catalogue
+          post "activities", action: :create_activity
+          post "activities/adopt", action: :adopt
+          patch "activities/:id", action: :update_activity
+          delete "activities/:id", action: :deactivate_activity
+          post "plans", action: :create_plan
+          patch "plans/:id", action: :update_plan
+          post "packs", action: :create_pack
+          patch "packs/:id", action: :update_pack
+          delete "packs/:id", action: :deactivate_pack
+        end
+        get "onboarding", to: "onboarding#show", as: :onboarding
+        post "onboarding/complete", to: "onboarding#complete"
+        post "onboarding/skip", to: "onboarding#skip"
+        post "onboarding/dismiss", to: "onboarding#dismiss"
+        get "getting-started", to: redirect(status: 302) { |p, _| "/admin/#{p[:salle_id]}/onboarding" }
+        # Module 5.
+        scope "team", controller: :team do
+          get "/", action: :index, as: :team
+          post "coaches", action: :create_coach
+          get "coaches/:id", action: :show_coach
+          patch "coaches/:id", action: :update_coach
+          delete "coaches/:id", action: :deactivate_coach
+          post "coaches/:id/login", action: :set_login
+          post "staff", action: :create_staff
+          patch "staff/:id", action: :update_staff
+        end
+        # Coaches and staff became one page (admin.routes.ts).
+        %w[coaches staff].each do |old_list|
+          get old_list, to: redirect(status: 302) { |p, req|
+            [ "/admin/#{p[:salle_id]}/team", req.query_string.presence ].compact.join("?")
+          }
+        end
+        # Module 6.
+        scope "settings", controller: :settings do
+          get "/", action: :show, as: :settings
+          patch "company", action: :update_company
+          patch "password", action: :update_password
+          post "sign-out-everywhere", action: :sign_out_everywhere
+          post "roles", action: :create_role
+          patch "roles/:id", action: :update_role
+          delete "roles/:id", action: :destroy_role
+          post "mobile-app/regenerate", action: :regenerate_key
+          get "data-exchange/imports/:id", action: :show_import
+          get "data-exchange/:entity/template", action: :data_template
+          get "data-exchange/:entity/export", action: :export_data
+          post "data-exchange/:entity/import", action: :import_data
+          get ":section", action: :show, as: :settings_section
+        end
+        get "subscription", to: "subscription#show", as: :subscription
+        get "invoices/:id", to: "invoices#show", as: :invoice
+        post "subscription/request", to: "subscription#request_plan"
+        # The marketplace is gone (admin.routes.ts).
+        get "modules", to: redirect(status: 302) { |p, _| "/admin/#{p[:salle_id]}/subscription" }
+        # Import/export moved under Settings (admin.routes.ts).
+        get "data-exchange", to: redirect(status: 302) { |p, _| "/admin/#{p[:salle_id]}/settings/data-exchange" }
+        # Module 8.
+        scope "clients/:id", controller: :client_profiles, constraints: { id: Web::Routing::SALLE } do
+          get "/", action: :show, as: :client
+          patch "/", action: :update
+          delete "/", action: :destroy
+          post "invite", action: :invite
+          post "contracts", action: :sell
+          post "bookings", action: :book
+          get "sessions", action: :sessions
+        end
+        # Module 7.
+        get "dashboard", to: "dashboard#show", as: :dashboard
+        get "dashboard/report", to: "dashboard#report"
+        get "attendance/:session_id", to: "attendance#show", as: :attendance
+        post "attendance", to: "attendance#create"
+        # Module 9.
+        scope "calendar", controller: :calendar do
+          get "/", action: :show, as: :calendar
+          get "events", action: :events
+          get "clients", action: :clients
+          get "schedule", action: :schedule_pdf
+          post "sessions", action: :create
+          patch "sessions/:id", action: :move
+          post "sessions/:id/cancel", action: :cancel
+          post "sessions/:id/bookings", action: :book
+          patch "series/:id", action: :stop_series
+        end
+        # The command palette's search (⌘K).
+        get "palette", to: "palette#search"
+        # Anything else: Angular's `**` → "" (app.routes.ts).
+        get "*page", to: redirect("/", status: 302), format: false
+      end
+
+      # Pre-migration admin URLs → the same page in the current salle (§8.3).
+      get "admin(/*path)", to: "legacy#show", defaults: { shell: "admin" }, format: false
+    end
+  end
+
+  # ---- The front desk (module 10) ----
+  constraints(->(_request) { Web::Routing.shell?("desk") }) do
+    scope "desk/:salle_id", module: "web/desk", as: :web_desk, constraints: { salle_id: Web::Routing::SALLE } do
+      get "dashboard", to: "dashboard#show", as: :dashboard
+      get "checkin", to: "checkin#show", as: :checkin
+      get "clients", to: "clients#index"
+      get "attendance/:session_id", to: "attendance#show"
+      post "attendance", to: "attendance#create"
+      post "switch/:id", to: "salles#switch"
+      get "/", to: redirect(status: 302) { |p, _| "/desk/#{p[:salle_id]}/dashboard" }
+      get "*page", to: redirect("/", status: 302), format: false
+    end
+    get "desk(/*path)", to: "web/legacy#show", defaults: { shell: "desk" }, format: false
+  end
+
+  # ---- A coach's day (module 10) ----
+  constraints(->(_request) { Web::Routing.shell?("coach") }) do
+    scope "coach/:salle_id", module: "web/coach", as: :web_coach, constraints: { salle_id: Web::Routing::SALLE } do
+      get "today", to: "today#show", as: :today
+      get "members", to: "members#index", as: :members
+      get "attendance/:session_id", to: "attendance#show"
+      post "attendance", to: "attendance#create"
+      get "/", to: redirect(status: 302) { |p, _| "/coach/#{p[:salle_id]}/today" }
+      get "*page", to: redirect("/", status: 302), format: false
+    end
+    get "coach(/*path)", to: "web/legacy#show", defaults: { shell: "coach" }, format: false
+  end
+
+  # ---- A member's own app (module 10): its Angular URLs (§8.1) ----
+  constraints(->(_request) { Web::Routing.shell?("member") }) do
+    scope "member", module: "web/member", as: :web_member do
+      get "home", to: "schedule#show", as: :home
+      get "bookings", to: "bookings#index", as: :bookings
+      post "bookings", to: "bookings#create"
+      post "bookings/:id/cancel", to: "bookings#cancel"
+      get "profile", to: "profile#show", as: :profile
+      patch "profile", to: "profile#update"
+      patch "password", to: "profile#update_password"
+      post "sign-out-everywhere", to: "profile#sign_out_everywhere"
+      delete "account", to: "profile#destroy"
+      post "gym", to: "profile#switch_gym"
+      get "notifications", to: "notifications#index"
+      post "notifications/read_all", to: "notifications#read_all"
+      patch "notifications/:id/read", to: "notifications#read"
+      get "/", to: redirect("/member/home", status: 302)
+      # Anything else: Angular's `**` → "" (app.routes.ts).
+      get "*page", to: redirect("/", status: 302), format: false
+    end
+  end
+
+  # ---- The superadmin's console (module 10): its Angular URLs (§8.1) ----
+  constraints(->(_request) { Web::Routing.shell?("superadmin") }) do
+    scope "superadmin", module: "web/superadmin", as: :web_superadmin do
+      get "overview", to: "overview#show", as: :overview
+      get "companies", to: "companies#index", as: :companies
+      get "companies/:id", to: "companies#show", as: :company
+      patch "companies/:id/subscription", to: "companies#update_subscription"
+      patch "companies/:id/settings", to: "companies#update_settings"
+      post "companies/:id/impersonate", to: "companies#impersonate"
+      post "companies/:id/invoices", to: "companies#create_invoice"
+      delete "companies/:id/invoices/:invoice_id", to: "companies#destroy_invoice"
+      get "pricing", to: "pricing#show", as: :pricing
+      patch "pricing", to: "pricing#update"
+      get "support", to: "support#index", as: :support
+      patch "support/:id/resolve", to: "support#resolve"
+      get "support/:id/attachments/:attachment_id", to: "support#attachment", as: :support_attachment
+      get "updates", to: "updates#index", as: :updates
+      post "updates", to: "updates#create"
+      get "notifications", to: "notifications#index"
+      post "notifications/read_all", to: "notifications#read_all"
+      patch "notifications/:id/read", to: "notifications#read"
+      # The marketplace is gone (superadmin.routes): its prices are here.
+      get "modules", to: redirect("/superadmin/pricing", status: 302)
+      get "/", to: redirect("/superadmin/overview", status: 302)
+      # Anything else: Angular's `**` → "" (app.routes.ts).
+      get "*page", to: redirect("/", status: 302), format: false
+    end
+  end
+
+  # A salle shell switched back to Angular (§8.4): a bookmark of its Rails
+  # URL opens the same page there, in the account's saved salle.
+  Web::Routing::SALLE_SHELLS.each do |shell|
+    constraints(->(_request) { !Web::Routing.shell?(shell) }) do
+      get "#{shell}/:salle_id(/*page)", constraints: { salle_id: Web::Routing::SALLE }, format: false,
+                                        to: redirect(status: 302) { |p, req| [ "/#{shell}/#{p[:page]}", req.query_string.presence ].compact.join("?") }
+    end
+  end
+
+  # Any other page: Angular's `**` → "" (app.routes.ts), once Rails serves
+  # the landing page — except under a shell still served by Angular, whose
+  # paths fall through to it below.
+  get "*path", to: redirect("/", status: 302), format: false, constraints: ->(req) {
+    Web::Routing.shell?("admin") && req.get? && req.format.html? && !Web::Routing.angular_shell_path?(req.path) &&
+      %w[/api /cable /rails /up /sidekiq /assets].none? { |p| req.path.start_with?(p) }
+  }
+
   # SPA fallback — any non-API HTML GET that isn't a real file in public/
   # serves the Angular app's index.html so client-side routes work on hard
-  # refresh and deep links. Must stay last.
-  get "*path", to: "spa#index", format: false, constraints: ->(req) {
+  # refresh and deep links; "/" too, while the landing page is Angular's
+  # (its index.html is kept out of public/, see SpaController). Must stay last.
+  get "(*path)", to: "spa#index", format: false, constraints: ->(req) {
     req.get? && req.format.html? &&
       %w[/api /cable /rails /up /sidekiq].none? { |p| req.path.start_with?(p) }
   }

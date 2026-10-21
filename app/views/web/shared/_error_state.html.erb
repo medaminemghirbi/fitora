@@ -1,0 +1,10 @@
+<%# ErrorStateComponent (no styles of its own): the generic message, the
+    page's own words when it has them (`body`), and a retry. %>
+<div class="fx-state fx-state--danger" role="alert">
+  <div class="fx-state-icon"><i class="bi bi-exclamation-triangle"></i></div>
+  <p class="fx-state-title"><%= ngt("common.error_generic") %></p>
+  <% if local_assigns[:body].present? %><p class="fx-state-body"><%= body %></p><% end %>
+  <button type="button" class="btn btn-outline-secondary btn-sm" data-action="<%= retry_action %>">
+    <i class="bi bi-arrow-clockwise"></i> <%= ngt("common.retry") %>
+  </button>
+</div>

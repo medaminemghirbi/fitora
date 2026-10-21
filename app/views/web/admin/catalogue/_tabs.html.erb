@@ -1,0 +1,17 @@
+<%# ng: catalogue %>
+<% tabs = [ [ "tarifs", "catalogue.tab_prices", "bi-grid-3x3-gap", nil ],
+            [ "activites", "nav.activities", "bi-lightning-charge", active_activities.size ],
+            [ "formules", "nav.plans", "bi-award", active_plans.size ] ]
+   tabs << [ "packs", "catalogue.tab_packs", "bi-collection", active_packs.size ] if packs_enabled? %>
+<nav class="nav nav-tabs cat-tabs" role="tablist" aria-label="<%= ngt("catalogue.title") %>" id="cat-tabs">
+  <% tabs.each do |key, label, icon, count| %>
+    <button type="button" class="nav-link<%= " active" if tab == key %>" role="tab" aria-selected="<%= tab == key %>"
+            data-tab="<%= key %>" data-action="catalogue#select">
+      <i class="bi <%= icon %>" aria-hidden="true"></i>
+      <%= ngt(label) %>
+      <% unless count.nil? %>
+        <span class="cat-tab-count"><%= count %></span>
+      <% end %>
+    </button>
+  <% end %>
+</nav>

@@ -1,6 +1,9 @@
 # syntax=docker/dockerfile:1
-# Production image for the Fitora API. Also bakes the Angular SPA into
-# public/ so one container serves both the API and the web app on one origin.
+# Production image for the Fitora API and its server-rendered web UI. Also
+# bakes the Angular SPA into public/ — it serves every shell WEB_UI_SHELLS
+# does not list, and stays as the rollback until Rails serves them all
+# (MIGRATION_AUDIT §9.4) — so one container serves the API and both web
+# front ends on one origin.
 # Build from the repo root:  docker build -f backend/Dockerfile -t fitora .
 
 # ── 1. Build the Angular SPA ────────────────────────────────────────────
@@ -9,8 +12,22 @@ WORKDIR /spa
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
-RUN npx ng build --configuration production
-# → /spa/dist/frontend/browser
+RUN npx ng build --configuration production \
+ && mv dist/frontend/browser/index.html dist/frontend/index.html
+# → /spa/dist/frontend/browser, and its index.html beside it: see below
+
+# ── 1b. Build the Rails web UI's bundles (jsbundling + cssbundling) ──────
+# The same scripts as `npm run build` / `build:css` in development; the
+# Ruby stage then only digests what they wrote (SKIP_JS_BUILD/SKIP_CSS_BUILD).
+FROM node:20-slim AS web
+WORKDIR /web
+COPY backend/package.json backend/package-lock.json ./
+RUN npm ci --omit=dev
+COPY backend/bin/build-css.mjs ./bin/
+COPY backend/app/javascript ./app/javascript
+COPY backend/app/assets/stylesheets ./app/assets/stylesheets
+RUN mkdir -p app/assets/builds && npm run build && npm run build:css
+# → /web/app/assets/builds
 
 # ── 2. Ruby base ───────────────────────────────────────────────────────
 FROM registry.docker.com/library/ruby:3.4.7-slim AS base
@@ -29,7 +46,8 @@ RUN apt-get update -qq \
  && apt-get install --no-install-recommends -y build-essential git libpq-dev pkg-config \
  && rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-COPY backend/Gemfile backend/Gemfile.lock ./
+# .ruby-version too: the Gemfile reads it (`ruby file:`), REL-07.
+COPY backend/Gemfile backend/Gemfile.lock backend/.ruby-version ./
 RUN bundle install \
  && rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git \
  && bundle exec bootsnap precompile --gemfile
@@ -37,11 +55,22 @@ RUN bundle install \
 COPY backend/ ./
 RUN bundle exec bootsnap precompile app/ lib/
 
+# The web UI's assets, digested into public/assets. The icon font is read
+# from node_modules (config.assets.paths), as in development. A build has
+# none of the runtime settings (required_env.rb): they are checked at boot.
+COPY --from=web /web/app/assets/builds ./app/assets/builds
+COPY --from=web /web/node_modules/bootstrap-icons/font ./node_modules/bootstrap-icons/font
+RUN SECRET_KEY_BASE_DUMMY=1 SKIP_REQUIRED_ENV_CHECK=1 SKIP_JS_BUILD=1 SKIP_CSS_BUILD=1 ./bin/rails assets:precompile \
+ && rm -rf node_modules
+
 # ── 4. Final image ─────────────────────────────────────────────────────
 FROM base
 COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --from=build /rails /rails
 COPY --from=spa   /spa/dist/frontend/browser /rails/public
+# Not in public/, where the static file server would answer "/" with it
+# ahead of the router (SpaController serves it).
+COPY --from=spa   /spa/dist/frontend/index.html /rails/spa/index.html
 
 # Run as an unprivileged user.
 RUN groupadd --system --gid 1000 rails \

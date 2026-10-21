@@ -1,0 +1,170 @@
+<%# ng: settings-roles %>
+<%# SettingsRolesComponent: the roles × permissions matrix — a column per
+    role (the admin's full and locked), a row per permission in its group —
+    edited in place and saved together (settings-roles, on the host), with
+    the name dialog for a new or renamed role. Rendered as saved; the
+    controller redraws what the edits change. %>
+<% roles = data[:roles] %>
+<% catalog = data[:permission_catalog] %>
+<% columns = roles.sort_by.with_index { |r, i| [ r[:key] == "admin" ? 0 : (r[:builtin] ? 1 : 2), i ] } %>
+<% groups = Web::SettingsRoles.groups(catalog.keys) %>
+<% total = catalog.size %>
+<% label = ->(key) { Web::SettingsRoles.label(key, catalog) } %>
+<% hint = ->(key) { Web::SettingsRoles.hint(key) } %>
+<% accounts = lambda do |role|
+     if role[:key] == "admin" then ngt("settings.role_accounts_owner")
+     elsif role[:staff_count].zero? then ngt("settings.role_accounts_none")
+     else ngt(role[:staff_count] == 1 ? "settings.role_accounts_one" : "settings.role_accounts_many", count: role[:staff_count])
+     end
+   end %>
+<% count = ->(role) { role[:key] == "admin" ? total : catalog.keys.count { |k| role[:permissions].include?(k) } } %>
+<div class="rm">
+  <div class="rm-tools">
+    <label class="rm-search">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <input type="search" placeholder="<%= ngt("settings.role_search_perm") %>" aria-label="<%= ngt("settings.role_search_perm") %>" data-action="input->settings-roles#search" />
+    </label>
+    <div class="rm-legend" aria-hidden="true">
+      <span><span class="rm-box is-on rm-box--mini"><i class="bi bi-check-lg"></i></span><%= ngt("settings.role_legend_allowed") %></span>
+      <span><span class="rm-box is-locked rm-box--mini"><i class="bi bi-check-lg"></i></span><%= ngt("settings.role_legend_always") %></span>
+    </div>
+    <button type="button" class="btn btn-primary rm-new" data-action="settings-roles#startCreate">
+      <i class="bi bi-plus-lg" aria-hidden="true"></i> <%= ngt("settings.role_new") %>
+    </button>
+  </div>
+
+  <div class="rm-card">
+    <table class="rm-table">
+      <thead>
+        <tr>
+          <th scope="col" class="rm-perm-head"><%= ngt("settings.role_col_permission") %></th>
+          <% columns.each do |role| %>
+            <th scope="col">
+              <div class="rm-col">
+                <span class="rm-col-ic<%= " is-admin" if role[:key] == "admin" %>" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
+                <span class="rm-col-name"><%= role[:name] %></span>
+                <span class="rm-col-meta" data-role-count="<%= role[:id] %>">
+                  <%= ngt("settings.role_perm_count", count: count.call(role), total: total) %>
+                </span>
+                <span class="rm-col-meta">
+                  <%= accounts.call(role) %>
+                  <% if role[:key] == "moderator" %> · <%= ngt("settings.role_one_seat_short") %><% end %>
+                </span>
+                <% if !role[:builtin] %>
+                  <span class="rm-col-actions">
+                    <button type="button" class="rm-icon-btn" aria-label="<%= ngt("settings.role_rename") %> <%= role[:name] %>" data-role-id="<%= role[:id] %>" data-action="settings-roles#startRename">
+                      <i class="bi bi-pencil" aria-hidden="true"></i>
+                    </button>
+                    <% if role[:deletable] %>
+                      <button type="button" class="rm-icon-btn is-danger" aria-label="<%= ngt("common.delete") %> <%= role[:name] %>" data-role-id="<%= role[:id] %>" data-action="settings-roles#remove">
+                        <i class="bi bi-trash" aria-hidden="true"></i>
+                      </button>
+                    <% end %>
+                  </span>
+                <% else %>
+                  <span class="rm-col-badge"><%= ngt("settings.role_system_badge") %></span>
+                <% end %>
+              </div>
+            </th>
+          <% end %>
+          <th scope="col" class="rm-add-head">
+            <button type="button" class="rm-add" aria-label="<%= ngt("settings.role_new") %>" data-action="settings-roles#startCreate">
+              <i class="bi bi-plus-lg" aria-hidden="true"></i>
+            </button>
+            <span class="rm-col-meta"><%= ngt("settings.role_new") %></span>
+          </th>
+        </tr>
+      </thead>
+      <tbody data-settings-roles-target="body">
+        <% groups.each do |group| %>
+          <tr class="rm-group" data-group="<%= group[:id] %>">
+            <th scope="rowgroup" class="rm-group-label">
+              <%= ngt("settings.role_group_#{group[:id]}") %>
+              <span><%= group[:keys].size %></span>
+            </th>
+            <% columns.each do |role| %>
+              <% on = group[:keys].count { |k| role[:key] == "admin" || role[:permissions].include?(k) } %>
+              <% state = on == group[:keys].size ? "all" : (on.zero? ? "none" : "some") %>
+              <td>
+                <button type="button" class="rm-box<%= " is-on" if state == "all" && role[:key] != "admin" %><%= " is-mixed" if state == "some" %><%= " is-locked" if role[:key] == "admin" %>" role="checkbox"
+                        aria-checked="<%= { "all" => "true", "none" => "false", "some" => "mixed" }[state] %>" aria-label="<%= ngt("settings.role_group_#{group[:id]}") %> — <%= role[:name] %>"<%= raw(" disabled") if role[:key] == "admin" %>
+                        data-role-id="<%= role[:id] %>" data-group="<%= group[:id] %>" data-action="settings-roles#toggleGroup">
+                  <% if state == "all" %><i class="bi bi-check-lg" aria-hidden="true"></i><% elsif state == "some" %><i class="bi bi-dash-lg" aria-hidden="true"></i><% end %>
+                </button>
+              </td>
+            <% end %>
+            <td aria-hidden="true"></td>
+          </tr>
+          <% group[:keys].each do |key| %>
+            <tr class="rm-row" data-key="<%= key %>">
+              <th scope="row" class="rm-perm">
+                <b>
+                  <%= label.call(key) %>
+                  <% if Web::SettingsRoles::SENSITIVE.include?(key) %>
+                    <span class="rm-sensitive"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <%= ngt("settings.role_sensitive") %></span>
+                  <% end %>
+                </b>
+                <% if hint.call(key) != "" %><small><%= hint.call(key) %></small><% end %>
+              </th>
+              <% columns.each do |role| %>
+                <% on = role[:key] == "admin" || role[:permissions].include?(key) %>
+                <td>
+                  <button type="button" class="rm-box<%= " is-on" if on && role[:key] != "admin" %><%= " is-locked" if role[:key] == "admin" %>" role="checkbox"
+                          aria-checked="<%= on %>" aria-label="<%= label.call(key) %> — <%= role[:name] %>"<%= raw(" disabled") if role[:key] == "admin" %>
+                          data-role-id="<%= role[:id] %>" data-key="<%= key %>" data-action="settings-roles#toggle">
+                    <% if on %><i class="bi bi-check-lg" aria-hidden="true"></i><% end %>
+                  </button>
+                </td>
+              <% end %>
+              <td aria-hidden="true"></td>
+            </tr>
+          <% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rm-foot">
+    <div class="rm-reserved">
+      <span class="rm-reserved-title"><i class="bi bi-lock" aria-hidden="true"></i> <%= ngt("settings.role_reserved_title") %></span>
+      <div class="rm-chips">
+        <% Web::SettingsRoles::ADMIN_RESERVED.each do |x| %>
+          <span class="rm-chip"><%= ngt("settings.role_reserved_#{x}") %></span>
+        <% end %>
+      </div>
+    </div>
+    <a href="<%= admin_page_path("team") %>" class="rm-accounts">
+      <i class="bi bi-people" aria-hidden="true"></i> <%= ngt("settings.role_manage_accounts") %>
+    </a>
+  </div>
+</div>
+
+<app-modal data-controller="modal" data-modal-name-value="roles-name" data-action="roles-name:open@window->modal#open roles-name:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: "" } do %>
+      <form novalidate data-roles-name-form>
+        <p class="rm-dialog-hint" data-create-only><%= ngt("settings.role_new_hint") %></p>
+        <label for="rm-name" class="form-label"><%= ngt("settings.role_name") %></label>
+        <input id="rm-name" name="name" class="form-control" placeholder="<%= ngt("settings.role_name_placeholder") %>" maxlength="60" />
+        <div class="rm-dialog-actions">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" data-save>
+          </button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>
+
+<%# What the controller redraws from. %>
+<script type="application/json" data-settings-roles-target="data"><%= raw json_escape({ roles: roles, columns: columns.map { |r| r[:id] }, keys: catalog.keys, groups: Web::SettingsRoles::GROUPS, labels: catalog.keys.to_h { |k| [ k, label.call(k) ] }, hints: catalog.keys.to_h { |k| [ k, hint.call(k) ] } }.to_json) %></script>
+<template data-settings-roles-target="emptyRow"><tr><td colspan="<%= columns.size + 2 %>" class="rm-empty"><%= ngt("common.no_results") %></td></tr></template>
+<template data-settings-roles-target="savebar">
+  <div class="rm-savebar" role="status">
+    <span>
+    </span>
+    <button type="button" class="btn rm-savebar-ghost" data-action="settings-roles#reset"><%= ngt("common.cancel") %></button>
+    <button type="button" class="btn btn-primary" data-action="settings-roles#save">
+    </button>
+  </div>
+</template>

@@ -12,27 +12,19 @@ module Api
       def create
         record = current_client || current_user
         return render_forbidden if record.nil? || (record.is_a?(User) && record.superadmin?)
-        return render(json: { error: "no_email" }, status: :unprocessable_content) if record.email.blank?
-        return render(json: { error: "already_verified" }, status: :unprocessable_content) if record.email_verified?
-
-        wait = record.email_verification_resend_in
-        return render(json: { error: "too_soon", retry_in: wait }, status: :too_many_requests) if wait.positive?
-
-        raw = record.generate_email_verification_token!
-        AccountMailer.email_verification(record, raw).deliver_later
-        head :no_content
+        case (outcome = EmailVerificationResend.call(record))
+        when :sent then head :no_content
+        when :no_email, :already_verified then render json: { error: outcome.to_s }, status: :unprocessable_content
+        else render json: { error: "too_soon", retry_in: outcome.last }, status: :too_many_requests
+        end
       end
 
       # PATCH /api/v1/email_verifications/:token — unauthenticated: the
       # token itself, from the emailed link, is the proof.
       def update
-        record = User.where.not(role: :superadmin).find_by_email_verification_token(params[:token]) ||
-                 Client.find_by_email_verification_token(params[:token])
+        return head(:no_content) if AccountRecovery.verify_email(params[:token])
 
-        return render(json: { error: "invalid_or_expired_token" }, status: :unprocessable_content) if record.nil?
-
-        record.verify_email!
-        head :no_content
+        render json: { error: "invalid_or_expired_token" }, status: :unprocessable_content
       end
     end
   end

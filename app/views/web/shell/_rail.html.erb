@@ -1,0 +1,60 @@
+<%# ng: rail %>
+<%# RailComponent (layout/rail): the desktop navigation, one flat list. %>
+<% user = bootstrap[:user]; branding = bootstrap[:branding] %>
+<aside class="rail d-none d-lg-flex">
+  <a href="<%= nav.path(nav.home_page) %>" class="rail-brand">
+    <span class="rail-brand-mark">
+      <% if branding&.dig(:logo_url).present? %>
+        <img src="<%= branding[:logo_url] %>" alt="" />
+      <% else %>
+        <i class="bi bi-lightning-charge-fill"></i>
+      <% end %>
+    </span>
+    <span class="rail-brand-text">Fitora</span>
+  </a>
+
+  <div class="rail-who">
+    <app-avatar><%= render "web/shared/avatar", name: user[:full_name].to_s, size: 34 %></app-avatar>
+    <span class="rail-who-text">
+      <span class="rail-who-name"><%= user[:first_name] %></span>
+      <span class="rail-who-role">
+        <%= ngt(shell_role_label) %><% if (gym = branding&.dig(:name).presence) %> · <%= gym %><% end %>
+      </span>
+    </span>
+  </div>
+
+  <nav class="rail-nav" aria-label="<%= ngt("nav.primary") %>">
+    <% if (dash = nav.dashboard) %>
+      <a href="<%= nav.path(dash) %>" class="rail-item<%= " is-active" if shell_active?(dash) %>">
+        <i class="bi <%= dash.icon %>"></i>
+        <%= ngt(dash.label_key) %>
+      </a>
+    <% end %>
+
+    <% nav.groups.each do |group| %>
+      <% group.items.each do |item| %>
+        <a href="<%= nav.path(item) %>" class="rail-item<%= " is-active" if shell_active?(item) %>">
+          <i class="bi <%= item.icon %>"></i>
+          <%= ngt(item.label_key) %>
+          <% if item.coming_soon %>
+            <span class="rail-soon"><%= ngt("nav.coming_soon") %></span>
+          <% end %>
+        </a>
+      <% end %>
+    <% end %>
+
+    <% nav.secondary.each do |item| %>
+      <a href="<%= nav.path(item) %>" class="rail-item<%= " is-active" if shell_active?(item) %>">
+        <i class="bi <%= item.icon %>"></i>
+        <%= ngt(item.label_key) %>
+        <% if item.pro && !nav.pro_features? %>
+          <span class="rail-pro"><i class="bi bi-lock-fill" aria-hidden="true"></i> Pro</span>
+        <% end %>
+      </a>
+    <% end %>
+  </nav>
+
+  <% if (version = shell_version) %>
+    <span class="rail-version" data-app-version="<%= version %>">v<%= version %> — Fitora</span>
+  <% end %>
+</aside>

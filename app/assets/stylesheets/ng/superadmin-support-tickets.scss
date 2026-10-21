@@ -1,0 +1,100 @@
+// GENERATED from frontend/src/app/features/superadmin/support/support-tickets.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+.support-row {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  &:hover { background: var(--color-surface-hover); }
+}
+
+.support-excerpt {
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ticket-status {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-pill);
+  color: var(--color-warning);
+  background: var(--color-warning-soft);
+  white-space: nowrap;
+
+  &.is-resolved { color: var(--color-success); background: var(--color-success-soft); }
+}
+
+.ticket-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.ticket-detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+
+  i { width: 1.1rem; color: var(--color-muted); }
+}
+.ticket-detail-message {
+  margin: 0;
+  padding: var(--space-3);
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
+  white-space: pre-wrap;
+  font-size: var(--font-size-sm);
+}
+.ticket-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.ticket-attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--font-size-xs);
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+.ticket-detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-2);
+}
+
+// A plan request: Fitora calls back to set it up, so the number is the
+// first thing to act on.
+.ticket-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0.25rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.ticket-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}

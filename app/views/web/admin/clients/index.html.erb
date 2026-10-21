@@ -1,0 +1,50 @@
+<%# ng-host: clients-list %>
+<%# ClientsListComponent (features/admin/clients/clients-list.component.html).
+    It has no styles of its own, so nothing here is scoped — as in Angular.
+    The regions that depend on the results are partials: the clients-list
+    controller asks for them again (as a Turbo Stream) when a filter changes. %>
+<div class="fx-listpage" data-controller="clients-list"
+     data-clients-list-url-value="<%= admin_page_path("clients") %>"
+     data-clients-list-filters-value="<%= @filters.to_json %>"
+     data-clients-list-page-value="<%= @page %>"
+     data-clients-list-labels-value="<%= clients_filter_labels(@catalogue).to_json %>"
+     data-clients-list-open-wizard-value="<%= request.query_parameters["action"] == "new" %>">
+
+  <div class="fx-listpage-main">
+    <header class="lst-head">
+      <h1><%= ngt("nav.clients") %></h1>
+      <%= render "web/admin/clients/head_count", counts: @counts %>
+      <div class="lst-head-search fx-input-icon">
+        <i class="bi bi-search"></i>
+        <input type="search" class="form-control form-control-sm" value="<%= @filters[:search] %>"
+               placeholder="<%= ngt("clients.search_placeholder") %>" aria-label="<%= ngt("clients.search_placeholder") %>"
+               data-clients-list-target="search" data-action="input->clients-list#searchChanged">
+      </div>
+      <% if current_user.admin? %>
+        <button type="button" class="btn btn-outline-secondary" data-action="clients-list#exportCsv">
+          <i class="bi bi-download"></i> <%= ngt("common.export") %>
+        </button>
+      <% end %>
+      <button type="button" class="btn btn-primary" data-action="clients-list#openWizard">
+        <i class="bi bi-plus-lg"></i> <%= ngt("clients.new") %>
+      </button>
+    </header>
+
+    <%= render "web/admin/clients/filters", counts: @counts, filters: @filters, advanced_open: false %>
+
+    <template data-clients-list-target="advancedTemplate">
+      <%= render "web/admin/clients/advanced", filters: @filters, catalogue: @catalogue %>
+    </template>
+
+    <%= render "web/admin/clients/card", clients: @clients, meta: @meta, filters: @filters, catalogue: @catalogue %>
+
+    <template data-clients-list-target="loadingTemplate">
+      <div class="app-card-body"><app-skeleton><%= render "web/shared/skeleton_table", rows: 8, cols: 6 %></app-skeleton></div>
+    </template>
+    <template data-clients-list-target="errorTemplate">
+      <div class="app-card-body"><app-error-state><%= render "web/shared/error_state", retry_action: "clients-list#retry" %></app-error-state></div>
+    </template>
+  </div>
+</div>
+
+<%= render "web/admin/clients/wizard", catalogue: @catalogue %>

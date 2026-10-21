@@ -1,0 +1,297 @@
+<%# ng: calendar %>
+<%# ng-host: calendar %>
+<%# CalendarComponent: the page's own toolbar and filters around
+    FullCalendar (the same version, with the component's options, driven by
+    calendar-page), the hover card, the session detail with its attendance
+    and the "new session" dialog. %>
+<% manage = @manage %>
+<% pro = nav.pro_features? %>
+<% labels = {
+     calendar: ngt("nav.calendar"), error: ngt("common.error_generic"), save: ngt("common.save"), saving: ngt("common.saving"), confirm: ngt("common.confirm"),
+     slot_open: ngt("calendar.slot_open"), no_coach: ngt("calendar.no_coach"), no_coach_schedule: ngt("schedule.no_coach"), move_title: ngt("calendar.move_confirm_title"), move_body: ngt("calendar.move_confirm_body"),
+     cancel_title: ngt("bookings.cancel_confirm_title"), cancel_body: ngt("calendar.cancel_session_body"),
+     stop_title: ngt("calendar.stop_series_title"), stop_body: ngt("calendar.stop_series_body"), stop: ngt("calendar.stop_series"),
+     series_stopped: Web::Translations.translate("calendar.series_stopped", {}, locale: I18n.locale), series_kept: Web::Translations.translate("calendar.series_kept", {}, locale: I18n.locale),
+     weekly_created: Web::Translations.translate("calendar.weekly_created", {}, locale: I18n.locale), weekly_conflicts: Web::Translations.translate("calendar.weekly_conflicts", {}, locale: I18n.locale),
+     repeat_weekly: Web::Translations.translate("calendar.repeat_weekly", {}, locale: I18n.locale), repeat_until_invalid: ngt("calendar.repeat_until_invalid"),
+     statuses: %w[scheduled completed cancelled confirmed].to_h { |s| [ s, ngt("bookings.status_#{s}") ] },
+     attendance: %w[present absent late no_show].to_h { |s| [ s, ngt("coach.attendance_#{s}") ] },
+     format_hints: %w[collective small_group].to_h { |f| [ f, ngt("activities.format_#{f}_hint") ] },
+     no_bookings: ngt("coach.no_bookings_title")
+   } %>
+<div class="fx-listpage" data-controller="calendar-page"
+     data-calendar-page-url-value="<%= admin_page_path("calendar") %>"
+     data-calendar-page-manage-value="<%= manage %>"
+     data-calendar-page-locale-value="<%= locale_code %>"
+     data-calendar-page-rtl-value="<%= rtl? %>"
+     data-calendar-page-hours-value="<%= { start: salle.business_hours_start, end: salle.business_hours_end, days: salle.working_days }.to_json %>"
+     data-calendar-page-activities-value="<%= @activities.to_json %>"
+     data-calendar-page-clients-value="<%= @clients.to_json %>"
+     data-calendar-page-drop-in-value="<%= bootstrap.dig(:features, :drop_in) != false %>"
+     data-calendar-page-labels-value="<%= labels.to_json %>"
+     data-action="modal:opened@window->calendar-page#fill modal:closed@window->calendar-page#closed">
+  <div class="fx-listpage-main">
+    <div class="fx-cal-toolbar">
+      <div class="fx-cal-nav">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-action="calendar-page#today"><%= ngt("schedule.today") %></button>
+        <button type="button" class="icon-btn" aria-label="<%= ngt("schedule.prev_period") %>" data-action="calendar-page#prev"><i class="bi bi-chevron-left"></i></button>
+        <button type="button" class="icon-btn" aria-label="<%= ngt("schedule.next_period") %>" data-action="calendar-page#next"><i class="bi bi-chevron-right"></i></button>
+        <h1 class="fx-cal-title" data-calendar-page-target="title"><%= ngt("nav.calendar") %></h1>
+      </div>
+
+      <div class="fx-segmented" role="group" aria-label="<%= ngt("nav.calendar") %>">
+        <button type="button" data-view="timeGridDay" data-action="calendar-page#setView"><%= ngt("schedule.day") %></button>
+        <button type="button" data-view="timeGridWeek" data-action="calendar-page#setView"><%= ngt("schedule.week") %></button>
+        <button type="button" data-view="dayGridMonth" data-action="calendar-page#setView"><%= ngt("schedule.month") %></button>
+      </div>
+
+      <div class="fx-cal-actions">
+        <% if pro %>
+          <button type="button" class="btn btn-outline-primary btn-sm" data-action="calendar-page#printSchedule">
+            <i class="bi bi-printer"></i>
+            <%= ngt("schedule.print_week") %>
+          </button>
+        <% else %>
+          <a href="<%= admin_page_path("subscription") %>" class="btn btn-outline-primary btn-sm fx-cal-print-locked" title="<%= ngt("schedule.print_needs_pro") %>">
+            <i class="bi bi-printer"></i>
+            <%= ngt("schedule.print_week") %>
+            <span class="fx-pro-chip"><i class="bi bi-lock-fill" aria-hidden="true"></i> Pro</span>
+          </a>
+        <% end %>
+        <% if manage %>
+          <button type="button" class="btn btn-primary btn-sm" data-action="calendar-page#openCreate">
+            <i class="bi bi-plus-lg"></i> <%= ngt("schedule.new_session") %>
+          </button>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="fx-cal-filters">
+      <div class="fx-cal-filter">
+        <label for="cal-coach-filter"><%= ngt("bookings.coach") %></label>
+        <select id="cal-coach-filter" class="form-select form-select-sm" data-filter="coach" data-action="calendar-page#filter">
+          <option value=""><%= ngt("common.all") %></option>
+          <% @coaches.each do |c| %>
+            <option value="<%= c[:id] %>"><%= c[:full_name] %></option>
+          <% end %>
+        </select>
+      </div>
+
+      <div class="fx-cal-filter">
+        <label for="cal-activity-filter"><%= ngt("activities.title") %></label>
+        <select id="cal-activity-filter" class="form-select form-select-sm" data-filter="activity" data-action="calendar-page#filter">
+          <option value=""><%= ngt("common.all") %></option>
+          <% @activities.each do |a| %>
+            <option value="<%= a[:id] %>"><%= a[:emoji].to_s != "" ? "#{a[:emoji]} " : "" %><%= a[:name] %></option>
+          <% end %>
+        </select>
+      </div>
+
+      <ul class="fx-legend" aria-label="<%= ngt("calendar.legend") %>">
+        <li><span class="fx-legend-dot" style="background: var(--color-primary)"></span><%= ngt("bookings.status_confirmed") %></li>
+        <li><span class="fx-legend-dot" style="background: var(--color-success)"></span><%= ngt("bookings.status_completed") %></li>
+        <li><span class="fx-legend-dot" style="background: var(--color-border-strong)"></span><%= ngt("bookings.status_cancelled") %></li>
+        <li><span class="fx-legend-dot" style="background: var(--color-border)"></span><%= ngt("calendar.legend_past") %></li>
+      </ul>
+    </div>
+
+    <div class="app-card calendar-card">
+      <div class="app-card-body">
+        <full-calendar data-calendar-page-target="calendar"></full-calendar>
+      </div>
+    </div>
+  </div>
+
+  <template data-calendar-page-target="resetTemplate">
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-action="calendar-page#resetFilters">
+      <i class="bi bi-arrow-counterclockwise"></i> <%= ngt("common.reset") %>
+    </button>
+  </template>
+  <template data-calendar-page-target="spinnerTemplate"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span></template>
+</div>
+
+<%# The hover card's markup; calendar-page fills and places it. %>
+<template data-calendar-tip>
+  <div class="fx-session-tip" aria-hidden="true">
+    <div class="fx-session-tip-head">
+      <span class="fx-session-tip-title" data-tip="title"></span>
+      <app-status-badge data-tip="badge"></app-status-badge>
+    </div>
+
+    <ul class="fx-session-tip-meta">
+      <li>
+        <i class="bi bi-clock"></i>
+        <span dir="ltr" data-tip="hours"></span>
+        <span class="fx-muted" data-tip="day"></span>
+      </li>
+      <li data-tip="coach"><i class="bi bi-person-badge"></i></li>
+      <li data-tip="place"><i class="bi bi-geo-alt"></i></li>
+      <li data-tip="price"><i class="bi bi-cash"></i></li>
+    </ul>
+
+    <div>
+      <div class="fx-session-tip-fill-head">
+        <span><%= ngt("schedule.booked_places") %></span>
+        <strong dir="ltr" data-tip="fill"></strong>
+      </div>
+      <div class="fx-session-tip-bar">
+        <div data-tip="bar"></div>
+      </div>
+    </div>
+
+    <p class="fx-session-tip-hint"><%= ngt("schedule.click_for_detail") %></p>
+  </div>
+</template>
+
+<app-modal data-controller="modal" data-modal-name-value="calendar-detail" data-action="calendar-detail:open@window->modal#open calendar-detail:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: "" } do %>
+      <div class="session-detail-meta mb-3">
+        <div><i class="bi bi-geo-alt"></i> <span data-detail="place"></span></div>
+        <div><i class="bi bi-person-badge"></i> <span data-detail="coach"></span></div>
+        <div><i class="bi bi-clock"></i> <span data-detail="time"></span></div>
+        <div><i class="bi bi-people"></i> <span dir="ltr" data-detail="fill"></span></div>
+        <app-status-badge data-detail="badge"></app-status-badge>
+      </div>
+
+      <div class="session-ended-note" data-detail="ended">
+        <i class="bi bi-info-circle"></i> <%= ngt("calendar.session_ended") %>
+      </div>
+
+      <% if manage %>
+        <div class="mb-3 position-relative" data-detail="add">
+          <label for="cal-add-client-search"><%= ngt("clients.add_booking") %></label>
+          <input id="cal-add-client-search" class="form-control" placeholder="<%= ngt("clients.search_placeholder") %>" autocomplete="off" />
+        </div>
+      <% end %>
+
+      <div data-detail="bookings"></div>
+
+      <% if manage %>
+        <div class="d-flex justify-content-end gap-2 mt-3" data-detail="actions">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-detail="stop">
+            <i class="bi bi-arrow-repeat"></i> <%= ngt("calendar.stop_series") %>
+          </button>
+          <button type="button" class="btn btn-outline-danger btn-sm" data-detail="cancel">
+            <i class="bi bi-x-lg"></i> <%= ngt("calendar.cancel_session") %>
+          </button>
+        </div>
+      <% end %>
+    <% end %>
+  </template>
+</app-modal>
+
+<% if manage %>
+  <app-modal data-controller="modal" data-modal-name-value="calendar-create" data-action="calendar-create:open@window->modal#open calendar-create:close@window->modal#close">
+    <template data-modal-target="template">
+      <%= render layout: "web/shared/modal", locals: { title: ngt("schedule.new_session") } do %>
+        <form novalidate data-calendar-create>
+          <div class="mb-3">
+            <label for="cs-activity"><%= ngt("activities.title") %> *</label>
+            <select id="cs-activity" class="form-select" name="activity_id">
+              <option value="" disabled selected>—</option>
+              <% @activities.each do |a| %>
+                <option value="<%= a[:id] %>"><%= a[:emoji].to_s != "" ? "#{a[:emoji]} " : "" %><%= a[:name] %> (<%= a[:duration] %> min)</option>
+              <% end %>
+            </select>
+          </div>
+          <template data-create="member">
+            <div class="mb-3">
+              <label for="cs-client"><%= ngt("schedule.member") %> (<%= ngt("common.optional") %>)</label>
+              <app-searchable-select data-controller="searchable-select" data-searchable-select-id-value="cs-client"
+                                     data-searchable-select-placeholder-value="<%= ngt("schedule.member_placeholder") %>"
+                                     data-searchable-select-search-value="<%= ngt("common.search") %>"
+                                     data-searchable-select-empty-value="<%= ngt("common.no_results") %>"></app-searchable-select>
+              <div class="form-text"><%= ngt("schedule.member_open_hint") %></div>
+            </div>
+          </template>
+          <template data-create="kind">
+            <fieldset class="mb-3">
+              <legend class="form-label mb-1"><%= ngt("bookings.kind_label") %></legend>
+              <% %w[contract trial drop_in].each do |kind| %>
+                <div class="form-check">
+                  <input id="cs-kind-<%= kind %>" type="radio" class="form-check-input" name="booking_kind" value="<%= kind %>"<%= raw(" checked") if kind == "contract" %> />
+                  <label for="cs-kind-<%= kind %>" class="form-check-label"><%= ngt("bookings.kind_#{kind}") %></label>
+                </div>
+              <% end %>
+            </fieldset>
+          </template>
+          <div class="mb-3">
+            <label for="cs-coach"><%= ngt("bookings.coach") %> (<%= ngt("common.optional") %>)</label>
+            <select id="cs-coach" class="form-select" name="coach_id">
+              <option value="">—</option>
+              <% @coaches.each do |c| %>
+                <option value="<%= c[:id] %>"><%= c[:full_name] %></option>
+              <% end %>
+            </select>
+          </div>
+          <% if @spaces.any? %>
+            <div class="mb-3">
+              <label for="cs-space"><%= ngt("calendar.room") %> (<%= ngt("common.optional") %>)</label>
+              <select id="cs-space" class="form-select" name="space_id">
+                <option value="">—</option>
+                <% @spaces.each do |room| %>
+                  <option value="<%= room[:id] %>"><%= room[:name] %></option>
+                <% end %>
+              </select>
+            </div>
+          <% end %>
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label for="cs-date"><%= ngt("bookings.date") %> *</label>
+              <input id="cs-date" type="date" class="form-control" name="date" />
+            </div>
+            <div class="col-6 mb-3">
+              <label for="cs-time"><%= ngt("bookings.time") %> *</label>
+              <input id="cs-time" type="time" class="form-control" name="start_time" />
+            </div>
+          </div>
+          <div class="mb-3" data-create="repeat">
+            <label class="d-flex align-items-center gap-2" for="cs-repeat">
+              <input id="cs-repeat" type="checkbox" name="repeat_weekly" />
+              <span data-repeat-label></span>
+            </label>
+          </div>
+          <template data-create="until">
+            <div class="mt-2">
+              <label for="cs-repeat-until"><%= ngt("calendar.repeat_until") %> *</label>
+              <input id="cs-repeat-until" type="date" class="form-control" name="repeat_until" />
+              <div class="form-text"><%= ngt("calendar.repeat_hint") %></div>
+            </div>
+          </template>
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label for="cs-capacity"><%= ngt("schedule.capacity") %> (<%= ngt("common.optional") %>)</label>
+              <input id="cs-capacity" type="number" class="form-control" name="capacity" min="1" />
+            </div>
+            <div class="col-6 mb-3">
+              <label for="cs-price"><%= ngt("activities.price") %> (<%= ngt("common.optional") %>)</label>
+              <input id="cs-price" type="number" min="0" step="0.01" class="form-control" name="price" />
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+            <button type="submit" class="btn btn-primary" data-save>
+              <%= ngt("common.save") %>
+            </button>
+          </div>
+        </form>
+      <% end %>
+    </template>
+  </app-modal>
+<% end %>
+
+<%# The detail's roster and its add-member results, drawn by calendar-page. %>
+<template data-calendar-roster>
+  <li class="d-flex justify-content-between align-items-center py-2 border-bottom flex-wrap gap-2">
+    <span data-name></span>
+    <div class="d-flex gap-1 flex-wrap">
+      <% %w[present absent late no_show].each do |status| %>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-status="<%= status %>">
+          <%= ngt("coach.attendance_#{status}") %>
+        </button>
+      <% end %>
+    </div>
+  </li>
+</template>

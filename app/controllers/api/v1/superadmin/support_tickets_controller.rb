@@ -21,11 +21,7 @@ module Api
 
         # PATCH /api/v1/superadmin/support_tickets/:id/resolve
         def resolve
-          @ticket.update!(status: :resolved)
-          AuditLog.record!(
-            company: @ticket.company, user: current_user, action: "support_ticket.resolved",
-            auditable: @ticket, metadata: { subject: @ticket.subject }
-          )
+          SupportRequest.resolve(@ticket, by: current_user)
           render json: { support_ticket: SuperadminSupportTicketSerializer.new(@ticket).as_json }
         end
 

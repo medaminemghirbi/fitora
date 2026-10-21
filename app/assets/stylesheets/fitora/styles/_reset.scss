@@ -1,0 +1,133 @@
+// GENERATED from frontend/src/styles/_reset.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// RESET
+// ----------------------------------------------------------------------------
+// The element-level defaults every screen inherits.
+//
+// This is the layer Bootstrap called Reboot, and removing Bootstrap removed
+// it without anything taking its place. The component styles all assumed it
+// was there, so the browser's own defaults came back underneath them: <dl>
+// and <dd> reappeared with their 1em / 40px margins and spread a stats bar
+// across the page, headings got their UA margins back and pushed a count
+// into a button, <fieldset> grew a groove border, <legend> floated again.
+//
+// None of that showed up as an error. Every class still existed and every
+// rule still applied; what changed was what those rules were sitting on top
+// of. It is the third failure of this shape in this work, and the only one
+// with a single cause.
+//
+// Deliberately small: this normalises what the app actually uses, rather
+// than reproducing a general-purpose reset.
+// ============================================================================
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+// ---------------------------------------------------------------------------
+// Blocks whose UA margins the layout does not want
+// ---------------------------------------------------------------------------
+// Spacing comes from the component or from a utility, never from the
+// browser's idea of a paragraph.
+body,
+h1, h2, h3, h4, h5, h6,
+p,
+figure,
+blockquote,
+dl, dd,
+ol, ul,
+fieldset,
+legend,
+pre { margin: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1.25;
+}
+
+ol, ul { padding: 0; }
+
+// A <dl> is how the stats bars are written; without this its <dd> keeps the
+// 40px indent browsers have given definition lists since 1996.
+dd { margin-inline-start: 0; }
+
+// ---------------------------------------------------------------------------
+// Form and interactive elements
+// ---------------------------------------------------------------------------
+fieldset {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
+// A <legend> is floated and sized by the UA, which is why a filter rail's
+// group titles sat outside their own box.
+legend {
+  display: block;
+  float: none;
+  width: auto;
+  padding: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+button,
+[type="button"],
+[type="submit"],
+[type="reset"] {
+  appearance: button;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+button:disabled { cursor: default; }
+
+textarea { resize: vertical; }
+
+// ---------------------------------------------------------------------------
+// Media and tables
+// ---------------------------------------------------------------------------
+img, svg, video, canvas { display: block; max-width: 100%; }
+
+// Inside a line of text an icon should sit on the baseline, not break the
+// line — the rule above is for images that are their own block.
+svg.bi, .bi > svg { display: inline-block; }
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+th { text-align: inherit; font-weight: inherit; }
+
+// ---------------------------------------------------------------------------
+// Focus
+// ---------------------------------------------------------------------------
+// A keyboard user must always be able to see where they are; components may
+// replace this ring, never remove it.
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+hr {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}

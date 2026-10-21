@@ -1,0 +1,63 @@
+<%# ng: coach-today %>
+<%# CoachTodayComponent's day: the session on now or next (upNext — "now"
+    is the gym's clock, which the Angular page reads from the browser's, the
+    same moment in every parity run), and the day's sessions, each opening
+    its roster. `sessions`: SessionSerializer rows; `date`: the day shown. %>
+<% now = Time.current %>
+<% scheduled = sessions.select { |s| s[:status] == "scheduled" } %>
+<% live = scheduled.find { |s| Time.zone.parse(s[:starts_at]) <= now && Time.zone.parse(s[:ends_at]) > now } %>
+<% upcoming = live ? nil : scheduled.select { |s| Time.zone.parse(s[:starts_at]) > now }.min_by { |s| Time.zone.parse(s[:starts_at]) } %>
+<% next_session = live || upcoming %>
+<% if next_session %>
+  <section class="ct-next<%= " is-live" if live %>" data-coach-today-target="next">
+    <span class="ct-next-when">
+      <% if live %>
+        <%= ngt("checkin.now") %>
+      <% else %>
+        <%= ng_date(next_session[:starts_at], "HH:mm") %>
+      <% end %>
+    </span>
+    <span class="ct-next-what">
+      <strong><%= next_session[:activity_emoji].present? ? "#{next_session[:activity_emoji]} " : "" %><%= next_session[:activity_name] %></strong>
+      <small dir="ltr"><%= next_session[:confirmed_count] %>/<%= next_session[:capacity] %></small>
+    </span>
+    <button type="button" class="btn btn-primary" data-action="coach-today#select" data-session-id="<%= next_session[:id] %>" data-session-label="<%= coach_session_label(next_session) %>">
+      <i class="bi bi-check2-square"></i> <%= ngt("checkin.open") %>
+    </button>
+  </section>
+<% end %>
+
+<div class="app-card mb-3" data-coach-today-target="card">
+  <div class="app-card-header">
+    <div class="d-flex align-items-center gap-2">
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-action="coach-today#shift" data-coach-today-date-param="<%= (date - 1).iso8601 %>" data-coach-today-label-param="<%= ng_date((date - 1).in_time_zone, "fullDate") %>" aria-label="<%= ngt("schedule.prev_period") %>">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <strong data-coach-today-target="label"><%= ng_date(date.in_time_zone, "fullDate") %></strong>
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-action="coach-today#shift" data-coach-today-date-param="<%= (date + 1).iso8601 %>" data-coach-today-label-param="<%= ng_date((date + 1).in_time_zone, "fullDate") %>" aria-label="<%= ngt("schedule.next_period") %>">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-action="coach-today#shift" data-coach-today-date-param="<%= Date.current.iso8601 %>" data-coach-today-label-param="<%= ng_date(Date.current.in_time_zone, "fullDate") %>"><%= ngt("schedule.today") %></button>
+    </div>
+  </div>
+  <div class="app-card-body" data-coach-today-target="body">
+    <% if sessions.empty? %>
+      <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("schedule.empty_title"), body: ngt("coach.no_sessions_body"), icon: "bi-calendar3" } do %><% end %></app-empty-state>
+    <% else %>
+      <div class="schedule-list">
+        <% sessions.each do |session| %>
+          <button type="button" class="schedule-row" data-action="coach-today#select" data-session-id="<%= session[:id] %>" data-session-label="<%= coach_session_label(session) %>">
+            <div class="schedule-time"><%= ng_date(session[:starts_at], "HH:mm") %></div>
+            <div class="schedule-info">
+              <div class="fw-semibold"><%= session[:activity_emoji].present? ? "#{session[:activity_emoji]} " : "" %><%= session[:activity_name] %></div>
+              <div class="text-muted-token small">
+                <%= session[:company_name] %> · <span dir="ltr"><%= session[:confirmed_count] %>/<%= session[:capacity] %></span> <%= ngt("schedule.capacity") %>
+              </div>
+            </div>
+            <app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: session[:status] } do %><%= ngt("bookings.status_#{session[:status]}") %><% end %></app-status-badge>
+          </button>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

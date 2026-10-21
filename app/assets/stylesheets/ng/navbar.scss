@@ -1,0 +1,335 @@
+// GENERATED from frontend/src/app/layout/navbar/navbar.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+:host { display: contents; }
+
+// White, like the rail it sits beside. The bar used to be a dark-aubergine
+// skin from the old sidebar; with the rail carrying the navigation and the
+// brand, a dark strip across the top was the only dark thing left on the
+// page and it cut the rail in half.
+//
+// It also gets out of the way: scrolling down slides it off, scrolling up
+// brings it straight back. Reading a long list should not cost 64px, and
+// getting to the search should not cost a scroll to the top.
+.app-navbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-topbar);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  transition: transform 0.25s ease;
+
+  &.is-hidden {
+    transform: translateY(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-navbar {
+    transition: none;
+  }
+}
+
+.app-navbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: var(--topbar-height);
+  padding: 0 var(--space-4);
+}
+
+.app-navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  text-decoration: none;
+  padding-inline: var(--space-2) var(--space-5);
+  white-space: nowrap;
+
+  &:hover { text-decoration: none; color: var(--color-text); }
+  small { font-weight: 500; color: var(--color-text-secondary); font-size: 0.7rem; margin-inline-start: 0.15rem; }
+}
+
+.app-navbar-mark {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+
+  &:has(img) { background: transparent; }
+  img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: var(--radius-sm); }
+}
+
+// ---- desktop nav --------------------------------------------------------
+.app-navbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.app-navbar-group { position: relative; }
+
+.app-navbar-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  gap: 0.45rem;
+  padding: 0 0.85rem;
+  height: 38px;
+  border: 0;
+  background: transparent;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  .app-navbar-item-icon { font-size: 0.95rem; }
+  .bi-chevron-down { font-size: 0.65rem; opacity: 0.85; }
+  &:hover { background: var(--color-surface-hover); color: var(--color-text); text-decoration: none; }
+  // The accent is the "you are here" marker — the one place it appears in the bar.
+  &.is-active { background: var(--color-primary-soft); color: var(--color-text); font-weight: 600; }
+}
+
+.app-navbar-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-start: 0;
+  min-width: 214px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 0.35rem;
+  z-index: var(--z-dropdown);
+  animation: fx-pop var(--transition-fast);
+}
+
+.app-navbar-dd-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text);
+  text-decoration: none;
+
+  i { font-size: 0.95rem; color: var(--color-muted); width: 1rem; text-align: center; flex-shrink: 0; }
+  &:hover { background: var(--color-surface-hover); text-decoration: none; }
+  &.is-active { color: var(--color-primary); i { color: var(--color-primary); } }
+}
+
+.app-navbar-soon {
+  margin-inline-start: auto;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-warning);
+  background: var(--color-warning-soft);
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-pill);
+}
+
+
+.app-navbar-spacer { flex: 1; }
+
+// ---- search / actions -------------------------------------------------
+.app-navbar-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-hover);
+  border-radius: var(--radius-md);
+  padding: 0.4rem 0.7rem;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  margin-inline-end: 0.3rem;
+
+  &:hover { background: var(--color-surface); color: var(--color-text); }
+  kbd { font: inherit; font-size: 0.68rem; background: rgba(255, 255, 255, 0.12); border-radius: var(--radius-xs); padding: 0.05rem 0.3rem; color: var(--color-text); }
+}
+
+.app-navbar-support {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  border-radius: var(--radius-md);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  margin-inline-end: 0.3rem;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  i { font-size: 0.9rem; }
+  &:hover { background: var(--color-surface-hover); color: var(--color-text); text-decoration: none; }
+  &.is-active { background: var(--color-primary-soft); color: var(--color-text); border-color: transparent; }
+}
+
+// ---- mobile ---------------------------------------------------------------
+.app-navbar-burger {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  &:hover { background: var(--color-surface-hover); color: var(--color-text); }
+}
+
+.app-navbar-mobile-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-navbar-mobile {
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  max-height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+
+.app-navbar-m-group {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-muted);
+  padding: 0.7rem 0.6rem 0.3rem;
+}
+
+.app-navbar-m-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+  text-decoration: none;
+
+  i { font-size: 1rem; color: var(--color-muted); width: 1.15rem; text-align: center; }
+  &:hover { background: var(--color-surface-hover); text-decoration: none; }
+  &.is-active { background: var(--color-primary-soft); color: var(--color-primary); i { color: var(--color-primary); } }
+}
+
+// The mobile panel's salles are buttons, not links: switching is an action.
+button.app-navbar-m-item {
+  width: 100%;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+// "Gérer mes salles", set apart from the salles above it.
+.app-company-switcher-manage {
+  border-top: 1px solid var(--color-border);
+  margin-top: 0.25rem;
+  padding-top: 0.6rem;
+  color: var(--color-primary);
+}
+
+.app-company-switcher-item {
+  &.is-active { color: var(--color-primary); font-weight: 600; i { color: var(--color-primary); } }
+  &:disabled { cursor: not-allowed; color: var(--color-text-secondary); &:hover { background: none; } }
+}
+
+// Why the other salles are locked, and the way to Pro for the admin.
+.app-company-switcher-locked {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.25rem 0 0;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-decoration: none;
+
+  i { color: inherit; }
+}
+a.app-company-switcher-locked:hover { text-decoration: underline; }
+
+.app-company-switcher-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 36px;
+  padding: 0 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  max-width: 12rem;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+
+  &:hover { background: var(--color-surface-hover); }
+  &[aria-expanded="true"] { border-color: var(--color-accent); }
+  &:disabled { opacity: 0.6; cursor: wait; }
+
+  i.bi-building { color: var(--color-text-secondary); font-size: 0.95rem; }
+  i.bi-chevron-down { font-size: 0.7rem; color: var(--color-text-secondary); }
+}
+
+.app-company-switcher-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-company-switcher-logo {
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 3px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+// Several salles are Pro's: a lock on the switcher itself on Starter / trial.
+.app-company-switcher-lock {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}

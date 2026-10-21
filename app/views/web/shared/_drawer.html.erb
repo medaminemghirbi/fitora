@@ -1,0 +1,27 @@
+<%# DrawerComponent, open (no styles of its own, so no scope). The caller
+    writes the <app-drawer> host — with the modal controller, which opens
+    and closes it — and keeps this in a <template> until it opens: as in
+    Angular, nothing is in the DOM while it is closed. The block is
+    called twice: with no argument for the projected body, with "footer"
+    for the [drawer-footer] element ("footer": a Symbol would be read as
+    a content_for name, not passed to the block). %>
+<div class="fx-drawer-backdrop" data-action="click->modal#close"></div>
+<aside class="fx-drawer<%= " fx-drawer--wide" if local_assigns[:wide] %>" role="dialog" aria-modal="true" aria-label="<%= title %>" data-modal-target="panel">
+  <header class="fx-drawer-header">
+    <div>
+      <h2 class="fx-drawer-title"><%= title %></h2>
+      <% if local_assigns[:description].present? %><p class="fx-drawer-desc"><%= description %></p><% end %>
+    </div>
+    <button type="button" class="icon-btn" data-action="modal#close" aria-label="Close">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </header>
+
+  <div class="fx-drawer-body">
+    <%= yield %>
+  </div>
+
+  <footer class="fx-drawer-footer">
+    <%= yield "footer" %>
+  </footer>
+</aside>

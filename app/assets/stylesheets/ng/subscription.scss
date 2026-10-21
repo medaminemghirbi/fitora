@@ -1,0 +1,616 @@
+// GENERATED from frontend/src/app/features/admin/subscription/subscription.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// Two columns: what the account has on the left, changing plan on the
+// right. One column below the width where the side panel would squeeze the
+// plan card.
+.sub-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 1.5rem;
+  align-items: start;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.sub-main,
+.sub-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.sub-side {
+  gap: 1.25rem;
+}
+
+.sub-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-xs);
+
+  h2 {
+    margin: 0;
+    font-size: 1.0625rem;
+    font-weight: 800;
+  }
+}
+
+.sub-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+// Arrows point the way the text reads.
+:host-context([dir="rtl"]) .sub-flip {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+
+// ---------- The plan in force ---------------------------------------------
+.sub-plan {
+  overflow: hidden;
+}
+
+.sub-plan-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1.75rem 2rem 1.5rem;
+}
+
+.sub-plan-id {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.sub-plan-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+
+  h2 {
+    font-size: 2.125rem;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+}
+
+.sub-plan-for {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.sub-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--color-success-soft);
+  color: var(--color-success);
+
+  &::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  &[data-state="due"] { background: var(--color-warning-soft); color: var(--color-warning); }
+  &[data-state="closed"] { background: var(--color-danger-soft); color: var(--color-danger); }
+  &[data-state="trial"] { background: var(--color-primary-soft); color: var(--color-primary); }
+}
+
+.sub-plan-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.375rem;
+  text-align: end;
+
+  // Wrapped under the plan name: read from the same edge as it.
+  @media (max-width: 575.98px) {
+    align-items: flex-start;
+    text-align: start;
+  }
+
+  strong {
+    font-size: 1.875rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+  }
+
+  small {
+    margin-inline-start: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+}
+
+.sub-plan-price-sub {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.sub-plan-price .sub-arrears {
+  font-size: 0.875rem;
+  letter-spacing: 0;
+  color: var(--color-danger);
+}
+
+// ---- where the period stands
+.sub-period {
+  --sub-period-fill: var(--color-primary);
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0 2rem 1.625rem;
+
+  &[data-state="due"] { --sub-period-fill: var(--color-warning); }
+  &[data-state="closed"] { --sub-period-fill: var(--color-danger); }
+}
+
+.sub-period-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  font-size: 0.8125rem;
+
+  strong {
+    font-weight: 700;
+  }
+}
+
+.sub-period-bar {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--sub-period-fill);
+  }
+}
+
+.sub-period-due {
+  font-weight: 600;
+  color: var(--color-warning);
+}
+
+// ---- what the account covers
+.sub-usage {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-hover);
+}
+
+.sub-usage-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1.25rem 2rem;
+
+  & + & {
+    border-inline-start: 1px solid var(--color-border);
+  }
+
+  // Phones keep the three figures on one line, without their icons.
+  @media (max-width: 575.98px) {
+    padding: 1rem;
+
+    .sub-usage-ic {
+      display: none;
+    }
+  }
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+}
+
+.sub-usage-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 1.0625rem;
+}
+
+.sub-usage-value {
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.sub-usage-label {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+// ---------- What the plan carries -----------------------------------------
+.sub-incl {
+  display: flex;
+  flex-direction: column;
+  gap: 1.375rem;
+  padding: 1.75rem 2rem;
+}
+
+.sub-incl-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+// Three extras side by side, each reading top-down: icon, name, what it is.
+.sub-pro-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.sub-pro-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--color-primary-border);
+  border-radius: 14px;
+  background: var(--color-primary-soft);
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+
+  strong {
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+
+  span:not(.sub-pro-ic) {
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+  }
+
+  // Not in the plan: shown, so Starter knows what Pro adds, but muted.
+  &.is-off {
+    border-color: var(--color-border);
+    background: var(--color-surface-sunken);
+
+    strong {
+      color: var(--color-text-secondary);
+    }
+
+    .sub-pro-ic {
+      background: var(--color-surface);
+      color: var(--color-muted);
+    }
+  }
+}
+
+.sub-pro-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 1.0625rem;
+}
+
+.sub-incl-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.75rem 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--color-success-soft);
+    color: var(--color-success);
+    font-size: 0.75rem;
+  }
+}
+
+// ---------- Changing plan -------------------------------------------------
+.sub-change {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+  padding: 1.5rem;
+}
+
+.sub-change-lead {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+}
+
+.sub-toggle {
+  display: flex;
+  width: 100%;
+
+  button {
+    flex: 1 1 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    height: 38px;
+  }
+}
+
+.sub-toggle-off {
+  padding: 0.0625rem 0.4375rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font-size: 0.6875rem;
+  font-weight: 800;
+}
+
+.sub-opts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.sub-opt {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  padding: 1rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: start;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-primary-border);
+  }
+
+  &.is-picked {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+
+    .sub-opt-radio {
+      border: 6px solid var(--color-primary);
+    }
+  }
+}
+
+.sub-opt-radio {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  border: 2px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+
+.sub-opt-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sub-opt-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+
+.sub-opt-chip {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sub-opt-for {
+  font-size: 0.78125rem;
+  line-height: 1.35;
+  color: var(--color-text-secondary);
+}
+
+.sub-opt-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.0625rem;
+  flex-shrink: 0;
+
+  strong {
+    font-size: 1rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  small {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+  }
+}
+
+.sub-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0.75rem 0.875rem;
+  border-radius: 12px;
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+
+  i {
+    margin-top: 1px;
+  }
+}
+
+.sub-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: center;
+
+  &.is-request {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--color-primary-hover);
+    }
+  }
+
+  &.is-current {
+    background: var(--color-surface-sunken);
+    color: var(--color-text-secondary);
+  }
+
+  &.is-sent {
+    border-color: var(--color-warning);
+    background: var(--color-warning-soft);
+    color: var(--color-warning);
+  }
+}
+
+.sub-change-note {
+  margin: 0;
+  font-size: 0.78125rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+// ---------- Who to ask ----------------------------------------------------
+// The shell's own aubergine, so it reads as Fitora speaking rather than one
+// more card of the page.
+.sub-help {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text-strong);
+
+  // Named: the global heading colour is the page's dark text.
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--sidebar-text-strong);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--sidebar-text);
+  }
+}
+
+.sub-help-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-accent);
+  font-size: 1.0625rem;
+}
+
+.sub-help-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+  color: var(--sidebar-text-active);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--sidebar-text-active);
+    text-decoration: underline;
+  }
+}

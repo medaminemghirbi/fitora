@@ -1,0 +1,59 @@
+// GENERATED from frontend/src/styles/components/_overlays.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// OVERLAYS
+// ----------------------------------------------------------------------------
+// Surfaces that sit above the page.
+//
+// Split out of _fitora.scss, which had grown to 1208 lines and was the reason
+// screens drifted: nobody could see what was already there.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// Drawer (side panel for create/edit workflows)
+// ---------------------------------------------------------------------------
+.fx-drawer-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: var(--z-backdrop);
+  animation: fx-fade var(--transition-base);
+}
+.fx-drawer {
+  position: fixed;
+  top: 0; bottom: 0; inset-inline-end: 0;
+  width: min(480px, 100vw);
+  background: var(--color-surface);
+  border-inline-start: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-drawer);
+  display: flex;
+  flex-direction: column;
+  animation: fx-slide-in var(--transition-base);
+
+  &--wide { width: min(640px, 100vw); }
+
+  &-header {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+  }
+  &-title { font-size: var(--font-size-lg); font-weight: 600; margin: 0; }
+  &-desc { font-size: var(--font-size-sm); color: var(--color-text-secondary); margin: 0.2rem 0 0; }
+  &-body { flex: 1; overflow-y: auto; padding: var(--space-5); }
+  &-footer {
+    display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2);
+    padding: var(--space-4) var(--space-5);
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+}
+
+@keyframes fx-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fx-slide-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+[dir="rtl"] .fx-drawer { animation-name: fx-slide-in-rtl; }
+@keyframes fx-slide-in-rtl {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: translateX(0); }
+}

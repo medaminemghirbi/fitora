@@ -1,0 +1,272 @@
+// GENERATED from frontend/src/styles/components/_filters.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// FILTERS
+// ----------------------------------------------------------------------------
+// Narrowing a list down: toolbars, pills, category tabs, match highlighting.
+//
+// Split out of _fitora.scss, which had grown to 1208 lines and was the reason
+// screens drifted: nobody could see what was already there.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// Filter toolbar
+// ---------------------------------------------------------------------------
+.fx-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+
+  .fx-input-icon { flex: 1 1 240px; max-width: 340px; }
+  .form-select, .form-control { min-width: 150px; width: auto; }
+  .fx-toolbar-spacer { flex: 1; }
+}
+
+@media (max-width: 767.98px) {
+  .fx-toolbar { gap: var(--space-2); }
+  .fx-toolbar .fx-input-icon { flex-basis: 100%; max-width: none; }
+  .fx-toolbar .form-select { flex: 1 1 45%; min-width: 0; }
+}
+
+// A toolbar living inside the datatable card itself (search + filters as
+// the card's own header strip) instead of a page-level bar or a side
+// rail — the filters read as part of the table, and the table keeps the
+// full page width instead of losing a rail's-worth of it.
+.app-card > .fx-toolbar {
+  margin-bottom: 0;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+// ---------------------------------------------------------------------------
+// Search-term highlight — <mark class="fx-hl"> from the `highlight` pipe
+// ---------------------------------------------------------------------------
+mark.fx-hl {
+  background: var(--color-highlight);
+  color: var(--color-highlight-text);
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+// ---------------------------------------------------------------------------
+// Segmented control (filter pills)
+// ---------------------------------------------------------------------------
+.fx-segmented {
+  display: inline-flex;
+  padding: 3px;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  gap: 2px;
+
+  button {
+    border: 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    padding: 0.3rem 0.7rem;
+    border-radius: calc(var(--radius-sm) - 2px);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--transition-fast), color var(--transition-fast);
+
+    &:hover { color: var(--color-text); }
+    &.is-active { background: var(--color-surface); color: var(--color-primary); box-shadow: var(--shadow-xs); }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Category tabs — a coloured top bar per tab, active one lifted onto the page
+// ---------------------------------------------------------------------------
+.fx-cat-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+.fx-cat-tab {
+  display: block;
+  flex-shrink: 0;
+  padding: 0.6rem 1rem 0.55rem;
+  margin-bottom: -1px;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--fx-tab-color, var(--color-primary));
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover { background: var(--color-surface-hover); color: var(--color-text); text-decoration: none; }
+
+  &.is-active {
+    background: var(--color-surface);
+    border-bottom-color: var(--color-surface);
+    padding: 0.65rem 1.15rem 0.6rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+}
+
+// The count on a tab, in its own pill rather than in parentheses: "(0)"
+// reads as part of the label, a pill reads as a quantity.
+.fx-cat-tab-count {
+  display: inline-block;
+  min-width: 1.25rem;
+  margin-inline-start: 0.35rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.71875rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.fx-cat-tab.is-active .fx-cat-tab-count {
+  background: var(--fx-tab-color, var(--color-primary));
+  color: #fff;
+}
+
+// ---------- Status chips -------------------------------------------------
+// The status filter, out of the left rail and onto one row above the table.
+// The radio stays for the semantics and is hidden; the label is the pill.
+.fx-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.fx-chips-legend {
+  float: none;
+  width: auto;
+  padding: 0;
+  margin: 0;
+  // The pills say what they filter; the legend is for whoever cannot see them.
+  position: absolute;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.fx-chip-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.fx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4375rem 0.8125rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.78125rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-border-strong);
+  }
+}
+
+.fx-chip-count {
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: 0.71875rem;
+  font-weight: 700;
+}
+
+// The selected pill takes its own status colour, so the filter and the
+// strip down the matching rows are visibly the same thing.
+.fx-chip-input:checked + .fx-chip {
+  border-color: var(--fx-chip-color, var(--color-primary));
+  background: var(--fx-chip-color, var(--color-primary));
+  color: #fff;
+
+  .fx-chip-count {
+    background: rgb(255 255 255 / 0.22);
+    color: #fff;
+  }
+}
+
+.fx-chip-input:focus-visible + .fx-chip {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+// ---------------------------------------------------------------------------
+// Advanced filters — the drawer under the pill row
+// ---------------------------------------------------------------------------
+// The status pills answer "what state are they in". Everything else — which
+// plan, which activity, who, since when — is a question asked far less often,
+// so it folds away instead of taking a second permanent row above the grid.
+.fx-adv-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  &.is-on {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-primary-soft);
+  }
+}
+
+.fx-adv-count {
+  min-width: 1.15rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.3rem;
+  text-align: center;
+}
+
+.fx-advanced {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.fx-advanced-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+
+  label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+}

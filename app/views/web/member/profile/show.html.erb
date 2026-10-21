@@ -1,0 +1,135 @@
+<%# ng: member-profile %>
+<%# ng-host: member-profile %>
+<%# MemberProfileComponent: who they are, the subscription they train on,
+    whether they have been turning up — and their account: name and phone
+    (edited in place), password, leaving Fitora (a dialog). @profile is nil
+    when no gym of theirs has the app: the error state. %>
+<div class="mb-page" data-controller="member-profile page-reload"
+     data-member-profile-url-value="<%= web_member_profile_path %>"
+     data-member-profile-account-url-value="<%= web_member_account_path %>"
+     data-member-profile-labels-value="<%= { saved: ngt("account.details_saved"), wrong: ngt("account.current_password_wrong"), error: ngt("common.error_generic"), save: ngt("common.save"), saving: ngt("common.saving") }.to_json %>"
+     data-action="modal:opened@window->member-profile#openedDelete">
+  <% if @profile.nil? %>
+    <app-error-state><%= render "web/shared/error_state", retry_action: "page-reload#reload" %></app-error-state>
+  <% else %>
+    <% p = @profile %>
+    <h1 class="mb-title" data-member-profile-target="name"><%= p.dig(:client, :full_name) %></h1>
+    <p class="mb-contact">
+      <% if p.dig(:client, :email).present? %> <span dir="ltr"><%= p.dig(:client, :email) %></span> <% end %>
+      <% if p.dig(:client, :phone).present? %> <span dir="ltr" data-member-profile-target="phone"> · <%= p.dig(:client, :phone) %></span> <% end %>
+    </p>
+
+    <% if (sub = p[:subscription]) %>
+      <section class="mb-hero">
+        <% if sub[:remaining_bookings].nil? %>
+          <span class="mb-hero-value">∞</span>
+          <span class="mb-hero-label"><%= ngt("member.unlimited") %></span>
+        <% else %>
+          <span class="mb-hero-value"><%= sub[:remaining_bookings] %></span>
+          <span class="mb-hero-label"><%= ngt("member.sessions_left_label") %></span>
+        <% end %>
+
+        <span class="mb-hero-plan">
+          <%= sub[:activity_emoji].present? ? "#{sub[:activity_emoji]} " : "" %><%= sub[:activity_name] %> · <%= sub[:plan_name] %>
+        </span>
+        <% if sub[:expires_at].present? %>
+          <span class="mb-hero-until">
+            <%= ngt("member.valid_until") %> <%= ng_date(sub[:expires_at], "d MMMM y") %>
+          </span>
+        <% end %>
+      </section>
+    <% else %>
+      <section class="mb-card">
+        <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("member.no_subscription_title"), body: ngt("member.no_subscription_body"), icon: "bi-award" } do %><% end %></app-empty-state>
+      </section>
+    <% end %>
+
+    <section class="mb-card">
+      <h2 class="mb-card-head"><%= ngt("member.attendance") %></h2>
+      <% unless p.dig(:attendance, :rate).nil? %>
+        <p class="mb-rate"><%= p.dig(:attendance, :rate) %>%</p>
+        <p class="mb-muted"><%= ngt("member.attendance_rate_hint") %></p>
+      <% end %>
+
+      <% if p.dig(:attendance, :recent).empty? %>
+        <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("member.no_attendance"), body: "", icon: "bi-clock-history" } do %><% end %></app-empty-state>
+      <% else %>
+        <ul class="mb-list mb-list--flush">
+          <% p.dig(:attendance, :recent).each do |entry| %>
+            <li class="mb-slot">
+              <span class="mb-slot-main">
+                <span class="mb-slot-name">
+                  <%= entry[:activity_emoji].present? ? "#{entry[:activity_emoji]} " : "" %><%= entry[:activity_name] %>
+                </span>
+                <span class="mb-slot-sub"><%= ng_date(entry[:starts_at], "mediumDate") %></span>
+              </span>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </section>
+
+    <section class="mb-card" data-member-profile-target="details" data-first-name="<%= p.dig(:client, :first_name) %>" data-last-name="<%= p.dig(:client, :last_name) %>" data-phone="<%= p.dig(:client, :phone) %>">
+      <h2 class="mb-card-head"><%= ngt("account.your_details") %></h2>
+      <%= render "web/member/profile/details_summary" %>
+    </section>
+
+    <section class="mb-card">
+      <h2 class="mb-card-head"><%= ngt("account.password") %></h2>
+      <app-change-password><%= render "web/shared/change_password", url: web_member_password_path, everywhere_url: "/member/sign-out-everywhere" %></app-change-password>
+    </section>
+
+    <section class="mb-card mb-card--danger">
+      <h2 class="mb-card-head"><%= ngt("account.delete_title") %></h2>
+      <p class="mb-muted"><%= ngt("account.delete_body") %></p>
+      <button type="button" class="btn btn-outline-danger" data-action="member-profile#openDelete">
+        <%= ngt("account.delete_action") %>
+      </button>
+    </section>
+
+    <template data-member-profile-target="summary"><%= render "web/member/profile/details_summary" %></template>
+    <template data-member-profile-target="form">
+      <form novalidate data-action="submit->member-profile#saveDetails">
+        <div class="mb-3">
+          <label for="me-first-name"><%= ngt("account.first_name") %></label>
+          <input id="me-first-name" class="form-control" name="first_name" autocomplete="given-name" />
+        </div>
+        <div class="mb-3">
+          <label for="me-last-name"><%= ngt("account.last_name") %></label>
+          <input id="me-last-name" class="form-control" name="last_name" autocomplete="family-name" />
+        </div>
+        <div class="mb-3">
+          <label for="me-phone"><%= ngt("auth.phone") %></label>
+          <input id="me-phone" class="form-control" name="phone" autocomplete="tel" dir="ltr" />
+        </div>
+        <div class="mb-actions">
+          <button type="button" class="btn btn-outline-secondary" data-action="member-profile#closeDetails">
+            <%= ngt("common.cancel") %>
+          </button>
+          <button type="submit" class="btn btn-primary" data-save>
+            <%= ngt("common.save") %>
+          </button>
+        </div>
+      </form>
+    </template>
+  <% end %>
+</div>
+
+<app-modal data-controller="modal" data-modal-name-value="member-delete" data-action="member-delete:open@window->modal#open member-delete:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("account.delete_title") } do %>
+      <p><%= ngt("account.delete_confirm_body") %></p>
+      <form novalidate>
+        <div class="mb-3">
+          <label for="me-delete-password"><%= ngt("auth.password") %></label>
+          <input id="me-delete-password" type="password" class="form-control" name="password" autocomplete="current-password" dir="ltr" />
+        </div>
+        <div class="mb-actions">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-danger" data-delete><%= ngt("account.delete_action") %></button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+  <template data-member-profile-delete-error><div class="alert alert-danger" role="alert"></div></template>
+</app-modal>

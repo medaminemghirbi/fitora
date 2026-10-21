@@ -1,0 +1,21 @@
+<%# The superadmin shell's page: index.html + AppComponent +
+    SuperadminShellComponent, with the routed page inside. No gym colours:
+    the console is no gym's. %>
+<!doctype html>
+<html lang="<%= locale_code %>" data-theme="<%= theme %>" dir="<%= rtl? ? "rtl" : "ltr" %>">
+<head>
+  <%= render "layouts/web/head" %>
+</head>
+<body>
+  <app-root>
+    <router-outlet></router-outlet>
+    <%= render layout: "web/shell/superadmin_shell" do %>
+      <%= yield %>
+    <% end %>
+    <%= render "web/shared/app_root_tail" %>
+  </app-root>
+  <%= render "layouts/web/locale_form" %>
+  <%= render "layouts/web/sign_out_form" %>
+  <%= yield :templates %>
+</body>
+</html>

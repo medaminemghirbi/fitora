@@ -1,0 +1,68 @@
+<%# ng: packs %>
+<%# The pack form, blank or filled by the catalogue controller: the
+    activities as toggles, a price per active formule (with what the
+    activities cost separately once two are picked). %>
+<app-modal data-controller="modal" data-modal-name-value="catalogue-pack" data-action="catalogue-pack:open@window->modal#open catalogue-pack:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("packs.new") } do %>
+      <form novalidate data-pack-form>
+        <div class="mb-3">
+          <label for="pk-name"><%= ngt("packs.name") %> *</label>
+          <input id="pk-name" class="form-control" name="name" placeholder="<%= ngt("packs.name_placeholder") %>" />
+        </div>
+
+        <fieldset class="mb-3">
+          <legend class="form-label mb-1"><%= ngt("packs.activities") %> *</legend>
+          <p class="small text-muted-token mb-2"><%= ngt("packs.activities_hint") %></p>
+          <div class="pk-pick">
+            <% active_activities.each do |a| %>
+              <button type="button" class="pk-pick-btn" aria-pressed="false" data-pick="<%= a[:id] %>" data-label="<%= a[:emoji].present? ? "#{a[:emoji]} " : "" %><%= a[:name] %>">
+                <%= a[:emoji].present? ? "#{a[:emoji]} " : "" %><%= a[:name] %>
+              </button>
+            <% end %>
+          </div>
+        </fieldset>
+
+        <fieldset class="mb-3">
+          <legend class="form-label mb-1"><%= ngt("packs.prices") %></legend>
+          <p class="small text-muted-token mb-2"><%= ngt("packs.prices_hint") %></p>
+          <% if active_plans.empty? %>
+            <div class="alert alert-info mb-0"><%= ngt("packs.no_plans") %></div>
+          <% else %>
+            <div class="fx-price-grid">
+              <% active_plans.each do |plan| %>
+                <div class="fx-price-grid-row">
+                  <label class="mb-0" for="pk-price-<%= plan[:id] %>">
+                    <%= plan[:name] %>
+                    <span class="pk-period"><%= ngt("catalogue.length_#{plan[:billing_period]}", days: plan[:validity_days]) %></span>
+                  </label>
+                  <div class="input-group input-group-sm">
+                    <input id="pk-price-<%= plan[:id] %>" type="number" min="0" step="0.01" class="form-control" data-plan-price="<%= plan[:id] %>"
+                           placeholder="<%= ngt("contract_types.not_offered") %>" />
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </fieldset>
+
+        <div class="mb-3">
+          <label for="pk-desc"><%= ngt("activities.description") %></label>
+          <textarea id="pk-desc" class="form-control" rows="2" name="description"></textarea>
+        </div>
+
+        <div class="mb-3 form-check" data-active-field>
+          <input id="pk-active" type="checkbox" class="form-check-input" name="active" />
+          <label for="pk-active" class="form-check-label"><%= ngt("common.active") %></label>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" data-save>
+            <%= ngt("common.save") %>
+          </button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>

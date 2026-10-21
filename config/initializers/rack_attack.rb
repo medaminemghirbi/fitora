@@ -29,14 +29,18 @@ Rack::Attack.cache.store = ActiveSupport::Cache::RedisCacheStore.new(
 # test surfaced this throttling out nearly all of them at 5/20s) — the
 # per-email throttle below is the real brute-force defense; this one is
 # a backstop against a single-IP flood, not the primary defense.
+# The API's login and the web UI's sign-in form (Web::SessionsController)
+# are the same door: one budget for both.
+LOGIN_PATHS = %w[/api/v1/auth/login /connexion].freeze
+
 Rack::Attack.throttle("logins/ip/burst", limit: 60, period: 20.seconds) do |req|
-  req.ip if req.post? && req.path == "/api/v1/auth/login"
+  req.ip if req.post? && LOGIN_PATHS.include?(req.path)
 end
 
 # Longer window, higher ceiling — catches a slower attempt that stays
 # under the burst limit but is still clearly not a human typing a password.
 Rack::Attack.throttle("logins/ip/sustained", limit: 300, period: 5.minutes) do |req|
-  req.ip if req.post? && req.path == "/api/v1/auth/login"
+  req.ip if req.post? && LOGIN_PATHS.include?(req.path)
 end
 
 # Keyed on the attempted email rather than the caller's IP — the burst/
@@ -52,7 +56,7 @@ end
 # bring that to 50, while someone who mistypes a few times in a row is only
 # ever held back by the short one.
 login_email = lambda do |req|
-  next unless req.post? && req.path == "/api/v1/auth/login"
+  next unless req.post? && LOGIN_PATHS.include?(req.path)
 
   req.params["email"].to_s.downcase.strip.presence
 end
@@ -71,34 +75,37 @@ Rack::Attack.throttle("password_checks/ip", limit: 10, period: 5.minutes) do |re
   req.ip if PASSWORD_CHECKS.include?([ req.request_method, req.path ])
 end
 
+# The web UI's twins of those endpoints: the token is in the form, not the path.
+WEB_EMAILED_TOKENS = %w[/auth/reset-password /auth/accept-invitation /verify-email].freeze
+
 # The emailed-token endpoints: accepting an invitation, finishing a reset,
 # confirming an address. The tokens are 256 bits and not guessable, but
 # nothing unauthenticated should take unlimited attempts.
 Rack::Attack.throttle("emailed_tokens/ip", limit: 10, period: 1.minute) do |req|
-  req.ip if req.patch? && req.path.match?(%r{\A/api/v1/(invitations|password_resets|email_verifications)/[^/]+\z})
+  req.ip if req.patch? && (req.path.match?(%r{\A/api/v1/(invitations|password_resets|email_verifications)/[^/]+\z}) || WEB_EMAILED_TOKENS.include?(req.path))
 end
 
 Rack::Attack.throttle("password_resets/ip", limit: 5, period: 1.minute) do |req|
-  req.ip if req.post? && req.path == "/api/v1/password_resets"
+  req.ip if req.post? && %w[/api/v1/password_resets /mot-de-passe-oublie].include?(req.path)
 end
 
 # Signing up is unauthenticated, creates a User and emails the address given,
 # with no ownership check. Unthrottled, a script could mass-create accounts or
 # use Fitora's own mailer to bomb a third party's inbox.
 Rack::Attack.throttle("register/ip", limit: 5, period: 10.minutes) do |req|
-  req.ip if req.post? && req.path == "/api/v1/auth/register"
+  req.ip if req.post? && %w[/api/v1/auth/register /inscription].include?(req.path)
 end
 
 # Re-sending a verification email is unauthenticated and mails whatever
 # address it is given — the same inbox-bombing surface as a password reset,
 # and it was the one account-mail endpoint with no ceiling on it.
 Rack::Attack.throttle("email_verifications/ip", limit: 5, period: 1.minute) do |req|
-  req.ip if req.post? && req.path == "/api/v1/email_verifications"
+  req.ip if req.post? && %w[/api/v1/email_verifications /confirmation-email/resend].include?(req.path)
 end
 
-Rack::Attack.throttled_responder = lambda do |_request|
-  [ 429, { "Content-Type" => "application/json" }, [ { error: "rate_limited" }.to_json ] ]
-end
+# The API's paths answer {error: "rate_limited"}; the web UI's forms answer
+# with their own page, refused (Web::RateLimit).
+Rack::Attack.throttled_responder = ->(request) { Web::RateLimit.respond(request) }
 
 # The mobile app's key lookup is public: a coach key lists a salle's team.
 # Keys are long and random, but nothing unauthenticated takes unlimited

@@ -1,0 +1,14 @@
+<%# ng: signature-pad %>
+<%# SignaturePadComponent, empty: drawn on with a pointer (signature-pad),
+    handed out as a PNG cropped to the ink. The caller writes the
+    <app-signature-pad> host with the controller. %>
+<div class="sp-paper is-empty">
+  <canvas class="sp-canvas" role="img" aria-label="<%= ngt("signature_pad.label") %>" data-signature-pad-target="canvas"></canvas>
+  <span class="sp-hint" aria-hidden="true" data-signature-pad-target="hint"><i class="bi bi-pen"></i> <%= ngt("signature_pad.hint") %></span>
+  <span class="sp-baseline" aria-hidden="true"></span>
+</div>
+<div class="sp-actions">
+  <button type="button" class="btn btn-link btn-sm px-0" disabled data-signature-pad-target="clear" data-action="signature-pad#clear">
+    <i class="bi bi-eraser" aria-hidden="true"></i> <%= ngt("signature_pad.clear") %>
+  </button>
+</div>

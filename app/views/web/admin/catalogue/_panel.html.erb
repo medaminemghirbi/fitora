@@ -1,0 +1,16 @@
+<%# ng: catalogue %>
+<%# @switch (tab()). %>
+<% case tab %>
+<% when "activites" %>
+  <app-activities><%= render "web/admin/catalogue/activities" %></app-activities>
+<% when "formules" %>
+  <app-plans><%= render "web/admin/catalogue/plans" %></app-plans>
+<% when "packs" %>
+  <app-packs><%= render "web/admin/catalogue/packs" %></app-packs>
+<% else %>
+  <% if active_activities.any? && active_plans.any? %>
+    <app-price-grid><%= render "web/admin/catalogue/price_grid" %></app-price-grid>
+  <% else %>
+    <%= render "web/admin/catalogue/setup" %>
+  <% end %>
+<% end %>

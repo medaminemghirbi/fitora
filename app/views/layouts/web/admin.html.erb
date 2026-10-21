@@ -1,0 +1,21 @@
+<%# The admin shell's page: index.html + AppComponent + AdminShellComponent,
+    with the routed page inside. %>
+<!doctype html>
+<html lang="<%= locale_code %>" data-theme="<%= theme %>" dir="<%= rtl? ? "rtl" : "ltr" %>"<%= raw(%( style="#{h(shell_brand_style)}")) if shell_brand_style %>>
+<head>
+  <%= render "layouts/web/head" %>
+</head>
+<body>
+  <app-root>
+    <router-outlet></router-outlet>
+    <%= render layout: "web/shell/admin_shell" do %>
+      <%= yield %>
+    <% end %>
+    <%= render "web/shared/app_root_tail", palette: true %>
+  </app-root>
+  <%= render "layouts/web/locale_form" %>
+  <%= render "layouts/web/sign_out_form" %>
+  <%# Markup a page puts in later (a state it moves to), kept outside the page. %>
+  <%= yield :templates %>
+</body>
+</html>

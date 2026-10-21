@@ -1,0 +1,114 @@
+// GENERATED from frontend/src/app/features/admin/settings/settings-branding.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+.branding-logo-preview {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: 1.4rem;
+  overflow: hidden;
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+}
+
+.branding-preview-bar {
+  --preview-color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: var(--preview-color);
+  color: #fff;
+}
+
+.branding-preview-mark {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+}
+
+.branding-docs {
+  margin: var(--space-5) 0 var(--space-4);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+// On its own tab ("Contrats & signature") it is the whole page: no divider.
+.branding-docs.is-alone {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.branding-docs-title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+}
+
+// A signature is wide and short; the box is shaped like the space it gets
+// on the contract.
+.branding-signature-preview {
+  display: grid;
+  place-items: center;
+  width: 200px;
+  height: 80px;
+  flex-shrink: 0;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  // Paper white in both themes: a dark-ink signature has to read as it
+  // will on the printed contract, not vanish into a dark surface.
+  background: #fff;
+  color: var(--color-text-secondary);
+  font-size: 1.4rem;
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+}
+
+.branding-signature-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.branding-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.branding-signature-current {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+
+  &.is-replaced .branding-signature-preview { opacity: 0.45; }
+}

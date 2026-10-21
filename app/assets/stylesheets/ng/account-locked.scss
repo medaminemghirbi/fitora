@@ -1,0 +1,59 @@
+// GENERATED from frontend/src/app/features/account-locked/account-locked.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+.locked-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+  background: var(--color-bg);
+}
+
+.locked-card {
+  width: 100%;
+  max-width: 30rem;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-5);
+}
+
+.locked-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: var(--space-4);
+}
+
+.locked-card h1 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  margin-bottom: var(--space-3);
+  text-wrap: balance;
+}
+
+.locked-body {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-5);
+}
+
+.locked-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-md);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.locked-hint {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  margin-top: var(--space-4);
+}
+
+// Deliberately quiet: leaving is not the action this page is for.
+.locked-out {
+  margin-top: var(--space-4);
+  color: var(--color-text-secondary);
+}

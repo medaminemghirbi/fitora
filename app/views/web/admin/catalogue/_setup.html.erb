@@ -1,0 +1,66 @@
+<%# ng: catalogue %>
+<%# One way in, in the order it has to be done. %>
+<% activity_count = active_activities.size
+   plan_count = active_plans.size
+   pack_count = active_packs.size %>
+<section class="cat-setup" aria-labelledby="cat-setup-h">
+  <header class="cat-setup-head">
+    <h2 id="cat-setup-h"><%= ngt("catalogue.setup_title") %></h2>
+    <p><%= ngt("catalogue.setup_body") %></p>
+  </header>
+
+  <ol class="cat-steps">
+    <li class="cat-step<%= " is-done" if activity_count > 0 %>">
+      <span class="cat-step-mark" aria-hidden="true">
+        <% if activity_count > 0 %><i class="bi bi-check-lg"></i><% else %> 1 <% end %>
+      </span>
+      <div class="cat-step-body">
+        <h3><%= ngt("nav.activities") %></h3>
+        <p><%= ngt("catalogue.step_activities") %></p>
+        <% if activity_count > 0 %>
+          <p class="cat-step-state"><%= ngt("catalogue.n_activities", count: activity_count) %></p>
+        <% end %>
+      </div>
+      <% if activity_count > 0 %>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-tab="activites" data-action="catalogue#select"><%= ngt("catalogue.see") %></button>
+      <% else %>
+        <button type="button" class="btn btn-primary btn-sm" data-kind="activity" data-action="catalogue#start">
+          <i class="bi bi-grid-3x3-gap"></i> <%= ngt("activity_catalogue.pick") %>
+        </button>
+      <% end %>
+    </li>
+
+    <li class="cat-step<%= " is-done" if plan_count > 0 %><%= " is-locked" if activity_count == 0 %>">
+      <span class="cat-step-mark" aria-hidden="true">
+        <% if plan_count > 0 %><i class="bi bi-check-lg"></i><% else %> 2 <% end %>
+      </span>
+      <div class="cat-step-body">
+        <h3><%= ngt("nav.plans") %></h3>
+        <p><%= ngt("catalogue.step_plans") %></p>
+        <% if activity_count == 0 %>
+          <p class="cat-step-state is-muted"><i class="bi bi-lock"></i> <%= ngt("catalogue.needs_activity") %></p>
+        <% end %>
+      </div>
+      <button type="button" class="btn btn-sm <%= activity_count > 0 ? "btn-primary" : "btn-outline-secondary" %>"<%= raw(" disabled") if activity_count == 0 %>
+              data-kind="plan" data-action="catalogue#start">
+        <i class="bi bi-plus-lg"></i> <%= ngt("contract_types.new") %>
+      </button>
+    </li>
+
+    <li class="cat-step<%= " is-done" if pack_count > 0 %><%= " is-locked" if activity_count < 2 %>">
+      <span class="cat-step-mark" aria-hidden="true">
+        <% if pack_count > 0 %><i class="bi bi-check-lg"></i><% else %> 3 <% end %>
+      </span>
+      <div class="cat-step-body">
+        <h3><%= ngt("catalogue.tab_packs") %> <span class="cat-optional"><%= ngt("catalogue.optional") %></span></h3>
+        <p><%= ngt("catalogue.step_packs") %></p>
+        <% if activity_count < 2 %>
+          <p class="cat-step-state is-muted"><i class="bi bi-lock"></i> <%= ngt("packs.needs_two") %></p>
+        <% end %>
+      </div>
+      <button type="button" class="btn btn-outline-secondary btn-sm"<%= raw(" disabled") if activity_count < 2 %> data-kind="pack" data-action="catalogue#start">
+        <i class="bi bi-plus-lg"></i> <%= ngt("packs.new") %>
+      </button>
+    </li>
+  </ol>
+</section>

@@ -5,12 +5,20 @@ module ApplicationCable
   # so the copy that access logs keep is worthless — unlike the login token
   # that used to travel here.
   #
+  # The server-rendered web UI opens it without a ticket: same origin, its
+  # session cookie goes along, and the session is checked as the pages check
+  # it (Web::SessionAccount). The handshake's Origin is checked against
+  # allowed_request_origins, which is what keeps another site from opening
+  # one with that cookie.
+  #
   # A connection is either a User's (admin, superadmin) or a Client's (a member on
   # their own app), never both.
   class Connection < ActionCable::Connection::Base
     identified_by :current_user, :current_client
 
     def connect
+      return connect_web_session if request.params[:ticket].blank?
+
       claims = verified_ticket
       if claims[:client_id]
         self.current_client = find_current(Client, claims)
@@ -21,10 +29,17 @@ module ApplicationCable
 
     private
 
+    def connect_web_session
+      session = cookies.encrypted[Rails.application.config.session_options[:key]]
+      found = Web::SessionAccount.resolve(session.is_a?(Hash) ? session[Web::Authentication::SESSION_KEY.to_s] : nil)
+      reject_unauthorized_connection if found.account.nil?
+
+      self.current_user = found.user
+      self.current_client = found.client
+    end
+
     def verified_ticket
       ticket = request.params[:ticket].to_s
-      reject_unauthorized_connection if ticket.blank?
-
       claims = JwtService.decode_cable_ticket(ticket)
       reject_unauthorized_connection unless first_use?(claims[:jti])
       claims

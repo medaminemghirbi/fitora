@@ -1,0 +1,88 @@
+<%# ng: superadmin-company-detail %>
+<%# SuperadminCompanyDetailComponent, its host written here for its
+    controller (superadmin-company): the way back, the gym and its admin,
+    what needs deciding (outside the tabs, on purpose), and two tabs — is
+    this gym paying (_billing), what is this gym (_gym). The tab not shown
+    waits in a <template>, as Angular's @if keeps it out of the DOM. %>
+<% c = @data[:company]; invoices = @data[:invoices]; sub = c[:subscription] || {} %>
+<% attention = superadmin_attention(c); arrears = (c[:arrears_cents] || 0) / 100.0 %>
+<app-superadmin-company-detail data-controller="superadmin-company"
+     data-superadmin-company-url-value="/superadmin/companies/<%= c[:id] %>"
+     data-superadmin-company-tab-value="<%= @tab %>"
+     data-superadmin-company-labels-value="<%= { error: ngt("common.error_generic"), void_title: ngt("superadmin.void_invoice_title"), void_body: Web::Translations.translate("superadmin.void_invoice_body", {}, locale: I18n.locale), saving: ngt("common.saving") }.to_json %>">
+  <a href="/superadmin/companies" class="ac-back">
+    <i class="bi bi-chevron-left"></i> <%= ngt("superadmin.companies") %>
+  </a>
+
+  <div class="ac-head">
+    <div>
+      <h1><%= c[:name] %></h1>
+      <p class="ac-meta">
+        <%= c.dig(:admin, :full_name) %> · <span dir="ltr"><%= c.dig(:admin, :email) %></span>
+        <% if c[:city].present? %> · <%= c[:city] %> <% end %>
+        · <%= ngt("superadmin.created_on") %> <%= ng_date(c[:created_at], "dd/MM/yyyy") %>
+      </p>
+    </div>
+    <div class="ac-head-actions">
+      <% if c[:plan] %>
+        <span class="ac-plan-chip" data-plan="<%= c[:plan] %>"><%= ngt("subscription.plan_#{c[:plan]}") %></span>
+      <% end %>
+      <app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: sub[:active] ? "active" : "cancelled" } do %>
+        <%= ngt(sub[:active] ? "superadmin.access_open" : "superadmin.access_closed") %>
+      <% end %></app-status-badge>
+      <button type="button" class="btn btn-primary btn-sm" data-action="superadmin-company#impersonate">
+        <i class="bi bi-box-arrow-in-right"></i>
+        <%= ngt("superadmin.impersonate_named", name: c.dig(:admin, :full_name)) %>
+      </button>
+    </div>
+  </div>
+
+  <% if attention %>
+    <section class="ac-attention" data-kind="<%= attention %>">
+      <div class="ac-attention-main">
+        <% icon = { "due" => "bi-cash-coin", "never" => "bi-receipt" }.fetch(attention, "bi-lock-fill") %>
+        <i class="bi <%= icon %>"></i>
+        <div>
+          <%# superadmin.attention_due / _never / _unpaid / _trial_over / _suspended %>
+          <strong> <%= ngt("superadmin.attention_#{attention}", days: sub[:days_before_lock]) %> </strong>
+          <span>
+            <% if sub[:paid_through] %>
+              <%= ngt("superadmin.attention_paid_through") %> <%= ng_date(sub[:paid_through], "d MMM y") %>
+            <% else %>
+              <%= ngt("superadmin.attention_never_paid") %>
+            <% end %>
+            <% if arrears > 0 %>
+              · <%= ngt("superadmin.attention_arrears", amount: ng_money(arrears, c[:currency])) %>
+            <% end %>
+          </span>
+        </div>
+      </div>
+      <% if attention == "suspended" %>
+        <button type="button" class="btn btn-primary" data-action="superadmin-company#toggleAccess" data-superadmin-company-active-param="true">
+          <%= ngt("superadmin.restore_access") %>
+        </button>
+      <% else %>
+        <button type="button" class="btn btn-primary"<%= raw(" disabled") unless c[:plan] %> data-action="superadmin-company#issueInvoice"<%= raw(%( title="#{h(ngt("superadmin.choose_plan_first"))}")) unless c[:plan] %>>
+          <%= ngt("superadmin.record_payment") %>
+        </button>
+      <% end %>
+    </section>
+  <% end %>
+
+  <ul class="nav nav-tabs mb-4">
+    <% %w[billing gym].each do |tab| %>
+      <li class="nav-item">
+        <button type="button" class="nav-link<%= " active" if @tab == tab %>" data-action="superadmin-company#setTab" data-superadmin-company-tab-param="<%= tab %>">
+          <%= ngt("superadmin.tab_#{tab}") %>
+        </button>
+      </li>
+    <% end %>
+  </ul>
+
+  <% panes = { "billing" => -> { render("web/superadmin/companies/billing", c: c, sub: sub, invoices: invoices, arrears: arrears) },
+               "gym" => -> { render("web/superadmin/companies/gym", c: c, currency_options: @data[:currency_options], locale_options: @data[:locale_options]) } } %>
+  <%= panes.fetch(@tab).call %>
+  <% (panes.keys - [ @tab ]).each do |tab| %>
+    <template data-superadmin-company-target="pane" data-tab="<%= tab %>"><%= panes.fetch(tab).call %></template>
+  <% end %>
+</app-superadmin-company-detail>

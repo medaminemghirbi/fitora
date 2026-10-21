@@ -1,0 +1,30 @@
+// GENERATED from frontend/src/styles/components/_base.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// BASE
+// ----------------------------------------------------------------------------
+// Type rhythm: the few element-level rules the whole app inherits.
+//
+// Split out of _fitora.scss, which had grown to 1208 lines and was the reason
+// screens drifted: nobody could see what was already there.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// Typography rhythm
+// ---------------------------------------------------------------------------
+// The reset strips headings back to inherited size and weight, so the
+// product's own type scale is stated here rather than assumed from the UA's.
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+h1 { font-size: var(--font-size-2xl); }
+h2 { font-size: var(--font-size-xl); }
+h3 { font-size: var(--font-size-lg); }
+h4 { font-size: var(--font-size-md); }
+h5, h6 { font-size: var(--font-size-base); }
+
+.fx-muted { color: var(--color-text-secondary) !important; }
+.fx-strong { font-weight: 600; }

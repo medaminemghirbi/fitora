@@ -1,0 +1,16 @@
+// GENERATED from frontend/src/app/shared/components/status-badge.component.ts by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-badge--success { background: var(--color-success-soft); color: var(--color-success); }
+    .status-badge--warning { background: var(--color-warning-soft); color: var(--color-warning); }
+    .status-badge--danger { background: var(--color-danger-soft); color: var(--color-danger); }
+    .status-badge--info { background: var(--color-info-soft); color: var(--color-info); }
+    .status-badge--neutral { background: var(--color-border); color: var(--color-text-secondary); }
+  

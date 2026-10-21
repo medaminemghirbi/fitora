@@ -10,12 +10,7 @@ module Api
 
       # GET /api/v1/contract_types
       def index
-        # Was ordered by the flat price, which no longer exists — a plan now
-        # has one price per activity. Shortest commitment first, then name.
-        plans = current_company.contract_types
-                               .preload({ contract_type_activities: :activity }, { contract_type_packs: { pack: :activities } })
-                               .order(:billing_period, :name)
-        render json: { plans: plans.map { |p| ContractTypeSerializer.new(p).as_json } }
+        render json: { plans: CatalogueListing.plans(current_company).map { |p| ContractTypeSerializer.new(p).as_json } }
       end
 
       # GET /api/v1/contract_types/:id
@@ -51,50 +46,14 @@ module Api
         @plan = current_company.contract_types.find(params[:id])
       end
 
-      # The plan's pricing grid: one { activity_id, price } per activity this
-      # plan is sold for. Activities not listed are dropped — the plan simply
-      # isn't offered for them. Ids from another company are ignored, same
-      # guard the old activity_ids sync used.
+      # The pricing grid (CatalogueEditor, shared with the web UI's
+      # catalogue): a list that is absent is left alone.
       def sync_associations(plan)
-        sync_activity_prices(plan)
-        sync_pack_prices(plan)
-      end
-
-      def sync_activity_prices(plan)
-        return unless params.key?(:activity_prices)
-
-        own_activity_ids = current_company.activities.ids
-        rows = Array(params[:activity_prices]).filter_map do |row|
-          activity_id = row[:activity_id].presence
-          next unless own_activity_ids.include?(activity_id)
-
-          { activity_id: activity_id, price: row[:price].to_f }
-        end
-
-        plan.contract_type_activities.where.not(activity_id: rows.map { |r| r[:activity_id] }).destroy_all
-        rows.each do |row|
-          plan.contract_type_activities.find_or_initialize_by(activity_id: row[:activity_id]).update!(price: row[:price])
-        end
-      end
-
-      # The same grid for packs. Sent on its own so a caller pricing one
-      # activity doesn't have to restate every pack, and vice versa: a list
-      # that is absent is left alone, an empty one clears the plan's packs.
-      def sync_pack_prices(plan)
-        return unless params.key?(:pack_prices)
-
-        own_pack_ids = current_company.packs.ids
-        rows = Array(params[:pack_prices]).filter_map do |row|
-          pack_id = row[:pack_id].presence
-          next unless own_pack_ids.include?(pack_id)
-
-          { pack_id: pack_id, price: row[:price].to_f }
-        end
-
-        plan.contract_type_packs.where.not(pack_id: rows.map { |r| r[:pack_id] }).destroy_all
-        rows.each do |row|
-          plan.contract_type_packs.find_or_initialize_by(pack_id: row[:pack_id]).update!(price: row[:price])
-        end
+        CatalogueEditor.price_plan(
+          plan, current_company,
+          activity_prices: params.key?(:activity_prices) ? Array(params[:activity_prices]) : nil,
+          pack_prices: params.key?(:pack_prices) ? Array(params[:pack_prices]) : nil
+        )
       end
 
       # Optional, so the pricing grid can send a formule's prices alone. A

@@ -35,38 +35,16 @@ module Api
         end
 
         # PATCH /api/v1/superadmin/companies/:id/subscription — the ACCOUNT's
-        # subscription, reached through any one of its salles: whether the
-        # door is open (for every salle at once), which plan it is on, and
-        # whether an invoice covers one month or twelve. None of them ends a
-        # trial: only an invoice does (#create_invoice).
+        # subscription, reached through any one of its salles
+        # (SuperadminActions.update_subscription).
         def update_subscription
-          subscription = @company.subscription || @company.admin.build_subscription
-
           attrs = {}
           attrs[:active] = ActiveModel::Type::Boolean.new.cast(params[:active]) if params.key?(:active)
           attrs[:billing_period] = params[:billing_period].presence if params.key?(:billing_period)
           attrs[:plan] = params[:plan].presence if params.key?(:plan)
-          was_active = subscription.active
-          was_plan = subscription.plan
+          subscription = SuperadminActions.update_subscription(@company, attrs, by: current_user)
 
-          if subscription.update(attrs)
-            # Only a change of access is an access event. Picking what the
-            # next invoice covers used to be logged as "access restored",
-            # which is what the admin's feed then told them.
-            action =
-              if subscription.active != was_active
-                subscription.active? ? "subscription.access_restored" : "subscription.access_suspended"
-              elsif subscription.plan != was_plan then "subscription.plan_changed"
-              else "subscription.billing_period_changed"
-              end
-            AuditLog.record!(
-              company: @company, user: current_user, action: action,
-              auditable: subscription,
-              metadata: {
-                from: was_active, to: subscription.active, billing_period: subscription.billing_period,
-                plan_from: was_plan, plan: subscription.plan
-              }
-            )
+          if subscription.errors.empty?
             render json: { company: SuperadminCompanySerializer.new(@company.reload).as_json }
           else
             render_errors(subscription)
@@ -78,11 +56,7 @@ module Api
         # language and the billing/display currency. { company: { currency:,
         # locale: } }.
         def update_settings
-          if @company.update(company_settings_params)
-            AuditLog.record!(
-              company: @company, user: current_user, action: "superadmin.settings_updated",
-              auditable: @company, metadata: { currency: @company.currency, locale: @company.locale }
-            )
+          if SuperadminActions.update_settings(@company, company_settings_params, by: current_user)
             render json: { company: SuperadminCompanySerializer.new(@company).as_json }
           else
             render_errors(@company)
@@ -94,48 +68,25 @@ module Api
         # superadmin's id so it's traceable, and reuses the entire admin-facing
         # app as-is instead of duplicating every page for superadmin use.
         def impersonate
-          admin = @company.admin
+          admin = SuperadminActions.impersonate(@company, by: current_user)
           return render json: { error: "This company has no admin account" }, status: :unprocessable_content if admin.nil?
-
-          AuditLog.record!(
-            company: @company, user: admin, action: "superadmin.impersonation_started",
-            auditable: @company, metadata: { superadmin_id: current_user.id, superadmin_email: current_user.email }
-          )
 
           render json: { token: JwtService.for_user(admin, impersonator: current_user), user: UserSerializer.new(admin).as_json }
         end
 
         # GET /api/v1/superadmin/companies/:id/invoices — the account's.
         def invoices
-          scope = @company.subscription&.invoices || Invoice.none
+          # What was paid; the bill still to pay is subscription.due_invoice.
+          scope = @company.subscription&.invoices&.paid || Invoice.none
           render json: {
             invoices: scope.newest_first.map { |i| InvoiceSerializer.new(i).as_json }
           }
         end
 
-        # POST /api/v1/superadmin/companies/:id/invoices — the money arrived.
-        #
-        # Issues one invoice for the next period the account has not paid
-        # for, at its plan's price, and opens access again for every salle.
-        # Payment happens off-app, so this is the only record that it
-        # happened at all.
+        # POST /api/v1/superadmin/companies/:id/invoices — the money arrived
+        # (SuperadminActions.issue_invoice).
         def create_invoice
-          subscription = @company.subscription
-          return render_errors("This gym has no subscription.") if subscription.nil?
-
-          return render_errors("Choose a plan before recording a payment.") if subscription.plan.nil?
-
-          invoice = subscription.issue_invoice!(issued_by: current_user, notes: params[:notes].presence)
-          AuditLog.record!(
-            company: @company, user: current_user, action: "subscription.invoice_issued",
-            auditable: invoice,
-            metadata: { number: invoice.number, period_end: invoice.period_end, amount_cents: invoice.amount_cents }
-          )
-          Notification.push(
-            recipient: @company.admin, kind: "invoice_issued",
-            data: { number: invoice.number, amount: invoice.amount, currency: invoice.currency },
-            url: "/admin/subscription", dedup_key: "invoice-#{invoice.id}"
-          )
+          invoice = SuperadminActions.issue_invoice(@company, by: current_user, notes: params[:notes])
           render json: {
             invoice: InvoiceSerializer.new(invoice).as_json,
             company: SuperadminCompanySerializer.new(@company.reload).as_json
@@ -143,18 +94,9 @@ module Api
         end
 
         # DELETE /api/v1/superadmin/companies/:id/invoices/:invoice_id — an
-        # invoice issued in error. Deleting it takes the coverage back with
-        # it; the sweep closes access again if that leaves the account
-        # uncovered.
+        # invoice issued in error (SuperadminActions.void_invoice).
         def destroy_invoice
-          invoice = (@company.subscription&.invoices || Invoice.none).find(params[:invoice_id])
-          number = invoice.number
-          invoice.destroy!
-
-          AuditLog.record!(
-            company: @company, user: current_user, action: "subscription.invoice_voided",
-            auditable: @company, metadata: { number: number }
-          )
+          SuperadminActions.void_invoice(@company, params[:invoice_id], by: current_user)
           render json: { company: SuperadminCompanySerializer.new(@company.reload).as_json }
         end
 

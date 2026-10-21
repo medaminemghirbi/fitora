@@ -37,4 +37,22 @@ class AccountMailer < ApplicationMailer
 
     mail(to: client.email, subject: "#{company.name} vous invite sur Fitora")
   end
+
+  # A Fitora superadmin closed the account's access (SuperadminActions
+  # .update_subscription): every salle it covers, at once.
+  def access_suspended(admin)
+    @first_name = admin.first_name
+    @subscription_url = "#{FRONTEND_URL}/admin/subscription"
+
+    mail(to: admin.email, subject: "Votre accès Fitora est suspendu")
+  end
+
+  # ...and opened it again.
+  def access_restored(admin)
+    @first_name = admin.first_name
+    @plan = admin.subscription&.plan
+    @app_url = "#{FRONTEND_URL}/connexion"
+
+    mail(to: admin.email, subject: "Votre accès Fitora est rétabli")
+  end
 end

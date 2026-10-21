@@ -18,6 +18,14 @@ FactoryBot.define do
     currency { "TND" }
     billing_period { :monthly }
     issued_at { Time.current }
+    # Paid on issue, as every invoice was before a change of plan could bill
+    # ahead of the money (:due).
+    paid_at { issued_at }
+
+    # A change of plan's bill, waiting for the money.
+    trait :due do
+      paid_at { nil }
+    end
 
     # Covers today and the rest of this month — the ordinary "paid up" case.
     trait :current do

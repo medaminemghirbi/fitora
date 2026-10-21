@@ -1,0 +1,104 @@
+<%# ng: settings-booking %>
+<%# SettingsBookingComponent: how the gym books. Each change is saved as it
+    is made (settings-booking, on the host); the rules that only matter when
+    another is on (the member's own booking, a reminder) appear with it —
+    kept as templates after the last section, where they upset neither
+    .sb-row:last-child nor .sb-group + .sb-group. %>
+<% s = company[:settings].with_indifferent_access %>
+<% features = s[:features] || {} %>
+<% booking = s[:booking] || {} %>
+<% content_for :booking_online_rows do %>
+  <div class="sb-row">
+    <%= render "web/admin/settings/booking_label", id: "sb-window", label: "settings.booking_cancel_window", hint: "settings.booking_cancel_window_hint" %>
+    <select id="sb-window" class="form-select form-select-sm sb-control" data-rule="cancellation_hours" data-action="settings-booking#change">
+      <% [ 0, 2, 6, 12, 24, 48 ].each do |hours| %>
+        <option value="<%= hours %>"<%= raw(" selected") if booking[:cancellation_hours] == hours %>>
+          <%= hours.zero? ? ngt("settings.booking_cancel_anytime") : ngt("settings.booking_hours_before", count: hours) %>
+        </option>
+      <% end %>
+    </select>
+  </div>
+
+  <div class="sb-row">
+    <%= render "web/admin/settings/booking_label", id: "sb-horizon", label: "settings.booking_horizon", hint: "settings.booking_horizon_hint" %>
+    <select id="sb-horizon" class="form-select form-select-sm sb-control" data-rule="booking_opens_days" data-action="settings-booking#change">
+      <% [ 7, 14, 30, 60, 90 ].each do |days| %>
+        <option value="<%= days %>"<%= raw(" selected") if booking[:booking_opens_days] == days %>><%= ngt("settings.booking_days_ahead", count: days) %></option>
+      <% end %>
+    </select>
+  </div>
+<% end %>
+<% content_for :booking_sms_row do %>
+  <div class="sb-row">
+    <%= render "web/admin/settings/booking_label", id: "sb-reminder-sms", label: "settings.booking_reminder_sms", hint: "settings.booking_reminder_sms_hint" %>
+    <input id="sb-reminder-sms" type="checkbox" class="form-check-input"<%= raw(" checked") if booking[:reminder_sms] %> data-rule="reminder_sms" data-action="settings-booking#change" />
+  </div>
+<% end %>
+<section class="sb-group">
+  <h2 class="sb-group-title"><%= ngt("settings.booking_how") %></h2>
+
+  <div class="sb-row">
+    <%= render "web/admin/settings/booking_label", id: "sb-online", label: "settings.booking_online", hint: "settings.booking_online_hint" %>
+    <input id="sb-online" type="checkbox" class="form-check-input"<%= raw(" checked") if features[:online_booking] %> data-feature="online_booking" data-action="settings-booking#change" />
+  </div>
+
+  <% if features[:online_booking] %>
+    <%= content_for(:booking_online_rows) %>
+  <% end %>
+
+  <div class="sb-row">
+    <%= render "web/admin/settings/booking_label", id: "sb-noshow", label: "settings.booking_no_show", hint: "settings.booking_no_show_hint" %>
+    <input id="sb-noshow" type="checkbox" class="form-check-input"<%= raw(" checked") if booking[:no_show_consumes_session] %> data-rule="no_show_consumes_session" data-action="settings-booking#change" />
+  </div>
+
+  <div class="sb-row">
+    <%= render "web/admin/settings/booking_label", id: "sb-dropin", label: "settings.booking_drop_in", hint: "settings.booking_drop_in_hint" %>
+    <input id="sb-dropin" type="checkbox" class="form-check-input"<%= raw(" checked") if features[:drop_in] %> data-feature="drop_in" data-action="settings-booking#change" />
+  </div>
+
+  <div class="sb-row">
+    <%= render "web/admin/settings/booking_label", id: "sb-waitlist", label: "settings.booking_waitlist", hint: "settings.booking_waitlist_hint" %>
+    <input id="sb-waitlist" type="checkbox" class="form-check-input"<%= raw(" checked") if features[:waitlist] %> data-feature="waitlist" data-action="settings-booking#change" />
+  </div>
+</section>
+
+<section class="sb-group">
+  <h2 class="sb-group-title"><%= ngt("settings.booking_reminders") %></h2>
+
+  <div class="sb-row">
+    <%= render "web/admin/settings/booking_label", id: "sb-reminder", label: "settings.booking_reminder", hint: "settings.booking_reminder_hint" %>
+    <select id="sb-reminder" class="form-select form-select-sm sb-control" data-rule="reminder_hours" data-action="settings-booking#change">
+      <% [ 0, 2, 12, 24, 48 ].each do |hours| %>
+        <option value="<%= hours %>"<%= raw(" selected") if booking[:reminder_hours] == hours %>>
+          <%= hours.zero? ? ngt("settings.booking_reminder_off") : ngt("settings.booking_hours_before", count: hours) %>
+        </option>
+      <% end %>
+    </select>
+  </div>
+
+  <% if booking[:reminder_hours].to_i > 0 %>
+    <%= content_for(:booking_sms_row) %>
+  <% end %>
+</section>
+
+<section class="sb-group">
+  <h2 class="sb-group-title"><%= ngt("settings.booking_what") %></h2>
+
+  <div class="sb-row">
+    <%= render "web/admin/settings/booking_label", id: "sb-spaces", label: "settings.booking_spaces", hint: "settings.booking_spaces_hint" %>
+    <input id="sb-spaces" type="checkbox" class="form-check-input"<%= raw(" checked") if features[:spaces] %> data-feature="spaces" data-action="settings-booking#change" />
+  </div>
+
+  <div class="sb-row">
+    <%= render "web/admin/settings/booking_label", id: "sb-attendance", label: "settings.booking_attendance", hint: "settings.booking_attendance_hint" %>
+    <input id="sb-attendance" type="checkbox" class="form-check-input"<%= raw(" checked") if features[:attendance] %> data-feature="attendance" data-action="settings-booking#change" />
+  </div>
+
+  <div class="sb-row">
+    <%= render "web/admin/settings/booking_label", id: "sb-packs", label: "settings.booking_packs", hint: "settings.booking_packs_hint" %>
+    <input id="sb-packs" type="checkbox" class="form-check-input"<%= raw(" checked") if features[:packs] %> data-feature="packs" data-action="settings-booking#change" />
+  </div>
+</section>
+
+<template data-settings-booking-target="online"><%= content_for(:booking_online_rows) %></template>
+<template data-settings-booking-target="sms"><%= content_for(:booking_sms_row) %></template>

@@ -97,6 +97,17 @@ jobs:
       - name: Set up database
         run: bin/rails db:schema:load
 
+      # The web UI's request specs render its pages, which link the built
+      # stylesheets and scripts (Propshaft refuses a missing asset).
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Build web UI assets
+        run: npm ci && npm run build && npm run build:css
+
       # CI=true (set by GitHub) also turns on: Bullet raising on any N+1, and
       # the coverage floor in spec/spec_helper.rb.
       - name: RSpec

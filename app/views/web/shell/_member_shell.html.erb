@@ -1,0 +1,93 @@
+<%# ng: member-shell %>
+<%# ng-host: member-shell %>
+<%# MemberShellComponent (layout/member-shell): the gym's name in the bar —
+    a choice when the person trains at several — the bell, the theme, their
+    menu; a left rail on a desktop, a tab bar on a phone. The menus are put
+    in when they open (shell-menu). %>
+<% client = current_client; gyms = member_gyms %>
+<% nav_items = [ [ web_member_home_path, "bi-calendar-week", "member.nav.schedule" ], [ web_member_bookings_path, "bi-calendar-check", "member.nav.bookings" ], [ web_member_profile_path, "bi-person", "member.nav.profile" ] ] %>
+<div class="member-shell" data-controller="shell-menu">
+  <header class="member-topbar">
+    <% if gyms.size > 1 %>
+      <div class="dropdown-wrap">
+        <button type="button" class="member-brand member-brand--switch" data-action="shell-menu#toggle" data-shell-menu-menu-param="gym">
+          <span class="member-brand-mark"><i class="bi bi-lightning-charge-fill"></i></span>
+          <span class="member-brand-text"><%= gym&.name.presence || "Fitora" %></span>
+          <i class="bi bi-chevron-down member-brand-caret" aria-hidden="true"></i>
+        </button>
+        <template data-shell-menu-target="menu" data-menu="gym">
+          <div class="dropdown-menu-custom">
+            <% gyms.each do |g| %>
+              <button type="button" class="dropdown-item-custom" data-action="shell-menu#submit" data-shell-menu-url-param="<%= web_member_gym_path %>" data-shell-menu-fields-param="<%= { id: g.id }.to_json %>">
+                <% if g.id == gym&.id %>
+                  <i class="bi bi-check2"></i>
+                <% else %>
+                  <i class="bi"></i>
+                <% end %>
+                <%= g.name %>
+              </button>
+            <% end %>
+          </div>
+        </template>
+      </div>
+    <% else %>
+      <a href="<%= web_member_home_path %>" class="member-brand">
+        <span class="member-brand-mark"><i class="bi bi-lightning-charge-fill"></i></span>
+        <span class="member-brand-text"><%= gym&.name.presence || "Fitora" %></span>
+      </a>
+    <% end %>
+
+    <div class="member-topbar-actions">
+      <app-notification-bell><%= render "web/shell/notification_bell", url: "/member/notifications", inbox: false, unread: client.notifications.unread.count %></app-notification-bell>
+
+      <button type="button" class="icon-btn" data-action="shell-menu#toggleTheme" aria-label="<%= ngt("common.toggle_theme") %>">
+        <i class="bi <%= theme == "light" ? "bi-moon-stars" : "bi-sun" %>"></i>
+      </button>
+
+      <div class="dropdown-wrap">
+        <button type="button" class="user-menu-trigger" data-action="shell-menu#toggle" data-shell-menu-menu-param="user" aria-label="<%= client.full_name %>">
+          <app-avatar><%= render "web/shared/avatar", name: client.full_name.to_s, size: 32 %></app-avatar>
+        </button>
+        <template data-shell-menu-target="menu" data-menu="user">
+          <div class="dropdown-menu-custom dropdown-menu-end">
+            <div class="dropdown-user-info">
+              <strong><%= client.full_name %></strong>
+              <span><%= client.email %></span>
+            </div>
+            <a href="<%= web_member_profile_path %>" class="dropdown-item-custom" data-action="shell-menu#closeMenu" data-shell-menu-menu-param="user">
+              <i class="bi bi-person"></i> <%= ngt("member.nav.profile") %>
+            </a>
+            <button type="button" class="dropdown-item-custom" data-controller="form-submit" data-form-submit-form-value="sign-out-form" data-action="form-submit#submit">
+              <i class="bi bi-box-arrow-right"></i> <%= ngt("auth.logout") %>
+            </button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </header>
+
+  <div class="member-body">
+    <nav class="member-rail d-none d-lg-flex" aria-label="<%= ngt("nav.primary") %>">
+      <% nav_items.each do |href, icon, label_key| %>
+        <a href="<%= href %>" class="member-rail-link<%= " is-active" if request.path.start_with?(href) %>">
+          <i class="bi <%= icon %>"></i>
+          <span><%= ngt(label_key) %></span>
+        </a>
+      <% end %>
+    </nav>
+
+    <main class="member-content">
+      <router-outlet></router-outlet>
+      <%= yield %>
+    </main>
+  </div>
+
+  <nav class="member-tabbar d-lg-none" aria-label="<%= ngt("nav.primary") %>">
+    <% nav_items.each do |href, icon, label_key| %>
+      <a href="<%= href %>" class="member-tabbar-link<%= " is-active" if request.path.start_with?(href) %>">
+        <i class="bi <%= icon %>"></i>
+        <span><%= ngt(label_key) %></span>
+      </a>
+    <% end %>
+  </nav>
+</div>

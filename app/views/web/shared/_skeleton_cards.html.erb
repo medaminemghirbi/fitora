@@ -1,0 +1,11 @@
+<%# ng: skeleton %>
+<%# SkeletonComponent, variant "cards". The caller writes the <app-skeleton> host. %>
+<div class="fx-skeleton-cards" aria-hidden="true">
+  <% count.times do %>
+    <div class="fx-skeleton-card">
+      <span class="fx-skeleton fx-skeleton--circle" style="width:44px;height:44px"></span>
+      <span class="fx-skeleton fx-skeleton--text" style="width:70%"></span>
+      <span class="fx-skeleton fx-skeleton--text" style="width:45%"></span>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,34 @@
+<%# ng: admin-support %>
+<div id="support-history">
+  <h2 class="contact-history-title"><%= ngt("modules_page.contact.history_title") %></h2>
+
+  <% if tickets.empty? %>
+    <p class="fx-muted"><%= ngt("modules_page.contact.no_tickets") %></p>
+  <% else %>
+    <div class="ticket-list">
+      <% tickets.each do |ticket| %>
+        <div class="ticket-item">
+          <div class="ticket-item-head">
+            <strong><%= ticket[:subject] %></strong>
+            <span class="ticket-status<%= " is-resolved" if ticket[:status] == "resolved" %>">
+              <i class="bi<%= " bi-check-circle-fill" if ticket[:status] == "resolved" %><%= " bi-hourglass-split" if ticket[:status] == "open" %>"></i>
+              <%= ngt("modules_page.contact.status_#{ticket[:status]}") %>
+            </span>
+          </div>
+          <p class="ticket-item-message"><%= ticket[:message] %></p>
+          <% if ticket[:attachments].present? %>
+            <div class="ticket-attachments">
+              <% ticket[:attachments].each do |att| %>
+                <a href="<%= admin_page_path("support/#{ticket[:id]}/attachments/#{att[:id]}") %>" target="_blank" rel="noopener" class="ticket-attachment">
+                  <i class="bi<%= support_file_icon(att[:content_type]) %>"></i>
+                  <%= att[:filename] %>
+                </a>
+              <% end %>
+            </div>
+          <% end %>
+          <span class="ticket-item-date"><%= ng_date(ticket[:created_at], "dd/MM/yyyy HH:mm") %></span>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

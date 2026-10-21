@@ -1,0 +1,150 @@
+// GENERATED from frontend/src/app/features/admin/catalogue/catalogue.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// What the gym sells, one tab per kind of thing.
+//
+// The two-column layout this replaces had no room for a third half (packs),
+// and showed an empty gym two empty states side by side. The tabs keep one
+// list on screen at a time; the "Tarifs" grid is where they meet.
+
+.cat-tabs {
+  margin-bottom: var(--space-4);
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+  }
+}
+
+.cat-tab-count {
+  min-width: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35rem;
+  text-align: center;
+
+  .active > & {
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Setup — the three steps, until there is something to price
+// ---------------------------------------------------------------------------
+.cat-setup {
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.cat-setup-head {
+  margin-bottom: var(--space-4);
+
+  h2 {
+    margin: 0 0 0.2rem;
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+  }
+}
+
+.cat-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.cat-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0 0 0.15rem;
+    font-size: var(--font-size-md);
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+
+  &.is-done { background: var(--color-surface); }
+  &.is-locked .cat-step-body { opacity: 0.75; }
+
+  // Phone: the button drops under the text instead of squeezing it.
+  @media (max-width: 575px) {
+    grid-template-columns: auto minmax(0, 1fr);
+
+    > .btn { grid-column: 2; justify-self: start; }
+  }
+}
+
+.cat-step-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 700;
+
+  .is-done & {
+    background: var(--color-success-soft);
+    color: var(--color-success);
+  }
+}
+
+.cat-step-state {
+  margin-top: 0.35rem !important;
+  font-weight: 600;
+  color: var(--color-success) !important;
+
+  &.is-muted {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--color-text-secondary) !important;
+    font-weight: 500;
+  }
+}
+
+.cat-optional {
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}

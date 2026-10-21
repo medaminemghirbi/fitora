@@ -8,8 +8,7 @@ module Api
 
       # GET /api/v1/activities
       def index
-        scope = current_company.activities
-        render json: { activities: scope.order(:name).map { |a| ActivitySerializer.new(a).as_json } }
+        render json: { activities: CatalogueListing.activities(current_company).map { |a| ActivitySerializer.new(a).as_json } }
       end
 
       # GET /api/v1/activities/:id

@@ -1,0 +1,98 @@
+<%# ng: superadmin-overview %>
+<%# ng-host: superadmin-overview %>
+<%# SuperadminOverviewComponent: four numbers with a decision behind each,
+    Fitora's own money, usage, the newest gyms. %>
+<% m = @metrics; trend = superadmin_signup_trend(m[:companies]); share = superadmin_active_share(m) %>
+<section class="ao-grid">
+  <article class="ao-tile">
+    <span class="ao-label"><%= ngt("superadmin.overview.gyms") %></span>
+    <span class="ao-value"><%= m.dig(:companies, :total) %></span>
+    <span class="ao-note">
+      <%= ngt("superadmin.overview.open_count", count: m.dig(:companies, :open)) %>
+      <% if m.dig(:companies, :locked) > 0 %>
+        · <span class="ao-warn"><%= ngt("superadmin.overview.locked_count", count: m.dig(:companies, :locked)) %></span>
+      <% end %>
+    </span>
+    <% if (plans = m.dig(:companies, :plans)) %>
+      <span class="ao-note">
+        <%= ngt("superadmin.overview.plans_split", starter: plans[:starter], pro: plans[:pro]) %>
+      </span>
+    <% end %>
+  </article>
+
+  <article class="ao-tile">
+    <span class="ao-label"><%= ngt("superadmin.overview.new_this_month") %></span>
+    <span class="ao-value"><%= m.dig(:companies, :new_this_month) %></span>
+    <span class="ao-note">
+      <% if trend.nil? %>
+        <%= ngt("superadmin.overview.no_comparison") %>
+      <% else %>
+        <span<%= raw(%( class="#{[ ("ao-up" if trend > 0), ("ao-down" if trend < 0) ].compact.join(" ")}")) if trend != 0 %>>
+          <%= trend > 0 ? "+" : "" %><%= trend %>%
+        </span>
+        <%= ngt("superadmin.overview.vs_last_month", count: m.dig(:companies, :new_last_month)) %>
+      <% end %>
+    </span>
+  </article>
+
+  <article class="ao-tile">
+    <span class="ao-label"><%= ngt("superadmin.overview.members") %></span>
+    <span class="ao-value"><%= m.dig(:members, :total) %></span>
+    <span class="ao-note"><%= ngt("superadmin.overview.new_members", count: m.dig(:members, :new_this_month)) %></span>
+  </article>
+
+  <article class="ao-tile">
+    <span class="ao-label"><%= ngt("superadmin.overview.in_use") %></span>
+    <span class="ao-value">
+      <% if share.nil? %>
+        —
+      <% else %>
+        <%= share %>%
+      <% end %>
+    </span>
+    <span class="ao-note"><%= ngt("superadmin.overview.in_use_note", count: m.dig(:activity, :companies_with_activity)) %></span>
+  </article>
+</section>
+
+<section class="ao-grid ao-grid--two">
+  <article class="ao-tile">
+    <span class="ao-label"><%= ngt("superadmin.overview.invoiced") %></span>
+    <span class="ao-value"><%= superadmin_money(m.dig(:money, :invoiced_this_month_cents)) %> <small><%= m.dig(:money, :currency) %></small></span>
+    <span class="ao-note"><%= ngt("superadmin.overview.invoiced_note") %></span>
+  </article>
+
+  <article class="ao-tile<%= " ao-tile--warn" if m.dig(:money, :arrears_cents) > 0 %>">
+    <span class="ao-label"><%= ngt("superadmin.overview.arrears") %></span>
+    <span class="ao-value"><%= superadmin_money(m.dig(:money, :arrears_cents)) %> <small><%= m.dig(:money, :currency) %></small></span>
+    <span class="ao-note"><%= ngt("superadmin.overview.arrears_note") %></span>
+  </article>
+</section>
+
+<section class="ao-section">
+  <h2 class="ao-section-title"><%= ngt("superadmin.overview.usage") %></h2>
+  <p class="ao-usage">
+    <%= ngt("superadmin.overview.usage_line", sessions: m.dig(:activity, :sessions_last_30_days), bookings: m.dig(:activity, :bookings_last_30_days)) %>
+  </p>
+</section>
+
+<section class="ao-section">
+  <h2 class="ao-section-title"><%= ngt("superadmin.overview.newest") %></h2>
+
+  <ul class="ao-list">
+    <% m[:recent_companies].each do |company| %>
+      <li class="ao-row">
+        <a class="ao-row-body" href="/superadmin/companies/<%= company[:id] %>">
+          <strong><%= company[:name] %></strong>
+          <small>
+            <%= company[:admin_name] %>
+            <% if company[:city].present? %> · <%= company[:city] %> <% end %>
+            · <%= ng_date(company[:created_at], "d MMM") %>
+          </small>
+        </a>
+        <% unless company[:access_open] %>
+          <span class="ao-chip"><%= ngt("superadmin.overview.locked") %></span>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+</section>

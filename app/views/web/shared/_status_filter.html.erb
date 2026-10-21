@@ -1,0 +1,12 @@
+<%# StatusFilterComponent: one radio pill per state, with its count. (No
+    styles of its own, so no scope — as in Angular.) %>
+<fieldset class="fx-chips">
+  <legend class="fx-chips-legend"><%= legend %></legend>
+  <% options.each do |opt| %>
+    <input type="radio" class="fx-chip-input" id="<%= name %>-<%= opt[:value] %>" name="<%= name %>" value="<%= opt[:value] %>"<%= raw(" checked") if opt[:value] == value %><%= raw(%( data-filter="#{filter}")) if local_assigns[:filter] %><%= raw(%( data-action="#{action}")) if local_assigns[:action] %>>
+    <label class="fx-chip" for="<%= name %>-<%= opt[:value] %>" style="--fx-chip-color: <%= opt[:color] %>;">
+      <%= opt[:label] %>
+      <span class="fx-chip-count"><%= opt[:count] %></span>
+    </label>
+  <% end %>
+</fieldset>

@@ -1,0 +1,120 @@
+<%# The card under the filters: the active-filter chips, then the table (or
+    the empty state), then the pagination. Replaced as a whole when the
+    results change. %>
+<% chips = clients_filter_chips(filters, catalogue) %>
+<div class="app-card" id="cl-card" data-clients-list-target="card">
+  <% if chips.any? %>
+    <div class="fx-active-filters p-3 pb-0" data-clients-list-target="chips">
+      <% chips.each do |chip| %>
+        <span class="fx-active-chip">
+          <%= chip[:label] %>
+          <button type="button" data-action="clients-list#clearChip" data-chip="<%= chip[:clear] %>" aria-label="<%= ngt("common.reset") %>">
+            <i class="bi bi-x"></i>
+          </button>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if clients.empty? %>
+    <div class="app-card-body">
+      <app-empty-state>
+        <%= render layout: "web/shared/empty_state", locals: { title: ngt("clients.empty_title"), body: ngt("clients.empty_body"), icon: "bi-people" } do %>
+          <button type="button" class="btn btn-primary" data-action="clients-list#openWizard">
+            <i class="bi bi-plus-lg"></i> <%= ngt("clients.new") %>
+          </button>
+        <% end %>
+      </app-empty-state>
+    </div>
+  <% else %>
+    <div class="fx-table-scroll">
+      <table class="table table-hover fx-grid">
+        <thead>
+          <tr>
+            <th aria-sort="<%= clients_aria_sort(filters, "name") %>"<%= raw(%( class="is-sorted")) if clients_sort(filters) == "name" %>>
+              <button type="button" class="fx-th-sort" data-action="clients-list#sortBy" data-column="name">
+                <%= ngt("clients.title") %>
+                <i class="bi <%= clients_sort_icon(filters, "name") %>"></i>
+              </button>
+            </th>
+            <th class="fx-col-contact"><%= ngt("auth.email") %></th>
+            <th><%= ngt("contract_types.plan") %></th>
+            <th><%= ngt("common.status") %></th>
+            <th class="fx-col-seen"><%= ngt("clients.last_visit") %></th>
+            <th aria-sort="<%= clients_aria_sort(filters, "joined") %>" class="<%= "is-sorted " if clients_sort(filters) == "joined" %>fx-col-seen">
+              <button type="button" class="fx-th-sort" data-action="clients-list#sortBy" data-column="joined">
+                <%= ngt("clients.member_since") %>
+                <i class="bi <%= clients_sort_icon(filters, "joined") %>"></i>
+              </button>
+            </th>
+            <th class="fx-col-go"><span class="visually-hidden"><%= ngt("common.actions") %></span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% clients.each do |client| %>
+            <% contract = client[:current_contract] %>
+            <tr style="--fx-row-color: <%= clients_row_color(client) %>;" class="fx-row-link" data-action="click->clients-list#openClient" data-href="<%= admin_page_path("clients/#{client[:id]}") %>">
+              <td>
+                <div class="fx-cell-lead">
+                  <app-avatar><%= render "web/shared/avatar", name: client[:full_name].to_s, size: 34 %></app-avatar>
+                  <div class="fx-cell-lead-text">
+                    <div class="fx-cell-lead-title">
+                      <a href="<%= admin_page_path("clients/#{client[:id]}") %>"><%= ng_highlight(client[:full_name], filters[:search]) %></a>
+                    </div>
+                    <% if client[:phone].present? %>
+                      <div class="fx-cell-lead-sub" dir="ltr"><%= ng_highlight(client[:phone], filters[:search]) %></div>
+                    <% end %>
+                  </div>
+                </div>
+              </td>
+
+              <td class="fx-col-contact">
+                <% if client[:email].present? %>
+                  <span dir="ltr"><%= ng_highlight(client[:email], filters[:search]) %></span>
+                <% else %>
+                  <span class="fx-muted">—</span>
+                <% end %>
+              </td>
+
+              <td>
+                <% if contract %>
+                  <span class="fx-plan-tag">
+                    <span class="fx-dot" style="background: <%= contract.dig(:plan, :color) %>;"></span>
+                    <%= contract.dig(:plan, :name) %>
+                  </span>
+                <% else %>
+                  <span class="fx-muted"><%= ngt("clients.no_contract") %></span>
+                <% end %>
+              </td>
+
+              <td>
+                <% if contract %>
+                  <span class="lst-sub-state" data-tone="<%= clients_contract_tone(client) %>"><%= clients_contract_state(client) %></span>
+                <% else %>
+                  <span class="lst-sub-state is-link"><%= ngt("clients.subscribe_cta") %></span>
+                <% end %>
+                <% unless client[:active] %>
+                  <span class="badge text-bg-secondary ms-1"><%= ngt("common.inactive") %></span>
+                <% end %>
+              </td>
+
+              <td class="fx-col-seen fx-num">
+                <% if client[:last_visit_at] %>
+                  <%= ng_date(client[:last_visit_at], "d MMM y") %>
+                <% else %>
+                  <span class="fx-muted"><%= ngt("clients.never_came") %></span>
+                <% end %>
+              </td>
+
+              <td class="fx-col-seen fx-num"><%= ng_date(client[:joined_at], "d MMM y") %></td>
+
+              <td class="fx-col-go"><i class="bi bi-chevron-right lst-go" aria-hidden="true"></i></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <app-pagination><%= render "web/shared/pagination", meta: meta, action: "clients-list#goToPage" %></app-pagination>
+  <% end %>
+</div>

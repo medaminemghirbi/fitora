@@ -1,0 +1,87 @@
+// GENERATED from frontend/src/app/features/auth/setup-progress.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// The three lines between the click and naming the gym.
+
+.sp {
+  list-style: none;
+  margin: 0 0 var(--space-5);
+  padding: 1rem 1.125rem;
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    opacity: 0.55;
+    transition: opacity 0.3s ease, color 0.3s ease;
+    animation: sp-in 0.4s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+
+    &:nth-child(2) { animation-delay: 0.08s; }
+    &:nth-child(3) { animation-delay: 0.16s; }
+
+    &[data-state="active"] {
+      opacity: 1;
+      color: var(--color-text);
+    }
+
+    &[data-state="done"] {
+      opacity: 1;
+      color: var(--color-text);
+    }
+  }
+}
+
+.sp-icon {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  font-size: 0.875rem;
+
+  [data-state="active"] > & { border-color: var(--color-primary); }
+
+  [data-state="done"] > & {
+    border-color: var(--color-success);
+    background: var(--color-success);
+    color: #fff;
+    animation: sp-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+}
+
+.sp-spin {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary);
+  border-right-color: transparent;
+  animation: sp-turn 0.8s linear infinite;
+}
+
+@keyframes sp-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@keyframes sp-pop {
+  from { transform: scale(0.4); }
+}
+
+@keyframes sp-turn {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp li,
+  .sp-icon,
+  .sp-spin {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,66 @@
+// GENERATED from frontend/src/app/features/admin/onboarding/onboarding.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+.ob {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ob-head {
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  p {
+    margin: 0.25rem 0 0;
+    color: var(--color-text-secondary);
+  }
+}
+
+.ob-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.25rem;
+
+  dt {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+  }
+
+  dd {
+    margin: 0.2rem 0 0;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+}
+
+.ob-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ob-done {
+  h2 {
+    margin: 0 0 0.35rem;
+  }
+
+  p {
+    margin: 0 0 1rem;
+    color: var(--color-text-secondary);
+  }
+}
+
+.ob-leave {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0;
+  font-size: 0.86rem;
+}

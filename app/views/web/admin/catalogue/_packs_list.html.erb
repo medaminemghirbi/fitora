@@ -1,0 +1,84 @@
+<%# ng: packs %>
+<% filtered = catalogue_filter(packs, search_term) { |p| [ p[:name], p[:description], *p[:activities].map { |a| a[:name] } ] }
+   paged, meta = catalogue_page(filtered, list_page) %>
+<% if packs.empty? %>
+  <div class="app-card" data-catalogue-list><div class="app-card-body">
+    <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("packs.empty_title"), body: ngt("packs.empty_body"), icon: "bi-collection" } do %>
+      <% if can_create %>
+        <button type="button" class="btn btn-primary" data-action="catalogue#openPackForm">
+          <i class="bi bi-plus-lg"></i> <%= ngt("packs.new") %>
+        </button>
+      <% else %>
+        <p class="pk-needs"><%= ngt("packs.needs_two") %></p>
+        <button type="button" class="btn btn-outline-secondary" data-kind="activity" data-action="catalogue#start">
+          <i class="bi bi-plus-lg"></i> <%= ngt("activities.new") %>
+        </button>
+      <% end %>
+    <% end %></app-empty-state>
+  </div></div>
+<% elsif filtered.empty? %>
+  <div class="app-card" data-catalogue-list><div class="app-card-body">
+    <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("common.no_results"), body: "", icon: "bi-search" } do %><% end %></app-empty-state>
+  </div></div>
+<% else %>
+  <div class="pk-grid" data-catalogue-list>
+    <% paged.each do |pack| %>
+      <% prices = catalogue_prices_for(:pack, pack[:id]) %>
+      <article class="pk-card<%= " is-off" unless pack[:active] %>" data-pack="<%= { id: pack[:id], name: pack[:name], description: pack[:description], active: pack[:active], activity_ids: pack[:activity_ids], prices: prices.to_h { |r| [ r[:plan][:id], r[:price] ] } }.to_json %>">
+        <header class="pk-card-head">
+          <span class="pk-icon" aria-hidden="true"><i class="bi bi-collection"></i></span>
+          <h3><%= ng_highlight(pack[:name], search_term) %></h3>
+          <% unless pack[:active] %>
+            <app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: "inactive" } do %><%= ngt("common.inactive") %><% end %></app-status-badge>
+          <% end %>
+          <%= render layout: "web/shared/action_menu", locals: { host_class: "ms-auto" } do %>
+            <button type="button" class="fx-menu-item" data-action="catalogue#openPackForm">
+              <i class="bi bi-pencil"></i> <%= ngt("common.edit") %>
+            </button>
+            <div class="fx-menu-divider"></div>
+            <% if pack[:active] %>
+              <button type="button" class="fx-menu-item is-danger" data-action="catalogue#deactivatePack">
+                <i class="bi bi-slash-circle"></i> <%= ngt("common.deactivate") %>
+              </button>
+            <% else %>
+              <button type="button" class="fx-menu-item" data-action="catalogue#reactivatePack">
+                <i class="bi bi-arrow-counterclockwise"></i> <%= ngt("packs.reactivate") %>
+              </button>
+            <% end %>
+          <% end %>
+        </header>
+
+        <ul class="pk-acts" aria-label="<%= ngt("nav.activities") %>">
+          <% pack[:activities].each do |a| %>
+            <li><%= a[:emoji].present? ? "#{a[:emoji]} " : "" %><%= a[:name] %></li>
+          <% end %>
+        </ul>
+
+        <% if pack[:description].present? %>
+          <p class="pk-desc"><%= pack[:description] %></p>
+        <% end %>
+
+        <% if prices.empty? %>
+          <p class="pk-warn"><i class="bi bi-exclamation-triangle"></i> <%= ngt("packs.not_priced") %></p>
+        <% else %>
+          <ul class="pk-prices">
+            <% prices.each do |row| %>
+              <li>
+                <span><%= row[:plan][:name] %></span>
+                <span class="pk-price"><%= ng_money(row[:price], row[:plan][:currency]) %></span>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+
+        <footer class="pk-card-foot">
+          <button type="button" class="btn btn-sm btn-outline-secondary w-100" data-action="catalogue#openPackForm">
+            <i class="bi bi-pencil"></i> <%= ngt("common.edit") %>
+          </button>
+        </footer>
+      </article>
+    <% end %>
+  </div>
+
+  <app-pagination data-catalogue-list><%= render "web/shared/pagination", meta: meta, action: "catalogue#goToPage" %></app-pagination>
+<% end %>

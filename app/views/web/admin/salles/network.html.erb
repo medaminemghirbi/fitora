@@ -1,0 +1,97 @@
+<%# ng: salles %>
+<%# ng-host: salles %>
+<%# SallesComponent: every salle the admin runs — switching to one, posting
+    moderators to each, opening another — or, below paid Pro, the page
+    locked. The salles-page controller runs the two modals and the switch. %>
+<% pro = bootstrap.dig(:subscription, :pro_features) != false %>
+<% multi = bootstrap.dig(:subscription, :multi_salle) != false %>
+<% subscription = bootstrap[:subscription] || {} %>
+<% plan_note = subscription[:trial] ? "salles.plan_note_trial" : (multi ? "salles.plan_note" : "salles.plan_note_starter") %>
+<% labels = {
+     assign_title: Web::Translations.translate("salles.assign_title", {}, locale: I18n.locale), saved: Web::Translations.translate("salles.moderators_saved", {}, locale: I18n.locale),
+     save: ngt("common.save"), saving: ngt("common.saving"), create: ngt("salles.create"), creating: ngt("common.creating"),
+     switch: ngt("salles.switch"), switching: ngt("salles.switching"), error: ngt("common.error_generic"), needs_pro_refused: ngt("salles.needs_pro_refused")
+   } %>
+<div class="fx-stack" data-controller="salles-page"
+     data-salles-page-url-value="<%= admin_page_path("salles") %>"
+     data-salles-page-switch-url-value="/admin/<%= salle.id %>/switch"
+     data-salles-page-timezone-value="<%= salle.timezone.presence || "Africa/Tunis" %>"
+     data-salles-page-currency-value="<%= salle.currency.presence || "TND" %>"
+     data-salles-page-multi-value="<%= multi %>"
+     data-salles-page-labels-value="<%= labels.to_json %>"
+     data-action="modal:opened@window->salles-page#fill">
+  <app-page-header>
+    <%= render layout: "web/shared/page_header", locals: { title: ngt("salles.title"), description: ngt("salles.subtitle") } do %>
+      <% if !pro %>
+      <% elsif multi %>
+        <button type="button" class="btn btn-primary" data-action="salles-page#openCreate">
+          <i class="bi bi-plus-lg"></i> <%= ngt("salles.new") %>
+        </button>
+      <% else %>
+        <a href="<%= admin_page_path("subscription") %>" class="btn btn-outline-primary">
+          <i class="bi bi-lock"></i> <%= ngt("salles.needs_pro") %>
+        </a>
+      <% end %>
+    <% end %>
+  </app-page-header>
+
+  <% if !pro %>
+    <app-pro-lock><%= render "web/shared/pro_lock", feature: "salles" %></app-pro-lock>
+  <% else %>
+    <p class="sl-plan-note">
+      <i class="bi <%= multi ? "bi-stars" : "bi-lock" %>" aria-hidden="true"></i>
+      <span><%= ngt(plan_note) %></span>
+      <a href="<%= admin_page_path("subscription") %>"><%= ngt("salles.plan_link") %></a>
+    </p>
+
+    <div class="sl-network" data-salles-page-target="network"><%= render "web/admin/salles/network", network: @network %></div>
+  <% end %>
+</div>
+
+<app-modal data-controller="modal" data-modal-name-value="salles-assign" data-action="salles-assign:open@window->modal#open salles-assign:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: "" } do %><% end %>
+  </template>
+</app-modal>
+
+<app-modal data-controller="modal" data-modal-name-value="salles-create" data-action="salles-create:open@window->modal#open salles-create:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("salles.new") } do %>
+      <% if subscription[:plan].present? %>
+        <p class="fx-muted"><%= ngt("salles.new_plan_hint", plan: ngt("subscription.plan_#{subscription[:plan]}")) %></p>
+      <% else %>
+        <p class="fx-muted"><%= ngt("salles.new_plan_hint_trial") %></p>
+      <% end %>
+
+      <form novalidate data-salles-create>
+        <div class="mb-3">
+          <label for="salle-name"><%= ngt("salles.name") %> *</label>
+          <input id="salle-name" class="form-control" name="name" />
+        </div>
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label for="salle-city"><%= ngt("salles.city") %></label>
+            <input id="salle-city" class="form-control" name="city" />
+          </div>
+          <div class="col-6 mb-3">
+            <label for="salle-phone"><%= ngt("salles.phone") %></label>
+            <input id="salle-phone" type="tel" dir="ltr" class="form-control" name="phone" />
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="salle-timezone"><%= ngt("company_setup.timezone") %> *</label>
+          <select id="salle-timezone" class="form-select" name="timezone"></select>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" data-salles-cancel>
+            <%= ngt("common.cancel") %>
+          </button>
+          <button type="submit" class="btn btn-primary" data-save>
+            <%= ngt("salles.create") %>
+          </button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>

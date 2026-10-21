@@ -1,0 +1,108 @@
+// GENERATED from frontend/src/styles/components/_navigation.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// NAVIGATION
+// ----------------------------------------------------------------------------
+// Moving around inside a page: tab strips and per-row action menus.
+//
+// Split out of _fitora.scss, which had grown to 1208 lines and was the reason
+// screens drifted: nobody could see what was already there.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// Tabs (Bootstrap .nav-tabs re-skin)
+// ---------------------------------------------------------------------------
+.nav-tabs {
+  border-bottom: 1px solid var(--color-border);
+  gap: 0.25rem;
+
+  .nav-link {
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    background: none;
+    margin-bottom: -1px;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+
+    &:hover { color: var(--color-text); border-bottom-color: var(--color-border-strong); }
+    &.active {
+      color: var(--color-primary);
+      background: none;
+      border-bottom-color: var(--color-primary);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Action menu (row "⋯" overflow)
+// ---------------------------------------------------------------------------
+.fx-action-menu { position: relative; display: inline-flex; }
+
+.fx-action-trigger {
+  width: 32px; height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover, &.is-open { background: var(--color-surface-hover); color: var(--color-text); border-color: var(--color-border); }
+}
+
+.fx-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  inset-inline-end: 0;
+  min-width: 176px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 0.3rem;
+  z-index: var(--z-dropdown);
+  animation: fx-pop var(--transition-fast);
+
+  &--start { inset-inline-end: auto; inset-inline-start: 0; }
+
+  // Positioned by ActionMenuComponent against the trigger — escapes any
+  // ancestor `overflow` (every table sits in a `.fx-table-scroll`).
+  &--fixed {
+    position: fixed;
+    top: 0;
+    inset-inline: auto;
+    left: 0;
+    right: auto;
+    bottom: auto;
+    z-index: var(--z-modal);
+  }
+
+  &-item {
+    display: flex; align-items: center; gap: 0.55rem;
+    width: 100%;
+    padding: 0.5rem 0.6rem;
+    border: 0; background: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    color: var(--color-text);
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+
+    i { font-size: 0.95rem; color: var(--color-text-secondary); width: 1rem; text-align: center; }
+    &:hover { background: var(--color-surface-hover); }
+    &.is-danger { color: var(--color-danger); i { color: var(--color-danger); } }
+    &.is-danger:hover { background: var(--color-danger-soft); }
+  }
+  &-divider { height: 1px; background: var(--color-border); margin: 0.3rem 0; }
+}
+
+@keyframes fx-pop {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

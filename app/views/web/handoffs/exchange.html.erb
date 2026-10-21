@@ -1,0 +1,49 @@
+<%# Angular → Rails (Web::BaseController#sign_in_first): a page that needs a
+    session, opened with none. If the Angular app holds one, it is posted
+    once to /session/exchange; otherwise, the sign-in page. `to`: where the
+    person was going. %>
+<!doctype html>
+<html lang="<%= locale_code %>" data-theme="<%= theme %>" dir="<%= rtl? ? "rtl" : "ltr" %>">
+<head>
+  <meta charset="utf-8">
+  <title>Fitora</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <form id="exchange" action="<%= web_session_exchange_path %>" method="post" hidden>
+    <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+    <input type="hidden" name="to" value="<%= to %>">
+    <input type="hidden" name="token">
+    <input type="hidden" name="impersonator_token">
+    <input type="hidden" name="company_name">
+    <input type="hidden" name="locale">
+    <input type="hidden" name="theme">
+    <input type="hidden" name="member_gym">
+  </form>
+  <script>
+    (() => {
+      const read = (key) => {
+        try { return localStorage.getItem(key) } catch { return null }
+      }
+      const token = read("fitora_token")
+      if (!token) return location.replace("/connexion")
+
+      const form = document.getElementById("exchange")
+      form.elements.token.value = token
+      try {
+        const stash = JSON.parse(read("fitora_impersonator_v2") || "null")
+        if (stash) {
+          form.elements.impersonator_token.value = stash.token || ""
+          form.elements.company_name.value = stash.companyName || ""
+        }
+      } catch {
+        // An unreadable stash: the impersonation simply has nowhere to return to.
+      }
+      form.elements.locale.value = read("fitora_locale") || ""
+      form.elements.theme.value = read("fitora_theme") || ""
+      form.elements.member_gym.value = read("fitora_member_gym") || ""
+      form.submit()
+    })()
+  </script>
+</body>
+</html>

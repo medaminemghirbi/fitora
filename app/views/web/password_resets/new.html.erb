@@ -1,0 +1,49 @@
+<%# ng: forgot-password %>
+<%# ng-host: forgot-password %>
+<%# ForgotPasswordComponent (features/auth/forgot-password.component.html):
+    the form, then — same page, as the component's `sent` signal does — the
+    "check your inbox" state. %>
+<% content_for :auth_panel do %>
+  <div authPanel class="auth-panel">
+    <span class="auth-panel-icon" aria-hidden="true"><i class="bi bi-key"></i></span>
+    <p class="auth-panel-title">
+      <%= ngt("auth.forgot_panel_title_1") %>
+      <em><%= ngt("auth.forgot_panel_title_2") %></em>
+    </p>
+    <p class="auth-panel-lead"><%= ngt("auth.forgot_panel_lead") %></p>
+  </div>
+<% end %>
+<app-auth-pro-shell>
+  <%= render layout: "web/shared/auth_pro_shell", locals: { tone: "soft", back_link_text: ngt("auth.back_to_login") } do %>
+    <% if @sent %>
+      <span class="auth-request-mark" aria-hidden="true"><i class="bi bi-envelope-check"></i></span>
+      <h1 class="auth-title"><%= ngt("auth.forgot_password_sent_title") %></h1>
+      <p class="auth-subtitle"><%= ngt("auth.forgot_password_sent_body") %></p>
+      <a href="/connexion" class="btn btn-primary w-100"><%= ngt("auth.back_to_login") %></a>
+    <% else %>
+      <h1 class="auth-title"><%= ngt("auth.forgot_password_title") %></h1>
+      <p class="auth-subtitle"><%= ngt("auth.forgot_password_hint") %></p>
+
+      <form action="/mot-de-passe-oublie" method="post" novalidate data-turbo="false" data-controller="form-checks" data-form-checks-scope-value="forgot-password"
+            data-action="submit->form-checks#submit turbo:submit-start->form-checks#busy turbo:submit-end->form-checks#idle">
+        <% if @error %>
+          <div class="alert alert-danger" role="alert"><%= @error %></div>
+        <% end %>
+
+        <div class="mb-3">
+          <label for="email"><%= ngt("auth.email") %></label>
+          <input id="email" name="email" type="email" class="form-control" autocomplete="email" dir="ltr" value="<%= @email %>"
+                 data-checks="required email" data-check-message="<%= ngt("common.required") %>" />
+          <% if @email_invalid %>
+            <div class="invalid-feedback d-block" data-check-error="email"><%= ngt("common.required") %></div>
+          <% end %>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 mt-2" data-form-checks-target="submit">
+          <%= ngt("auth.send_reset_link") %>
+        </button>
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      </form>
+    <% end %>
+  <% end %>
+</app-auth-pro-shell>

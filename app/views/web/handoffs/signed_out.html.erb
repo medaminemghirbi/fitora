@@ -1,0 +1,24 @@
+<%# Signed out while some shells are still Angular's: the Angular app's
+    session goes too, or its guards would send the person straight back in
+    (AuthService#clearSession). `to`: the page to land on. %>
+<!doctype html>
+<html lang="<%= locale_code %>" data-theme="<%= theme %>" dir="<%= rtl? ? "rtl" : "ltr" %>">
+<head>
+  <meta charset="utf-8">
+  <title>Fitora</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <script>
+    (() => {
+      try {
+        for (const key of <%= raw(json_escape(Web::HandoffsController::ANGULAR_KEYS.to_json)) %>) localStorage.removeItem(key)
+        sessionStorage.removeItem("fitora_company_id")
+      } catch {
+        // Blocked storage held nothing to remove.
+      }
+      location.replace(<%= raw(json_escape(to.to_json)) %>)
+    })()
+  </script>
+</body>
+</html>

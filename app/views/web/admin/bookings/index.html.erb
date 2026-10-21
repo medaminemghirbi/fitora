@@ -1,0 +1,48 @@
+<%# ng-host: admin-bookings %>
+<%# AdminBookingsComponent (no styles of its own): the filter rail (date,
+    reset), the status tabs and pills, the table — re-asked on every change
+    (bookings-list controller). %>
+<div class="fx-listpage" data-controller="bookings-list"
+     data-bookings-list-url-value="<%= admin_page_path("bookings") %>"
+     data-bookings-list-filters-value="<%= { q: @filters[:q].to_s, status: @filters[:status].to_s, date: @filters[:date].to_s }.to_json %>"
+     data-bookings-list-page-value="<%= @page %>"
+     data-bookings-list-labels-value="<%= { statuses: booking_statuses.to_h { |v, k, _| [ v, ngt(k) ] }, reset: ngt("common.reset"), reminder_sent: ngt("bookings.reminder_sent"), error: ngt("common.error_generic"), confirm: ngt("common.confirm"), cancel_title: ngt("bookings.cancel_confirm_title"), cancel_body: ngt("bookings.cancel_confirm_body") }.to_json %>">
+  <app-filter-rail>
+    <%= render layout: "web/shared/filter_rail", locals: { active_count: bookings_chip_count(@filters) } do %>
+      <div class="fx-rail-block">
+        <label class="fx-rail-label" for="booking-date-filter"><%= ngt("bookings.date") %></label>
+        <input id="booking-date-filter" type="date" class="form-control form-control-sm" value="<%= @filters[:date] %>" data-filter="date" data-action="change->bookings-list#setFilter" />
+      </div>
+
+      <% if bookings_chip_count(@filters) > 0 %>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-action="bookings-list#reset" data-bookings-reset>
+          <i class="bi bi-arrow-counterclockwise"></i> <%= ngt("common.reset") %>
+        </button>
+      <% end %>
+    <% end %>
+  </app-filter-rail>
+
+  <div class="fx-listpage-main">
+    <header class="lst-head">
+      <h1><%= ngt("bookings.title") %></h1>
+      <%= render "web/admin/bookings/count", meta: @meta %>
+      <div class="lst-head-search fx-input-icon">
+        <i class="bi bi-search"></i>
+        <input type="search" class="form-control form-control-sm" value="<%= @filters[:q] %>"
+               placeholder="<%= ngt("bookings.search_placeholder") %>" aria-label="<%= ngt("bookings.search_placeholder") %>"
+               data-bookings-list-target="search" data-action="input->bookings-list#searchChanged" />
+      </div>
+    </header>
+
+    <%= render "web/admin/bookings/statuses", counts: @counts, filters: @filters %>
+
+    <%= render "web/admin/bookings/card", bookings: @bookings, meta: @meta, filters: @filters %>
+
+    <template data-bookings-list-target="loadingTemplate">
+      <div class="app-card-body"><app-skeleton><%= render "web/shared/skeleton_table", rows: 8, cols: 7 %></app-skeleton></div>
+    </template>
+    <template data-bookings-list-target="errorTemplate">
+      <div class="app-card-body"><app-error-state><%= render "web/shared/error_state", retry_action: "bookings-list#retry" %></app-error-state></div>
+    </template>
+  </div>
+</div>

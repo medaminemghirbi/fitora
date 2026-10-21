@@ -1,0 +1,6 @@
+<%# What the page asks for when a filter, the sort or the page changes: the
+    regions that depend on the results, morphed in place so the controls keep
+    their focus (as Angular updates bindings rather than rebuilding). %>
+<%= turbo_stream.replace "cl-head-count", partial: "web/admin/clients/head_count", locals: { counts: @counts }, method: :morph %>
+<%= turbo_stream.replace "cl-filters", partial: "web/admin/clients/filters", locals: { counts: @counts, filters: @filters, advanced_open: params[:advanced] == "1" }, method: :morph %>
+<%= turbo_stream.replace "cl-card", partial: "web/admin/clients/card", locals: { clients: @clients, meta: @meta, filters: @filters, catalogue: @catalogue }, method: :morph %>

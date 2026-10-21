@@ -1,0 +1,36 @@
+<%# ng: checkin-panel %>
+<%# CheckinPanelComponent, loaded: who the session expects, narrowed by name,
+    one tap each (checkin-panel). Answered by the attendance endpoint the
+    panel asks once it is open. `bookings`: AttendanceBookingSerializer rows. %>
+<% if bookings.empty? %>
+  <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("coach.no_bookings_title"), body: "", icon: "bi-people" } do %><% end %></app-empty-state>
+<% else %>
+  <div class="ckin-head">
+    <div class="fx-input-icon">
+      <i class="bi bi-search"></i>
+      <input type="search" class="form-control form-control-sm" placeholder="<%= ngt("checkin.search_placeholder") %>" aria-label="<%= ngt("checkin.search_placeholder") %>" data-action="input->checkin-panel#search" />
+    </div>
+    <span class="ckin-count" dir="ltr" data-count><%= bookings.count { |b| b.dig(:attendance, :status) == "present" } %>/<%= bookings.size %></span>
+  </div>
+
+  <ul class="ckin-list">
+    <% bookings.each do |b| %>
+      <% status = b.dig(:attendance, :status) %>
+      <li class="ckin-row" data-booking-id="<%= b[:booking_id] %>" data-name="<%= b.dig(:client, :full_name) %>" data-status="<%= status %>">
+        <span class="ckin-name" data-highlight="<%= b.dig(:client, :full_name) %>"><%= b.dig(:client, :full_name) %></span>
+        <div class="ckin-actions">
+          <button type="button" class="ckin-btn ckin-btn--present<%= " is-on" if status == "present" %>" data-status="present" data-action="checkin-panel#mark">
+            <i class="bi bi-check-lg"></i>
+            <span class="ckin-btn-label"><%= ngt("coach.attendance_present") %></span>
+          </button>
+          <button type="button" class="ckin-btn ckin-btn--absent<%= " is-on" if status == "absent" %>" data-status="absent" data-action="checkin-panel#mark">
+            <i class="bi bi-x-lg"></i>
+            <span class="ckin-btn-label"><%= ngt("coach.attendance_absent") %></span>
+          </button>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+
+  <template data-checkin-no-results><app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("common.no_results"), body: "", icon: "bi-search" } do %><% end %></app-empty-state></template>
+<% end %>

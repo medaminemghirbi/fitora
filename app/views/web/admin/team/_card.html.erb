@@ -1,0 +1,74 @@
+<%# ng: team %>
+<%# One person's card (TeamComponent's @for over pagedMembers). The data-
+    attributes are what team-page filters, searches and opens the forms on. %>
+<% summary = team_permission_summary(member.dig(:staff, :permissions)) %>
+<div class="fx-person-card" data-key="<%= member[:key] %>" data-kind="<%= member[:coach] ? "coach" : "staff" %>" data-mobile="<%= member[:has_mobile] %>" data-web="<%= member[:has_web] %>"
+     data-search="<%= [ member[:name], member[:email], member[:phone] ].map(&:to_s).join("\u001f") %>">
+  <div class="fx-person-card-head">
+    <app-avatar><%= render "web/shared/avatar", name: member[:name], size: 44 %></app-avatar>
+    <div class="fx-person-card-id">
+      <div class="fx-person-card-name" data-highlight="<%= member[:name] %>"><%= member[:name] %></div>
+      <div class="fx-person-card-sub">
+        <% if member[:email].to_s != "" %><span data-highlight="<%= member[:email] %>"><%= member[:email] %></span><% else %> — <% end %>
+      </div>
+    </div>
+    <app-status-badge>
+      <%= render layout: "web/shared/status_badge", locals: { status: member[:active] ? "active" : "inactive" } do %>
+        <%= ngt(member[:active] ? "common.active" : "common.inactive") %>
+      <% end %>
+    </app-status-badge>
+  </div>
+
+  <% if summary != "" %>
+    <p class="team-access-summary"><%= summary %></p>
+  <% end %>
+
+  <div class="team-chips">
+    <span class="badge text-bg-secondary"><%= member[:role_name] %></span>
+    <% if member[:has_mobile] %>
+      <span class="team-access"><i class="bi bi-phone"></i> <%= ngt("team.access_mobile") %></span>
+    <% end %>
+    <% if member[:has_web] %>
+      <span class="team-access"><i class="bi bi-window-desktop"></i> <%= ngt("team.access_web") %></span>
+    <% end %>
+  </div>
+
+  <% if member[:bio].to_s != "" %>
+    <p class="fx-person-card-bio"><%= member[:bio] %></p>
+  <% end %>
+
+  <div class="fx-person-card-actions">
+    <% if member[:coach] %>
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-action="team-page#openEditCoach">
+        <i class="bi bi-pencil"></i> <%= ngt("common.edit") %>
+      </button>
+    <% elsif member[:staff] && current_user.admin? %>
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-action="team-page#openRole">
+        <i class="bi bi-shield-lock"></i> <%= ngt("team.action_web_access") %>
+      </button>
+    <% end %>
+
+    <%= render layout: "web/shared/action_menu" do %>
+      <% if member[:coach] %>
+        <button type="button" class="fx-menu-item" data-action="team-page#openEditCoach">
+          <i class="bi bi-pencil"></i> <%= ngt("coaches.edit") %>
+        </button>
+        <button type="button" class="fx-menu-item" data-action="team-page#openLogin">
+          <i class="bi bi-phone"></i>
+          <%= ngt(member[:has_mobile] ? "coaches.reset_login" : "coaches.set_login") %>
+        </button>
+      <% end %>
+      <% if member[:staff] && current_user.admin? %>
+        <button type="button" class="fx-menu-item" data-action="team-page#openRole">
+          <i class="bi bi-shield-lock"></i> <%= ngt("team.action_web_access") %>
+        </button>
+      <% end %>
+      <% if member[:active] && (member[:coach] || (member[:staff] && current_user.admin?)) %>
+        <div class="fx-menu-divider"></div>
+        <button type="button" class="fx-menu-item is-danger" data-action="team-page#deactivate">
+          <i class="bi bi-slash-circle"></i> <%= ngt("common.deactivate") %>
+        </button>
+      <% end %>
+    <% end %>
+  </div>
+</div>

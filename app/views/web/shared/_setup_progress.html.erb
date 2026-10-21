@@ -1,0 +1,15 @@
+<%# ng: setup-progress %>
+<%# SetupProgressComponent: the three steps between the click and naming the
+    gym — the first already done, the others ticking over across `duration`
+    (setup-progress controller). The caller writes the <app-setup-progress>
+    host. %>
+<ol class="sp" role="status" aria-live="polite" data-controller="setup-progress" data-setup-progress-duration-value="<%= duration %>">
+  <% %w[auth.setup_step_email auth.setup_step_account auth.setup_step_gym].each_with_index do |key, i| %>
+    <li data-state="<%= i < 1 ? "done" : (i == 1 ? "active" : "todo") %>" data-setup-progress-target="step">
+      <span class="sp-icon" aria-hidden="true">
+        <% if i < 1 %><i class="bi bi-check-lg"></i><% elsif i == 1 %><span class="sp-spin"></span><% end %>
+      </span>
+      <%= ngt(key) %>
+    </li>
+  <% end %>
+</ol>

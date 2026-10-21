@@ -1,0 +1,26 @@
+<%# ng: desk-shell %>
+<%# The desk search's results (DeskShellComponent): the panel's content,
+    put into .desk-results by desk-search. `clients`: ClientSerializer
+    rows; `term`: what was typed. Each opens the member's file. %>
+<% if clients.empty? %>
+  <p class="desk-results-empty"><%= ngt("desk.no_match", term: term) %></p>
+<% else %>
+  <% clients.each do |client| %>
+    <button type="button" class="desk-result" data-action="desk-search#open" data-href="<%= served_path("/admin/#{salle.id}/clients/#{client[:id]}") %>">
+      <app-avatar><%= render "web/shared/avatar", name: client[:full_name].to_s, size: 36 %></app-avatar>
+      <span class="desk-result-body">
+        <strong><%= client[:full_name] %></strong>
+        <small>
+          <% if (contract = client[:current_contract]) %>
+            <%= contract.dig(:plan, :name) %>
+          <% else %>
+            <%= ngt("desk.no_subscription") %>
+          <% end %>
+        </small>
+      </span>
+      <% unless client[:active] %>
+        <span class="badge text-bg-secondary"><%= ngt("common.inactive") %></span>
+      <% end %>
+    </button>
+  <% end %>
+<% end %>

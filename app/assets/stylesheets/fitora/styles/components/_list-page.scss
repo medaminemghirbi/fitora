@@ -1,0 +1,154 @@
+// GENERATED from frontend/src/styles/components/_list-page.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// LIST PAGE
+// ----------------------------------------------------------------------------
+// The back-office list layout: a filter rail beside a main column.
+//
+// Split out of _fitora.scss, which had grown to 1208 lines and was the reason
+// screens drifted: nobody could see what was already there.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// List page — filter rail + main column (the back-office layout)
+
+// ---------------------------------------------------------------------------
+// The rail sits flush against the top bar, so a list page cancels the
+// shell's content padding and manages its own. The router puts the component's
+// host element in between, which also has to become a block for the
+// full-height layout to fill it.
+.app-content:has(.fx-listpage) { padding: 0; }
+.app-content > *:has(.fx-listpage) { display: block; }
+
+.fx-listpage {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - var(--topbar-height));
+}
+
+.fx-listpage-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+
+  // the column's own gap does the spacing here
+  .fx-page-header { margin-bottom: 0; }
+  .fx-active-filters { margin-bottom: 0; }
+}
+
+// ---- the rail itself ----
+.fx-rail {
+  width: 244px;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border-inline-end: 1px solid var(--color-border);
+  padding: var(--space-4) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+
+  .form-select,
+  .form-control { font-size: 0.8125rem; }
+}
+
+.fx-rail-block { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.fx-rail-legend,
+.fx-rail-label {
+  display: block;
+  float: none; // a <legend> is floated by Bootstrap's reboot
+  width: auto;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding: 0;
+  margin-bottom: var(--space-2);
+}
+
+.fx-rail-group { border: 0; padding: 0; margin: 0; }
+
+.fx-rail-status {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.3rem 0.15rem;
+  border-radius: var(--radius-sm);
+
+  label { flex: 1; margin: 0; font-size: 0.84rem; color: var(--color-text-secondary); cursor: pointer; }
+  input[type="radio"] { accent-color: var(--color-primary); width: 14px; height: 14px; flex-shrink: 0; }
+  &.is-active {
+    background: var(--color-primary-soft);
+    padding-inline: 0.4rem;
+    label { color: var(--color-text); font-weight: 600; }
+    .fx-rail-status-count { color: var(--color-text); font-weight: 700; }
+  }
+}
+
+.fx-rail-status-strip { width: 3px; height: 16px; border-radius: 2px; flex-shrink: 0; }
+.fx-rail-status-count { font-size: 0.78rem; font-weight: 600; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+
+.fx-rail-toggle { display: none; }
+
+@media (max-width: 991.98px) {
+  .fx-listpage { flex-direction: column; min-height: 0; }
+  .fx-listpage-main { padding: var(--space-4); }
+
+  .fx-rail-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.7rem var(--space-4);
+    border: 0;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text);
+
+    i:last-child { margin-inline-start: auto; font-size: 0.7rem; color: var(--color-muted); }
+  }
+
+  .fx-rail-toggle-count {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    border-radius: var(--radius-pill);
+    font-size: 0.7rem;
+    padding: 0.05rem 0.4rem;
+  }
+
+  .fx-rail {
+    width: 100%;
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--color-border);
+    display: none;
+
+    &.is-open { display: flex; }
+  }
+}
+
+// ---- header search + the chip row ---------------------------------------
+// The status filter left the rail; a list page's whole filter surface is now
+// its header (search, the actions) and one row of pills above the table.
+.lst-head-search {
+  margin-inline-start: auto;
+  max-width: 260px;
+  width: 100%;
+}
+
+.lst-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 767.98px) {
+  .lst-head-search {
+    order: 3;
+    max-width: none;
+    margin-inline-start: 0;
+  }
+}

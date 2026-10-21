@@ -1,0 +1,13 @@
+// GENERATED from frontend/src/app/shared/components/spinner.component.ts by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+
+    .app-spinner {
+      display: inline-block;
+      border: 2.5px solid var(--color-border);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  

@@ -1,0 +1,262 @@
+{
+  "//": "Angular components whose styles the Rails pages reuse, keyed by the id the build scopes them with (_ngcontent-<id> / _nghost-<id>). `source` is relative to ../frontend/src/app (a list when the component has several styleUrls). `inline` means the styles live in the component's TypeScript (styles: [`…`]). test/parity/sync-from-angular.mjs copies each into ng/<id>.scss and checks the copies have not drifted; bin/build-css compiles and scopes them the way Angular's emulated encapsulation does.",
+  "components": {
+    "account-locked": {
+      "source": "features/account-locked/account-locked.component.scss"
+    },
+    "activities": {
+      "source": "features/admin/activities/activities.component.scss"
+    },
+    "activity-picker": {
+      "source": "shared/ui/activity-picker.component.scss"
+    },
+    "admin-shell": {
+      "source": "layout/admin-shell/admin-shell.component.scss"
+    },
+    "admin-support": {
+      "source": "features/admin/support/support.component.scss"
+    },
+    "auth-pro-shell": {
+      "source": "shared/ui/auth-pro-shell.component.scss"
+    },
+    "avatar": {
+      "source": "shared/components/avatar.component.ts",
+      "inline": true
+    },
+    "calendar": {
+      "source": "features/admin/calendar/calendar.component.scss"
+    },
+    "catalogue": {
+      "source": "features/admin/catalogue/catalogue.component.scss"
+    },
+    "change-password": {
+      "source": "shared/ui/change-password.component.ts",
+      "inline": true
+    },
+    "checkin-panel": {
+      "source": "shared/ui/checkin-panel.component.scss"
+    },
+    "client-profile": {
+      "source": "features/admin/clients/client-profile.component.scss"
+    },
+    "coach-members": {
+      "source": "features/coach/members/coach-members.component.scss"
+    },
+    "coach-shell": {
+      "source": "layout/admin-shell/admin-shell.component.scss"
+    },
+    "coach-today": {
+      "source": "features/coach/today/today.component.scss"
+    },
+    "command-palette": {
+      "source": "shared/components/command-palette.component.scss"
+    },
+    "company-setup": {
+      "source": [
+        "features/auth/auth.component.scss",
+        "features/admin/onboarding/company-setup.component.scss"
+      ]
+    },
+    "confirm-dialog": {
+      "source": "shared/components/confirm-dialog.component.ts",
+      "inline": true
+    },
+    "confirm-email": {
+      "source": [
+        "features/auth/auth.component.scss",
+        "features/auth/confirm-email.component.scss"
+      ]
+    },
+    "dashboard": {
+      "source": "features/admin/dashboard/dashboard.component.scss"
+    },
+    "data-exchange": {
+      "source": "features/admin/data-exchange/data-exchange.component.scss"
+    },
+    "desk-checkin": {
+      "source": "features/desk/checkin/desk-checkin.component.scss"
+    },
+    "desk-dashboard": {
+      "source": "features/desk/dashboard/desk-dashboard.component.scss"
+    },
+    "desk-shell": {
+      "source": "layout/desk-shell/desk-shell.component.scss"
+    },
+    "forgot-password": {
+      "source": "features/auth/auth.component.scss"
+    },
+    "landing": {
+      "source": "features/landing/landing.component.scss"
+    },
+    "line-chart": {
+      "source": "shared/ui/line-chart.component.ts",
+      "inline": true
+    },
+    "mail-stage": {
+      "source": "features/auth/mail-stage.component.scss"
+    },
+    "member-bookings": {
+      "source": "features/member/bookings/member-bookings.component.scss"
+    },
+    "member-profile": {
+      "source": "features/member/profile/member-profile.component.scss"
+    },
+    "member-schedule": {
+      "source": "features/member/schedule/member-schedule.component.scss"
+    },
+    "member-shell": {
+      "source": "layout/member-shell/member-shell.component.scss"
+    },
+    "mobile-bar": {
+      "source": "layout/mobile-bar/mobile-bar.component.scss"
+    },
+    "modal": {
+      "source": "shared/components/modal.component.ts",
+      "inline": true
+    },
+    "navbar": {
+      "source": "layout/navbar/navbar.component.scss"
+    },
+    "notification-art": {
+      "source": "layout/notifications/notification-art.component.ts",
+      "inline": true
+    },
+    "notification-bell": {
+      "source": "layout/notifications/notification-bell.component.scss"
+    },
+    "notification-detail": {
+      "source": "features/admin/notifications/notification-detail.component.scss"
+    },
+    "notifications-inbox": {
+      "source": "features/admin/notifications/notifications-inbox.component.scss"
+    },
+    "onboarding": {
+      "source": "features/admin/onboarding/onboarding.component.scss"
+    },
+    "onboarding-steps": {
+      "source": "shared/ui/onboarding-steps.component.scss"
+    },
+    "packs": {
+      "source": "features/admin/packs/packs.component.scss"
+    },
+    "pagination": {
+      "source": "shared/components/pagination.component.ts",
+      "inline": true
+    },
+    "plans": {
+      "source": "features/admin/plans/plans.component.scss"
+    },
+    "price-grid": {
+      "source": "features/admin/catalogue/price-grid.component.scss"
+    },
+    "pro-lock": {
+      "source": "shared/ui/pro-lock.component.ts",
+      "inline": true
+    },
+    "pro-login": {
+      "source": "features/auth/auth.component.scss"
+    },
+    "rail": {
+      "source": "layout/rail/rail.component.scss"
+    },
+    "register": {
+      "source": "features/auth/auth.component.scss"
+    },
+    "reset-password": {
+      "source": "features/auth/auth.component.scss"
+    },
+    "salles": {
+      "source": "features/admin/salles/salles.component.scss"
+    },
+    "searchable-select": {
+      "source": "shared/ui/searchable-select.component.ts",
+      "inline": true
+    },
+    "settings-appearance": {
+      "source": "features/admin/settings/settings-appearance.component.ts",
+      "inline": true
+    },
+    "settings-booking": {
+      "source": "features/admin/settings/settings-booking.component.scss"
+    },
+    "settings-branding": {
+      "source": "features/admin/settings/settings-branding.component.scss"
+    },
+    "settings-mobile-app": {
+      "source": "features/admin/settings/settings-mobile-app.component.ts",
+      "inline": true
+    },
+    "settings-roles": {
+      "source": "features/admin/settings/settings-roles.component.scss"
+    },
+    "settings-shell": {
+      "source": "features/admin/settings/settings-shell.component.scss"
+    },
+    "setup-progress": {
+      "source": "features/auth/setup-progress.component.scss"
+    },
+    "signature-pad": {
+      "source": "shared/ui/signature-pad.component.ts",
+      "inline": true
+    },
+    "skeleton": {
+      "source": "shared/ui/skeleton.component.ts",
+      "inline": true
+    },
+    "spaces": {
+      "source": "features/admin/spaces/spaces.component.scss"
+    },
+    "spinner": {
+      "source": "shared/components/spinner.component.ts",
+      "inline": true
+    },
+    "status-badge": {
+      "source": "shared/components/status-badge.component.ts",
+      "inline": true
+    },
+    "subscription": {
+      "source": "features/admin/subscription/subscription.component.scss"
+    },
+    "superadmin-companies": {
+      "source": "features/superadmin/companies/companies.component.scss"
+    },
+    "superadmin-company-detail": {
+      "source": "features/superadmin/company-detail/company-detail.component.scss"
+    },
+    "superadmin-overview": {
+      "source": "features/superadmin/overview/superadmin-overview.component.scss"
+    },
+    "superadmin-pricing": {
+      "source": "features/superadmin/pricing/pricing.component.scss"
+    },
+    "superadmin-shell": {
+      "source": "layout/superadmin-shell/superadmin-shell.component.scss"
+    },
+    "superadmin-support-tickets": {
+      "source": "features/superadmin/support/support-tickets.component.scss"
+    },
+    "superadmin-updates": {
+      "source": "features/superadmin/updates/updates.component.scss"
+    },
+    "team": {
+      "source": "features/admin/team/team.component.scss"
+    },
+    "toast-container": {
+      "source": "shared/components/toast-container.component.ts",
+      "inline": true
+    },
+    "update-timeline": {
+      "source": "shared/ui/update-timeline.component.scss"
+    },
+    "verify-email": {
+      "source": [
+        "features/auth/auth.component.scss",
+        "features/auth/confirm-email.component.scss"
+      ]
+    },
+    "wizard-steps": {
+      "source": "shared/ui/wizard-steps.component.ts",
+      "inline": true
+    }
+  }
+}

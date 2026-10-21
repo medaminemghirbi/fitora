@@ -1,0 +1,5 @@
+<% if @first_name.present? %>Bonjour <%= @first_name %>,
+
+<% end %>Bonne nouvelle : l'accès de votre compte Fitora est de nouveau ouvert, pour toutes vos salles<% if @plan.present? %>, avec l'offre <%= @plan.capitalize %><% end %>.
+
+<%= @app_url %>

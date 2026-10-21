@@ -5,14 +5,10 @@ module Api
     class InvitationsController < ApplicationController
       # PATCH /api/v1/invitations/:token — { password: }
       def update
-        client = Client.active.find_by_invitation_token(params[:token])
-        return render(json: { error: "invalid_or_expired_token" }, status: :unprocessable_content) if client.nil?
+        client = AccountRecovery.accept_invitation(params[:token], params[:password])
+        return render(json: { error: "invalid_or_expired_token" }, status: :unprocessable_content) if client == :invalid_token
 
-        if client.accept_invitation!(params[:password])
-          head :no_content
-        else
-          render_errors(client)
-        end
+        client.errors.empty? ? head(:no_content) : render_errors(client)
       end
     end
   end

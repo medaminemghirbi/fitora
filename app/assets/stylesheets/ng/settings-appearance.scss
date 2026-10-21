@@ -1,0 +1,13 @@
+// GENERATED from frontend/src/app/features/admin/settings/settings-appearance.component.ts by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+
+      .sa-body { display: flex; flex-direction: column; gap: var(--space-4); }
+      .sa-row { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+      .sa-label {
+        min-width: 90px;
+        font-size: var(--font-size-xs);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--color-text-secondary);
+      }
+    

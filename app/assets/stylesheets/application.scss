@@ -1,0 +1,10 @@
+// The web UI's global stylesheet.
+//
+// fitora/_root.scss is the Angular app's styles.scss and fitora/styles/ its
+// styles/ folder, copied verbatim by test/parity/sync-from-angular.mjs — never
+// edit them here. Component styles are built separately and scoped
+// (bin/build-css.mjs → ng-components.css).
+@import "fitora/root";
+
+// What exists only because this is not Angular any more.
+@import "web/turbo";

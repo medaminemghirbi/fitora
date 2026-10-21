@@ -1,0 +1,230 @@
+<%# ng: dashboard %>
+<%# The dashboard once its data is in (`d`: the /admin/dashboard payload):
+    what needs attention, the figures, the day and the side column, the
+    utility toggles. Also the ?fragment=1 answer load() redraws from. %>
+<% stats = d[:stats] %>
+<% company = d[:company] %>
+<% now = Time.current %>
+<% targets = {
+     "expiring" => [ "contracts", { status: "expiring" }, "bi-hourglass-split", "warning" ],
+     "unpaid" => [ "contracts", { payment: "unpaid" }, "bi-cash-coin", "danger" ],
+     "expired" => [ "contracts", { status: "expired" }, "bi-x-octagon", "danger" ],
+     "sessions_without_coach" => [ "calendar", {}, "bi-person-dash", "warning" ]
+   } %>
+<% attention = stats[:attention].select { |row| row[:count].positive? } %>
+<% all_clear = attention.empty? %>
+<% kpis = [ [ "total_clients", stats[:total_clients].to_s, "bi-people", "ok" ], [ "active_contracts", stats[:active_contracts].to_s, "bi-award", "brand" ],
+            [ "todays_bookings", stats[:todays_bookings].to_s, "bi-calendar3", "info" ], [ "todays_attendance", stats[:todays_attendance].to_s, "bi-check2-square", "accent" ] ]
+   kpis << [ "outstanding_payments", dashboard_money(stats[:outstanding_payments], company[:currency_symbol]), "bi-cash-coin", "warn" ] unless stats[:outstanding_payments].nil? %>
+<% current = stats[:todays_schedule].find { |s| s[:status] != "cancelled" && Time.iso8601(s[:starts_at]) <= now && Time.iso8601(s[:ends_at]) > now } %>
+<section class="dash-attn<%= " is-clear" if all_clear %>" aria-labelledby="dash-attention-h">
+  <div class="dash-attn-head">
+    <span class="dash-attn-mark" aria-hidden="true">
+      <i class="bi <%= all_clear ? "bi-check2" : "bi-exclamation-triangle" %>"></i>
+    </span>
+    <h2 id="dash-attention-h">
+      <%= ngt(all_clear ? "dashboard.nothing_pending" : "dashboard.needs_attention") %>
+    </h2>
+    <% unless all_clear %>
+      <span class="dash-attn-count"><%= attention.size %></span>
+    <% end %>
+  </div>
+
+  <% unless all_clear %>
+    <ul class="dash-attn-list">
+      <% attention.each do |row| %>
+        <% page, query, _icon, tone = targets.fetch(row[:key]) %>
+        <li>
+          <a href="<%= admin_page_path(page, query) %>" data-tone="<%= tone %>">
+            <span class="dash-attn-n"><%= row[:count] %></span>
+            <span class="dash-attn-text">
+              <span class="dash-attn-label">
+                <%= ngt("dashboard.attention_#{row[:key]}", count: row[:count]) %>
+              </span>
+              <% if row[:detail] %>
+                <span class="dash-attn-detail">
+                  <%= ngt("dashboard.attention_detail_#{row.dig(:detail, :kind)}", count: row.dig(:detail, :count)) %>
+                </span>
+              <% end %>
+            </span>
+            <% unless row[:amount].nil? %>
+              <strong class="dash-attn-amount"><%= ng_money(row[:amount], company[:currency]) %></strong>
+            <% end %>
+            <span class="dash-attn-cta">
+              <%= ngt("dashboard.attention_cta_#{row[:key]}") %>
+              <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </span>
+          </a>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>
+
+<div class="dash-kpis" aria-label="<%= ngt("dashboard.figures") %>">
+  <% kpis.each do |key, value, icon, tone| %>
+    <div class="dash-kpi">
+      <span class="dash-kpi-icon" data-tone="<%= tone %>"><i class="bi <%= icon %>"></i></span>
+      <span class="dash-kpi-value"><%= value %></span>
+      <span class="dash-kpi-label"><%= ngt("dashboard.#{key}") %></span>
+    </div>
+  <% end %>
+</div>
+
+<div class="dash-cols">
+  <section class="dash-section dash-cols-main" aria-labelledby="dash-day-h">
+    <div class="dash-section-head">
+      <h2 id="dash-day-h"><%= ngt("dashboard.todays_schedule") %></h2>
+      <a href="<%= admin_page_path("calendar") %>" class="dash-section-link">
+        <%= ngt("dashboard.view_schedule") %> <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    <% if stats[:todays_schedule].empty? %>
+      <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("dashboard.no_sessions_today"), body: "", icon: "bi-calendar3" } do %><% end %></app-empty-state>
+    <% else %>
+      <ul class="dash-day">
+        <% stats[:todays_schedule].each do |item| %>
+          <% is_now = current && current[:id] == item[:id] %>
+          <% done = Time.iso8601(item[:ends_at]) <= now %>
+          <% classes = [ ("is-now" if is_now), ("is-done" if done) ].compact %>
+          <li<%= raw(%( class="#{classes.join(' ')}")) if classes.any? %>>
+            <span class="dash-day-dot" aria-hidden="true"></span>
+            <span class="dash-day-time"><%= ng_date(Time.iso8601(item[:starts_at]), "HH:mm") %></span>
+
+            <span class="dash-day-name">
+              <span class="fx-strong">
+                <%= item[:activity_emoji].to_s != "" ? "#{item[:activity_emoji]} " : "" %><%= item[:activity_name] %>
+              </span>
+              <% if item[:coach_name].to_s != "" %>
+                <span class="fx-muted"> · <%= item[:coach_name] %></span>
+              <% else %>
+                <span class="dash-day-nocoach"> · <%= ngt("dashboard.no_coach") %></span>
+              <% end %>
+              <% if is_now %>
+                <span class="dash-day-live"><%= ngt("checkin.now") %></span>
+              <% end %>
+            </span>
+
+            <% if done %>
+              <span class="fx-muted dash-day-done">
+                <%= ngt("dashboard.session_done", count: item[:attended_count] || item[:confirmed_count]) %>
+              </span>
+            <% else %>
+              <% pct = dashboard_fill_pct(item) %>
+              <span class="dash-day-bar d-none d-sm-inline-block" aria-label="<%= item[:confirmed_count] %>/<%= item[:capacity] %>">
+                <span<%= raw(' class="is-full"') if pct >= 100 %> style="width: <%= Web::LineChart.num(pct) %>%;"></span>
+              </span>
+              <span class="fx-muted dash-day-count d-none d-sm-inline" dir="ltr">
+                <%= item[:confirmed_count] %>/<%= item[:capacity] %>
+              </span>
+              <button type="button" class="btn btn-sm <%= is_now ? "btn-primary" : "btn-outline-secondary" %>" data-session-id="<%= item[:id] %>" data-action="dashboard-page#openCheckin">
+                <i class="bi bi-check2-square"></i>
+                <span class="d-none d-sm-inline"><%= ngt("checkin.open") %></span>
+              </button>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+
+  <div class="dash-cols-side">
+    <% if stats[:revenue_by_month].any? %>
+      <% chart = Web::LineChart.new(stats[:revenue_by_month].map { |row| [ Web::DateFormat.intl(Date.parse(row[:month]).in_time_zone, "month_short", locale: I18n.locale), row[:total].to_f ] }, tick: ->(v) { dashboard_short_amount(v) }) %>
+      <section class="app-card dash-chart" aria-labelledby="dash-rev-h">
+        <div class="dash-chart-head">
+          <span class="dash-chart-title">
+            <h2 id="dash-rev-h"><%= ngt("dashboard.revenue") %></h2>
+            <strong><%= ng_money(stats[:revenue_by_month].last[:total].to_f, company[:currency]) %></strong>
+          </span>
+          <span class="dash-chart-chip"><%= ngt("dashboard.last_12_months") %></span>
+        </div>
+        <app-line-chart><%= render "web/shared/line_chart", chart: chart, marker: dashboard_money(chart.last.value, company[:currency_symbol]), aria_label: ngt("dashboard.revenue_chart_label") %></app-line-chart>
+      </section>
+    <% end %>
+
+    <% if stats[:recent_payments].any? %>
+      <section class="app-card dash-side-card" aria-labelledby="dash-pay-h">
+        <div class="dash-side-head">
+          <h2 id="dash-pay-h"><%= ngt("dashboard.recent_payments") %></h2>
+          <a href="<%= admin_page_path("payments") %>"><%= ngt("common.view_all") %></a>
+        </div>
+        <ul class="dash-side-list">
+          <% stats[:recent_payments].each do |payment| %>
+            <li>
+              <span class="dash-side-main">
+                <span class="fx-strong"><%= payment[:client_name] %></span>
+                <span class="fx-muted"><%= ng_date(payment[:paid_at] && Time.iso8601(payment[:paid_at]), "d MMM") %></span>
+              </span>
+              <strong><%= ng_money(payment[:amount], payment[:currency]) %></strong>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  </div>
+</div>
+
+<div class="dashboard-utility-bar">
+  <% if current_user.admin? %>
+    <button type="button" class="dashboard-utility-toggle" aria-expanded="false" data-toggle="export" data-action="dashboard-page#toggle">
+      <i class="bi bi-download"></i> <%= ngt("dashboard.export_title") %>
+      <i class="bi bi-chevron-down"></i>
+    </button>
+  <% end %>
+  <button type="button" class="dashboard-utility-toggle" aria-expanded="false" data-toggle="activity" data-action="dashboard-page#toggle">
+    <i class="bi bi-clock-history"></i> <%= ngt("dashboard.recent_activity") %>
+    <i class="bi bi-chevron-down"></i>
+  </button>
+</div>
+
+<template data-dashboard-page-target="exportCard">
+  <div class="app-card" data-card="export">
+    <div class="app-card-body">
+      <div class="d-flex gap-2 align-items-end flex-wrap">
+        <div>
+          <label for="export-period-type"><%= ngt("dashboard.export_period_type") %></label>
+          <select id="export-period-type" class="form-select form-select-sm" data-action="dashboard-page#periodType">
+            <option value="month"><%= ngt("dashboard.export_monthly") %></option>
+            <option value="year"><%= ngt("dashboard.export_yearly") %></option>
+          </select>
+        </div>
+        <div data-period="month">
+          <label for="export-month"><%= ngt("dashboard.export_month") %></label>
+          <input id="export-month" type="month" class="form-control form-control-sm" value="<%= now.strftime("%Y-%m") %>" />
+        </div>
+        <button type="button" class="btn btn-sm btn-primary" data-action="dashboard-page#exportReport">
+          <i class="bi bi-download"></i> <%= ngt("dashboard.export_button") %>
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+<template data-dashboard-page-target="yearField">
+  <div data-period="year">
+    <label for="export-year"><%= ngt("dashboard.export_year") %></label>
+    <input id="export-year" type="number" class="form-control form-control-sm" style="width: 110px" value="<%= now.year %>" />
+  </div>
+</template>
+<template data-dashboard-page-target="activityCard">
+  <div class="app-card" data-card="activity">
+    <div class="app-card-body">
+      <% if audit_logs.empty? %>
+        <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("dashboard.no_recent_activity"), body: "", icon: "bi-clock-history" } do %><% end %></app-empty-state>
+      <% else %>
+        <ul class="fx-list">
+          <% audit_logs.each do |log| %>
+            <li>
+              <span class="fx-list-main">
+                <span class="fx-strong"><%= dashboard_audit_label(log[:action]) %></span>
+                <span class="fx-muted">· <%= log.dig(:user, :full_name).presence || "—" %></span>
+              </span>
+              <span class="fx-muted"><%= ng_date(Time.iso8601(log[:created_at]), "short") %></span>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+  </div>
+</template>

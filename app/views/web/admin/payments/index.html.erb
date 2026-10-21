@@ -1,0 +1,98 @@
+<%# ng-host: admin-payments %>
+<%# AdminPaymentsComponent (no styles of its own): the method tabs, the cash
+    strip, the status pills, the table — re-asked on every change
+    (payments-list controller) — and the record dialog. %>
+<% labels = {
+     statuses: payment_statuses.to_h { |value, label, _| [ value, ngt(label) ] },
+     methods: payment_methods.to_h { |value, label, _| [ value, ngt(label) ] },
+     reset: ngt("common.reset"), error: ngt("common.error_generic"), saved: ngt("common.save"),
+     save: ngt("common.save"), saving: ngt("common.saving"),
+     refund_title: ngt("payments.refund_confirm_title"), refund_body: ngt("payments.refund_confirm_body"), refunded: ngt("payments.refunded_toast")
+   } %>
+<div class="fx-listpage" data-controller="payments-list"
+     data-payments-list-url-value="<%= admin_page_path("payments") %>"
+     data-payments-list-filters-value="<%= { q: @filters[:q].to_s, status: @filters[:status].to_s, payment_method: @filters[:payment_method].to_s }.to_json %>"
+     data-payments-list-page-value="<%= @page %>"
+     data-payments-list-open-value="<%= @open_record %>"
+     data-payments-list-labels-value="<%= labels.to_json %>"
+     data-action="modal:opened@window->payments-list#fillRecord">
+  <div class="fx-listpage-main">
+    <header class="lst-head">
+      <h1><%= ngt("nav.payments") %></h1>
+      <%= render "web/admin/payments/count", counts: @counts %>
+      <div class="lst-head-search fx-input-icon">
+        <i class="bi bi-search"></i>
+        <input type="search" class="form-control form-control-sm" value="<%= @filters[:q] %>"
+               placeholder="<%= ngt("payments.search_placeholder") %>" aria-label="<%= ngt("payments.search_placeholder") %>"
+               data-payments-list-target="search" data-action="input->payments-list#searchChanged" />
+      </div>
+      <button type="button" class="btn btn-primary" data-action="payments-list#openRecord">
+        <i class="bi bi-plus-lg"></i> <%= ngt("payments.record") %>
+      </button>
+    </header>
+
+    <%= render "web/admin/payments/tabs", counts: @counts, method_counts: @method_counts, filters: @filters %>
+
+    <% if @totals %>
+      <%= render "web/admin/payments/stats", totals: @totals %>
+    <% end %>
+
+    <div class="lst-filters" data-payments-list-target="rail">
+      <%= render "web/admin/payments/pills", counts: @counts, filters: @filters %>
+      <% if @filters[:q].present? || @filters[:status].present? || @filters[:payment_method].present? %>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-action="payments-list#reset" data-payments-reset>
+          <i class="bi bi-arrow-counterclockwise"></i> <%= ngt("common.reset") %>
+        </button>
+      <% end %>
+    </div>
+
+    <%= render "web/admin/payments/card", payments: @payments, meta: @meta, filters: @filters %>
+
+    <template data-payments-list-target="loadingTemplate">
+      <div class="app-card-body"><app-skeleton><%= render "web/shared/skeleton_table", rows: 8, cols: 6 %></app-skeleton></div>
+    </template>
+    <template data-payments-list-target="errorTemplate">
+      <div class="app-card-body"><app-error-state><%= render "web/shared/error_state", retry_action: "payments-list#retry" %></app-error-state></div>
+    </template>
+  </div>
+</div>
+
+<%# The record dialog. The client search is always there; the form only once
+    a client is picked (@if (selectedClient())), from the template below. %>
+<app-modal data-controller="modal" data-modal-name-value="payments-record" data-action="payments-record:open@window->modal#open payments-record:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("payments.record") } do %>
+      <div class="mb-3 position-relative">
+        <label for="pay-client-search"><%= ngt("bookings.client") %> *</label>
+        <input id="pay-client-search" class="form-control" placeholder="<%= ngt("clients.search_placeholder") %>" autocomplete="off" data-client-search />
+      </div>
+    <% end %>
+  </template>
+</app-modal>
+
+<template id="pay-record-form">
+  <form novalidate>
+    <div class="mb-3">
+      <label for="pay-payable"><%= ngt("payments.for") %> *</label>
+      <select id="pay-payable" class="form-select" name="payable_key">
+        <option value="" disabled>—</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="pay-amount"><%= ngt("payments.amount") %> *</label>
+      <input id="pay-amount" type="number" step="0.01" min="0" class="form-control" name="amount" />
+    </div>
+    <div class="mb-3">
+      <label for="pay-notes"><%= ngt("clients.notes") %> (<%= ngt("common.optional") %>)</label>
+      <textarea id="pay-notes" class="form-control" rows="2" name="notes"></textarea>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+      <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+      <button type="submit" class="btn btn-primary" data-save>
+        <%= ngt("common.save") %>
+      </button>
+    </div>
+  </form>
+  <div class="form-text mt-1" data-nothing-outstanding><%= ngt("payments.nothing_outstanding") %></div>
+</template>

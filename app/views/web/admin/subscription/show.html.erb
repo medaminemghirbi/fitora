@@ -1,0 +1,297 @@
+<%# ng: subscription %>
+<%# ng-host: subscription %>
+<%# SubscriptionComponent: the plan in force, the period and what the
+    account covers; what the plan carries; and, aside, changing plan —
+    periods, plans, and the request (subscription-page). %>
+<% v = @view %>
+<% s = v.info %>
+<% picked = v.plans.find { |p| p[:current] } %>
+<% period_label = ->(yearly) { ngt(yearly ? "subscription.per_year" : "subscription.per_month") } %>
+<div class="fx-page" data-controller="subscription-page"
+     data-subscription-page-url-value="<%= admin_page_path("subscription/request") %>"
+     data-subscription-page-plans-value="<%= v.plans.to_json %>"
+     data-subscription-page-period-value="<%= v.billing_period %>"
+     data-subscription-page-billed-value="<%= v.sub[:billing_period] %>"
+     data-subscription-page-loses-pro-value="<%= (v.sub[:member_app] || v.sub[:multi_salle]) ? true : false %>"
+     data-subscription-page-phone-value="<%= bootstrap.dig(:user, :phone).nil? ? salle.phone.to_s : bootstrap.dig(:user, :phone) %>"
+     data-subscription-page-labels-value="<%= {
+       names: v.plans.to_h { |p| [ p[:key], ngt(p[:name_key]) ] }, per_year: ngt("subscription.per_year"), per_month: ngt("subscription.per_month"),
+       plan_yearly: ngt("subscription.plan_yearly"), plan_monthly: ngt("subscription.plan_monthly"),
+       request_cta: Web::Translations.translate("subscription.request_plan_cta", {}, locale: I18n.locale),
+       switch_yearly: ngt("subscription.switch_to_yearly"), switch_monthly: ngt("subscription.switch_to_monthly"),
+       request_title: Web::Translations.translate("subscription.request_title", {}, locale: I18n.locale),
+       request_hint: Web::Translations.translate("subscription.request_hint", {}, locale: I18n.locale),
+       subject: Web::Translations.translate("subscription.request_subject", {}, locale: I18n.locale),
+       body: Web::Translations.translate("subscription.request_body", {}, locale: I18n.locale),
+       phone_required: ngt("subscription.request_phone_required"), phone_invalid: ngt("subscription.request_phone_invalid"), phone_hint: ngt("subscription.request_phone_hint"),
+       sent: ngt("subscription.request_sent"), error: ngt("common.error_generic"), pick_a_plan: ngt("subscription.pick_a_plan"),
+       prices: v.plans.to_h { |p| [ p[:key], { monthly: ng_money(p[:monthly], v.currency), yearly: ng_money(p[:yearly], v.currency) } ] }
+     }.to_json %>">
+  <header class="lst-head">
+    <h1><%= ngt("subscription.title") %></h1>
+  </header>
+  <p class="fx-muted mb-4"><%= ngt("subscription.subtitle") %></p>
+
+  <div class="sub-layout">
+    <div class="sub-main">
+      <section class="sub-card sub-plan" aria-labelledby="sub-plan-h">
+        <div class="sub-plan-head">
+          <div class="sub-plan-id">
+            <span class="sub-eyebrow"><%= ngt("subscription.your_plan") %></span>
+            <div class="sub-plan-name">
+              <h2 id="sub-plan-h"><%= ngt(v.current_plan_name) %></h2>
+              <span class="sub-pill" data-state="<%= v.access_state %>"><%= ngt(v.access_label) %></span>
+            </div>
+            <p class="sub-plan-for"><%= ngt(v.current_plan_tagline) %></p>
+          </div>
+
+          <div class="sub-plan-price">
+            <% if v.on_trial? %>
+              <strong><%= ngt("subscription.trial_price") %></strong>
+              <span class="sub-plan-price-sub"><%= ngt("subscription.trial_length", count: s[:trial_days]) %></span>
+            <% else %>
+              <div>
+                <strong><%= ng_money(v.current_price, v.currency) %></strong>
+                <small><%= period_label.call(v.yearly?) %></small>
+              </div>
+              <span class="sub-plan-price-sub">
+                <% if v.yearly? %>
+                  <%= ngt("subscription.plan_yearly") %> · <%= ngt("subscription.monthly_equiv", amount: ng_money(v.current_price / 12, v.currency)) %>
+                <% else %>
+                  <%= ngt("subscription.plan_monthly") %>
+                <% end %>
+              </span>
+            <% end %>
+            <% if v.arrears.positive? %>
+              <strong class="sub-arrears"><%= ngt("subscription.arrears", amount: ng_money(v.arrears, v.currency)) %></strong>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="sub-period" data-state="<%= v.access_state %>">
+          <% if (p = v.period) %>
+            <div class="sub-period-row">
+              <span class="fx-muted"><%= ngt("subscription.period_current") %></span>
+              <strong>
+                <%= ng_date(p[:start], "d MMM y") %> <i class="bi bi-arrow-right sub-flip" aria-hidden="true"></i> <%= ng_date(p[:end], "d MMM y") %>
+              </strong>
+            </div>
+            <div class="sub-period-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= p[:percent] %>" aria-label="<%= ngt("subscription.period_current") %>">
+              <span style="width: <%= p[:percent] %>%;"></span>
+            </div>
+          <% end %>
+          <div class="sub-period-row fx-muted">
+            <span>
+              <% if v.on_trial? %>
+                <%= ngt(v.trial_running? ? "subscription.trial_until" : "subscription.trial_ended_on") %>
+                <%= ng_date(v.paid_through, "d MMMM y") %>
+              <% elsif v.paid_through %>
+                <%= ngt("subscription.paid_until") %> <%= ng_date(v.paid_through, "d MMMM y") %>
+              <% else %>
+                <%= ngt("subscription.never_paid") %>
+              <% end %>
+            </span>
+            <% if v.access_state == "trial" %>
+              <span><%= ngt("subscription.days_left", days: v.trial_days_left) %></span>
+            <% elsif v.access_state == "open" && v.renews_in %>
+              <span><%= ngt("subscription.renews_in", days: v.renews_in) %></span>
+            <% elsif v.access_state == "due" %>
+              <span class="sub-period-due"><%= ngt("subscription.state_due", days: v.sub[:days_before_lock]) %></span>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="sub-usage">
+          <% v.usage.each do |key, icon, value| %>
+            <div class="sub-usage-cell">
+              <span class="sub-usage-ic"><i class="bi <%= icon %>" aria-hidden="true"></i></span>
+              <div>
+                <span class="sub-usage-value"><%= value %></span>
+                <span class="sub-usage-label"><%= ngt("subscription.usage_#{key}") %></span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </section>
+
+      <section class="sub-card sub-incl" aria-labelledby="sub-incl-h">
+        <h2 id="sub-incl-h"><%= ngt("subscription.includes_title") %></h2>
+
+        <div class="sub-incl-group">
+          <span class="sub-eyebrow"><%= ngt("subscription.pro_only") %></span>
+          <div class="sub-pro-grid">
+            <% v.pro_features.each do |feature| %>
+              <div class="sub-pro-tile<%= " is-off" unless feature[:held] %>">
+                <span class="sub-pro-ic"><i class="bi <%= feature[:held] ? feature[:icon] : "bi-lock-fill" %>" aria-hidden="true"></i></span>
+                <div>
+                  <strong><%= ngt("subscription.pro_#{feature[:key]}_name") %></strong>
+                  <span><%= ngt(feature[:held] ? "subscription.pro_#{feature[:key]}_desc" : "subscription.not_included") %></span>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="sub-incl-group">
+          <span class="sub-eyebrow"><%= ngt("subscription.cmp_group_included") %></span>
+          <ul class="sub-incl-list">
+            <% v.included.each do |_key, label| %>
+              <li><i class="bi bi-check-lg" aria-hidden="true"></i><%= ngt(label) %></li>
+            <% end %>
+          </ul>
+        </div>
+      </section>
+
+      <%# The account's invoices: the bill a change of plan left to pay, then
+          every one paid, each a PDF. Where the notifications and the locked
+          page send the admin ("Voir mes factures"). %>
+      <% invoices = [ v.sub[:due_invoice], *s[:invoices] ].compact %>
+      <section class="sub-card sub-incl" aria-labelledby="sub-invoices-h" id="invoices">
+        <h2 id="sub-invoices-h"><%= ngt("subscription.invoices_title") %></h2>
+        <% if invoices.empty? %>
+          <p class="fx-muted mb-0"><%= ngt("superadmin.no_invoices") %></p>
+        <% else %>
+          <div class="fx-table-scroll">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th><%= ngt("subscription.invoice_number") %></th>
+                  <th><%= ngt("subscription.period") %></th>
+                  <th><%= ngt("payments.amount") %></th>
+                  <th></th>
+                  <th class="text-end"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% invoices.each do |invoice| %>
+                  <% paid = invoice[:paid_at].present? %>
+                  <tr>
+                    <td class="fx-strong" dir="ltr"><%= invoice[:number] %></td>
+                    <td><%= ng_date(invoice[:period_start], "d MMM") %> — <%= ng_date(invoice[:period_end], "d MMM y") %></td>
+                    <td class="fx-num"><%= ng_money(invoice[:amount], invoice[:currency]) %></td>
+                    <td>
+                      <% if !paid %>
+                        <app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: "pending" } do %><%= ngt("subscription.invoice_due") %><% end %></app-status-badge>
+                      <% elsif invoice[:trial] %>
+                        <app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: "trial" } do %><%= ngt("superadmin.trial") %><% end %></app-status-badge>
+                      <% end %>
+                    </td>
+                    <td class="text-end">
+                      <a class="btn btn-sm btn-outline-secondary" href="<%= admin_page_path("invoices/#{invoice[:id]}") %>" data-turbo="false" download>
+                        <i class="bi bi-download" aria-hidden="true"></i> <%= ngt("subscription.download") %>
+                      </a>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </section>
+    </div>
+
+    <aside class="sub-side">
+      <% if v.plans.any? %>
+        <section class="sub-card sub-change" aria-labelledby="sub-change-h">
+          <div>
+            <h2 id="sub-change-h"><%= ngt("subscription.change_title") %></h2>
+            <p class="sub-change-lead fx-muted"><%= ngt("subscription.plan_per_account") %></p>
+          </div>
+
+          <div class="fx-segmented sub-toggle" role="group" aria-label="<%= ngt("subscription.change_title") %>">
+            <button type="button"<%= raw(' class="is-active"') unless v.yearly? %> aria-pressed="<%= !v.yearly? %>" data-period="monthly" data-action="subscription-page#setPeriod">
+              <%= ngt("subscription.monthly") %>
+            </button>
+            <button type="button"<%= raw(' class="is-active"') if v.yearly? %> aria-pressed="<%= v.yearly? %>" data-period="yearly" data-action="subscription-page#setPeriod">
+              <%= ngt("subscription.yearly") %>
+              <% if s[:annual_discount_percent].to_i.positive? %>
+                <span class="sub-toggle-off">-<%= s[:annual_discount_percent] %>%</span>
+              <% end %>
+            </button>
+          </div>
+
+          <div class="sub-opts">
+            <% v.plans.each do |plan| %>
+              <% on = picked && plan[:key] == picked[:key] %>
+              <button type="button" class="sub-opt<%= " is-picked" if on %>" aria-pressed="<%= on ? true : false %>" data-plan="<%= plan[:key] %>" data-action="subscription-page#pick">
+                <span class="sub-opt-radio" aria-hidden="true"></span>
+                <span class="sub-opt-body">
+                  <span class="sub-opt-name">
+                    <%= ngt(plan[:name_key]) %>
+                    <% if plan[:current] %>
+                      <span class="sub-opt-chip"><%= ngt("subscription.tier_current") %></span>
+                    <% end %>
+                  </span>
+                  <span class="sub-opt-for"><%= ngt("#{plan[:name_key]}_for") %></span>
+                </span>
+                <span class="sub-opt-price">
+                  <strong data-price><%= ng_money(v.yearly? ? plan[:yearly] : plan[:monthly], v.currency) %></strong>
+                  <small data-per><%= period_label.call(v.yearly?) %></small>
+                </span>
+              </button>
+            <% end %>
+          </div>
+
+          <% if picked %>
+            <span class="sub-cta is-current" data-cta><i class="bi bi-check-lg" aria-hidden="true"></i> <%= ngt("subscription.is_current_plan") %></span>
+          <% else %>
+            <p class="sub-change-note" data-cta><%= ngt("subscription.pick_a_plan") %></p>
+          <% end %>
+
+          <p class="sub-change-note"><%= ngt("subscription.offapp_short") %></p>
+        </section>
+      <% end %>
+
+      <section class="sub-help">
+        <span class="sub-help-ic"><i class="bi bi-headset" aria-hidden="true"></i></span>
+        <h2><%= ngt("subscription.help_title") %></h2>
+        <p><%= ngt("subscription.help_body") %></p>
+        <a href="<%= admin_page_path("support") %>" class="sub-help-link">
+          <%= ngt("subscription.help_cta") %> <i class="bi bi-arrow-right sub-flip" aria-hidden="true"></i>
+        </a>
+      </section>
+    </aside>
+  </div>
+
+  <%# The CTA's other states, and the request dialog (opened by the page). %>
+  <template data-subscription-page-target="sent"><span class="sub-cta is-sent" data-cta><i class="bi bi-hourglass-split" aria-hidden="true"></i> <%= ngt("subscription.request_pending") %></span></template>
+  <template data-subscription-page-target="current"><span class="sub-cta is-current" data-cta><i class="bi bi-check-lg" aria-hidden="true"></i> <%= ngt("subscription.is_current_plan") %></span></template>
+  <template data-subscription-page-target="warn"><p class="sub-warn" data-cta><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <%= ngt("subscription.downgrade_warning") %></p></template>
+  <template data-subscription-page-target="request">
+    <button type="button" class="sub-cta is-request" data-cta data-action="subscription-page#openRequest">
+      <i class="bi bi-send" aria-hidden="true"></i>
+    </button>
+  </template>
+  <template data-subscription-page-target="modal">
+    <app-modal data-controller="modal" data-modal-name-value="subscription-request" data-action="subscription-request:close@window->modal#close modal:closed->subscription-page#requestClosed">
+      <template data-modal-target="template">
+        <%= render layout: "web/shared/modal", locals: { title: "" } do %>
+          <p class="fx-muted" data-request-hint></p>
+
+          <div class="mb-3">
+            <label class="form-label" for="upgrade-phone">
+              <%= ngt("subscription.request_phone_label") %> <span class="text-danger" aria-hidden="true">*</span>
+            </label>
+            <input id="upgrade-phone" type="tel" class="form-control" autocomplete="tel" inputmode="tel" dir="ltr" required aria-invalid="false" aria-describedby="upgrade-phone-hint" placeholder="<%= ngt("subscription.request_phone_placeholder") %>" />
+            <div id="upgrade-phone-hint" class="form-text"><%= ngt("subscription.request_phone_hint") %></div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="upgrade-note"><%= ngt("subscription.request_note_label") %></label>
+            <textarea id="upgrade-note" class="form-control" rows="3" placeholder="<%= ngt("subscription.request_note_placeholder") %>"></textarea>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-secondary" data-request-cancel>
+              <%= ngt("common.cancel") %>
+            </button>
+            <button type="button" class="btn btn-primary" data-request-send>
+              <i class="bi bi-send-check"></i>
+              <%= ngt("subscription.request_send") %>
+            </button>
+          </div>
+        <% end %>
+      </template>
+    </app-modal>
+  </template>
+</div>

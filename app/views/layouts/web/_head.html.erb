@@ -1,0 +1,18 @@
+<meta charset="utf-8">
+<title>Fitora</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#4a2a8f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<%# No page snapshots: Back shows the page as it is now, as the Angular app
+    re-renders it, never a stale copy with yesterday's rows or an open menu. %>
+<meta name="turbo-cache-control" content="no-cache">
+<%= csrf_meta_tags %>
+<%# Who the live notifications are for (lib/live_notifications.js): an
+    admin, a superadmin or a member — NotificationService#connect's three. %>
+<% if (live = live_notifications_for) %>
+  <meta name="fitora-live" content="<%= live %>">
+<% end %>
+<%= stylesheet_link_tag "application", "ng-components", "data-turbo-track": "reload" %>
+<%= javascript_include_tag "application", type: "module", "data-turbo-track": "reload" %>

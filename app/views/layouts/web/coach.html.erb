@@ -1,0 +1,20 @@
+<%# The coach shell's page: index.html + AppComponent + CoachShellComponent,
+    with the routed page inside. %>
+<!doctype html>
+<html lang="<%= locale_code %>" data-theme="<%= theme %>" dir="<%= rtl? ? "rtl" : "ltr" %>"<%= raw(%( style="#{h(shell_brand_style)}")) if shell_brand_style %>>
+<head>
+  <%= render "layouts/web/head" %>
+</head>
+<body>
+  <app-root>
+    <router-outlet></router-outlet>
+    <%= render layout: "web/shell/coach_shell" do %>
+      <%= yield %>
+    <% end %>
+    <%= render "web/shared/app_root_tail" %>
+  </app-root>
+  <%= render "layouts/web/locale_form" %>
+  <%= render "layouts/web/sign_out_form" %>
+  <%= yield :templates %>
+</body>
+</html>

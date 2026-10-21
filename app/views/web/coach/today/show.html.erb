@@ -1,0 +1,28 @@
+<%# ng: coach-today %>
+<%# CoachTodayComponent, its host written here for its controller
+    (coach-today): the header, the day (_day: what is on now or next, the
+    day's sessions), and the roster of the session picked, put in below it
+    when one is. %>
+<app-coach-today data-controller="coach-today"
+                 data-coach-today-url-value="<%= coach_path("today") %>"
+                 data-coach-today-attendance-value="<%= coach_path("attendance") %>"
+                 data-coach-today-date-value="<%= @date.iso8601 %>"
+                 data-coach-today-error-value="<%= ngt("common.error_generic") %>">
+  <div class="content-header">
+    <div>
+      <h1><%= ngt("coach.today") %></h1>
+    </div>
+  </div>
+
+  <%= render "web/coach/today/day", sessions: @sessions, date: @date %>
+  <template data-coach-today-target="spinner"><div class="d-flex justify-content-center py-5"><app-spinner><%= render "web/shared/spinner", size: 32 %></app-spinner></div></template>
+  <template data-coach-today-target="sessionCard">
+    <div class="app-card">
+      <div class="app-card-header">
+        <h2></h2>
+      </div>
+      <div class="app-card-body"></div>
+    </div>
+  </template>
+  <template data-coach-today-target="emptyRoster"><%= render "web/coach/today/roster", bookings: [] %></template>
+</app-coach-today>

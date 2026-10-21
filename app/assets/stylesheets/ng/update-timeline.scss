@@ -1,0 +1,132 @@
+// GENERATED from frontend/src/app/shared/ui/update-timeline.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+.updates-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes update-entry-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.update-entry {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: var(--space-4);
+  animation: update-entry-in var(--transition-base) both;
+}
+
+.update-entry-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.update-entry-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-border-strong);
+  margin-top: 0.4rem;
+  flex-shrink: 0;
+
+  &.is-latest {
+    background: var(--color-accent);
+    box-shadow: 0 0 0 4px var(--color-accent-soft);
+  }
+}
+.update-entry-line {
+  flex: 1;
+  width: 2px;
+  background: var(--color-border);
+  margin: 0.25rem 0;
+}
+
+.update-entry-card {
+  padding-bottom: var(--space-5);
+}
+
+.update-entry-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.35rem;
+}
+.update-entry-version {
+  font-family: ui-monospace, monospace;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+.update-entry-badge {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-pill);
+}
+.update-entry-date {
+  font-size: var(--font-size-xs);
+  color: var(--color-muted);
+  margin-inline-start: auto;
+}
+
+.update-entry-card h3 {
+  margin: 0 0 0.3rem;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+.update-entry-desc {
+  margin: 0 0 var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  white-space: pre-wrap;
+}
+
+.update-entry-media {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: var(--space-3);
+  max-width: 640px;
+}
+.update-media-tile {
+  position: relative;
+  display: block;
+  height: 100px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-sunken);
+
+  img, video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  &:hover { border-color: var(--color-primary-border); }
+}
+.update-media-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 1.4rem;
+}
+
+.update-entry-author {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .update-entry { animation: none; }
+}
+

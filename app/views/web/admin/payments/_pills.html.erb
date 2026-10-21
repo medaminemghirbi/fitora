@@ -1,0 +1,6 @@
+<%# The status pills (StatusFilterComponent). %>
+<app-status-filter id="pay-pills">
+  <%= render "web/shared/status_filter", name: "payment-status", legend: ngt("clients.filter_status"), value: filters[:status].to_s,
+             options: payment_statuses.map { |value, label, color| { value: value, label: ngt(label), count: counts[value.presence || "all"] || 0, color: color } },
+             filter: "status", action: "change->payments-list#setFilter" %>
+</app-status-filter>

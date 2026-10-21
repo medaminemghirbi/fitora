@@ -1,0 +1,215 @@
+// GENERATED from frontend/src/styles/_marketing.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// FITORA — public chrome shared by the auth pages (login / register):
+// the top nav and the footer, via <app-landing-header> / <app-landing-footer>.
+// The landing page itself is self-contained in landing.component.scss.
+// ============================================================================
+
+.mkt-container {
+  width: 100%;
+  max-width: 1140px;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 5vw, 2.5rem);
+}
+
+// ---- buttons ------------------------------------------------------------
+.mkt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1;
+  padding: 0.9rem 1.4rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+
+  i { font-size: 1.05rem; }
+  &:hover { text-decoration: none; transform: translateY(-1px); }
+  &:active { transform: translateY(0); }
+  &:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+}
+
+.mkt-btn--primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--color-primary) 55%, transparent);
+  &:hover { background: var(--color-primary-hover); box-shadow: 0 10px 26px -8px color-mix(in srgb, var(--color-primary) 60%, transparent); }
+}
+
+.mkt-btn--ghost {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+  &:hover { background: var(--color-surface-hover); border-color: var(--color-muted); }
+}
+
+.mkt-btn--sm { padding: 0.6rem 1rem; font-size: 0.875rem; }
+
+// ---- nav --------------------------------------------------------------
+.mkt-nav {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-topbar);
+  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mkt-nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  height: 68px;
+}
+
+.mkt-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: 0.02em;
+  color: var(--color-text);
+  text-decoration: none;
+
+  .mkt-brand-mark {
+    width: 30px; height: 30px;
+    border-radius: var(--radius-sm);
+    background: var(--color-primary);
+    color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+  }
+  &:hover { text-decoration: none; color: var(--color-text); }
+}
+
+.mkt-nav-links {
+  display: flex;
+  gap: 1.75rem;
+  margin-inline: auto;
+
+  a {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    &:hover { color: var(--color-text); }
+  }
+}
+
+.mkt-nav-actions { display: flex; align-items: center; gap: 0.5rem; }
+
+.mkt-nav-icon {
+  width: 38px; height: 38px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 1.05rem;
+  &:hover { background: var(--color-surface-hover); color: var(--color-text); }
+}
+
+.mkt-nav-burger { display: none; }
+
+.mkt-lang-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-end: 0;
+  min-width: 160px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 0.35rem;
+  z-index: var(--z-dropdown);
+
+  button {
+    display: block; width: 100%; text-align: start;
+    border: 0; background: none;
+    padding: 0.5rem 0.6rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    color: var(--color-text);
+    cursor: pointer;
+    &:hover { background: var(--color-surface-hover); }
+    &.is-active { color: var(--color-primary); font-weight: 600; }
+  }
+}
+
+.mkt-mobile-menu {
+  display: none;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 0.75rem clamp(1.25rem, 5vw, 2.5rem) 1.25rem;
+
+  a {
+    display: block;
+    padding: 0.7rem 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-text);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border);
+    &:last-of-type { border-bottom: 0; }
+  }
+  .mkt-mobile-menu-cta { display: grid; gap: 0.6rem; margin-top: 0.9rem; }
+}
+
+// ---- footer -----------------------------------------------------------
+.mkt-footer {
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  padding-block: clamp(2.5rem, 5vw, 3.5rem);
+}
+.mkt-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem 2.5rem;
+  flex-wrap: wrap;
+
+  .mkt-brand--light {
+    color: var(--sidebar-text-strong);
+    font-family: var(--font-display);
+  }
+}
+.mkt-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+
+  a {
+    font-size: 0.85rem;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+    &:hover { color: var(--sidebar-text-strong); }
+  }
+}
+.mkt-footer-copy {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--sidebar-border);
+  font-size: 0.8rem;
+  color: var(--sidebar-section);
+}
+
+// ---- responsive / motion --------------------------------------------------
+@media (max-width: 900px) {
+  .mkt-nav-links { display: none; }
+  .mkt-nav-burger { display: inline-flex; }
+  .mkt-nav-actions .mkt-nav-hide-sm { display: none; }
+  .mkt-mobile-menu.is-open { display: block; }
+  .mkt-footer-row { justify-content: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mkt-btn { transition: none; }
+}

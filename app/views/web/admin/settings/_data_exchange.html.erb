@@ -1,0 +1,74 @@
+<%# ng: data-exchange %>
+<%# DataExchangeComponent: per entity, its CSV template, its export (the
+    admin's) and an import previewed in the browser before it is sent, then
+    followed until done (data-exchange, on the host). %>
+<% entities = [ %w[clients bi-people nav.clients data_exchange.clients_desc], %w[activities bi-lightning-charge activities.title data_exchange.activities_desc],
+                %w[contracts bi-file-earmark-text nav.subscriptions data_exchange.contracts_desc], %w[payments bi-credit-card nav.payments data_exchange.payments_desc] ] %>
+<div class="fx-page">
+  <div class="data-exchange-selector">
+    <label for="data-exchange-entity"><%= ngt("data_exchange.select_module") %></label>
+    <select id="data-exchange-entity" class="form-select" data-action="data-exchange#selectEntity">
+      <% entities.each do |entity, _icon, title, _desc| %>
+        <option value="<%= entity %>"><%= ngt(title) %></option>
+      <% end %>
+    </select>
+  </div>
+
+  <div class="app-card">
+    <div class="app-card-header">
+      <h2 data-data-exchange-target="title"><i class="bi bi-people"></i> <%= ngt("nav.clients") %></h2>
+    </div>
+    <div class="app-card-body" data-data-exchange-target="body">
+      <p class="text-muted-token small" data-data-exchange-target="desc"><%= ngt("data_exchange.clients_desc") %></p>
+
+      <div class="data-exchange-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-download="template" data-action="data-exchange#download">
+          <i class="bi bi-filetype-csv"></i>
+          <%= ngt("data_exchange.download_template") %>
+        </button>
+        <% if current_user.admin? %>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-download="export" data-action="data-exchange#download">
+            <i class="bi bi-download"></i>
+            <%= ngt("common.export") %>
+          </button>
+        <% end %>
+      </div>
+
+      <label class="data-exchange-upload" data-data-exchange-target="upload">
+        <i class="bi bi-upload"></i>
+        <span><%= ngt("data_exchange.upload_cta") %></span>
+        <input type="file" accept=".csv,text/csv" hidden data-action="data-exchange#fileSelected" />
+      </label>
+    </div>
+  </div>
+</div>
+
+<%# The states the card's body takes, drawn by the controller. %>
+<template data-data-exchange-target="previewTemplate">
+  <div class="data-exchange-preview">
+    <div class="data-exchange-preview-head">
+      <span data-file-name><i class="bi bi-filetype-csv"></i> </span>
+      <span class="text-muted-token small" data-rows></span>
+    </div>
+
+    <div class="data-exchange-preview-scroll">
+      <table class="table table-sm">
+        <thead>
+          <tr data-head></tr>
+        </thead>
+        <tbody data-body></tbody>
+      </table>
+    </div>
+
+    <div class="data-exchange-preview-actions">
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-action="data-exchange#clearPreview">
+        <%= ngt("common.cancel") %>
+      </button>
+      <button type="button" class="btn btn-sm btn-primary" data-confirm data-action="data-exchange#confirmImport">
+        <i class="bi bi-upload"></i>
+        <%= ngt("data_exchange.confirm_import") %>
+      </button>
+    </div>
+  </div>
+</template>
+<script type="application/json" data-data-exchange-target="entities"><%= raw json_escape(entities.to_h { |entity, icon, title, desc| [ entity, { icon: icon, title: ngt(title), desc: ngt(desc) } ] }.to_json) %></script>

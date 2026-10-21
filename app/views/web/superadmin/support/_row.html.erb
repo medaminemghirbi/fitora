@@ -1,0 +1,32 @@
+<%# ng: superadmin-support-tickets %>
+<%# One ticket in the list: the gym, who wrote and how to call them back,
+    what it is about, its attachments, whether it is resolved, when. %>
+<tr class="support-row" data-ticket-id="<%= t[:id] %>" data-action="click->superadmin-support#open">
+  <td>
+    <div class="fx-strong"><%= t.dig(:company, :name) %></div>
+    <div class="fx-muted" style="font-size: 0.8125rem"><%= t.dig(:created_by, :full_name) %></div>
+    <% if t[:contact_phone].present? %>
+      <a class="ticket-phone" href="<%= support_tel_href(t[:contact_phone]) %>" dir="ltr" data-action="click->superadmin-support#stop">
+        <i class="bi bi-telephone"></i> <%= t[:contact_phone] %>
+      </a>
+    <% end %>
+  </td>
+  <td>
+    <% if t[:kind] == "upgrade" %>
+      <span class="ticket-kind"><i class="bi bi-gem"></i> <%= ngt("superadmin.support.kind_upgrade") %></span>
+    <% end %>
+    <div class="fx-strong"><%= t[:subject] %></div>
+    <div class="fx-muted support-excerpt"><%= t[:message] %></div>
+  </td>
+  <td class="fx-muted">
+    <% if t[:attachments].any? %>
+      <i class="bi bi-paperclip"></i> <%= t[:attachments].size %>
+    <% else %> — <% end %>
+  </td>
+  <td>
+    <span class="ticket-status<%= " is-resolved" if t[:status] == "resolved" %>">
+      <%= ngt("modules_page.contact.status_#{t[:status]}") %>
+    </span>
+  </td>
+  <td class="fx-muted"><%= ng_date(t[:created_at], "dd/MM/yyyy HH:mm") %></td>
+</tr>

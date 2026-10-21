@@ -1,0 +1,67 @@
+// GENERATED from frontend/src/app/shared/ui/pro-lock.component.ts by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+
+      .pro-lock {
+        display: flex;
+        gap: 1.25rem;
+        align-items: flex-start;
+        padding: 2rem;
+        border-radius: var(--radius-xl);
+        border: 1px dashed var(--color-primary-border);
+        background: var(--color-primary-soft);
+      }
+
+      .pro-lock.is-compact {
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .pro-lock-ic {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        display: grid;
+        place-items: center;
+        border-radius: 14px;
+        background: var(--color-primary);
+        color: var(--color-on-primary);
+        font-size: 1.25rem;
+      }
+
+      .pro-lock-chip {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: var(--radius-pill);
+        background: var(--color-text);
+        color: var(--color-surface);
+        font-size: 0.6875rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+      }
+
+      .pro-lock-title {
+        margin: 0.5rem 0 0.375rem;
+        font-size: 1.125rem;
+        font-weight: 800;
+        color: var(--color-text);
+      }
+
+      .pro-lock-text {
+        margin: 0 0 1rem;
+        max-width: 560px;
+        color: var(--color-text-secondary);
+        font-size: 0.9375rem;
+      }
+
+      .pro-lock-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      @media (max-width: 575.98px) {
+        .pro-lock {
+          flex-direction: column;
+          padding: 1.25rem;
+        }
+      }
+    

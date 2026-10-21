@@ -1,0 +1,27 @@
+<%# ng: spaces %>
+<% names = space[:activity_ids].filter_map { |id| activity_names[id] } %>
+<tr data-search="<%= [ space[:name], space[:kind].to_s ].join("\u001f") %>" data-space="<%= space.slice(:id, :name, :kind, :capacity, :activity_ids, :deletable).to_json %>">
+  <td class="fx-strong"><span data-highlight="<%= space[:name] %>"><%= space[:name] %></span></td>
+  <td><%= space[:kind].presence || "—" %></td>
+  <td><%= space[:capacity].presence || "—" %></td>
+  <td class="text-muted-token"><%= names.any? ? names.join(", ") : ngt("spaces.any_activity") %></td>
+  <td>
+    <app-status-badge>
+      <%= render layout: "web/shared/status_badge", locals: { status: space[:active] ? "active" : "inactive" } do %>
+        <%= ngt(space[:active] ? "common.active" : "common.inactive") %>
+      <% end %>
+    </app-status-badge>
+  </td>
+  <td class="text-end">
+    <%= render layout: "web/shared/action_menu" do %>
+      <button type="button" class="fx-menu-item" data-action="spaces-page#openEdit">
+        <i class="bi bi-pencil"></i> <%= ngt("common.edit") %>
+      </button>
+      <div class="fx-menu-divider"></div>
+      <button type="button" class="fx-menu-item is-danger" data-action="spaces-page#remove">
+        <i class="bi bi-slash-circle"></i>
+        <%= ngt(space[:deletable] ? "common.delete" : "common.deactivate") %>
+      </button>
+    <% end %>
+  </td>
+</tr>

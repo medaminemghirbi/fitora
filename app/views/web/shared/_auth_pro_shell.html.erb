@@ -1,0 +1,75 @@
+<%# ng: auth-pro-shell %>
+<%# AuthProShellComponent: the panel (projected as content_for :auth_panel)
+    on one side, the form column on the other. Rendered as a layout around
+    the page's own content, which stays the page's (and keeps its scope), as
+    projected content does in Angular. %>
+<% tone = local_assigns.fetch(:tone, "dark")
+   aside_text = local_assigns[:aside_text].to_s
+   aside_link_text = local_assigns[:aside_link_text].to_s
+   aside_link = local_assigns.fetch(:aside_link, "/inscription")
+   back_link_text = local_assigns[:back_link_text].to_s
+   back_link = local_assigns.fetch(:back_link, "/connexion") %>
+<div class="apro<%= " is-soft" if tone == "soft" %>">
+  <aside class="apro-panel">
+    <a href="/" class="apro-brand">
+      <span class="apro-mark" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 4v16M18 4v16M3 8v8M21 8v8M6 12h12" /></svg>
+      </span>
+      Fitora
+    </a>
+
+    <div class="apro-panel-body">
+      <%= yield :auth_panel %>
+    </div>
+
+    <span class="apro-panel-foot"><%= ngt("auth.panel_support") %></span>
+  </aside>
+
+  <div class="apro-side">
+    <header class="apro-bar">
+      <a href="/" class="apro-brand apro-brand--bar">
+        <span class="apro-mark" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 4v16M18 4v16M3 8v8M21 8v8M6 12h12" /></svg>
+        </span>
+        Fitora
+      </a>
+
+      <% if back_link_text.present? %>
+        <a href="<%= back_link %>" class="apro-back">
+          <i class="bi bi-arrow-left" aria-hidden="true"></i>
+          <%= back_link_text %>
+        </a>
+      <% end %>
+
+      <div class="apro-bar-end">
+        <% if aside_link_text.present? %>
+          <span class="apro-aside">
+            <%= aside_text %>
+            <a href="<%= aside_link %>"><%= aside_link_text %></a>
+          </span>
+        <% end %>
+
+        <%# The switch reloads the page in the chosen language (D6), through
+            the layout's locale form (layouts/web/_locale_form). %>
+        <div class="apro-lang" role="group" aria-label="<%= ngt("common.change_language") %>" data-controller="locale-switch">
+          <% [ [ "fr", "Français", "FR" ], [ "en", "English", "EN" ], [ "ar", "العربية", "ع" ] ].each do |code, label, short| %>
+            <button type="button"<%= raw(%( class="is-active")) if locale_code == code %> aria-pressed="<%= locale_code == code %>" aria-label="<%= label %>" lang="<%= code %>" data-action="locale-switch#choose" data-locale-switch-locale-param="<%= code %>">
+              <%= short %>
+            </button>
+          <% end %>
+        </div>
+      </div>
+    </header>
+
+    <main class="apro-main">
+      <div class="apro-col<%= " is-wide" if local_assigns[:wide] %>">
+        <%= yield %>
+      </div>
+    </main>
+
+    <footer class="apro-foot">
+      © <%= Time.current.year %> Fitora ·
+      <a href="mailto:contact@fitora.io"><%= ngt("landing.footer_contact") %></a>
+    </footer>
+  </div>
+</div>

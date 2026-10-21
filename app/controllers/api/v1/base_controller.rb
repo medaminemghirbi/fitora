@@ -1,6 +1,11 @@
 module Api
   module V1
     class BaseController < ApplicationController
+      # The rules themselves (who may do what, in which salle, under which
+      # plan and lock) are TenantRules, shared with the web UI. What stays
+      # here is how the API says no: a JSON error and a status.
+      include TenantRules
+
       before_action :authenticate_request!
       before_action :reject_member_token!
       before_action :require_confirmed_email!
@@ -44,8 +49,7 @@ module Api
       # A superadmin impersonating them is let through: they are there to help,
       # and the address is not theirs to confirm.
       def require_confirmed_email!
-        return if current_user.nil? || current_impersonator.present?
-        return unless current_user.email_confirmation_pending?
+        return unless email_confirmation_required?
 
         render json: {
           error: "email_unverified",
@@ -53,74 +57,22 @@ module Api
         }, status: :forbidden
       end
 
-      # The only endpoints a locked company's admin can still reach — enough
-      # to see their status, and nothing that operates the gym. Staff get no
-      # exceptions at all: once the free trial expires, only the admin has
-      # any access, and only to this much, until a platform superadmin manually
-      # grants access again (Api::V1::Superadmin::CompaniesController#update_subscription).
-      ADMIN_ALLOWED_WHEN_LOCKED = {
-        # A locked admin still sees what they owe and can download the
-        # invoices they already have: the way out is settling, and both of
-        # these are how they work out what settling means.
-        "Api::V1::SubscriptionController" => %w[show],
-        "Api::V1::InvoicesController" => %w[index show],
-        # Their salles are still theirs to see and move between while the
-        # account is locked.
-        "Api::V1::CompaniesController" => %w[show index switch]
+      # Which TenantRules::ADMIN_ALLOWED_WHEN_LOCKED area each controller is.
+      LOCK_AREAS = {
+        "Api::V1::SubscriptionController" => :subscription,
+        "Api::V1::InvoicesController" => :invoices,
+        "Api::V1::CompaniesController" => :companies
       }.freeze
-      private_constant :ADMIN_ALLOWED_WHEN_LOCKED
+      private_constant :LOCK_AREAS
 
       def enforce_trial_lock!
-        # A member's own login carries no current_user. Their gym's trial
-        # status is not their problem to see: the member app has no "locked"
-        # screen, and leaving them stranded mid-booking would teach them
-        # nothing they can act on.
-        return if current_client
-        return if current_user.superadmin?
-
-        subscription = current_company&.subscription
-        return unless subscription&.locked?
-
-        return if current_user.admin? && ADMIN_ALLOWED_WHEN_LOCKED[self.class.name]&.include?(action_name)
+        subscription = locking_subscription(area: LOCK_AREAS[self.class.name], action: action_name)
+        return if subscription.nil?
 
         render json: {
           error: subscription.lock_reason.to_s,
           message: lock_message(subscription)
         }, status: :payment_required
-      end
-
-      # Why the door is shut, in words the person reading them can act on.
-      # Staff are told to talk to their admin whatever the reason: the money
-      # is not theirs to settle and the detail is not theirs to see.
-      def lock_message(subscription)
-        return "This gym's account is locked. Contact your gym's admin." unless current_user.admin?
-
-        reason = subscription.lock_reason
-        if reason == :unpaid && subscription.trial?
-          "Your free trial has ended. Choose Starter or Pro and settle with Fitora to reopen access."
-        elsif reason == :unpaid
-          "The period you paid for has run out. Access closed #{Subscription::GRACE_DAYS} days later; settle with Fitora to reopen it."
-        else
-          "Your access has been suspended by Fitora. Get in touch to find out why."
-        end
-      end
-
-      # Never trust a company_id supplied by the client — always derive
-      # it from the authenticated user: an admin runs several salles and a
-      # staff login may be posted to several, so it is whichever one the
-      # session switched to (Api::V1::CompaniesController#switch), and for
-      # staff only ever one it still works in (User#current_company). Never
-      # confuse either with User#role == "superadmin", the Fitora platform
-      # operator handled entirely by Api::V1::Superadmin::*.
-      def current_company
-        @current_company ||= current_user&.current_company
-      end
-
-      # For a member's login: the gyms whose app they can use — the ones
-      # they belong to whose account includes the member app (a paid Pro
-      # period). A Starter or trial gym's members have no app to open.
-      def member_companies
-        @member_companies ||= (current_client&.companies&.includes(admin: { subscription: :invoices }) || []).select(&:member_app?)
       end
 
       # For a member's login: the gym named by ?company_id=, checked against
@@ -149,7 +101,7 @@ module Api
       # open on a paid Pro period, refused on Starter and the trial with a code
       # the app turns into an upgrade prompt rather than a generic error.
       def require_pro!
-        return if current_company&.pro_features?
+        return if pro_access?
 
         render json: {
           error: "pro_required",
@@ -163,12 +115,6 @@ module Api
         return if params[:company_id].blank? || member_company
 
         render json: { error: "Gym not found" }, status: :not_found
-      end
-
-      def current_staff_member
-        return nil unless current_user&.staff?
-
-        @current_staff_member ||= current_user.staff_member
       end
 
       def require_admin!
@@ -185,44 +131,24 @@ module Api
         render_forbidden if current_client.nil?
       end
 
-      # True for the admin (always) or for staff whose role grants this
-      # capability — the only two ways into any endpoint gated by this check.
+      # The admin (always) or staff whose role grants this capability. For an
+      # action that has to ask somewhere other than a before_action, use
+      # TenantRules#capability? — render_forbidden does not halt, so calling
+      # this mid-action would render twice.
       def require_capability!(capability)
         render_forbidden unless capability?(capability)
-      end
-
-      # The same test without the rendering, for an action that has to make
-      # the check somewhere other than a before_action — render_forbidden
-      # does not halt, so calling require_capability! mid-action would render
-      # twice.
-      def capability?(capability)
-        return true if current_user.admin?
-
-        current_staff_member&.active? && current_staff_member.can?(capability) || false
       end
 
       # Anyone with a seat in the company can see the calendar — the schedule is
       # shared operational context for every role. Editing sessions is a
       # separate, narrower check (require_capability!(:sessions)).
       def require_staff!
-        return if current_user.admin?
-        return if current_staff_member&.active?
-
-        render_forbidden
+        render_forbidden unless staff_access?
       end
 
-      # Read access to the reference data a session is built from (the activity
-      # catalogue, the opening hours): whoever owns that data
-      # (`capability`) *plus* anyone who can edit the schedule (`:sessions`),
-      # since you can't plan a week of sessions without seeing the options.
+      # See TenantRules#schedule_reference_access?.
       def require_schedule_reference_read!(capability)
-        return if current_user.admin?
-        if current_staff_member&.active? &&
-           (current_staff_member.can?(capability) || current_staff_member.can?(:sessions))
-          return
-        end
-
-        render_forbidden
+        render_forbidden unless schedule_reference_access?(capability)
       end
 
       def require_company!

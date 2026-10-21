@@ -1,0 +1,97 @@
+// GENERATED from frontend/src/styles.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// Bootstrap is gone. Its components were already fully restyled in
+// styles/fitora, so the framework was shipping a stylesheet whose every
+// visible rule we overrode; what was genuinely in use was a bounded set of
+// layout utilities and five small components, now styles/utilities and
+// styles/leftovers. The icon font stays — it is a font, not a framework.
+//
+// scripts/check-css.mjs fails the build if a template uses a class nothing
+// defines, which is what makes removing a framework safe to do at all.
+@import "bootstrap-icons/font/bootstrap-icons";
+@import "styles/tokens";
+// The element reset the component layer assumes. Was Bootstrap's Reboot.
+@import "styles/reset";
+@import "styles/utilities";
+// Fitora's own component layer, one file per concern. Was a single 1208-line
+// _fitora.scss, which is why screens drifted: nobody could see what was
+// already there before writing it again.
+@import "styles/components/base";
+@import "styles/components/buttons";
+@import "styles/components/forms";
+@import "styles/components/tables";
+@import "styles/components/feedback";
+@import "styles/components/page";
+@import "styles/components/cards";
+@import "styles/components/filters";
+@import "styles/components/navigation";
+@import "styles/components/overlays";
+@import "styles/components/list";
+@import "styles/components/list-page";
+@import "styles/components/calendar";
+@import "styles/components/misc";
+@import "styles/leftovers";
+@import "styles/shell";
+@import "styles/marketing";
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+// Route progress bar (ngx-progressbar) — brand-coloured, above everything.
+ng-progress {
+  --ng-progress-color: var(--color-primary);
+  --ng-progress-thickness: 3;
+}
+
+.text-primary { color: var(--color-primary) !important; }
+.text-muted-token { color: var(--color-text-secondary) !important; }
+.text-warning-token { color: var(--color-warning) !important; }
+.text-danger-token { color: var(--color-danger) !important; }
+.text-success-token { color: var(--color-success) !important; }
+.cursor-pointer { cursor: pointer; }
+
+// Global visible focus ring for keyboard users
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.btn:focus-visible, .form-control:focus-visible, .form-select:focus-visible { outline: none; }
+
+// Reused wherever a text input drives a live client search (payments, client
+// booking, calendar "add client to session").
+.search-results-dropdown {
+  position: absolute;
+  z-index: var(--z-dropdown);
+  margin-top: 0.25rem;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.search-result-item {
+  display: block;
+  width: 100%;
+  text-align: start;
+  padding: 0.55rem 0.85rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  cursor: pointer;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--color-surface-hover); }
+}

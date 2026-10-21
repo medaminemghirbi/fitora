@@ -1,0 +1,197 @@
+// GENERATED from frontend/src/styles/_leftovers.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// THE LAST FEW BOOTSTRAP COMPONENTS
+// ----------------------------------------------------------------------------
+// _fitora.scss already restyled the ones that carry the product's look —
+// buttons, fields, tables, alerts, badges, tabs. These five are the remainder:
+// small things still borrowed from the framework and never themed, which is
+// why they are the only places the old stylesheet still showed through.
+//
+// Written against the tokens, so they finally match everything else, and so
+// Bootstrap has nothing left to provide.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// Input group — a field with an affix (a currency, a unit, a search icon)
+// ---------------------------------------------------------------------------
+.input-group {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+
+  > .form-control,
+  > .form-select {
+    position: relative;
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+  }
+
+  // Only the outer edges are rounded, so the parts read as one control.
+  > :not(:last-child) {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  > :not(:first-child) {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+    margin-inline-start: -1px;
+  }
+
+  // A focused field has to sit above its neighbour's border for its ring
+  // to be unbroken.
+  > .form-control:focus,
+  > .form-select:focus {
+    z-index: 2;
+  }
+}
+
+.input-group-text {
+  display: flex;
+  align-items: center;
+  padding: 0.45rem 0.75rem;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+}
+
+.input-group-sm {
+  > .form-control,
+  > .form-select,
+  > .input-group-text {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8125rem;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Spinner
+// ---------------------------------------------------------------------------
+.spinner-border {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  vertical-align: -0.125em;
+  border: 2px solid currentcolor;
+  // The gap in the ring is what makes the spin visible.
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: fx-spin 0.75s linear infinite;
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 1.5px;
+}
+
+@keyframes fx-spin {
+  to { transform: rotate(360deg); }
+}
+
+// Someone who has asked not to be shown motion still needs to know the thing
+// is working, so the ring stays and only the spinning stops.
+@media (prefers-reduced-motion: reduce) {
+  .spinner-border { animation-duration: 2s; }
+}
+
+// ---------------------------------------------------------------------------
+// Progress
+// ---------------------------------------------------------------------------
+.progress {
+  display: flex;
+  height: 0.5rem;
+  overflow: hidden;
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-pill);
+}
+
+.progress-bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--color-primary);
+  transition: width var(--motion-base, 200ms) ease;
+}
+
+// ---------------------------------------------------------------------------
+// Responsive table wrapper
+// ---------------------------------------------------------------------------
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+// ---------------------------------------------------------------------------
+// Colour input
+// ---------------------------------------------------------------------------
+.form-control-color {
+  width: 3rem;
+  padding: 0.25rem;
+  cursor: pointer;
+
+  &::-webkit-color-swatch-wrapper { padding: 0; }
+  &::-webkit-color-swatch { border: none; border-radius: var(--radius-sm); }
+  &::-moz-color-swatch { border: none; border-radius: var(--radius-sm); }
+}
+
+// ---------------------------------------------------------------------------
+// Checkbox / radio row
+// ---------------------------------------------------------------------------
+// _fitora styles the input itself; this is the row it sits in, so the label
+// is clickable and lines up with the box rather than sitting above it.
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 1.5rem;
+}
+
+.form-check-label {
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+// ---------------------------------------------------------------------------
+// Tab list
+// ---------------------------------------------------------------------------
+// .nav-tabs and .nav-link are styled in _fitora; these two are the list and
+// item they hang off.
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-item { margin: 0; }
+
+// ---------------------------------------------------------------------------
+// Compact table
+// ---------------------------------------------------------------------------
+.table-sm {
+  th,
+  td { padding: var(--space-2) var(--space-3); }
+}
+
+// ---------------------------------------------------------------------------
+// Warning button
+// ---------------------------------------------------------------------------
+// The one button variant _fitora did not restyle, because only the superadmin
+// company list uses it — for suspending a gym, which should look like a
+// deliberate act rather than a routine one.
+.btn-warning {
+  background: var(--color-warning-soft);
+  border: 1px solid transparent;
+  color: var(--color-warning);
+
+  &:hover:not(:disabled) {
+    background: var(--color-warning);
+    color: var(--color-on-primary);
+  }
+}

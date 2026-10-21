@@ -1,0 +1,24 @@
+// GENERATED from frontend/src/app/shared/ui/skeleton.component.ts by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+
+    :host { display: block; }
+    .fx-skeleton-table { border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; }
+    .fx-skeleton-table-row {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      gap: 1.5rem;
+      padding: 0.95rem 1rem;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .fx-skeleton-table-row:last-child { border-bottom: 0; }
+    .fx-skeleton-table-row--head { background: var(--color-surface-sunken); }
+    .fx-skeleton-cards { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+    .fx-skeleton-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+  

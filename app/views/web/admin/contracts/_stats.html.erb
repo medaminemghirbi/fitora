@@ -1,0 +1,23 @@
+<div class="fx-stats-bar" id="ct-stats">
+  <dl class="fx-stats">
+    <%# Only for a login holding `revenue`; everyone sees what expires. %>
+    <% if totals.key?(:portfolio_value) %>
+      <div>
+        <dt><%= ngt("contracts.portfolio_value") %></dt>
+        <dd><%= ng_money(totals[:portfolio_value], currency) %></dd>
+      </div>
+      <div>
+        <dt><%= ngt("contracts.average_basket") %></dt>
+        <dd><%= ng_money(totals[:average_basket], currency) %></dd>
+      </div>
+      <div>
+        <dt><%= ngt("contracts.unpaid_value") %></dt>
+        <dd><%= ng_money(totals[:unpaid_value], currency) %></dd>
+      </div>
+    <% end %>
+    <div>
+      <dt><%= ngt("contracts.expiring_soon") %></dt>
+      <dd class="text-warning-token"><%= totals[:expiring_soon] %></dd>
+    </div>
+  </dl>
+</div>

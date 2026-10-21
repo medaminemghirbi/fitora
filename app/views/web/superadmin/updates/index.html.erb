@@ -1,0 +1,84 @@
+<%# ng: superadmin-updates %>
+<%# ng-host: superadmin-updates %>
+<%# SuperadminUpdatesComponent: the release notes with their authors, and
+    the drawer to publish one (superadmin-updates). %>
+<div class="fx-page" data-controller="superadmin-updates" data-superadmin-updates-url-value="/superadmin/updates"
+     data-superadmin-updates-labels-value="<%= { too_many: Web::Translations.translate("superadmin.updates.too_many_files", {}, locale: I18n.locale), invalid: Web::Translations.translate("superadmin.updates.invalid_file", {}, locale: I18n.locale), error: ngt("common.error_generic") }.to_json %>"
+     data-action="modal:opened@window->superadmin-updates#opened">
+  <header class="lst-head">
+    <h1><%= ngt("superadmin.updates.title") %></h1>
+    <span class="lst-head-count"><%= @updates.size %></span>
+    <button type="button" class="btn btn-primary" data-action="superadmin-updates#openCreate">
+      <i class="bi bi-megaphone"></i> <%= ngt("superadmin.updates.new") %>
+    </button>
+  </header>
+
+  <% if @updates.empty? %>
+    <div class="app-card">
+      <div class="app-card-body">
+        <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("superadmin.updates.empty_title"), body: ngt("superadmin.updates.empty_body"), icon: "bi-megaphone" } do %>
+          <button type="button" class="btn btn-primary" data-action="superadmin-updates#openCreate">
+            <i class="bi bi-megaphone"></i> <%= ngt("superadmin.updates.new") %>
+          </button>
+        <% end %></app-empty-state>
+      </div>
+    </div>
+  <% else %>
+    <app-update-timeline><%= render "web/shared/update_timeline", updates: @updates, show_author: true, date_format: "dd/MM/yyyy HH:mm" %></app-update-timeline>
+  <% end %>
+</div>
+
+<app-drawer data-controller="modal" data-modal-name-value="update-create" data-action="update-create:open@window->modal#open update-create:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/drawer", locals: { title: ngt("superadmin.updates.new"), description: ngt("superadmin.updates.new_hint") } do |slot| %>
+      <% if slot == "footer" %>
+        <div drawer-footer>
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" form="update-form" class="btn btn-primary" disabled data-update-submit>
+            <i class="bi bi-broadcast"></i>
+            <%= ngt("superadmin.updates.publish") %>
+          </button>
+        </div>
+      <% else %>
+        <form id="update-form" novalidate>
+          <div class="row">
+            <div class="col-5 mb-3">
+              <label for="upd-version"><%= ngt("superadmin.updates.version_label") %> *</label>
+              <input id="upd-version" class="form-control" dir="ltr" name="version" placeholder="1.4.0" required />
+            </div>
+            <div class="col-7 mb-3">
+              <label for="upd-title"><%= ngt("superadmin.updates.title_label") %> *</label>
+              <input id="upd-title" class="form-control" name="title" placeholder="<%= ngt("superadmin.updates.title_placeholder") %>" required />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="upd-desc"><%= ngt("superadmin.updates.description_label") %></label>
+            <textarea id="upd-desc" class="form-control" rows="5" name="description" placeholder="<%= ngt("superadmin.updates.description_placeholder") %>"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <div class="form-label"><%= ngt("superadmin.updates.media_label") %></div>
+            <label class="update-file-drop" for="update-files">
+              <i class="bi bi-cloud-arrow-up"></i>
+              <span><%= ngt("superadmin.updates.media_hint") %></span>
+            </label>
+            <input id="update-files" type="file" class="visually-hidden" multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm" />
+          </div>
+        </form>
+      <% end %>
+    <% end %>
+  </template>
+  <template data-update-error><div class="alert alert-danger"></div></template>
+  <template data-update-file-error><p class="update-file-error"></p></template>
+  <template data-update-file-list><ul class="update-file-list"></ul></template>
+  <template data-update-file-item>
+    <li>
+      <i class="bi"></i>
+      <span class="update-file-name"></span>
+      <button type="button" class="icon-btn" aria-label="<%= ngt("common.cancel") %>">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </li>
+  </template>
+  <template data-update-spinner><app-spinner><%= render "web/shared/spinner", size: 16 %></app-spinner></template>
+</app-drawer>

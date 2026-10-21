@@ -1,0 +1,17 @@
+<%# ng: confirm-dialog %>
+<%# ConfirmDialogComponent, closed: nothing shown. lib/confirm.js fills this
+    template and opens it (ConfirmService#ask). %>
+<template data-confirm-template>
+  <div class="confirm-backdrop" data-confirm-backdrop>
+    <div class="confirm-dialog" role="alertdialog" aria-modal="true">
+      <h3></h3>
+      <p></p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-outline-secondary" data-confirm-cancel>
+        </button>
+        <button type="button" class="btn" data-confirm-ok>
+        </button>
+      </div>
+    </div>
+  </div>
+</template>

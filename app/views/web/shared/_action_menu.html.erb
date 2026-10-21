@@ -1,0 +1,12 @@
+<%# ActionMenuComponent (no styles of its own): the "⋯" trigger and, while
+    open, its menu — put in and taken out by the action-menu controller, and
+    placed by hand (position: fixed) so a scrolling table never clips it. The
+    block is the projected items. %>
+<app-action-menu<%= raw(%( class="#{h(local_assigns[:host_class])}")) if local_assigns[:host_class] %>>
+  <div class="fx-action-menu" data-controller="action-menu" data-action-menu-align-value="<%= local_assigns.fetch(:align, "end") %>">
+    <button type="button" class="fx-action-trigger" aria-label="<%= ngt("common.actions") %>" aria-expanded="false" data-action="action-menu#toggle" data-action-menu-target="trigger">
+      <i class="bi bi-three-dots"></i>
+    </button>
+    <template data-action-menu-target="menu"><div class="fx-menu fx-menu--fixed" role="menu" data-action="click->action-menu#close"><%= yield %></div></template>
+  </div>
+</app-action-menu>

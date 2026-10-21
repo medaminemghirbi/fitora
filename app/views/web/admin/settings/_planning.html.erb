@@ -1,0 +1,40 @@
+<%# SettingsPlanningComponent (no styles of its own): the working days, as
+    toggle buttons Monday first, and the calendar's hours. %>
+<% days = [ [ 1, "common.dow_mon" ], [ 2, "common.dow_tue" ], [ 3, "common.dow_wed" ], [ 4, "common.dow_thu" ], [ 5, "common.dow_fri" ], [ 6, "common.dow_sat" ], [ 0, "common.dow_sun" ] ] %>
+<% working = Array(company[:working_days] || [ 1, 2, 3, 4, 5 ]) %>
+<div class="app-card" data-controller="settings-planning"
+     data-settings-planning-url-value="<%= admin_page_path("settings/company") %>"
+     data-settings-planning-days-value="<%= working.to_json %>"
+     data-settings-planning-labels-value="<%= { saved: ngt("common.save"), save: ngt("common.save"), saving: ngt("common.saving"), error: ngt("common.error_generic"), days_required: ngt("settings.working_days_required") }.to_json %>">
+  <div class="app-card-body">
+    <form novalidate data-action="submit->settings-planning#submit">
+      <h3 class="h6 mb-1"><%= ngt("settings.working_days") %></h3>
+      <p class="text-muted-token small"><%= ngt("settings.working_days_hint") %></p>
+      <div class="d-flex flex-wrap gap-2 mb-4">
+        <% days.each do |value, label| %>
+          <% on = working.include?(value) %>
+          <button type="button" class="btn btn-sm <%= on ? "btn-primary" : "btn-outline-secondary" %>" aria-pressed="<%= on %>" data-day="<%= value %>" data-action="settings-planning#toggle">
+            <%= ngt(label) %>
+          </button>
+        <% end %>
+      </div>
+
+      <h3 class="h6 mb-1"><%= ngt("settings.calendar") %></h3>
+      <p class="text-muted-token small"><%= ngt("settings.calendar_hint") %></p>
+      <div class="row">
+        <div class="col-6 mb-3">
+          <label for="cal-hours-start"><%= ngt("settings.business_hours_start") %> *</label>
+          <input id="cal-hours-start" type="time" class="form-control" name="business_hours_start" value="<%= company[:business_hours_start] %>" />
+        </div>
+        <div class="col-6 mb-3">
+          <label for="cal-hours-end"><%= ngt("settings.business_hours_end") %> *</label>
+          <input id="cal-hours-end" type="time" class="form-control" name="business_hours_end" value="<%= company[:business_hours_end] %>" />
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" data-save>
+        <%= ngt("common.save") %>
+      </button>
+    </form>
+  </div>
+</div>

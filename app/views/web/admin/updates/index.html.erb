@@ -1,0 +1,19 @@
+<%# ng-host: admin-updates %>
+<%# AdminUpdatesComponent (no styles of its own). %>
+<div class="fx-page">
+  <header class="lst-head">
+    <h1><%= ngt("updates.title") %></h1>
+    <% if @updates.any? %><span class="lst-head-count"><%= @updates.size %></span><% end %>
+  </header>
+  <p class="fx-muted mb-5"><%= ngt("updates.subtitle") %></p>
+
+  <% if @updates.empty? %>
+    <div class="app-card">
+      <div class="app-card-body">
+        <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("updates.empty_title"), body: ngt("updates.empty_body"), icon: "bi-megaphone" } do %><% end %></app-empty-state>
+      </div>
+    </div>
+  <% else %>
+    <app-update-timeline><%= render "web/shared/update_timeline", updates: @updates %></app-update-timeline>
+  <% end %>
+</div>

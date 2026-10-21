@@ -57,18 +57,7 @@ module Api
         require_company!
         return if performed?
 
-        # currency + locale are tenant-wide settings a Fitora superadmin manages
-        # (Api::V1::Superadmin::CompaniesController#update_settings); the admin
-        # only picks a currency once, at signup.
-        # A signature is taken off with remove_signature, never by sending
-        # an empty file.
-        current_company.signature.purge if ActiveModel::Type::Boolean.new.cast(params.dig(:company, :remove_signature))
-
-        # Branding (logo, colour, identifier) is a Pro tool. On Starter it is
-        # dropped rather than refused, so the rest of the form still saves.
-        attrs = company_params(branding: current_company.pro_features?).except(:currency)
-
-        if current_company.update(attrs)
+        if CompanyProfile.update(current_company, params)
           render json: { company: CompanySerializer.new(current_company).as_json }
         else
           render_errors(current_company)
@@ -103,32 +92,7 @@ module Api
       end
 
       def network_json
-        companies = current_user.companies.order(:created_at).to_a
-        posts = current_user.salle_staff_members.where(coach_id: nil).includes(:user, :assigned_role).to_a
-        members = current_user.salle_memberships.where(active: true).group(:company_id).count
-
-        {
-          companies: companies.map do |company|
-            CompanySummarySerializer.new(company, active: company.id == current_company&.id).as_json.merge(
-              city: company.city,
-              members_count: members.fetch(company.id, 0),
-              moderator_ids: posts.select { |p| p.company_id == company.id }.map(&:user_id)
-            )
-          end,
-          moderators: posts.group_by(&:user_id).map do |_, records|
-            first = records.min_by(&:created_at)
-            user = first.user
-            {
-              id: user.id,
-              full_name: user.full_name,
-              email: EmailMask.call(user.email),
-              role_name: first.assigned_role.name,
-              role_key: first.assigned_role.key,
-              active: records.any?(&:active?),
-              company_ids: records.map(&:company_id)
-            }
-          end.sort_by { |m| m[:full_name].downcase }
-        }
+        SalleNetwork.for(current_user, current_company)
       end
 
       # Activities the salle names itself at signup — [{ name:, emoji: }].
@@ -136,53 +100,8 @@ module Api
         params.fetch(:custom_activities, []).map { |entry| entry.permit(:name, :emoji) }
       end
 
-      # branding: false leaves out the logo, the colour and the identifier —
-      # Starter's update (see #update).
       def company_params(branding: true)
-        permitted = params.require(:company).permit(
-          :name, :description, :phone, :email, :country, :city,
-          :address, :latitude, :longitude, :timezone, :currency,
-          :slug, :logo,
-          # Who signs the gym's contracts, and what they print (Settings).
-          :signature, :signatory_name, :contract_terms,
-          # Hours and branding are settings now, but the app still sends them
-          # flat. Accept them where they have always been and fold them in.
-          :primary_color, :business_hours_start, :business_hours_end,
-          working_days: [],
-          settings: [
-            { features: CompanySettings::FEATURES.keys },
-            { booking: CompanySettings::BOOKING.keys },
-            { hours: [ :start, :end, { working_days: [] } ] },
-            { branding: CompanySettings::BRANDING.keys }
-          ]
-        )
-
-        unless branding
-          permitted = permitted.except(:slug, :logo, :primary_color)
-          permitted[:settings] = permitted[:settings].except(:branding) if permitted[:settings]
-        end
-
-        fold_legacy_settings_keys(permitted)
-      end
-
-      # Moves the flat hours/branding keys into the settings patch, so the
-      # model sees one shape whichever way the client sent them. An explicit
-      # `settings` section wins over the flat key for the same value.
-      def fold_legacy_settings_keys(permitted)
-        hours = {
-          start: permitted.delete(:business_hours_start),
-          end: permitted.delete(:business_hours_end),
-          working_days: permitted.delete(:working_days)
-        }.compact
-        branding = { primary_color: permitted.delete(:primary_color) }.compact
-
-        return permitted if hours.empty? && branding.empty?
-
-        settings = (permitted[:settings] || {}).to_h.symbolize_keys
-        settings[:hours] = hours.merge((settings[:hours] || {}).to_h.symbolize_keys)
-        settings[:branding] = branding.merge((settings[:branding] || {}).to_h.symbolize_keys)
-        permitted[:settings] = settings
-        permitted
+        CompanyProfile.attributes(params, branding: branding)
       end
     end
   end

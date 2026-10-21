@@ -1,0 +1,72 @@
+<%# The chips, then the table (or the empty state) and the pagination. %>
+<% chips = payments_chips(filters) %>
+<div class="app-card" id="pay-card" data-payments-list-target="card">
+  <% if chips.any? %>
+    <div class="fx-active-filters p-3 pb-0" data-payments-list-target="chips">
+      <% chips.each do |chip| %>
+        <span class="fx-active-chip">
+          <%= chip[:label] %>
+          <button type="button" data-action="payments-list#clearChip" data-chip="<%= chip[:clear] %>" aria-label="<%= ngt("common.reset") %>">
+            <i class="bi bi-x"></i>
+          </button>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if payments.empty? %>
+    <div class="app-card-body">
+      <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("payments.empty_title"), body: ngt("payments.empty_body"), icon: "bi-credit-card" } do %><% end %></app-empty-state>
+    </div>
+  <% else %>
+    <div class="fx-table-scroll">
+      <table class="table table-hover fx-grid">
+        <thead>
+          <tr>
+            <th><%= ngt("bookings.client") %></th>
+            <th><%= ngt("payments.product") %></th>
+            <th class="text-end"><%= ngt("payments.amount") %></th>
+            <th><%= ngt("payments.method") %></th>
+            <th><%= ngt("common.status") %></th>
+            <th><%= ngt("payments.date") %></th>
+            <th class="text-end"><%= ngt("common.actions") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% payments.each do |p| %>
+            <tr style="--fx-row-color: <%= payment_row_color(p) %>;" data-payment-id="<%= p[:id] %>">
+              <td>
+                <div class="fx-cell-lead">
+                  <app-avatar><%= render "web/shared/avatar", name: p.dig(:client, :full_name).to_s, size: 34 %></app-avatar>
+                  <div class="fx-cell-lead-text">
+                    <div class="fx-cell-lead-title"><%= ng_highlight(p.dig(:client, :full_name), filters[:q]) %></div>
+                  </div>
+                </div>
+              </td>
+              <td><%= p[:product_name].presence || "—" %></td>
+              <td class="fx-strong fx-num text-end"><%= ng_money(p[:amount], p[:currency]) %></td>
+              <td><%= ngt("payments.method_#{p[:payment_method]}") %></td>
+              <td><app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: p[:status] } do %><%= ngt("payments.status_#{p[:status]}") %><% end %></app-status-badge></td>
+              <td class="fx-muted fx-num"><%= ng_date(p[:created_at], "medium") %></td>
+              <td class="text-end">
+                <%= render layout: "web/shared/action_menu" do %>
+                  <a class="fx-menu-item" href="<%= admin_page_path("clients/#{p.dig(:client, :id)}") %>">
+                    <i class="bi bi-person"></i> <%= ngt("payments.view_client") %>
+                  </a>
+                  <% if p[:status] == "paid" && current_user.admin? %>
+                    <div class="fx-menu-divider"></div>
+                    <button type="button" class="fx-menu-item is-danger" data-action="payments-list#refund">
+                      <i class="bi bi-arrow-counterclockwise"></i> <%= ngt("payments.refund") %>
+                    </button>
+                  <% end %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <app-pagination><%= render "web/shared/pagination", meta: meta, action: "payments-list#goToPage" %></app-pagination>
+  <% end %>
+</div>

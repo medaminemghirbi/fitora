@@ -1,0 +1,32 @@
+<%# ng: member-schedule %>
+<%# One session of the member's schedule: when, what, who and where, how
+    much room is left, and its button — or "booked". `s`: a
+    PublicSessionSerializer row. %>
+<li class="mb-slot<%= " is-booked" if s[:already_booked] %>" data-session-id="<%= s[:id] %>">
+  <span class="mb-slot-time"><%= ng_date(s[:starts_at], "HH:mm") %></span>
+
+  <span class="mb-slot-main">
+    <span class="mb-slot-name">
+      <%= s[:activity_emoji].present? ? "#{s[:activity_emoji]} " : "" %><%= s[:activity_name] %>
+    </span>
+    <span class="mb-slot-sub">
+      <% if s[:coach_name].present? %> <%= s[:coach_name] %> · <% end %>
+      <% if s[:space_name].present? %> <%= s[:space_name] %> · <% end %>
+      <% if s[:individual] %>
+        <%= ngt("member.private_slot") %>
+      <% elsif s[:full] %>
+        <%= ngt("member.full") %>
+      <% else %>
+        <%= ngt("member.spots_left", count: s[:spots_left]) %>
+      <% end %>
+    </span>
+  </span>
+
+  <% if s[:already_booked] %>
+    <span class="mb-slot-state"><i class="bi bi-check-lg"></i> <%= ngt("member.booked_state") %></span>
+  <% else %>
+    <button type="button" class="btn btn-sm btn-primary mb-slot-cta"<%= raw(" disabled") if s[:full] %> data-full="<%= s[:full] %>" data-action="member-schedule#book">
+      <%= ngt("member.book") %>
+    </button>
+  <% end %>
+</li>

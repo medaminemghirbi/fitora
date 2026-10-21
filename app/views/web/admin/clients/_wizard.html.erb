@@ -1,0 +1,157 @@
+<%# The new-member wizard (the <app-modal> at the foot of
+    clients-list.component.html): who they are, what they buy, whether they
+    pay now. As in Angular, the modal is empty until it opens, every opening
+    starts from a blank form, and moving between steps keeps what was typed.
+    Each step's markup is a <template> the client-wizard controller puts in
+    and takes out the way Angular's @if blocks do; it submits the same
+    payload ClientsService#create sends, to Web::Admin::ClientsController#create. %>
+<% steps = [ ngt("clients.step_identity"), ngt("clients.step_subscription"), ngt("clients.step_payment") ] %>
+<app-modal data-controller="modal" data-action="clients-wizard:open@window->modal#open">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("clients.new") } do %>
+      <template id="cl-wizard-error"></template>
+      <app-wizard-steps id="cl-wizard-steps"><%= render "web/shared/wizard_steps", steps: steps, current: 0, label: ngt("clients.new") %></app-wizard-steps>
+
+      <form novalidate action="<%= admin_page_path("clients") %>" method="post"
+            data-controller="client-wizard"
+            data-client-wizard-catalogue-value="<%= catalogue.to_json %>"
+            data-client-wizard-today-value="<%= Date.current.iso8601 %>"
+            data-client-wizard-labels-value="<%= { next: ngt("common.next"), finish: ngt("clients.finish"), finish_without_plan: ngt("clients.finish_without_plan"), saving: ngt("common.saving") }.to_json %>"
+            data-action="submit->client-wizard#next">
+        <div class="d-flex justify-content-between gap-2 mt-4" data-client-wizard-target="actions">
+          <button type="button" class="btn btn-outline-secondary" data-client-wizard-target="cancel" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="button" class="btn btn-outline-secondary" data-client-wizard-target="back" data-action="client-wizard#back"><%= ngt("common.back") %></button>
+          <button type="submit" class="btn btn-primary" data-client-wizard-target="primary"></button>
+          <button type="button" class="btn btn-primary" data-client-wizard-target="finish" data-action="client-wizard#submit"></button>
+        </div>
+
+        <% 3.times do |i| %>
+          <template data-client-wizard-target="stepsTemplate" data-step="<%= i %>"><%= render "web/shared/wizard_steps", steps: steps, current: i, label: ngt("clients.new") %></template>
+        <% end %>
+
+          <%# 1 — who they are. %>
+        <template data-client-wizard-target="identity">
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label for="cl-first"><%= ngt("coaches.first_name") %> *</label>
+              <input id="cl-first" class="form-control" data-field="first_name" data-required />
+            </div>
+            <div class="col-6 mb-3">
+              <label for="cl-last"><%= ngt("coaches.last_name") %> *</label>
+              <input id="cl-last" class="form-control" data-field="last_name" data-required />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="cl-phone"><%= ngt("auth.phone") %> *</label>
+            <input id="cl-phone" class="form-control" data-field="phone" data-required dir="ltr" />
+          </div>
+
+          <button type="button" class="btn btn-link px-0" data-action="client-wizard#toggleDetails" aria-expanded="false">
+            <i class="bi bi-chevron-down"></i>
+            <%= ngt("clients.more_details") %>
+          </button>
+        </template>
+
+        <template data-client-wizard-target="details">
+          <div class="mb-3">
+            <label for="cl-email"><%= ngt("auth.email") %></label>
+            <input id="cl-email" type="email" class="form-control" data-field="email" dir="ltr" />
+            <div class="form-text"><%= ngt("clients.email_identifies_hint") %></div>
+          </div>
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label for="cl-dob"><%= ngt("clients.date_of_birth") %></label>
+              <input id="cl-dob" type="date" class="form-control" data-field="date_of_birth" />
+            </div>
+            <div class="col-6 mb-3">
+              <label for="cl-gender"><%= ngt("clients.gender") %></label>
+              <input id="cl-gender" class="form-control" data-field="gender" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label for="cl-ec-name"><%= ngt("clients.emergency_contact_name") %></label>
+              <input id="cl-ec-name" class="form-control" data-field="emergency_contact_name" />
+            </div>
+            <div class="col-6 mb-3">
+              <label for="cl-ec-phone"><%= ngt("clients.emergency_contact_phone") %></label>
+              <input id="cl-ec-phone" class="form-control" data-field="emergency_contact_phone" dir="ltr" />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="cl-notes"><%= ngt("clients.notes") %></label>
+            <textarea id="cl-notes" class="form-control" rows="2" data-field="notes"></textarea>
+          </div>
+        </template>
+
+        <%# 2 — what they buy: the activity (or pack) first, then the plans that price it. %>
+        <template data-client-wizard-target="item">
+          <div class="mb-3">
+            <label for="cl-activity"><%= ngt("clients.abo_activity_or_pack") %></label>
+            <select id="cl-activity" class="form-select" data-action="change->client-wizard#itemChanged">
+              <option value=""><%= ngt("clients.no_subscription_yet") %></option>
+              <optgroup label="<%= ngt("nav.activities") %>" data-group="activities"></optgroup>
+              <optgroup label="<%= ngt("catalogue.tab_packs") %>" data-group="packs"></optgroup>
+            </select>
+          </div>
+        </template>
+
+        <template data-client-wizard-target="plan">
+          <div class="mb-3">
+            <label for="cl-plan"><%= ngt("clients.abo_formula") %></label>
+            <select id="cl-plan" class="form-select" data-action="change->client-wizard#planChanged">
+              <option value="">—</option>
+            </select>
+          </div>
+        </template>
+
+        <template data-client-wizard-target="noPlan">
+          <div class="form-text text-warning"><%= ngt("clients.no_plan_for_activity") %></div>
+        </template>
+
+        <template data-client-wizard-target="pricing">
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label for="cl-start"><%= ngt("contracts.start_date") %></label>
+              <input id="cl-start" type="date" class="form-control" data-action="change->client-wizard#startChanged" />
+            </div>
+            <div class="col-6 mb-3">
+              <label for="cl-discount"><%= ngt("contracts.discount") %></label>
+              <input id="cl-discount" type="number" min="0" class="form-control" data-action="input->client-wizard#discountChanged" />
+            </div>
+          </div>
+        </template>
+
+        <template data-client-wizard-target="total">
+          <div class="fx-summary-row">
+            <span><%= ngt("clients.total_due") %></span>
+            <strong data-total></strong>
+          </div>
+        </template>
+
+        <%# 3 — money: whether it changes hands now. %>
+        <template data-client-wizard-target="payment">
+          <div class="form-check my-3">
+            <input id="cl-collect" type="checkbox" class="form-check-input" data-action="change->client-wizard#collectChanged" />
+            <label for="cl-collect" class="form-check-label"><%= ngt("clients.collect_now") %></label>
+          </div>
+        </template>
+
+        <template data-client-wizard-target="method">
+          <div class="mb-3">
+            <label for="cl-method"><%= ngt("payments.method") %></label>
+            <select id="cl-method" class="form-select" data-action="change->client-wizard#methodChanged">
+              <option value="cash"><%= ngt("payments.method_cash") %></option>
+              <option value="bank_transfer"><%= ngt("payments.method_bank_transfer") %></option>
+              <option value="other"><%= ngt("payments.method_other") %></option>
+            </select>
+          </div>
+        </template>
+
+        <template data-client-wizard-target="payLater">
+          <p class="form-text"><%= ngt("clients.pay_later_hint") %></p>
+        </template>
+      </form>
+    <% end %>
+  </template>
+</app-modal>

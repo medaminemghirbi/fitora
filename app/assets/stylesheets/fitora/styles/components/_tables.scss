@@ -1,0 +1,173 @@
+// GENERATED from frontend/src/styles/components/_tables.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// TABLES
+// ----------------------------------------------------------------------------
+// The data grid: header, rows, density, status strip, aligned figures.
+//
+// Split out of _fitora.scss, which had grown to 1208 lines and was the reason
+// screens drifted: nobody could see what was already there.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// Tables — premium SaaS data grid
+// ---------------------------------------------------------------------------
+.table {
+  // The rules below do the work; these were Bootstrap's variables, left
+  // behind when it went and read by nothing since.
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: collapse;
+  color: var(--color-text);
+  font-size: 0.875rem;
+
+  > :not(caption) > * > * { padding: 0.85rem 1rem; }
+
+  thead th {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary);
+    background: var(--color-surface-sunken);
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  tbody tr { transition: background var(--transition-fast); }
+  tbody td { border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: 0; }
+
+  &.table-hover tbody tr:hover { background: var(--color-surface-hover); }
+}
+
+// Table wrapper that keeps wide grids scrollable without the page scrolling
+// Horizontal scroll only. `overflow-y` is pinned to `hidden` on purpose: with
+// `overflow-x: auto` alone the browser promotes `overflow-y` to `auto` too,
+// which put a phantom vertical scrollbar on short tables and clipped their
+// header. The row action menu renders `position: fixed`, so nothing needs to
+// escape this box vertically.
+.fx-table-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+
+// Coloured plan / category tag
+.fx-plan-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 500;
+  white-space: nowrap;
+  .fx-dot { width: 8px; height: 8px; }
+}
+
+// FAC-2026-0001 — the invoice reference under a contract, set apart from
+// the words around it so it reads as something to quote back.
+.fx-contract-ref {
+  margin-top: 0.15rem;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.02em;
+}
+
+// Primary-identity cell (avatar + name + sub)
+.fx-cell-lead {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+
+  .fx-cell-lead-text { min-width: 0; }
+  .fx-cell-lead-title { font-weight: 600; color: var(--color-text); }
+  .fx-cell-lead-sub { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+}
+
+// A second line under a figure — what it was before the discount, and the
+// like. Same size as a lead's sub-line, aligned with the figure above it.
+.fx-cell-sub {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+// A date range in one cell: two columns for "from" and "to" cost more width
+// than the range itself needs.
+.fx-cell-period { white-space: nowrap; }
+
+// ---------------------------------------------------------------------------
+// Data grid density — zebra rows, a status strip, aligned figures
+// ---------------------------------------------------------------------------
+.table.fx-grid {
+  > :not(caption) > * > * { padding: 0.62rem 0.7rem; }
+
+  thead th { background: var(--color-surface); font-size: 0.72rem; }
+  thead th.is-sorted { color: var(--color-primary); }
+
+  tbody tr:nth-child(odd) { background: color-mix(in srgb, var(--color-surface-sunken) 55%, var(--color-surface)); }
+  tbody tr:hover { background: var(--color-surface-hover); }
+  tbody td { border-bottom: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent); }
+
+  // First cell carries the row's status colour, as in the design.
+  tbody td:first-child { border-inline-start: 3px solid var(--fx-row-color, transparent); padding-inline-start: 1rem; }
+  thead th:first-child { padding-inline-start: 1rem; }
+  > :not(caption) > * > *:last-child { padding-inline-end: 1rem; }
+
+  .fx-num { font-variant-numeric: tabular-nums; }
+}
+
+// ---------------------------------------------------------------------------
+// Sortable headers, and rows that open what they describe
+// ---------------------------------------------------------------------------
+// The header is a real button: sorting is an action, and a <th> alone gives
+// the keyboard nothing to press. The caret is doubled-headed until the column
+// is the one being sorted, so a sortable column says so before it is clicked.
+.fx-th-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+
+  i { font-size: 0.7em; opacity: 0.55; }
+  &:hover { color: var(--color-text); i { opacity: 1; } }
+}
+
+.table.fx-grid thead th.is-sorted .fx-th-sort i { opacity: 1; }
+
+// The whole row opens the member; the name stays a real link inside it, so
+// middle-click, "open in new tab" and the keyboard all still work.
+.fx-row-link { cursor: pointer; }
+
+.fx-cell-lead-title a {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover { color: var(--color-primary); text-decoration: underline; }
+}
+
+// Columns that are context rather than answer: the first things to go when
+// the grid runs out of width.
+@media (max-width: 1199.98px) {
+  .fx-col-contact { display: none; }
+}
+
+@media (max-width: 991.98px) {
+  .fx-col-seen { display: none; }
+}
+
+// The chevron's column: as narrow as the glyph, and out of the way of the
+// figures beside it.
+.fx-col-go { width: 1px; text-align: end; color: var(--color-muted); }
+
+// A renewal already sold, sitting behind the term in force. Deliberately
+// quieter than the dates above it: it is reassurance that the renewal landed,
+// not the period anyone is being asked to act on today.
+.fx-renewal-queued {
+  color: var(--color-success);
+  font-weight: 600;
+}

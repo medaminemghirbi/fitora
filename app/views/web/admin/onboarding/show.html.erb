@@ -1,0 +1,113 @@
+<%# ng: onboarding %>
+<%# ng-host: onboarding %>
+<%# OnboardingComponent: the steps, then one panel for the step being asked
+    for — with the tool inline where one exists (B-07: the activities and
+    formules tools render; the Angular page fails to inject them). %>
+<% s = onboarding
+   company = bootstrap[:company] || {}
+   current = s[:step] %>
+<div class="fx-page ob" data-controller="onboarding"
+     data-onboarding-url-value="<%= admin_page_path("onboarding") %>"
+     data-onboarding-home-value="<%= admin_page_path("dashboard") %>"
+     data-onboarding-error-value="<%= ngt("common.error_generic") %>">
+  <header class="ob-head">
+    <h1><%= ngt("onboarding.title", name: current_user.first_name.to_s) %></h1>
+    <p><%= ngt("onboarding.lead") %></p>
+  </header>
+
+  <div class="app-card">
+    <div class="app-card-body">
+      <app-onboarding-steps><%= render "web/shared/onboarding_steps", state: s %></app-onboarding-steps>
+    </div>
+  </div>
+
+  <% if s[:complete] %>
+    <section class="app-card ob-done">
+      <div class="app-card-body">
+        <h2><%= ngt("onboarding.complete_title") %></h2>
+        <p><%= ngt("onboarding.complete_body") %></p>
+        <a href="<%= admin_page_path("dashboard") %>" class="btn btn-primary"><%= ngt("onboarding.go_dashboard") %></a>
+      </div>
+    </section>
+  <% elsif current == "company" %>
+    <section class="app-card">
+      <div class="app-card-header"><h2><%= ngt("onboarding.step_company") %></h2></div>
+      <div class="app-card-body">
+        <p class="text-muted-token"><%= ngt("onboarding.company_body") %></p>
+
+        <% if company.present? %>
+          <dl class="ob-facts">
+            <div><dt><%= ngt("settings.company_name") %></dt><dd><%= company[:name] %></dd></div>
+            <div><dt><%= ngt("settings.currency") %></dt><dd><%= company[:currency] %></dd></div>
+            <div><dt><%= ngt("settings.timezone") %></dt><dd><%= company[:timezone] %></dd></div>
+            <div>
+              <dt><%= ngt("settings.calendar") %></dt>
+              <dd dir="ltr"><%= company[:business_hours_start] %> – <%= company[:business_hours_end] %></dd>
+            </div>
+          </dl>
+        <% end %>
+
+        <div class="ob-actions">
+          <a href="<%= admin_page_path("settings/company") %>" class="btn btn-outline-secondary">
+            <%= ngt("onboarding.edit_company") %>
+          </a>
+          <a href="<%= admin_page_path("settings/planning") %>" class="btn btn-outline-secondary">
+            <%= ngt("onboarding.edit_hours") %>
+          </a>
+          <button type="button" class="btn btn-primary ms-auto" data-working data-action="onboarding#confirmCompany">
+            <%= ngt("onboarding.confirm_company") %>
+          </button>
+        </div>
+      </div>
+    </section>
+  <% elsif %w[activities spaces plans].include?(current) %>
+    <section class="app-card">
+      <div class="app-card-header">
+        <h2><%= ngt("onboarding.step_#{current}") %></h2>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-working data-action="onboarding#refresh">
+          <%= ngt("onboarding.recheck") %>
+        </button>
+      </div>
+      <% if current == "spaces" %>
+        <div class="app-card-body">
+          <p class="text-muted-token"><%= ngt("onboarding.step_spaces_desc") %></p>
+          <app-spaces><%= render "web/admin/spaces/tool", spaces: embedded_spaces[:spaces], activities: embedded_spaces[:activities], embedded: true %></app-spaces>
+        </div>
+      <% else %>
+        <% tab = current == "activities" ? "activites" : "formules" %>
+        <div class="app-card-body" data-controller="catalogue" data-catalogue-embedded-value="true"
+             data-catalogue-url-value="<%= admin_page_path("catalogue") %>" data-catalogue-tab-value="<%= tab %>"
+             data-catalogue-data-value="<%= catalogue.slice(:activities, :plans, :packs).to_json %>"
+             data-catalogue-labels-value="<%= catalogue_labels.to_json %>"
+             data-action="modal:opened@window->catalogue#modalOpened">
+          <p class="text-muted-token"><%= ngt("onboarding.step_#{current}_desc") %></p>
+          <% if current == "activities" %>
+            <app-activities><%= render "web/admin/catalogue/activities" %></app-activities>
+          <% else %>
+            <app-plans><%= render "web/admin/catalogue/plans" %></app-plans>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+  <% elsif current == "staff" %>
+    <section class="app-card">
+      <div class="app-card-header"><h2><%= ngt("onboarding.step_staff") %></h2></div>
+      <div class="app-card-body">
+        <p class="text-muted-token"><%= ngt("onboarding.staff_body") %></p>
+        <div class="ob-actions">
+          <a href="<%= admin_page_path("team") %>" class="btn btn-primary"><%= ngt("onboarding.add_staff") %></a>
+          <button type="button" class="btn btn-outline-secondary" data-working data-action="onboarding#skip" data-step="staff">
+            <%= ngt("onboarding.alone_for_now") %>
+          </button>
+        </div>
+      </div>
+    </section>
+  <% end %>
+
+  <% unless s[:complete] %>
+    <p class="ob-leave">
+      <button type="button" class="btn btn-link" data-action="onboarding#leave"><%= ngt("onboarding.leave") %></button>
+      <span class="text-muted-token"><%= ngt("onboarding.leave_hint") %></span>
+    </p>
+  <% end %>
+</div>

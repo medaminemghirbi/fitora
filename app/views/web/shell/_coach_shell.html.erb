@@ -1,0 +1,79 @@
+<%# ng: coach-shell %>
+<%# ng-host: coach-shell %>
+<%# CoachShellComponent (layout/coach-shell, styled by the admin shell's
+    stylesheet under its own scope): the sidebar — behind the burger below
+    992 px, with its backdrop — the top bar naming the page, the page. The
+    user menu is put in when it opens (shell-menu). %>
+<% user = bootstrap[:user]; logo = bootstrap.dig(:branding, :logo_url).presence %>
+<% nav_items = [ [ "today", "bi-calendar-check", "coach.today" ], [ "members", "bi-people", "coach.members.title" ] ] %>
+<% title_key = nav_items.find { |page, _, _| request.path.start_with?(coach_path(page)) }&.last || "coach.today" %>
+<div class="app-shell" data-controller="shell-menu" data-shell-menu-escape-value="sidebar">
+  <template data-shell-menu-target="backdrop">
+    <div class="sidebar-backdrop d-lg-none" data-action="click->shell-menu#closeSidebar"></div>
+  </template>
+
+  <aside class="app-sidebar" data-shell-menu-target="sidebar">
+    <div class="sidebar-header">
+      <a href="<%= coach_path("today") %>" class="sidebar-brand" data-action="shell-menu#closeSidebar">
+        <span class="sidebar-brand-mark">
+          <% if logo %>
+            <img src="<%= logo %>" alt="" />
+          <% else %>
+            <i class="bi bi-lightning-charge-fill"></i>
+          <% end %>
+        </span>
+        <span class="sidebar-brand-text">Fitora <small>Coach</small></span>
+      </a>
+    </div>
+
+    <nav class="sidebar-scroll">
+      <div class="sidebar-section">
+        <% nav_items.each do |page, icon, label_key| %>
+          <a href="<%= coach_path(page) %>" class="sidebar-link<%= " active" if request.path.start_with?(coach_path(page)) %>" data-action="shell-menu#closeSidebar">
+            <i class="bi <%= icon %>"></i>
+            <span class="nav-link-label"><%= ngt(label_key) %></span>
+          </a>
+        <% end %>
+      </div>
+    </nav>
+  </aside>
+
+  <div class="app-main">
+    <header class="app-topbar">
+      <div class="d-flex align-items-center gap-2 min-w-0">
+        <button type="button" class="icon-btn d-lg-none" data-action="shell-menu#toggleSidebar" aria-label="<%= ngt("common.toggle_menu") %>">
+          <i class="bi bi-list"></i>
+        </button>
+        <span class="app-topbar-title"><%= ngt(title_key) %></span>
+      </div>
+
+      <div class="app-topbar-actions">
+        <button type="button" class="icon-btn" data-action="shell-menu#toggleTheme" aria-label="<%= ngt("common.toggle_theme") %>">
+          <i class="bi <%= theme == "light" ? "bi-moon-stars" : "bi-sun" %>"></i>
+        </button>
+
+        <div class="dropdown-wrap">
+          <button type="button" class="user-menu-trigger" data-action="shell-menu#toggle" data-shell-menu-menu-param="user" aria-label="<%= user[:full_name] %>">
+            <app-avatar><%= render "web/shared/avatar", name: user[:full_name].to_s, size: 32 %></app-avatar>
+          </button>
+          <template data-shell-menu-target="menu" data-menu="user">
+            <div class="dropdown-menu-custom dropdown-menu-end">
+              <div class="dropdown-user-info">
+                <strong><%= user[:full_name] %></strong>
+                <span><%= user[:email] %></span>
+              </div>
+              <button type="button" class="dropdown-item-custom" data-controller="form-submit" data-form-submit-form-value="sign-out-form" data-action="form-submit#submit">
+                <i class="bi bi-box-arrow-right"></i> <%= ngt("auth.logout") %>
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-content">
+      <router-outlet></router-outlet>
+      <%= yield %>
+    </main>
+  </div>
+</div>

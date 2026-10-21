@@ -1,0 +1,46 @@
+<%# ng: command-palette %>
+<%# CommandPaletteComponent (⌘K), in the admin shell (B-17). Closed, it is
+    an empty host, as in Angular; the command-palette controller opens it
+    from this template and draws its rows: the shell's pages (the rail's
+    entries, as NavigationService lists them), an admin's "new …" actions
+    once something is typed, and the members, contracts and payments the
+    term finds (Web::Admin::PaletteController). %>
+<% commands = [ nav.dashboard, *nav.groups.flat_map(&:items), *nav.secondary ].compact.map do |item|
+     path = nav.path(item)
+     { id: "nav:#{path}", label: ngt(item.label_key), icon: item.icon, url: path }
+   end
+   # B-16: "Nouvelle activité" opens the catalogue's activity form; the
+   # Angular palette names /admin/activities, which no longer exists.
+   actions = if current_user.admin?
+     [ [ "client", "palette.action_new_client", "bi-person-plus", "clients" ],
+       [ "payment", "palette.action_new_payment", "bi-cash-coin", "payments" ],
+       [ "activity", "palette.action_new_activity", "bi-lightning-charge", "catalogue" ],
+       [ "team", "team.new", "bi-person-vcard", "team" ] ].map do |id, key, icon, page|
+       { id: "act:#{id}", label: ngt(key), icon: icon, url: admin_page_path(page, action: "new") }
+     end
+   else
+     []
+   end
+   labels = %w[placeholder empty goto actions clients contracts payments].index_with { |key| ngt("palette.#{key}") } %>
+<app-command-palette data-controller="command-palette"
+                     data-command-palette-commands-value="<%= commands.to_json %>"
+                     data-command-palette-actions-value="<%= actions.to_json %>"
+                     data-command-palette-search-url-value="<%= admin_page_path("palette") if current_user.admin? %>"
+                     data-command-palette-labels-value="<%= labels.to_json %>"><template data-command-palette-target="overlay">
+    <div class="cmdk-backdrop" data-action="click->command-palette#dismiss">
+      <div class="cmdk" role="dialog" aria-modal="true">
+        <div class="cmdk-search">
+          <i class="bi bi-search"></i>
+          <input id="cmdk-input" type="text" value="" placeholder="<%= ngt("palette.placeholder") %>" autocomplete="off" autocorrect="off" spellcheck="false" data-action="input->command-palette#query">
+          <kbd>Esc</kbd>
+        </div>
+
+        <div class="cmdk-results" data-command-palette-results></div>
+
+        <div class="cmdk-foot">
+          <span><kbd>↑</kbd><kbd>↓</kbd> <%= ngt("palette.hint_nav") %></span>
+          <span><kbd>↵</kbd> <%= ngt("palette.hint_open") %></span>
+        </div>
+      </div>
+    </div>
+  </template></app-command-palette>

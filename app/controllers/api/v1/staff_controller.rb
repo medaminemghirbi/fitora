@@ -19,46 +19,18 @@ module Api
 
       # POST /api/v1/staff
       def create
-        user = User.new(user_params.merge(role: :staff, locale: user_params[:locale].presence || "fr"))
-        staff_member = nil
-
-        ActiveRecord::Base.transaction do
-          user.save!
-          staff_member = current_company.staff_members.create!(
-            user: user,
-            coach_id: staff_params[:coach_id],
-            birthdate: staff_params[:birthdate],
-            **role_assignment
-          )
-        end
-
-        AuditLog.record!(
-          company: current_company, user: current_user, action: "staff.created",
-          auditable: staff_member, metadata: { role: staff_member.role_key, staff_email: user.email }
-        )
-
-        raw = user.generate_email_verification_token!
-        AccountMailer.email_verification(user, raw).deliver_later
-
         # A refused save raises RecordInvalid, which ApplicationController
         # answers with the same 422 every other write gives.
+        staff_member = Team::Actions.create_staff!(
+          company: current_company, by: current_user,
+          user_attributes: user_params.to_h.symbolize_keys, staff_attributes: staff_params.to_h.symbolize_keys
+        )
         render json: { staff_member: StaffMemberSerializer.new(staff_member).as_json }, status: :created
       end
 
       # PATCH /api/v1/staff/:id
       def update
-        previous_key = @staff_member.role_key
-        attrs = { active: staff_params[:active], birthdate: staff_params[:birthdate], coach_id: staff_params[:coach_id] }
-                  .compact.merge(role_assignment)
-
-        if @staff_member.update(attrs)
-          if previous_key != @staff_member.reload.role_key
-            AuditLog.record!(
-              company: current_company, user: current_user, action: "staff.role_changed",
-              auditable: @staff_member, metadata: { from: previous_key, to: @staff_member.role_key }
-            )
-          end
-
+        if Team::Actions.update_staff(@staff_member, company: current_company, by: current_user, staff_attributes: staff_params.to_h.symbolize_keys)
           render json: { staff_member: StaffMemberSerializer.new(@staff_member).as_json }
         else
           render_errors(@staff_member)
@@ -83,30 +55,6 @@ module Api
 
       def staff_params
         params.require(:staff_member).permit(:role, :role_id, :active, :coach_id, :birthdate)
-      end
-
-      # Resolve an incoming assignment to the company's own Role row.
-      #
-      # `role_id` (the roles editor) is the real input. A bare `role` key
-      # ("moderator", "coach") is still accepted because older clients
-      # send it, and it means "the built-in role with that key, in this
-      # company". Returns {} when neither is present, so an unrelated update
-      # leaves the role alone.
-      #
-      # Both paths look the role up through current_company, so a role id
-      # belonging to another gym resolves to nothing rather than being
-      # assigned.
-      def role_assignment
-        if staff_params[:role_id].present?
-          { assigned_role: current_company.roles.find(staff_params[:role_id]) }
-        elsif staff_params[:role].present?
-          role = current_company.roles.find_by(key: staff_params[:role].to_s)
-          raise ActiveRecord::RecordNotFound, "Unknown role" if role.nil?
-
-          { assigned_role: role }
-        else
-          {}
-        end
       end
     end
   end

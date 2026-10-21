@@ -1,0 +1,44 @@
+<%# ng: notification-bell %>
+<%# NotificationBellComponent: the bell, its unread badge ("9+" past nine),
+    and its panel — put in when it opens, its first page of ten fetched then
+    (notification-bell controller), more as the list is scrolled. The admin
+    shell's opens a notification in the inbox; the member's and the
+    superadmin's have none ([detailRoute]="null": `url` and `unread` given,
+    `inbox` false), so a notification opens what it is about, and the panel
+    has no "see all". %>
+<% url = local_assigns[:url] || nav.path("notifications") %>
+<% inbox = local_assigns.fetch(:inbox, true) %>
+<% unread = local_assigns.key?(:unread) ? local_assigns[:unread].to_i : bootstrap.dig(:notifications, :unread_count).to_i %>
+<div class="dropdown-wrap notif-bell" data-controller="notification-bell"
+     data-notification-bell-url-value="<%= url %>" data-notification-bell-unread-value="<%= unread %>" data-notification-bell-inbox-value="<%= inbox %>">
+  <button type="button" class="icon-btn notif-bell-btn" data-action="notification-bell#toggle" data-notification-bell-target="button"
+          aria-label="<%= ngt("notifications.bell_label") %>" aria-expanded="false">
+    <i class="bi bi-bell"></i>
+    <% if unread > 0 %>
+      <span class="notif-bell-badge"><%= unread > 9 ? "9+" : unread %></span>
+    <% end %>
+  </button>
+  <template data-notification-bell-target="panel">
+    <div class="dropdown-menu-custom dropdown-menu-end notif-panel">
+      <div class="notif-panel-head">
+        <strong><%= ngt("notifications.panel_title") %></strong>
+        <button type="button" class="notif-panel-clear" data-action="notification-bell#markAllRead">
+          <%= ngt("notifications.mark_all_read") %>
+        </button>
+      </div>
+      <div class="notif-panel-list" data-action="scroll->notification-bell#scrolled">
+        <div class="notif-empty">
+          <i class="bi bi-bell-slash"></i>
+          <span><%= ngt("notifications.empty") %></span>
+        </div>
+        <div class="notif-more"><%= ngt("common.loading") %></div>
+      </div>
+      <% if inbox %>
+        <button type="button" class="notif-panel-foot" data-action="notification-bell#seeAll">
+          <%= ngt("notifications.see_all") %>
+        </button>
+      <% end %>
+    </div>
+  </template>
+  <template data-notification-bell-target="badge"><span class="notif-bell-badge"></span></template>
+</div>

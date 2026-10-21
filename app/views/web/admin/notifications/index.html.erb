@@ -1,0 +1,41 @@
+<%# ng: notifications-inbox %>
+<%# ng-host: notifications-inbox %>
+<%# NotificationsInboxComponent. "All / unread" filters the rows already
+    loaded, "more" loads the next page, ✓ marks one read — the inbox
+    controller, as the component does it client-side. %>
+<div class="fx-page" data-controller="notifications-inbox"
+     data-notifications-inbox-url-value="<%= admin_page_path("notifications") %>"
+     data-notifications-inbox-unread-value="<%= @unread_count %>"
+     data-notifications-inbox-labels-value="<%= { all: ngt("notifications.filter_all"), unread: ngt("notifications.filter_unread"), mark_all: ngt("notifications.mark_all_read"), loading: ngt("common.loading"), more: ngt("notifications.load_more") }.to_json %>">
+  <header class="lst-head" data-notifications-inbox-target="head">
+    <h1><%= ngt("notifications.inbox_title") %></h1>
+    <% if @unread_count > 0 %>
+      <span class="lst-head-count"><%= @unread_count %></span>
+    <% end %>
+    <% if @unread_count > 0 %>
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-action="notifications-inbox#markAllRead">
+        <%= ngt("notifications.mark_all_read") %>
+      </button>
+    <% end %>
+  </header>
+
+  <div class="fx-toolbar">
+    <div class="fx-segmented">
+      <button type="button" class="is-active" data-notifications-inbox-target="filterAll" data-action="notifications-inbox#showAll">
+        <%= ngt("notifications.filter_all") %>
+      </button>
+      <button type="button" data-notifications-inbox-target="filterUnread" data-action="notifications-inbox#showUnread">
+        <%= ngt("notifications.filter_unread") %> <% if @unread_count > 0 %> (<%= @unread_count %>) <% end %>
+      </button>
+    </div>
+  </div>
+
+  <%= render "web/admin/notifications/items", notifications: @notifications, has_more: @has_more %>
+</div>
+<% content_for :templates do %>
+  <template data-ni="empty">
+    <div class="app-card"><div class="app-card-body">
+      <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("notifications.empty"), body: "", icon: "bi-bell-slash" } do %><% end %></app-empty-state>
+    </div></div>
+  </template>
+<% end %>

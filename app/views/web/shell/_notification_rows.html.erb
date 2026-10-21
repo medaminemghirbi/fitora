@@ -1,0 +1,16 @@
+<%# ng: notification-bell %>
+<%# One page of the bell panel's rows (fetched by the notification-bell
+    controller), and whether there is another. %>
+<% notifications.each do |n| %>
+  <% text = notification_text(n) %>
+  <button type="button" class="notif-row<%= " is-unread" unless n[:read] %>" data-action="notification-bell#select" data-notification-id="<%= n[:id] %>" data-notification-url="<%= n[:url] %>">
+    <app-notification-art><%= render "web/shared/notification_art", kind: n[:kind], mini: true %></app-notification-art>
+    <span class="notif-row-body">
+      <span class="notif-row-title"><%= text[:title] %></span>
+      <span class="notif-row-text"><%= text[:body] %></span>
+      <span class="notif-row-time"><%= Web::NotificationText.time_ago(n[:created_at]) %></span>
+    </span>
+    <% unless n[:read] %><span class="notif-row-dot"></span><% end %>
+  </button>
+<% end %>
+<% if has_more %><span hidden data-has-more></span><% end %>

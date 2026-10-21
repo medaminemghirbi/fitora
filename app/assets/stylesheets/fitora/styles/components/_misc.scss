@@ -1,0 +1,85 @@
+// GENERATED from frontend/src/styles/components/_misc.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// MISC
+// ----------------------------------------------------------------------------
+// The genuinely uncategorised. Kept honest by being small.
+//
+// Split out of _fitora.scss, which had grown to 1208 lines and was the reason
+// screens drifted: nobody could see what was already there.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// Misc
+// ---------------------------------------------------------------------------
+.fx-divider { height: 1px; background: var(--color-border); border: 0; margin: var(--space-4) 0; }
+
+// Compact list (dashboard side cards, activity feeds)
+.fx-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.875rem;
+
+    &:last-child { border-bottom: 0; }
+    &:first-child { padding-top: 0; }
+  }
+  .fx-list-main { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.fx-dot {
+  width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0;
+  background: var(--color-muted);
+  &--success { background: var(--color-success); }
+  &--warning { background: var(--color-warning); }
+  &--danger { background: var(--color-danger); }
+  &--primary { background: var(--color-primary); }
+}
+
+::selection { background: var(--color-primary-soft); }
+
+// Plan pricing grid: one row per activity, its tariff under this plan. Kept as
+// a two-column grid so the amounts line up whatever the activity names' length.
+.fx-price-grid {
+  display: grid;
+  gap: var(--space-2);
+
+  &-row {
+    display: grid;
+    grid-template-columns: 1fr 9rem;
+    align-items: center;
+    gap: var(--space-3);
+
+    label {
+      margin: 0;
+      font-weight: 500;
+      overflow-wrap: anywhere;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .fx-price-grid-row { grid-template-columns: 1fr; gap: var(--space-1); }
+}
+
+// Read-only tariffs shown against an activity (edited on the plan itself).
+.fx-tariff-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-width: 10rem;
+  }
+}

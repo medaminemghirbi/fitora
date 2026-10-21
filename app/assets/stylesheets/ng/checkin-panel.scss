@@ -1,0 +1,84 @@
+// GENERATED from frontend/src/app/shared/ui/checkin-panel.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+.ckin-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+
+  .fx-input-icon { flex: 1; }
+}
+
+.ckin-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.ckin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 52vh;
+  overflow-y: auto;
+}
+
+.ckin-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child { border-bottom: 0; }
+  &.is-busy { opacity: 0.55; }
+}
+
+.ckin-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ckin-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+// Big enough to hit with a thumb at the desk, which is where this is used.
+.ckin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.25rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  &:disabled { cursor: default; }
+
+  &--present.is-on {
+    border-color: var(--color-success);
+    background: var(--color-success-soft);
+    color: var(--color-success);
+  }
+
+  &--absent.is-on {
+    border-color: var(--color-danger);
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+  }
+}
+
+// The icon alone carries the meaning once the row is tight.
+@media (max-width: 480px) {
+  .ckin-btn-label { display: none; }
+  .ckin-btn { padding: 0 0.6rem; }
+}

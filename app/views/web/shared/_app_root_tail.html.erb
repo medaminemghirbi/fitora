@@ -1,0 +1,14 @@
+<%# What AppComponent renders after the routed page: the command palette (the
+    admin shell's, B-17; elsewhere its empty host) and
+    the confirm dialog (both closed, so empty — the dialog's markup waits in a
+    <template>), and the toast stack — this request's flash, shown and
+    dismissed as ToastService shows them. %>
+<% if local_assigns[:palette] %>
+  <%= render "web/shared/command_palette" %>
+<% else %>
+  <app-command-palette></app-command-palette>
+<% end %>
+<app-toast-container>
+  <%= render "web/shared/toasts" %>
+</app-toast-container>
+<app-confirm-dialog data-confirm-labels="<%= { cancel: ngt("common.cancel"), confirm: ngt("common.confirm") }.to_json %>"><%= render "web/shared/confirm_dialog" %></app-confirm-dialog>

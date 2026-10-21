@@ -1,0 +1,62 @@
+<%# ng: onboarding-steps %>
+<%# OnboardingStepsComponent: the setup steps as a list, each in the state
+    the server says (OnboardingState). compact: the dashboard's card. The
+    caller writes the <app-onboarding-steps> host. %>
+<% compact = local_assigns.fetch(:compact, false)
+   meta = {
+     "company" => [ "onboarding.step_company", "onboarding.step_company_desc", "settings/company", "bi-building" ],
+     "activities" => [ "onboarding.step_activities", "onboarding.step_activities_desc", "catalogue", "bi-lightning-charge" ],
+     "spaces" => [ "onboarding.step_spaces", "onboarding.step_spaces_desc", "spaces", "bi-door-open" ],
+     "plans" => [ "onboarding.step_plans", "onboarding.step_plans_desc", "catalogue", "bi-card-checklist" ],
+     "staff" => [ "onboarding.step_staff", "onboarding.step_staff_desc", "team", "bi-person-badge" ]
+   }
+   progress = state[:total].to_i.zero? ? 0 : state[:done_count].to_f / state[:total] * 100 %>
+<div class="obs<%= " obs-compact" if compact %>">
+  <p class="obs-progress"><%= ngt("onboarding.progress", done: state[:done_count], total: state[:total]) %></p>
+  <div class="obs-bar"><span style="width: <%= js_number(progress) %>%;"></span></div>
+
+  <ol class="obs-list">
+    <% state[:steps].each do |step| %>
+      <% label, desc, route, icon = meta.fetch(step[:key]) %>
+      <li class="obs-item<%= " obs-done" if step[:state] == "done" %><%= " obs-current" if step[:state] == "current" %><%= " obs-skipped" if step[:state] == "skipped" %>">
+        <span class="obs-mark">
+          <% if step[:state] == "done" %>
+            <i class="bi bi-check-lg"></i>
+          <% elsif step[:state] == "skipped" %>
+            <i class="bi bi-dash-lg"></i>
+          <% else %>
+            <i class="bi <%= icon %>"></i>
+          <% end %>
+        </span>
+
+        <span class="obs-text">
+          <span class="obs-label"><%= ngt(label) %></span>
+          <% unless compact %>
+            <span class="obs-desc"><%= ngt(desc) %></span>
+          <% end %>
+        </span>
+
+        <span class="obs-end">
+          <% if step[:state] == "done" %>
+            <span class="obs-state obs-state-done">
+              <% if step[:count].present? && step[:count].to_i != 0 %>
+                <%= ngt("onboarding.count", count: step[:count]) %>
+              <% else %>
+                <%= ngt("onboarding.done") %>
+              <% end %>
+            </span>
+          <% elsif step[:state] == "skipped" %>
+            <span class="obs-state"><%= ngt("onboarding.skipped") %></span>
+          <% else %>
+            <a href="<%= admin_page_path(route) %>" class="obs-cta">
+              <%= ngt("onboarding.action") %> <i class="bi bi-arrow-right"></i>
+            </a>
+          <% end %>
+          <% if !compact && step[:skippable] && step[:state] != "skipped" %>
+            <button type="button" class="obs-skip" data-action="onboarding#skip" data-step="<%= step[:key] %>"><%= ngt("onboarding.skip_step") %></button>
+          <% end %>
+        </span>
+      </li>
+    <% end %>
+  </ol>
+</div>

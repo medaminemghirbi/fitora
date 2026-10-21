@@ -1,0 +1,160 @@
+<%# ng: team %>
+<%# ng-host: team %>
+<%# TeamComponent: the people (coaches and back-office logins) as cards —
+    by kind (tabs), by access (pills) and by name, e-mail or phone, paged by
+    25, all in the browser (team-page) — the create drawer, and the coach,
+    role and mobile-login modals. %>
+<% labels = {
+     results: ngt("common.results"), page: ngt("common.page"), of: ngt("common.of"),
+     save: ngt("common.save"), saving: ngt("common.saving"), create: ngt("common.create"), creating: ngt("common.creating"),
+     error: ngt("common.error_generic"), mobile_needs_credentials: ngt("team.mobile_needs_credentials"), email_type_full: ngt("common.email_type_full"),
+     login_set: ngt("coaches.login_set"), deactivate: ngt("common.deactivate"),
+     deactivate_title: ngt("team.deactivate_confirm_title"), deactivate_body: ngt("team.deactivate_confirm_body"),
+     role_access_preview: Web::Translations.translate("team.role_access_preview", {}, locale: I18n.locale), role_taken_suffix: ngt("team.role_taken_suffix"),
+     access: (Web::TeamHelper::TEAM_PERMISSION_ORDER + %w[everything nothing]).to_h { |key| [ key, ngt("team.access_#{key}") ] }
+   } %>
+<div class="fx-listpage" data-controller="team-page"
+     data-team-page-url-value="<%= admin_page_path("team") %>"
+     data-team-page-admin-value="<%= current_user.admin? %>"
+     data-team-page-roles-value="<%= team_backoffice_roles.map { |r| r.slice(:id, :key, :name, :permissions) }.to_json %>"
+     data-team-page-open-value="<%= @open %>"
+     data-team-page-labels-value="<%= labels.to_json %>"
+     data-action="modal:opened@window->team-page#fill">
+  <div class="fx-listpage-main" data-team-page-target="main">
+    <header class="lst-head">
+      <h1><%= ngt("nav.team") %></h1>
+      <span class="lst-head-count" data-team-page-target="count"><%= @members.size %></span>
+      <div class="lst-head-search fx-input-icon">
+        <i class="bi bi-search"></i>
+        <input type="search" class="form-control form-control-sm" placeholder="<%= ngt("team.search_placeholder") %>" aria-label="<%= ngt("team.search_placeholder") %>"
+               data-team-page-target="search" data-action="input->team-page#search" />
+      </div>
+      <button type="button" class="btn btn-primary" data-action="team-page#openCreate" data-kind="coach">
+        <i class="bi bi-plus-lg"></i> <%= ngt("team.new") %>
+      </button>
+    </header>
+
+    <%= render "web/admin/team/filters", members: @members %>
+    <%= render "web/admin/team/region", members: @members %>
+  </div>
+</div>
+
+<app-drawer data-controller="modal" data-modal-name-value="team-create" data-action="team-create:open@window->modal#open team-create:close@window->modal#close">
+  <template data-modal-target="template"><%= render "web/admin/team/create_drawer", members: @members, moderator: team_moderator(@members) %></template>
+</app-drawer>
+
+<app-modal data-controller="modal" data-modal-name-value="team-edit-coach" data-action="team-edit-coach:open@window->modal#open team-edit-coach:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("coaches.edit") } do %>
+      <form novalidate data-team-form="edit-coach">
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label for="ec-first"><%= ngt("coaches.first_name") %> *</label>
+            <input id="ec-first" class="form-control" name="first_name" />
+          </div>
+          <div class="col-6 mb-3">
+            <label for="ec-last"><%= ngt("coaches.last_name") %> *</label>
+            <input id="ec-last" class="form-control" name="last_name" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label for="ec-email"><%= ngt("auth.email") %></label>
+            <input id="ec-email" type="email" class="form-control" name="email" dir="ltr" />
+          </div>
+          <div class="col-6 mb-3">
+            <label for="ec-phone"><%= ngt("auth.phone") %></label>
+            <input id="ec-phone" class="form-control" name="phone" dir="ltr" />
+          </div>
+          <div class="col-6 mb-3">
+            <label for="ec-birthdate"><%= ngt("team.birthdate") %></label>
+            <input id="ec-birthdate" type="date" class="form-control" name="birthdate" />
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="ec-bio"><%= ngt("coaches.bio") %></label>
+          <textarea id="ec-bio" class="form-control" rows="3" name="bio"></textarea>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" data-save><%= ngt("common.save") %></button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>
+
+<app-modal data-controller="modal" data-modal-name-value="team-role" data-action="team-role:open@window->modal#open team-role:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("team.action_web_access") } do %>
+      <p class="fx-muted mb-3" data-team-staff-line></p>
+      <form novalidate data-team-form="role">
+        <div class="mb-3">
+          <label for="er-role"><%= ngt("staff.role") %> *</label>
+          <select id="er-role" class="form-select" name="role_id"></select>
+        </div>
+        <div class="mb-3">
+          <label for="er-birthdate"><%= ngt("team.birthdate") %></label>
+          <input id="er-birthdate" type="date" class="form-control" name="birthdate" />
+          <div class="form-text"><%= ngt("team.birthdate_hint") %></div>
+        </div>
+        <div class="mb-3 form-check">
+          <input id="er-active" type="checkbox" class="form-check-input" name="active" />
+          <label for="er-active" class="form-check-label"><%= ngt("common.active") %></label>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" data-save><%= ngt("common.save") %></button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>
+
+<app-modal data-controller="modal" data-modal-name-value="team-login" data-action="team-login:open@window->modal#open team-login:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("coaches.mobile_login") } do %>
+      <p class="fx-muted mb-3" data-team-coach-name></p>
+      <p class="form-text mb-3"><%= ngt("coaches.mobile_login_hint") %></p>
+      <form novalidate data-team-form="login">
+        <div class="mb-3">
+          <label for="tl-email"><%= ngt("auth.email") %> *</label>
+          <input id="tl-email" type="email" class="form-control" name="email" dir="ltr" />
+        </div>
+        <div class="mb-3">
+          <label for="tl-pass"><%= ngt("auth.password") %> *</label>
+          <input id="tl-pass" type="password" class="form-control" name="password" dir="ltr" />
+          <div class="form-text"><%= ngt("coaches.mobile_login_password_hint") %></div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" data-save><%= ngt("common.save") %></button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>
+
+<%# What the page redraws from: the cards, the people, the drawer as it
+    stands; and the states the region can take. %>
+<div hidden data-team-parts><%= render "web/admin/team/parts", members: @members %></div>
+<template data-team-region-template="skeleton"><app-skeleton data-team-region><%= render "web/shared/skeleton_cards", count: 6 %></app-skeleton></template>
+<template data-team-region-template="none">
+  <div class="app-card" data-team-region>
+    <div class="app-card-body">
+      <app-empty-state>
+        <%= render layout: "web/shared/empty_state", locals: { title: ngt("team.empty_title"), body: ngt("team.empty_body"), icon: "bi-person-vcard" } do %>
+          <button type="button" class="btn btn-primary" data-action="team-page#openCreate" data-kind="coach">
+            <i class="bi bi-plus-lg"></i> <%= ngt("team.new") %>
+          </button>
+        <% end %>
+      </app-empty-state>
+    </div>
+  </div>
+</template>
+<template data-team-region-template="no-results"><div class="app-card" data-team-region><div class="app-card-body"><app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("common.no_results"), body: "", icon: "bi-search" } do %><% end %></app-empty-state></div></div></template>
+<template data-team-region-template="reset">
+  <button type="button" class="btn btn-sm btn-outline-secondary" data-team-reset data-action="team-page#resetFilters">
+    <i class="bi bi-arrow-counterclockwise"></i> <%= ngt("common.reset") %>
+  </button>
+</template>

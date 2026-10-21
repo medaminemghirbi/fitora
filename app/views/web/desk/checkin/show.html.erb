@@ -1,0 +1,42 @@
+<%# ng: desk-checkin %>
+<%# ng-host: desk-checkin %>
+<%# DeskCheckinComponent: today's sessions to pick from, or the roster of the
+    one picked (?session=, kept in the URL as the Angular page keeps it —
+    desk-checkin replaces the history entry). %>
+<% if @sessions.empty? %>
+  <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("desk.checkin.no_sessions_title"), body: ngt("desk.checkin.no_sessions_body"), icon: "bi-calendar-x" } do %><% end %></app-empty-state>
+<% else %>
+  <% if (session = @selected) %>
+    <div class="desk-checkin-head">
+      <button type="button" class="btn btn-ghost" data-controller="desk-checkin" data-desk-checkin-url-value="<%= desk_path("checkin") %>" data-action="desk-checkin#pick">
+        <i class="bi bi-arrow-left"></i> <%= ngt("desk.checkin.other_session") %>
+      </button>
+
+      <div class="desk-checkin-session">
+        <strong><%= session[:activity_name] %></strong>
+        <span><%= ng_date(session[:starts_at], "HH:mm") %> – <%= ng_date(session[:ends_at], "HH:mm") %></span>
+      </div>
+    </div>
+
+    <%= render "web/shared/checkin_panel", url: desk_path("attendance"), session: session[:id] %>
+  <% else %>
+    <h2 class="desk-section-title"><%= ngt("desk.checkin.pick_session") %></h2>
+
+    <ul class="desk-session-picker">
+      <% @sessions.each do |s| %>
+        <li>
+          <button type="button" class="desk-session-option" data-controller="desk-checkin" data-desk-checkin-url-value="<%= desk_path("checkin", session: s[:id]) %>" data-action="desk-checkin#pick">
+            <span class="desk-session-time"><%= ng_date(s[:starts_at], "HH:mm") %></span>
+            <span class="desk-session-body">
+              <strong><%= s[:activity_name] %></strong>
+              <% if s[:coach_name].present? %>
+                <small><%= s[:coach_name] %></small>
+              <% end %>
+            </span>
+            <i class="bi bi-chevron-right" aria-hidden="true"></i>
+          </button>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+<% end %>

@@ -1,0 +1,9 @@
+<%# ng: toast-container %>
+<%# One toast, as ToastContainerComponent draws it. %>
+<div class="toast-item toast-item--<%= kind %>" data-toasts-target="toast">
+  <i class="bi <%= { "success" => "bi-check-circle-fill", "error" => "bi-x-circle-fill", "info" => "bi-info-circle-fill", "warning" => "bi-exclamation-triangle-fill" }[kind.to_s] %>"></i>
+  <span><%= message %></span>
+  <button type="button" class="toast-close" data-action="toasts#dismiss" aria-label="Close">
+    <i class="bi bi-x"></i>
+  </button>
+</div>

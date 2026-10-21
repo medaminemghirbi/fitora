@@ -57,6 +57,43 @@ RSpec.describe ApplicationCable::Connection, type: :channel do
     expect { connect "/cable" }.to have_rejected_connection
     expect { connect "/cable?ticket=garbage" }.to have_rejected_connection
   end
+
+  describe "the web UI's session cookie (no ticket)" do
+    def web_session(account, **claims)
+      kind = account.is_a?(Client) ? "client" : "user"
+      claims = { "kind" => kind, "id" => account.id, "tv" => account.token_version, "exp" => 7.days.from_now.to_i }.merge(claims)
+      cookies.encrypted["_fitora_session"] = { value: { "fitora" => claims } }
+    end
+
+    it "opens for the signed-in account, a member's too" do
+      web_session(user)
+      connect "/cable"
+      expect(connection.current_user).to eq(user)
+
+      member = create(:client, password: "member-pass-1")
+      web_session(member)
+      connect "/cable"
+      expect(connection.current_client).to eq(member)
+    end
+
+    it "refuses a session the pages would refuse: expired, signed out everywhere, an impersonation's superadmin gone" do
+      web_session(user, "exp" => 1.minute.ago.to_i)
+      expect { connect "/cable" }.to have_rejected_connection
+
+      web_session(user, "tv" => user.token_version - 1)
+      expect { connect "/cable" }.to have_rejected_connection
+
+      former = create(:user, :admin)
+      web_session(user, "imp" => former.id)
+      expect { connect "/cable" }.to have_rejected_connection
+    end
+
+    it "opens for an impersonated admin as the admin" do
+      web_session(user, "imp" => create(:user, :superadmin).id)
+      connect "/cable"
+      expect(connection.current_user).to eq(user)
+    end
+  end
 end
 
 RSpec.describe "POST /api/v1/cable_ticket", type: :request do

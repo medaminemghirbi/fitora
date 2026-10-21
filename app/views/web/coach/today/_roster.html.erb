@@ -1,0 +1,25 @@
+<%# ng: coach-today %>
+<%# CoachTodayComponent's roster of the session picked: who is booked, how
+    to reach them, and a button per attendance status. `bookings`:
+    AttendanceBookingSerializer rows. %>
+<% if bookings.empty? %>
+  <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("coach.no_bookings_title"), body: "", icon: "bi-people" } do %><% end %></app-empty-state>
+<% else %>
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th><%= ngt("clients.title") %></th>
+          <th><%= ngt("auth.phone") %></th>
+          <th><%= ngt("common.status") %></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% bookings.each do |booking| %>
+          <%= render "web/coach/today/row", booking: booking %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

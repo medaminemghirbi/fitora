@@ -1,0 +1,44 @@
+<%# ng: notification-art %>
+<%# NotificationArtComponent: an emoji badge and a small scene per kind. The
+    caller writes the <app-notification-art> host. %>
+<% kind = kind.to_s %>
+<div class="art<%= " art--mini" if local_assigns[:mini] %>" data-kind="<%= kind %>">
+  <span class="art-emoji"><%= Web::NotificationText::EMOJI.fetch(kind, "🔔") %></span>
+
+  <% case kind %>
+  <% when "employee_birthday" %>
+    <svg class="art-svg" viewBox="0 0 64 64" aria-hidden="true">
+      <rect x="14" y="34" width="36" height="20" rx="3" fill="#fde68a" />
+      <rect x="14" y="34" width="36" height="7" fill="#fca5a5" />
+      <rect x="30" y="18" width="4" height="12" rx="2" fill="#f59e0b" />
+      <circle class="flame" cx="32" cy="15" r="4" fill="#fb923c" />
+      <g class="confetti">
+        <rect x="10" y="8" width="4" height="4" fill="#4a2a8f" />
+        <rect x="50" y="12" width="4" height="4" fill="#22c55e" />
+        <rect x="26" y="4" width="4" height="4" fill="#8b5cf6" />
+        <rect x="44" y="6" width="4" height="4" fill="#f59e0b" />
+      </g>
+    </svg>
+  <% when "invoice_issued" %>
+    <svg class="art-svg" viewBox="0 0 64 64" aria-hidden="true">
+      <path d="M18 10h28v40l-5-4-5 4-5-4-5 4-5-4-3 2z" fill="#dcfce7" />
+      <path d="M24 22h16M24 30h16M24 38h10" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" />
+      <circle class="pulse" cx="45" cy="45" r="9" fill="#16a34a" />
+      <path d="M41 45l3 3 5-6" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </svg>
+  <% when "contract_expiring" %>
+    <svg class="art-svg" viewBox="0 0 64 64" aria-hidden="true">
+      <rect x="14" y="12" width="36" height="40" rx="4" fill="#e0e7ff" />
+      <rect x="14" y="12" width="36" height="10" rx="4" fill="#a5b4fc" />
+      <circle class="pulse" cx="32" cy="36" r="11" fill="#6366f1" opacity="0.9" />
+      <path d="M32 30v7l5 3" stroke="#fff" stroke-width="2.5" stroke-linecap="round" />
+    </svg>
+  <% else %>
+    <svg class="art-svg" viewBox="0 0 64 64" aria-hidden="true">
+      <path d="M18 10h20l8 8v36H18z" fill="#dbeafe" />
+      <path d="M38 10v8h8z" fill="#93c5fd" />
+      <circle class="pulse" cx="44" cy="44" r="10" fill="#ef4444" />
+      <path d="M44 39v6M44 48v.5" stroke="#fff" stroke-width="2.5" stroke-linecap="round" />
+    </svg>
+  <% end %>
+</div>

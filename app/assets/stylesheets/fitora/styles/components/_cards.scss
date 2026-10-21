@@ -1,0 +1,114 @@
+// GENERATED from frontend/src/styles/components/_cards.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// ============================================================================
+// CARDS
+// ----------------------------------------------------------------------------
+// Cards that stand for a thing: a metric, a person, a profile.
+//
+// Split out of _fitora.scss, which had grown to 1208 lines and was the reason
+// screens drifted: nobody could see what was already there.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// KPI cards
+// ---------------------------------------------------------------------------
+.fx-kpi-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.fx-kpi {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  &-head { display: flex; align-items: center; gap: 0.5rem; color: var(--color-text-secondary); font-size: 0.8125rem; font-weight: 500; }
+  &-icon {
+    width: 28px; height: 28px; flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+    background: var(--color-primary-soft); color: var(--color-primary);
+  }
+  &-value { font-family: var(--font-display); font-size: var(--font-size-2xl); font-weight: 700; line-height: 1.15; color: var(--color-text); letter-spacing: -0.02em; }
+  &-trend { font-size: var(--font-size-xs); font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; }
+  &-trend--up { color: var(--color-success); }
+  &-trend--down { color: var(--color-danger); }
+  &-trend--flat { color: var(--color-text-secondary); }
+
+  &--success .fx-kpi-icon { background: var(--color-success-soft); color: var(--color-success); }
+  &--warning .fx-kpi-icon { background: var(--color-warning-soft); color: var(--color-warning); }
+  &--danger .fx-kpi-icon { background: var(--color-danger-soft); color: var(--color-danger); }
+  &--info .fx-kpi-icon { background: var(--color-info-soft); color: var(--color-info); }
+}
+
+// ---------------------------------------------------------------------------
+// People / entity card grid (coaches, staff)
+// ---------------------------------------------------------------------------
+.fx-people-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.fx-person-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+
+  &:hover { box-shadow: var(--shadow-sm); border-color: var(--color-border-strong); }
+
+  &-head { display: flex; align-items: flex-start; gap: 0.85rem; }
+  &-id { min-width: 0; flex: 1; }
+  &-name { font-weight: 600; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &-sub { font-size: var(--font-size-xs); color: var(--color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &-bio { font-size: 0.8125rem; color: var(--color-text-secondary); margin: 0; line-height: 1.5; }
+  &-meta { font-size: 0.8125rem; color: var(--color-text-secondary); display: flex; align-items: center; gap: 0.4rem; }
+  &-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: auto; padding-top: var(--space-2); }
+}
+
+// ---------------------------------------------------------------------------
+// Entity profile header (client / coach detail)
+// ---------------------------------------------------------------------------
+.fx-profile-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+
+  &-back {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-bottom: 0.5rem;
+    text-decoration: none;
+    &:hover { color: var(--color-text); text-decoration: none; }
+  }
+  &-id { flex: 1; min-width: 0; }
+  &-name {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  &-contact { color: var(--color-text-secondary); font-size: 0.875rem; margin: 0.3rem 0 0; }
+  &-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+}

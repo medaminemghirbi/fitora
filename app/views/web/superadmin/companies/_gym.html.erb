@@ -1,0 +1,58 @@
+<%# ng: superadmin-company-detail %>
+<%# The gym tab: what this gym is — how much it is used, and the language
+    and currency a superadmin sets for it (saved once changed). %>
+<div class="app-card">
+  <div class="app-card-header ac-ledger-head">
+    <h2><%= ngt("superadmin.usage_title") %></h2>
+    <span class="fx-muted">
+      <% if c.dig(:usage, :last_session_at) %>
+        <%= ngt("superadmin.usage_last_session") %> <%= ng_date(c.dig(:usage, :last_session_at), "d MMM y") %>
+      <% else %>
+        <%= ngt("superadmin.usage_never") %>
+      <% end %>
+    </span>
+  </div>
+  <div class="app-card-body ac-usage">
+    <div class="ac-stat"><span class="ac-stat-label"><%= ngt("nav.clients") %></span><strong><%= c.dig(:usage, :clients) %></strong></div>
+    <div class="ac-stat"><span class="ac-stat-label"><%= ngt("nav.team") %></span><strong><%= c.dig(:usage, :staff) %></strong></div>
+    <div class="ac-stat"><span class="ac-stat-label"><%= ngt("nav.activities") %></span><strong><%= c.dig(:usage, :activities) %></strong></div>
+    <div class="ac-stat">
+      <span class="ac-stat-label"><%= ngt("superadmin.usage_sessions_30") %></span>
+      <strong<%= raw(' class="ac-stat--due"') if c.dig(:usage, :sessions_last_30_days).zero? %>><%= c.dig(:usage, :sessions_last_30_days) %></strong>
+    </div>
+  </div>
+</div>
+
+<div class="app-card" data-superadmin-company-target="settings" data-currency="<%= c[:currency] %>" data-locale="<%= c[:locale] %>">
+  <div class="app-card-header">
+    <div>
+      <h2><%= ngt("superadmin.settings_title") %></h2>
+      <p class="fx-muted mb-0" style="font-size: 0.8125rem"><%= ngt("superadmin.settings_subtitle") %></p>
+    </div>
+  </div>
+  <div class="app-card-body ac-form ac-form--row">
+    <div>
+      <label for="ac-currency"><%= ngt("superadmin.currency") %></label>
+      <select id="ac-currency" class="form-select" name="currency" data-action="change->superadmin-company#settingsChanged">
+        <% currency_options.each do |opt| %>
+          <option value="<%= opt[:code] %>"<%= raw(" selected") if opt[:code] == c[:currency] %>><%= ngt("currency.#{opt[:code]}") %> — <%= opt[:symbol] %> (<%= opt[:code] %>)</option>
+        <% end %>
+      </select>
+    </div>
+    <div>
+      <label for="ac-locale"><%= ngt("superadmin.language") %></label>
+      <select id="ac-locale" class="form-select" name="locale" data-action="change->superadmin-company#settingsChanged">
+        <% locale_options.each do |code| %>
+          <option value="<%= code %>"<%= raw(" selected") if code == c[:locale] %>><%= ngt("language.#{code}") %></option>
+        <% end %>
+      </select>
+    </div>
+  </div>
+  <template data-superadmin-company-target="settingsFoot">
+    <div class="ac-card-foot">
+      <button type="button" class="btn btn-sm btn-primary" data-action="superadmin-company#saveSettings">
+        <%= ngt("common.save") %>
+      </button>
+    </div>
+  </template>
+</div>

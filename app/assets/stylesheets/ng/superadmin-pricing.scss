@@ -1,0 +1,21 @@
+// GENERATED from frontend/src/app/features/superadmin/pricing/pricing.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// One plan per block: its name and what it sells, then its price.
+.pricing-plan {
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.pricing-plan-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: var(--space-2);
+
+  .fx-muted {
+    font-size: var(--font-size-sm);
+  }
+}

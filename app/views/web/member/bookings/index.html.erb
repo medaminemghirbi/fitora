@@ -1,0 +1,24 @@
+<%# ng: member-bookings %>
+<%# ng-host: member-bookings %>
+<%# MemberBookingsComponent: upcoming or past (?when=, M-05), the list
+    (_list) redrawn when that changes or a booking is given back
+    (member-bookings). %>
+<div class="mb-page" data-controller="member-bookings"
+     data-member-bookings-url-value="<%= web_member_bookings_path %>"
+     data-member-bookings-when-value="<%= @when %>"
+     data-member-bookings-labels-value="<%= { confirm_title: ngt("member.cancel_confirm_title"), confirm_body: Web::Translations.translate("member.cancel_confirm_body", {}, locale: I18n.locale), cancelled: ngt("member.cancelled"), error: ngt("common.error_generic") }.to_json %>">
+  <h1 class="mb-title"><%= ngt("member.nav.bookings") %></h1>
+
+  <div class="fx-segmented mb-4" role="group">
+    <button type="button"<%= raw(' class="is-active"') if @when == "upcoming" %> data-action="member-bookings#show" data-member-bookings-when-param="upcoming">
+      <%= ngt("member.upcoming") %>
+    </button>
+    <button type="button"<%= raw(' class="is-active"') if @when == "past" %> data-action="member-bookings#show" data-member-bookings-when-param="past">
+      <%= ngt("member.past") %>
+    </button>
+  </div>
+
+  <%= render "web/member/bookings/list", bookings: @bookings, timing: @when %>
+  <template data-member-bookings-target="skeleton"><% %w[100% 90%].each do |width| %><app-skeleton><%= render "web/shared/skeleton_line", width: width %></app-skeleton><% end %></template>
+  <template data-member-bookings-target="error"><app-error-state><%= render "web/shared/error_state", retry_action: "member-bookings#retry" %></app-error-state></template>
+</div>

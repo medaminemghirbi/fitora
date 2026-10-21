@@ -1,0 +1,421 @@
+// GENERATED from frontend/src/app/features/admin/clients/client-profile.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+.contract-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+
+.contract-progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+
+  &--success { background: var(--color-success); }
+  &--warning { background: var(--color-warning); }
+  &--danger { background: var(--color-danger); }
+}
+
+// ---- Abonnements tab — card list ----
+.abo-list { display: flex; flex-direction: column; gap: 0.9rem; }
+
+.abo {
+  display: grid;
+  grid-template-columns: 4px 1fr;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+
+  &.is-off { opacity: 0.72; }
+  &.is-off .abo-name { color: var(--color-text-secondary); }
+}
+.abo-rail { border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
+.abo-body { display: flex; flex-direction: column; gap: 0.6rem; min-width: 0; padding: 1rem 1.1rem 0.85rem; }
+
+.abo-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+.abo-name { font-family: var(--font-display); font-weight: 700; font-size: 1rem; }
+.abo-dates { color: var(--color-text-secondary); font-size: 0.8125rem; margin-top: 0.1rem; }
+
+.abo-status {
+  font-size: 0.78rem; font-weight: 600; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  &.st-ok { color: var(--color-success); }
+  &.st-due { color: var(--color-warning); }
+  &.st-off { color: var(--color-muted); }
+}
+
+.abo-track {
+  height: 6px; border-radius: 999px;
+  background: var(--color-surface-sunken); overflow: hidden;
+
+  > span { display: block; height: 100%; border-radius: 999px; background: var(--color-primary); }
+  &.warn > span { background: var(--color-warning); }
+  &.off > span { background: var(--color-muted); }
+}
+.abo-track-note { font-size: 0.78rem; color: var(--color-muted); margin-top: 0.25rem; }
+
+.abo-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.6rem; border-top: 1px dashed var(--color-border);
+}
+.abo-price {
+  font-weight: 600; font-variant-numeric: tabular-nums;
+
+  .paid { color: var(--color-success); font-weight: 500; font-size: 0.8125rem; }
+  .due { color: var(--color-warning); font-weight: 600; font-size: 0.8125rem; }
+}
+.abo-actions { display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap; }
+
+.btn-link-quiet,
+.btn-link-danger {
+  background: none; border: 0;
+  font-weight: 600; font-size: 0.8125rem;
+  padding: 0.35rem 0.5rem; cursor: pointer;
+}
+.btn-link-quiet { color: var(--color-text-secondary); &:hover { color: var(--color-primary); } }
+.btn-link-danger { color: var(--color-danger); &:hover { text-decoration: underline; } }
+
+.abo-total-line {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 0.6rem 0.85rem;
+  background: var(--color-surface-sunken); border-radius: var(--radius-md);
+  font-size: 0.9rem;
+
+  strong { font-family: var(--font-display); font-size: 1.05rem; }
+}
+.abo-collect {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.9rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+
+.mobile-login-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius-md);
+
+  &--active {
+    background: var(--color-success-soft);
+    color: var(--color-success);
+  }
+
+  &--pending {
+    background: var(--color-warning-soft);
+    color: var(--color-warning);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The member's file, as a banner
+// ---------------------------------------------------------------------------
+// The whole state of the relationship in one block, the actions in a row of
+// their own, and the history filling the rest. Five cards down a narrow
+// column said the same things in four times the height.
+
+.prof-back {
+  display: inline-block;
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+
+  &:hover { color: var(--color-text); text-decoration: none; }
+}
+
+.prof-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-5);
+  border-radius: var(--radius-xl);
+  // The dark end of the brand, so the block reads as one object rather than
+  // as a tinted card.
+  background: var(--color-primary-active);
+  color: #fff;
+
+  @media (max-width: 991px) {
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+}
+
+.prof-banner-avatar {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+}
+
+.prof-banner-id {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.prof-banner-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 0;
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+}
+
+.prof-banner-badge {
+  padding: 0.1rem 0.55rem;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.16);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+
+  // Inactive is a fact worth seeing at a glance, and the banner is already
+  // dark — so it changes weight and hue rather than relying on colour alone.
+  &.is-off { background: var(--color-warning); color: var(--color-text); }
+}
+
+.prof-banner-sub {
+  margin: 0.3rem 0 0;
+  font-size: var(--font-size-base);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.prof-banner-stat {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding-inline: var(--space-5);
+  border-inline-start: 1px solid rgba(255, 255, 255, 0.15);
+
+  @media (max-width: 991px) {
+    padding-inline: var(--space-4);
+    &:first-of-type { border-inline-start: 0; padding-inline-start: 0; }
+  }
+}
+
+.prof-banner-value {
+  font-size: 2.125rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+
+  small { font-size: 1.0625rem; font-weight: 700; }
+
+  // Money owed, on a dark ground: the danger red would not carry, so this is
+  // the accent lifted to read against aubergine.
+  &.is-owed { color: #ff8fb0; }
+}
+
+.prof-banner-label {
+  font-size: var(--font-size-xs);
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+}
+
+// ---------------------------------------------------------------------------
+// Actions
+// ---------------------------------------------------------------------------
+.prof-actions-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin: var(--space-4) 0 var(--space-5);
+
+  .btn { min-height: 42px; }
+}
+
+.prof-actions-spacer { flex-grow: 1; }
+
+// ---------------------------------------------------------------------------
+// Health file
+// ---------------------------------------------------------------------------
+.prof-health {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+
+  // Something to know: it should not read like the rest of the page.
+  &.has-notes {
+    border-color: var(--color-warning);
+    background: var(--color-warning-soft);
+  }
+
+  .prof-label { margin-bottom: var(--space-1); }
+}
+
+.prof-health-icon {
+  font-size: 1.25rem;
+  color: var(--color-text-secondary);
+
+  .has-notes & { color: var(--color-warning); }
+}
+
+.prof-health-body { flex: 1; min-width: 0; }
+
+.prof-health-notes {
+  margin: 0;
+  white-space: pre-line;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.prof-health-waiver {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-success);
+
+  &.is-missing { color: var(--color-danger); }
+}
+
+// ---------------------------------------------------------------------------
+// The stream
+// ---------------------------------------------------------------------------
+.prof-label {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.prof-main-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+
+  .prof-label { margin-bottom: 0; }
+}
+
+.prof-filters {
+  display: flex;
+  gap: 0.15rem;
+  margin-inline-start: auto;
+  padding: 0.2rem;
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
+}
+
+.prof-filter {
+  padding: 0.3rem 0.7rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+
+  &.is-active {
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-weight: 600;
+  }
+}
+
+.prof-timeline {
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+
+  > li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+
+    &:last-child { border-bottom: none; }
+  }
+}
+
+.prof-timeline-mark {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+
+  // Colour follows the meaning, and the entry's own words say it too.
+  &[data-kind="attended"] { background: var(--color-success-soft); color: var(--color-success); }
+  &[data-kind="missed"] { background: var(--color-danger-soft); color: var(--color-danger); }
+  &[data-kind="paid"] { background: var(--color-success-soft); color: var(--color-success); }
+  &[data-kind="refunded"] { background: var(--color-warning-soft); color: var(--color-warning); }
+  &[data-kind="booked"] { background: var(--color-primary-soft); color: var(--color-primary); }
+}
+
+.prof-timeline-text {
+  flex-grow: 1;
+  min-width: 0;
+  font-size: var(--font-size-base);
+}
+
+.prof-timeline-when {
+  flex-shrink: 0;
+  font-size: var(--font-size-xs);
+}
+
+// ---------------------------------------------------------------------------
+// The foot
+// ---------------------------------------------------------------------------
+.prof-foot {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--space-5);
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.prof-history {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  > li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+    font-size: var(--font-size-sm);
+    border-bottom: 1px solid var(--color-border);
+
+    &:last-child { border-bottom: none; }
+    > span:first-child { flex-grow: 1; min-width: 0; }
+  }
+}
+
+.prof-history-docs { display: inline-flex; gap: 0.15rem; align-self: center; }
+
+.prof-waiver-today { white-space: nowrap; }

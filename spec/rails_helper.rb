@@ -37,6 +37,9 @@ if ENV["OPENAPI"]
   RSpec::OpenAPI.application_version = "v1"
   RSpec::OpenAPI.enable_example = false
   RSpec::OpenAPI.info = { description: "Generated from spec/requests — do not edit by hand." }
+  # The contract is the API's: the web UI's pages (spec/requests/web) are
+  # not part of it.
+  RSpec::OpenAPI.ignored_paths = [ %r{\A(?!/api/)} ]
 
   # The hook sees the gem's working copy, keyed by symbols or strings
   # depending on where a node came from; `key` finds either.

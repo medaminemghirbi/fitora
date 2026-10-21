@@ -1,0 +1,33 @@
+<%# ng: line-chart %>
+<%# LineChartComponent: `chart` is a Web::LineChart; `marker` the last
+    point's preformatted value (empty hides it). The caller writes the
+    <app-line-chart> host. %>
+<% n = ->(v) { Web::LineChart.num(v) } %>
+<svg viewBox="0 0 <%= Web::LineChart::W %> <%= Web::LineChart::H %>" width="100%" height="<%= Web::LineChart::H %>" role="img" aria-label="<%= aria_label %>">
+  <% chart.grid_lines.each do |line| %>
+    <line x1="<%= Web::LineChart::LEFT %>" y1="<%= n.call(line[:y]) %>" x2="<%= Web::LineChart::RIGHT %>" y2="<%= n.call(line[:y]) %>" stroke="<%= line[:strong] ? "var(--color-border)" : "var(--color-surface-sunken)" %>" stroke-width="1"></line>
+    <text x="<%= Web::LineChart::LEFT - 10 %>" y="<%= n.call(line[:y] + 4) %>" text-anchor="end" font-size="10.5" fill="var(--color-text-secondary)"><%= line[:label] %></text>
+  <% end %>
+
+  <% if chart.points.size > 1 %>
+    <path d="<%= chart.area_path %>" fill="var(--color-primary-soft)"></path>
+    <path d="<%= chart.line_path %>" fill="none" stroke="var(--color-primary)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path>
+  <% end %>
+
+  <% if (point = chart.last) %>
+    <line x1="<%= n.call(point.x) %>" y1="<%= n.call(point.y) %>" x2="<%= n.call(point.x) %>" y2="<%= Web::LineChart::BOTTOM %>" stroke="var(--color-border-strong)" stroke-width="1" stroke-dasharray="3 3"></line>
+    <circle cx="<%= n.call(point.x) %>" cy="<%= n.call(point.y) %>" r="5.5" fill="var(--color-surface)" stroke="var(--color-primary)" stroke-width="2.6"></circle>
+
+    <% if marker.present? %>
+      <g transform="translate(<%= n.call(chart.marker_x) %>, <%= n.call(chart.marker_y) %>)">
+        <rect width="118" height="42" rx="9" fill="var(--color-text)"></rect>
+        <text x="14" y="19" font-size="13" font-weight="700" fill="var(--color-surface)"><%= marker %></text>
+        <text x="14" y="34" font-size="11" fill="var(--color-muted)"><%= point.label %></text>
+      </g>
+    <% end %>
+  <% end %>
+
+  <% chart.points.each_with_index do |point, i| %>
+    <text x="<%= n.call(point.x) %>" y="<%= Web::LineChart::BASELINE %>" text-anchor="middle" font-size="11" font-weight="<%= chart.end?(i) ? 700 : 400 %>" fill="<%= chart.end?(i) ? "var(--color-text)" : "var(--color-text-secondary)" %>"><%= point.label %></text>
+  <% end %>
+</svg>

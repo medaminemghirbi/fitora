@@ -1,0 +1,55 @@
+// GENERATED from frontend/src/app/features/admin/settings/settings-booking.component.scss by test/parity/sync-from-angular.mjs — edit the Angular source, then run it with --write.
+// One rule per row: what it is, what it does, and the control. A settings
+// screen where the label alone has to carry the meaning is a settings screen
+// people guess at.
+
+.sb-group + .sb-group { margin-top: var(--space-6); }
+
+.sb-group-title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.sb-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child { border-bottom: none; }
+}
+
+.sb-row-text {
+  flex-grow: 1;
+  min-width: 0;
+  // The whole block is the control's label, so the hint is clickable too.
+  margin: 0;
+  cursor: pointer;
+}
+
+.sb-row-label {
+  display: block;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sb-row-hint {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+.sb-control {
+  flex-shrink: 0;
+  width: auto;
+  min-width: 11rem;
+}

@@ -1,0 +1,165 @@
+<%# ng: team %>
+<%# The create drawer, open (TeamComponent's <app-drawer>): for the admin,
+    which kind of member — the back-office card locked while the moderator
+    seat is the only role and it is held — then the coach's or the
+    back-office login's form. The drawer sits beside the page, not in it,
+    so team-page binds these controls itself when it opens. Both forms are here; team-page keeps the one
+    chosen in place and the other aside (each keeps its values, as the
+    component's two form groups do), and drops the mobile password until
+    its box is ticked. %>
+<% backoffice_roles = team_backoffice_roles %>
+<% available = team_available_roles(moderator) %>
+<% open_seat = available.any? %>
+<%= render layout: "web/shared/drawer", locals: { title: ngt("team.new"), description: ngt("team.new_hint") } do |slot| %>
+  <% if slot == "footer" %>
+    <div drawer-footer>
+      <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+      <button type="submit" form="team-create-form" class="btn btn-primary" data-team-create-submit>
+        <%= ngt("common.create") %>
+      </button>
+    </div>
+  <% else %>
+    <% if current_user.admin? %>
+      <div class="team-kind-block">
+        <div class="fx-form-section-title"><%= ngt("team.create_type_label") %></div>
+        <div class="team-kind">
+          <button type="button" class="team-kind-opt is-active" data-create-kind="coach">
+            <i class="bi bi-person-badge"></i>
+            <strong><%= team_role_name("coach") %></strong>
+            <span><%= ngt("team.create_type_coach_hint") %></span>
+          </button>
+          <button type="button" class="team-kind-opt"<%= raw(%( disabled aria-describedby="team-seat-notice")) unless open_seat %> data-create-kind="backoffice">
+            <i class="bi <%= open_seat ? "bi-window-desktop" : "bi-lock" %>"></i>
+            <strong><%= ngt("team.create_type_backoffice") %></strong>
+            <span><%= ngt(open_seat ? "team.create_type_backoffice_hint" : "team.create_type_backoffice_taken") %></span>
+          </button>
+        </div>
+
+        <% unless open_seat %>
+          <div class="team-seat-notice" id="team-seat-notice" role="status">
+            <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+            <div class="team-seat-notice-text">
+              <strong><%= ngt("team.backoffice_taken_title") %></strong>
+              <p><%= ngt("team.backoffice_taken_body", name: moderator&.dig(:name) || "") %></p>
+              <div class="team-seat-notice-actions">
+                <a href="<%= admin_page_path("settings/roles") %>" class="btn btn-sm btn-primary">
+                  <i class="bi bi-shield-plus" aria-hidden="true"></i> <%= ngt("team.backoffice_taken_create_role") %>
+                </a>
+                <% if moderator %>
+                  <button type="button" class="btn btn-sm btn-outline-danger" data-team-free-seat>
+                    <i class="bi bi-person-dash" aria-hidden="true"></i>
+                    <%= ngt("team.backoffice_taken_action", name: moderator[:name]) %>
+                  </button>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <form id="team-create-form" novalidate data-team-form="coach">
+      <div class="fx-form-section">
+        <div class="fx-form-section-title"><%= ngt("clients.section_personal") %></div>
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label for="tc-first"><%= ngt("coaches.first_name") %> *</label>
+            <input id="tc-first" class="form-control" name="first_name" />
+          </div>
+          <div class="col-6 mb-3">
+            <label for="tc-last"><%= ngt("coaches.last_name") %> *</label>
+            <input id="tc-last" class="form-control" name="last_name" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label for="tc-email"><%= ngt("auth.email") %></label>
+            <input id="tc-email" type="email" class="form-control" name="email" dir="ltr" />
+          </div>
+          <div class="col-6 mb-3">
+            <label for="tc-phone"><%= ngt("auth.phone") %></label>
+            <input id="tc-phone" class="form-control" name="phone" dir="ltr" />
+          </div>
+          <div class="col-6 mb-3">
+            <label for="tc-birthdate"><%= ngt("team.birthdate") %></label>
+            <input id="tc-birthdate" type="date" class="form-control" name="birthdate" />
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="tc-bio"><%= ngt("coaches.bio") %></label>
+          <textarea id="tc-bio" class="form-control" rows="2" name="bio"></textarea>
+        </div>
+      </div>
+
+      <div class="fx-form-section">
+        <div class="fx-form-section-title"><%= ngt("team.access_mobile") %></div>
+        <div class="form-check mb-3">
+          <input id="tc-mobile" type="checkbox" class="form-check-input" name="with_mobile" />
+          <label for="tc-mobile" class="form-check-label"><%= ngt("team.create_mobile_toggle") %></label>
+        </div>
+        <div class="mb-3" data-team-mobile-password>
+          <label for="tc-mpass"><%= ngt("auth.password") %> *</label>
+          <input id="tc-mpass" type="password" class="form-control" name="password" dir="ltr" />
+          <div class="form-text"><%= ngt("coaches.mobile_login_password_hint") %> · <%= ngt("team.mobile_needs_email") %></div>
+        </div>
+      </div>
+    </form>
+
+    <form id="team-create-form" novalidate data-team-form="backoffice">
+      <div class="fx-form-section">
+        <div class="fx-form-section-title"><%= ngt("clients.section_personal") %></div>
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label for="tb-first"><%= ngt("coaches.first_name") %> *</label>
+            <input id="tb-first" class="form-control" name="first_name" />
+          </div>
+          <div class="col-6 mb-3">
+            <label for="tb-last"><%= ngt("coaches.last_name") %> *</label>
+            <input id="tb-last" class="form-control" name="last_name" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label for="tb-email"><%= ngt("auth.email") %> *</label>
+            <input id="tb-email" type="email" class="form-control" name="email" dir="ltr" />
+          </div>
+          <div class="col-6 mb-3">
+            <label for="tb-phone"><%= ngt("auth.phone") %></label>
+            <input id="tb-phone" class="form-control" name="phone" dir="ltr" />
+          </div>
+          <div class="col-6 mb-3">
+            <label for="tb-birthdate"><%= ngt("team.birthdate") %></label>
+            <input id="tb-birthdate" type="date" class="form-control" name="birthdate" />
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="tb-pass"><%= ngt("auth.password") %> *</label>
+          <input id="tb-pass" type="password" class="form-control" name="password" dir="ltr" />
+          <div class="form-text"><%= ngt("coaches.mobile_login_password_hint") %></div>
+        </div>
+      </div>
+
+      <div class="fx-form-section">
+        <div class="fx-form-section-title"><%= ngt("staff.role") %></div>
+        <div class="mb-3">
+          <label for="tb-role"><%= ngt("staff.role") %> *</label>
+          <select id="tb-role" class="form-select" name="role_id">
+            <% backoffice_roles.each do |role| %>
+              <% taken = team_role_taken?(role, moderator) %>
+              <option value="<%= role[:id] %>"<%= raw(" disabled") if taken %>>
+                <%= role[:name] %><%= taken ? " — #{ngt("team.role_taken_suffix")}" : "" %>
+              </option>
+            <% end %>
+          </select>
+          <div class="form-text" data-team-role-preview></div>
+          <% if moderator %>
+            <div class="form-text"><%= ngt("team.role_moderator_taken_hint", name: moderator[:name]) %></div>
+          <% end %>
+          <a href="<%= admin_page_path("settings/roles") %>" class="team-role-link">
+            <i class="bi bi-shield-plus" aria-hidden="true"></i> <%= ngt("team.role_manage_link") %>
+          </a>
+        </div>
+      </div>
+    </form>
+  <% end %>
+<% end %>

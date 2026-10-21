@@ -17,11 +17,9 @@ module Api
       # #request_upgrade) — signing up moves that conversation after the
       # trial, it does not remove it.
       def register
-        user = User.new(register_params.merge(role: :admin))
+        user = AccountRecovery.register(register_params)
 
-        if user.save
-          raw = user.generate_email_verification_token!
-          AccountMailer.email_verification(user, raw).deliver_later
+        if user.persisted?
           render json: {
             token: JwtService.for_user(user),
             account_type: "user",
@@ -40,28 +38,20 @@ module Api
       # first. A gym signs itself up (#register); a member never does — their
       # access is switched on from their own file by the gym.
       def login
-        email = params[:email].to_s.downcase.strip
+        result = SignIn.call(params[:email], params[:password])
 
-        user = User.active.find_by(email: email)
-        if user&.authenticate(params[:password])
-          return render json: { token: JwtService.for_user(user), account_type: "user", user: UserSerializer.new(user).as_json }
+        if result.user
+          render json: { token: JwtService.for_user(result.user), account_type: "user", user: UserSerializer.new(result.user).as_json }
+        elsif result.client
+          render json: { token: JwtService.for_client(result.client), account_type: "client", client: ClientSerializer.new(result.client, reveal: true).as_json }
+        elsif result.error == :member_app_not_included
+          render json: {
+            error: "member_app_not_included",
+            message: "Your gym's plan does not include the member app."
+          }, status: :forbidden
+        else
+          render json: { error: "Invalid email or password" }, status: :unauthorized
         end
-
-        client = Client.active.where.not(password_digest: nil).find_by(email: email)
-        if client&.authenticate(params[:password])
-          # The member app is a Pro feature. Said only after the password
-          # checked out, so it tells nobody but the member which gyms exist.
-          unless client.companies.includes(admin: { subscription: :invoices }).any?(&:member_app?)
-            return render json: {
-              error: "member_app_not_included",
-              message: "Your gym's plan does not include the member app."
-            }, status: :forbidden
-          end
-
-          return render json: { token: JwtService.for_client(client), account_type: "client", client: ClientSerializer.new(client, reveal: true).as_json }
-        end
-
-        render json: { error: "Invalid email or password" }, status: :unauthorized
       end
 
       # POST /api/v1/auth/logout — { all_devices: true } to sign out everywhere.

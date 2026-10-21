@@ -1,0 +1,82 @@
+<%# ng: activity-picker %>
+<%# ActivityPickerComponent: the search, the count, what the gym named
+    itself, the families of tiles and — allow_custom — the "Autre" entry.
+    The activity-picker controller searches and picks, and says what is
+    picked (activity-picker:change). The caller writes the host. %>
+<% allow_custom = local_assigns.fetch(:allow_custom, true)
+   adopted = local_assigns.fetch(:adopted, [])
+   emojis = %w[🏋️ 💪 🤸 🧘 🥊 🥋 🚴 🏃 🏊 ⚡ 🤾 🏓 🏸 ⚽ 🏀 💃 🩰 🔥 🎯 🧗] %>
+<div class="ap" data-controller="activity-picker"
+     data-activity-picker-labels-value="<%= { none: ngt("activity_catalogue.none_selected"), n: ngt("activity_catalogue.n_selected"), no_match: ngt("activity_catalogue.no_match"), yours: ngt("activity_catalogue.yours"), remove: ngt("common.remove") }.to_json %>">
+  <div class="ap-bar">
+    <div class="fx-input-icon ap-search">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <input type="search" class="form-control" placeholder="<%= ngt("activity_catalogue.search") %>" aria-label="<%= ngt("activity_catalogue.search") %>"
+             data-action="input->activity-picker#search" />
+    </div>
+    <p class="ap-count" aria-live="polite" data-activity-picker-target="count">
+      <%= ngt("activity_catalogue.none_selected") %>
+    </p>
+  </div>
+
+  <% ActivityTemplate::FAMILIES.each do |family| %>
+    <% tiles = templates.select { |t| t[:family].to_s == family.to_s } %>
+    <% next if tiles.empty? %>
+    <section class="ap-family" data-family>
+      <h3 class="ap-family-title"><%= ngt("activity_catalogue.family_#{family}") %></h3>
+      <div class="ap-grid">
+        <% tiles.each do |template| %>
+          <button type="button" class="ap-tile" role="checkbox" aria-checked="false"
+                  data-template="<%= template[:id] %>" data-names="<%= ([ template[:key] ] + template[:names].to_h.values).compact.to_json %>"
+                  data-action="activity-picker#toggle">
+            <span class="ap-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+            <span class="ap-emoji" aria-hidden="true"><%= template[:emoji].presence || "•" %></span>
+            <span class="ap-name"><%= template_name(template) %></span>
+            <span class="ap-meta">
+              <%= template[:duration] %> min ·
+              <% if template[:capacity].to_i > 1 %>
+                <%= template[:capacity] %> <%= ngt("activities.capacity_short") %>
+              <% else %>
+                <%= ngt("activity_catalogue.one_to_one") %>
+              <% end %>
+            </span>
+            <% if adopted.include?(template[:id]) %>
+              <span class="ap-adopted"><%= ngt("activity_catalogue.already_added") %></span>
+            <% end %>
+          </button>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <% if templates.empty? %>
+    <p class="ap-empty"><%= ngt("activity_catalogue.no_match", term: "") %></p>
+  <% end %>
+
+  <% if allow_custom %>
+    <button type="button" class="ap-other" data-activity-picker-target="other" data-action="activity-picker#openCustom">
+      <i class="bi bi-plus-lg" aria-hidden="true"></i>
+      <span>
+        <strong><%= ngt("activity_catalogue.other") %></strong>
+        <small><%= ngt("activity_catalogue.other_hint") %></small>
+      </span>
+    </button>
+    <template data-activity-picker-target="customTemplate">
+      <div class="ap-custom">
+        <label for="ap-custom-name"><%= ngt("activity_catalogue.custom_name") %></label>
+        <input id="ap-custom-name" class="form-control" maxlength="60" data-custom-name />
+        <div class="ap-emojis" role="group" aria-label="<%= ngt("activities.emoji") %>">
+          <% emojis.each do |emoji| %>
+            <button type="button" class="ap-emoji-btn" aria-pressed="false" data-custom-emoji="<%= emoji %>"><%= emoji %></button>
+          <% end %>
+        </div>
+        <div class="ap-custom-actions">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-custom-cancel><%= ngt("common.cancel") %></button>
+          <button type="button" class="btn btn-primary btn-sm" disabled data-custom-add>
+            <%= ngt("activity_catalogue.custom_add") %>
+          </button>
+        </div>
+      </div>
+    </template>
+  <% end %>
+</div>

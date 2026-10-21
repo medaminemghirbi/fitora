@@ -14,10 +14,7 @@ module Api
       def index
         return render(json: { packs: [] }) unless current_company.feature?(:packs)
 
-        packs = current_company.packs
-                               .preload(:company, :activities, contract_type_packs: :contract_type)
-                               .order(:name)
-        render json: { packs: packs.map { |p| PackSerializer.new(p).as_json } }
+        render json: { packs: CatalogueListing.packs(current_company).map { |p| PackSerializer.new(p).as_json } }
       end
 
       # POST /api/v1/packs
@@ -44,16 +41,11 @@ module Api
         @pack = current_company.packs.find(params[:id])
       end
 
-      # On a saved pack, assigning `activities` writes the join rows at once,
-      # before the validation that needs two of them has run — hence the
-      # transaction, which a refused save rolls back.
+      # CatalogueEditor.save_pack, shared with the web UI's catalogue.
       def save_pack(pack, status: :ok)
-        Pack.transaction do
-          pack.assign_attributes(pack_params)
-          pack.activities = current_company.activities.where(id: Array(params[:activity_ids])) if params.key?(:activity_ids)
-          pack.save!
-        end
-        render json: { pack: PackSerializer.new(pack.reload).as_json }, status: status
+        activity_ids = params.key?(:activity_ids) ? Array(params[:activity_ids]) : nil
+        pack = CatalogueEditor.save_pack(pack, current_company, pack_params, activity_ids: activity_ids)
+        render json: { pack: PackSerializer.new(pack).as_json }, status: status
       end
 
       def pack_params
