@@ -59,7 +59,7 @@ module Web
         @current_company = nil
         @current_staff_member = nil
         current_user.active_company_id = target.id
-        destination = current_user.admin? ? "/admin/#{target.id}/dashboard" : served_path(home_path)
+        destination = current_user.admin? ? "/admin/#{target.id}/dashboard" : home_path
         # The salles page asks with fetch (to show "Bascule…" meanwhile),
         # then loads the destination itself.
         return render(json: { next: destination }) if request.format.json?

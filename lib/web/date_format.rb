@@ -8,10 +8,9 @@ module Web
   # - .intl(time, :day_month_short) — Date#toLocaleDateString /
   #   Intl.DateTimeFormat, which the browser's ICU answers.
   #
-  # Both read lib/web/date_words.json, extracted from those two sources by
-  # test/parity/extract-date-words.mjs. Times are shown in the zone they come
-  # in: callers pass them in the gym's time zone (Web::BaseController runs
-  # every request in it).
+  # Both read lib/web/date_words.json, extracted once from those two
+  # sources. Times are shown in the zone they come in: callers pass them in
+  # the gym's time zone (Web::BaseController runs every request in it).
   module DateFormat
     WORDS = JSON.parse(File.read(File.expand_path("date_words.json", __dir__))).freeze
     LOCALES = %w[fr en ar].freeze
@@ -46,7 +45,7 @@ module Web
       end
     end
 
-    # An Intl format, by the name extract-date-words.mjs gave it: its parts
+    # An Intl format, by its name in date_words.json: its parts
     # in the locale's order, its words, its digits and its clock.
     def self.intl(time, format_name, locale: I18n.locale)
       return "" if time.nil?

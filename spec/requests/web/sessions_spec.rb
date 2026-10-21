@@ -73,12 +73,6 @@ RSpec.describe "Web sign-in", type: :request, openapi: false do
       expect(response).to redirect_to("/superadmin/overview")
     end
 
-    it "a home still on Angular: through the session hand-off (§9.3)" do
-      allow(Web::Routing).to receive(:shells).and_return(%w[admin])
-      web_sign_in(create(:user, :superadmin))
-      expect(response).to redirect_to("/session/handoff?to=%2Fsuperadmin%2Foverview")
-    end
-
     it "takes the salle's own language, as the Angular app does from /bootstrap" do
       company.update!(locale: "ar")
       web_sign_in(admin)

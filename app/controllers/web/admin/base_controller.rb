@@ -50,7 +50,7 @@ module Web
       # API's 402, which sends the page there (the jwt.interceptor's rule).
       def refuse_locked
         subscription = locking_subscription(area: lock_area, action: action_name)
-        return redirect_to(served_path("/account-locked")) unless request.format.json?
+        return redirect_to("/account-locked") unless request.format.json?
 
         render json: { error: subscription.lock_reason.to_s, message: lock_message(subscription) }, status: :payment_required
       end

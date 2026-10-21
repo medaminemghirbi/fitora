@@ -27,7 +27,7 @@ Rails.root.glob('spec/support/**/*.rb').sort_by(&:to_s).each { |f| require f }
 
 # The API contract, written from the request specs: `OPENAPI=1 bundle exec
 # rspec spec/requests` rewrites doc/openapi.yaml. CI regenerates it and fails
-# on a diff, so a serializer change cannot reach the Angular or mobile app
+# on a diff, so a serializer change cannot reach the mobile app
 # without the contract showing it. Shapes only — no example values, which
 # would be random ids and timestamps and change every run.
 if ENV["OPENAPI"]

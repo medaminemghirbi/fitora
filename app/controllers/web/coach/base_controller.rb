@@ -21,7 +21,7 @@ module Web
       def coach_area!
         return go_home unless current_user.staff? && current_staff_member&.coach?
 
-        redirect_to(served_path("/account-locked")) if locking_subscription.present?
+        redirect_to("/account-locked") if locking_subscription.present?
       end
 
       def coach_path(page, query = {})

@@ -1,12 +1,10 @@
 {
   "name": "fitora-web",
   "private": true,
-  "description": "Assets for Fitora's server-rendered web UI (jsbundling-rails + cssbundling-rails), and the Angular parity harness.",
+  "description": "Assets for Fitora's server-rendered web UI (jsbundling-rails + cssbundling-rails).",
   "scripts": {
     "build": "esbuild app/javascript/application.js --bundle --minify --sourcemap --format=esm --target=es2020 --outdir=app/assets/builds --public-path=/assets",
-    "build:css": "node bin/build-css.mjs",
-    "check:angular-sync": "node test/parity/sync-from-angular.mjs",
-    "parity": "node test/parity/run.mjs"
+    "build:css": "node bin/build-css.mjs"
   },
   "dependencies": {
     "@angular/compiler": "17.3.12",
@@ -21,10 +19,5 @@
     "bootstrap-icons": "1.13.1",
     "esbuild": "0.28.2",
     "sass": "1.71.1"
-  },
-  "devDependencies": {
-    "@playwright/test": "1.63.0",
-    "pixelmatch": "7.2.0",
-    "pngjs": "7.0.0"
   }
 }

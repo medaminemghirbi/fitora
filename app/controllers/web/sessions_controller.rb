@@ -38,13 +38,11 @@ module Web
     def destroy
       if current_impersonator
         exit_impersonation
-        return redirect_to(served_path("/superadmin/overview"), status: :see_other)
+        return redirect_to("/superadmin/overview", status: :see_other)
       end
 
       sign_out
       to = params[:to] == "/inscription" ? "/inscription" : web_sign_in_path
-      return render("web/handoffs/signed_out", layout: false, locals: { to: to }) if Web::Routing.transition?
-
       redirect_to to, status: :see_other
     end
 

@@ -1,18 +1,21 @@
 # Fitora Backend
 
-Rails 8 API backend for Fitora — a multi-tenant gym/studio management platform
-(clients, bookings, sessions, contracts, staff, payroll, attendance, and
-real-time notifications).
+Fitora — a multi-tenant gym/studio management platform (clients, bookings,
+sessions, contracts, staff, payroll, attendance, and real-time notifications).
+One Rails 8 app: the server-rendered web UI for every shell (admin, desk,
+coach, member, superadmin, the landing page) and the JSON API the mobile app
+calls (`/api/v1`).
 
 ## Stack
 
 - **Ruby** 3.4.7 (see [.ruby-version](.ruby-version))
-- **Rails** 8.1 (`config.api_only = true`)
+- **Rails** 8.1, with **Hotwire** (Turbo + Stimulus) for the web UI
+- **jsbundling-rails** (esbuild) + **cssbundling-rails** (sass), served by **Propshaft**
 - **PostgreSQL** — primary datastore, UUID primary keys everywhere
 - **Redis** — Sidekiq queue backend + ActionCable pub/sub
 - **Sidekiq** (+ `sidekiq-cron`) — background jobs (expiry scans, notification fan-out)
 - **ActionCable** — real-time notifications
-- **JWT** (`jwt` gem) — API authentication
+- **JWT** (`jwt` gem) — API authentication (the web UI uses the cookie session)
 - **Kamal** — Docker-based deployment
 - **Sentry** — error tracking (`sentry-ruby`, `sentry-rails`, `sentry-sidekiq`)
 
@@ -21,12 +24,14 @@ real-time notifications).
 - Ruby 3.4.7 (use [rbenv](https://github.com/rbenv/rbenv)/[asdf](https://asdf-vm.com/) with the provided `.ruby-version`)
 - PostgreSQL 14+
 - Redis 6+
+- Node.js 20 (builds the web UI's JavaScript and CSS)
 
 ## Setup
 
 ```bash
 # Install dependencies
 bin/setup --skip-server   # or: bundle install
+npm ci
 
 # Configure environment
 cp .env.example .env      # then fill in local values as needed
@@ -38,14 +43,15 @@ bin/rails db:create db:schema:load
 ## Running the app
 
 ```bash
-bin/rails server           # API on http://localhost:3000
-bundle exec sidekiq -c 5   # background job worker (needed for notifications/scans)
+bin/dev                    # web UI + API on http://localhost:3000, asset watchers, Sidekiq, mailcatcher
 ```
 
-Or run both with [foreman](https://github.com/ddollar/foreman) via `Procfile.dev`:
+`bin/dev` runs [Procfile.dev](Procfile.dev) with foreman. To run the server on
+its own, build the assets once first:
 
 ```bash
-foreman start -f Procfile.dev
+npm run build && npm run build:css
+bin/rails server
 ```
 
 The Sidekiq dashboard is mounted at `/sidekiq` — open in development, or in
@@ -84,13 +90,6 @@ rm doc/openapi.yaml && OPENAPI=1 COVERAGE=0 bundle exec rspec spec/requests --or
 
 and commit the result.
 
-### End-to-end smoke suite
-
-The Playwright journeys live in the frontend repo (`npm run e2e` there). They
-boot this API on port 3100 against its own database, `backend_e2e`, which
-`bin/rails e2e:seed` resets — it refuses to run on any database not named
-`*_e2e`.
-
 ## Linting & static analysis
 
 ```bash
@@ -112,6 +111,9 @@ Deployed as a Docker container via [Kamal](https://kamal-deploy.org/) — see
 ```bash
 bin/kamal deploy
 ```
+
+Kamal builds the image from a clean checkout of the current commit, so commit
+first. To build it by hand: `docker build -t fitora .` from this directory.
 
 Production refuses to boot without `SMTP_*` and `APP_HOST`
 (`config/initializers/required_env.rb`) — without mail, no admin can confirm
@@ -135,6 +137,7 @@ constraints), and drops it again.
 
 ## Project structure
 
+- `app/controllers/web`, `app/views/web` — the server-rendered web UI, one namespace per shell; `app/javascript` its Stimulus controllers, `app/assets/stylesheets` its styles
 - `app/controllers/api/v1` — versioned JSON API, namespaced by role where relevant (`superadmin/`, `admin/`, `me/`)
 - `app/models` — the data and the business rules on it: booking, cancelling, selling a plan, taking a payment are model methods (`Session#book!`, `Booking#cancel!`, `Contract.sell!`, `Payment.collect!`, …). A rule a request breaks raises `ApplicationRecord::Refused`, which the API answers with a 422
 - `app/lib` — code that isn't a business rule: PDF receipts and schedules, spreadsheet reports, dashboard figures, CSV import/export, JWT, the SMS gateway client

@@ -50,25 +50,6 @@ RSpec.describe "Web landing page", type: :request, openapi: false do
         expect(response).to redirect_to("/"), path
       end
     end
-
-    it "is Angular's own while the admin shell is (a rollback): \"/\" and every other page" do
-      allow(Web::Routing).to receive(:shells).and_return([])
-      index = Tempfile.new([ "index", ".html" ]).tap { |f| f.write("<app-root></app-root>") && f.flush }
-      stub_const("SpaController::INDEX", Pathname(index.path))
-      %w[/ /nowhere /connexion].each do |path|
-        get path, headers: { "Accept" => "text/html" }
-        expect(response.body).to eq("<app-root></app-root>"), path
-      end
-    end
-
-    it "leaves a shell Angular still serves to Angular" do
-      allow(Web::Routing).to receive(:shells).and_return(%w[admin])
-      get "/desk/checkin"
-      expect(response.body).not_to include("lp-hero")
-      expect(response).not_to be_redirect
-      get "/nowhere"
-      expect(response).to redirect_to("/")
-    end
   end
 
   it "guestGuard: a signed-in admin goes to their home" do

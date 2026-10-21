@@ -2,16 +2,15 @@ module Web
   # The desk shell's small decisions, as DeskShellComponent makes them.
   module DeskHelper
     # DeskShellComponent#navItems: the desk's two pages, then the admin
-    # shell's pages a desk works from — crossing to them is a full page load
-    # (through the hand-off while the admin shell is still Angular's).
+    # shell's pages a desk works from — crossing to them is a full page load.
     def desk_nav
       [
         [ desk_path("dashboard"), "bi-house", "desk.nav.today" ],
         [ desk_path("checkin"), "bi-check2-square", "desk.nav.checkin" ],
-        [ served_path("/admin/#{salle.id}/clients"), "bi-people", "desk.nav.members" ],
-        [ served_path("/admin/#{salle.id}/calendar"), "bi-calendar3", "desk.nav.schedule" ],
-        [ served_path("/admin/#{salle.id}/contracts"), "bi-award", "desk.nav.subscriptions" ],
-        [ served_path("/admin/#{salle.id}/payments"), "bi-cash-coin", "desk.nav.payments" ]
+        [ "/admin/#{salle.id}/clients", "bi-people", "desk.nav.members" ],
+        [ "/admin/#{salle.id}/calendar", "bi-calendar3", "desk.nav.schedule" ],
+        [ "/admin/#{salle.id}/contracts", "bi-award", "desk.nav.subscriptions" ],
+        [ "/admin/#{salle.id}/payments", "bi-cash-coin", "desk.nav.payments" ]
       ].map { |href, icon, label_key| { href: href, icon: icon, label_key: label_key, active: desk_link_active?(href) } }
     end
 

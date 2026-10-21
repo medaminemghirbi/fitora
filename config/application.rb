@@ -39,7 +39,7 @@ module Backend
     #
     # config.time_zone = "Central Time (US & Canada)"
 
-    # Where the Angular app is served. One default, read by the production
+    # Where the web UI is served. One default, read by the production
     # host list and by every link a mail sends (AccountMailer), so the two
     # can never point at different domains.
     config.x.app_host = ENV.fetch("APP_HOST", "app.fitora.com")
@@ -63,9 +63,9 @@ module Backend
                                         secure: Rails.env.production?, httponly: true,
                                         expire_after: 7.days
 
-    # The web UI speaks fr / en / ar (the Angular app's three). The default
-    # stays English so the API's validation messages are unchanged. Its
-    # words are the Angular app's own translation files, read as they are
+    # The web UI speaks fr / en / ar. The default stays English so the API's
+    # validation messages are unchanged. Its words are the translation files
+    # brought over from the Angular app, read as they are
     # (config/locales/web/ng.rb, Web::Translations).
     config.i18n.available_locales = %i[en fr ar]
     config.i18n.load_path += [ Rails.root.join("config/locales/web/ng.rb") ]
@@ -73,13 +73,6 @@ module Backend
     # bootstrap-icons' font files, which its stylesheet asks for as
     # url("./fonts/bootstrap-icons.woff2") — served by Propshaft from here.
     config.assets.paths << Rails.root.join("node_modules/bootstrap-icons/font")
-
-    # Which shells the Rails web UI serves (MIGRATION_AUDIT §9.2): a shell
-    # left out falls through to the Angular SPA, exactly as before. Off in
-    # production until a shell is switched over on purpose; development and
-    # test serve every migrated shell.
-    config.x.web_ui_shells = ENV.fetch("WEB_UI_SHELLS") { Rails.env.production? ? "" : "admin,desk,coach,member,superadmin" }
-                                .split(",").map(&:strip).reject(&:empty?).freeze
 
     # Background jobs run on Sidekiq (see config/initializers/sidekiq.rb and
     # config/sidekiq_cron.yml). The default :async adapter is not persistent.

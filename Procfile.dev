@@ -1,3 +1,5 @@
 web: bin/rails server -p ${PORT:-3000}
+js: npm run build -- --watch=forever
+css: npm run build:css -- --watch
 worker: bundle exec sidekiq
 mail: mailcatcher --foreground --smtp-port 1025 --http-port 1080

@@ -2,7 +2,7 @@
 # hash: the user, their salle, its branding, what they may do, what the
 # product offers here, and where the subscription stands.
 #
-# The JSON GET /api/v1/bootstrap answers (Angular SPA, mobile app), and what
+# The JSON GET /api/v1/bootstrap answers (the mobile app), and what
 # the server-rendered web UI reads to draw the same shell — one definition,
 # so the two can never disagree about a permission or a banner.
 class SessionBootstrap

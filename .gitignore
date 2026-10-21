@@ -49,9 +49,3 @@
 !/app/assets/builds/.keep
 /node_modules
 /public/assets
-
-# Parity harness output: screenshots, diffs and the HTML report.
-/test/parity/output
-
-# The Angular build's index.html, as the Docker image places it (SpaController)
-/spa/

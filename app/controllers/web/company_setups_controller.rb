@@ -21,7 +21,7 @@ module Web
       company = Company.open!(admin: current_user, attributes: company_params,
                     activity_template_ids: params[:activity_template_ids],
                     custom_activities: params.fetch(:custom_activities, []).map { |entry| entry.permit(:name, :emoji) })
-      render json: { next: served_path("/admin/#{company.id}/getting-started") }, status: :created
+      render json: { next: "/admin/#{company.id}/getting-started" }, status: :created
     rescue ActiveRecord::RecordInvalid => e
       render json: { error: I18n.with_locale(:en) { e.record.errors.full_messages.first } || "Validation failed" }, status: :unprocessable_content
     rescue ApplicationRecord::Refused => e
