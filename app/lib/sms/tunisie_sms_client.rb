@@ -10,6 +10,8 @@ module Sms
     class RequestError < StandardError; end
 
     BASE_URL = "https://www.tunisiesms.tn/client/Api/Api.aspx".freeze
+    OPEN_TIMEOUT = 5 # seconds
+    READ_TIMEOUT = 10
 
     def self.send_message(mobile:, text:)
       new.send_message(mobile: mobile, text: text)
@@ -35,10 +37,16 @@ module Sms
         heure: now.strftime("%H:%M:%S")
       )
 
-      response = Net::HTTP.get_response(uri)
+      # Booking#send_reminder! runs inside a web request: a gateway that hangs
+      # must not hold a server thread for Net::HTTP's default 60 + 60 seconds.
+      response = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: OPEN_TIMEOUT, read_timeout: READ_TIMEOUT) do |http|
+        http.request(Net::HTTP::Get.new(uri))
+      end
       raise RequestError, "TunisieSMS request failed (#{response.code})" unless response.is_a?(Net::HTTPSuccess)
 
       response.body
+    rescue Net::OpenTimeout, Net::ReadTimeout, SocketError, SystemCallError, OpenSSL::SSL::SSLError => e
+      raise RequestError, "TunisieSMS did not answer (#{e.class})"
     end
 
     private
