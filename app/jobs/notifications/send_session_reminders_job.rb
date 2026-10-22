@@ -4,8 +4,8 @@ module Notifications
   # to is an hour a studio cannot sell again; this is what keeps that rare.
   #
   # Each booking is reminded once (bookings.reminder_sent_at), on the
-  # member's app and — when the gym pays for it — by SMS. Someone who booked
-  # inside the window already knows, so they are left alone.
+  # member's app. Someone who booked inside the window already knows, so
+  # they are left alone.
   class SendSessionRemindersJob < ApplicationJob
     queue_as :default
 
@@ -42,17 +42,7 @@ module Notifications
         dedup_key: "session_reminder:#{booking.id}", url: "/member/bookings",
         data: { activity_name: session.activity.name, starts_at: session.starts_at.iso8601, gym_name: company.name }
       )
-      send_sms(booking) if company.settings.reminder_sms?
       booking.update_columns(reminder_sent_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
-    end
-
-    # Best effort: a member with no usable number, or a gateway that is
-    # down, must not stop everyone else's reminder — nor be retried every
-    # fifteen minutes.
-    def send_sms(booking)
-      booking.send_reminder!
-    rescue ApplicationRecord::Refused => e
-      Rails.logger.info("[reminders] SMS not sent for booking #{booking.id}: #{e.message}")
     end
   end
 end

@@ -6,8 +6,8 @@ import { toast } from "../lib/toast"
 
 // AdminBookingsComponent: the list (ServerListController) plus what its
 // signals redraw at once — the chips, the rail's count and "reset", the
-// active tab, the checked pill — and the row actions: remind the member, or
-// cancel (confirmed first, then the list again).
+// active tab, the checked pill — and the row's action: cancel (confirmed
+// first, then the list again).
 export default class extends ServerListController {
   static values = { ...ServerListController.values, labels: Object }
 
@@ -71,13 +71,6 @@ export default class extends ServerListController {
       }
       this.cardTarget.prepend(row)
     }
-  }
-
-  async remind(event) {
-    const button = event.currentTarget
-    const id = button.closest("tr").dataset.bookingId
-    const result = await send("POST", `${this.urlValue}/${id}/remind`)
-    result.ok ? toast("success", this.labelsValue.reminder_sent) : toast("error", result.error || this.labelsValue.error)
   }
 
   async cancel(event) {

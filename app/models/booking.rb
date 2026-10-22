@@ -59,18 +59,6 @@ class Booking < ApplicationRecord
     self
   end
 
-  # The "Remind client" button: an SMS through Sms::TunisieSmsClient. A
-  # missing phone, missing API credentials or a gateway error is refused
-  # with the reason, since a staff member triggered this by hand.
-  def send_reminder!
-    mobile = sms_number(client.phone)
-    raise Refused, "Client has no usable phone number" if mobile.blank?
-
-    Sms::TunisieSmsClient.send_message(mobile: mobile, text: reminder_text)
-  rescue Sms::TunisieSmsClient::ConfigurationError, Sms::TunisieSmsClient::RequestError => e
-    raise Refused, e.message
-  end
-
   private
 
   # nil when the cancellation is allowed; otherwise what to tell them.
@@ -87,24 +75,6 @@ class Booking < ApplicationRecord
     else
       "Bookings can only be cancelled up to #{hours} #{'hour'.pluralize(hours)} before the session starts."
     end
-  end
-
-  def reminder_text
-    "Bonjour #{client.first_name}, rappel : #{session.activity.name} le " \
-      "#{session.starts_at.strftime('%d/%m/%Y à %H:%M')} chez #{session.company.name}."
-  end
-
-  # TunisieSMS expects a bare digits mobile number prefixed with the
-  # country code (e.g. "21620111111") — client phones are stored as
-  # entered ("+216 20 111 111", "20 111 111"...), so this strips
-  # formatting and fills in Tunisia's 216 prefix when it's missing.
-  def sms_number(raw)
-    digits = raw.to_s.gsub(/\D/, "").delete_prefix("00")
-    return nil if digits.blank?
-    return digits if digits.start_with?("216")
-    return "216#{digits}" if digits.length == 8
-
-    digits
   end
 
   def waitlist_position_matches_status

@@ -67,28 +67,30 @@ RSpec.describe "Web rooms and bookings", type: :request, openapi: false do
       end
     end
 
-    it "cancels a booking and reminds its member, as the policy allows" do
+    it "cancels a booking, as the policy allows" do
       booking = Booking.find_by!(status: :confirmed)
-      allow_any_instance_of(Booking).to receive(:send_reminder!)
-      post "/admin/#{company.id}/bookings/#{booking.id}/remind"
-      expect(response).to have_http_status(:no_content)
-
       post "/admin/#{company.id}/bookings/#{booking.id}/cancel"
       expect(booking.reload.status).to eq("cancelled")
       expect(AuditLog.where(action: "booking.cancelled", auditable_id: booking.id)).to exist
     end
 
-    it "answers a refusal with the API's 422 and its message, which the page toasts" do
+    it "answers a refused cancellation with the API's 422 and its message, which the page toasts" do
       booking = Booking.find_by!(status: :confirmed)
-      allow_any_instance_of(Booking).to receive(:send_reminder!).and_raise(ApplicationRecord::Refused, "Client has no usable phone number")
-      post "/admin/#{company.id}/bookings/#{booking.id}/remind", as: :json
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(response.parsed_body["error"]).to eq("Client has no usable phone number")
-
       allow_any_instance_of(Booking).to receive(:cancel!).and_raise(ApplicationRecord::Refused, "Too late to cancel.")
       post "/admin/#{company.id}/bookings/#{booking.id}/cancel", as: :json
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.parsed_body["error"]).to eq("Too late to cancel.")
+    end
+
+    # No SMS in this version: no "remind the member" in the row's menu, and
+    # no endpoint behind it.
+    it "offers no SMS reminder" do
+      booking = Booking.find_by!(status: :confirmed)
+      get "/admin/#{company.id}/bookings"
+      expect(response.body).not_to include("bookings-list#remind")
+
+      post "/admin/#{company.id}/bookings/#{booking.id}/remind", as: :json
+      expect(response).to have_http_status(:not_found)
     end
 
     it "answers a filter change with its regions" do

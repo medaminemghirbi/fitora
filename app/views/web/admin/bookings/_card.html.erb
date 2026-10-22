@@ -51,10 +51,6 @@
               <td class="text-end">
                 <% if b[:status] == "confirmed" %>
                   <%= render layout: "web/shared/action_menu" do %>
-                    <button type="button" class="fx-menu-item" data-action="bookings-list#remind">
-                      <i class="bi bi-bell"></i> <%= ngt("bookings.remind_client") %>
-                    </button>
-                    <div class="fx-menu-divider"></div>
                     <button type="button" class="fx-menu-item is-danger" data-action="bookings-list#cancel">
                       <i class="bi bi-x-circle"></i> <%= ngt("bookings.status_cancelled") %>
                     </button>

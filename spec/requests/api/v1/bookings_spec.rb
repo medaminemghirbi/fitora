@@ -124,36 +124,13 @@ RSpec.describe "Api::V1::Bookings", type: :request do
     end
   end
 
-  describe "POST /api/v1/bookings/:id/remind" do
-    let(:booking) { create(:booking, client: client, session: session) }
+  # No SMS in this version, so no "remind" and no endpoint behind it.
+  it "has no remind endpoint" do
+    booking = create(:booking, client: client, session: session)
 
-    it "sends the reminder and returns sent" do
-      allow(Sms::TunisieSmsClient).to receive(:send_message)
+    post "/api/v1/bookings/#{booking.id}/remind", headers: auth_headers(admin)
 
-      post "/api/v1/bookings/#{booking.id}/remind", headers: auth_headers(admin)
-
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body["status"]).to eq("sent")
-      expect(Sms::TunisieSmsClient).to have_received(:send_message).once
-    end
-
-    it "surfaces a gateway/config failure as a 422" do
-      allow(Sms::TunisieSmsClient).to receive(:send_message)
-        .and_raise(Sms::TunisieSmsClient::ConfigurationError, "TUNISIESMS_API_KEY is not set")
-
-      post "/api/v1/bookings/#{booking.id}/remind", headers: auth_headers(admin)
-
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(response.parsed_body["error"]).to eq("TUNISIESMS_API_KEY is not set")
-    end
-
-    it "forbids a coach — coaches only have the checkin capability, never bookings" do
-      coach_staff = create(:staff_member, company: company, role: :coach, coach: create(:coach, company: company))
-
-      post "/api/v1/bookings/#{booking.id}/remind", headers: auth_headers(coach_staff.user)
-
-      expect(response).to have_http_status(:forbidden)
-    end
+    expect(response).to have_http_status(:not_found)
   end
 
   describe "the list's filters and rail counts" do

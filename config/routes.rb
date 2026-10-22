@@ -91,7 +91,6 @@ Rails.application.routes.draw do
       resources :bookings, only: [ :index, :show, :create ] do
         member do
           post :cancel
-          post :remind
         end
       end
       resources :clients, only: [ :index, :show, :create, :update, :destroy ] do
@@ -263,7 +262,6 @@ Rails.application.routes.draw do
       resources :bookings, only: :index do
         member do
           post :cancel
-          post :remind
         end
       end
       # Module 3.

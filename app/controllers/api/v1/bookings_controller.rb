@@ -3,7 +3,7 @@ module Api
     class BookingsController < BaseController
       before_action :require_company!
       before_action -> { require_capability!(:bookings) }, only: :index
-      before_action :set_booking, only: [ :show, :cancel, :remind ]
+      before_action :set_booking, only: [ :show, :cancel ]
 
       # GET /api/v1/bookings — filterable list of the company's bookings (coaches
       # narrowed to their own sessions)
@@ -54,15 +54,6 @@ module Api
 
         Bookings::Actions.cancel(@booking, by: current_user)
         render json: { booking: BookingSerializer.new(@booking.reload).as_json }
-      end
-
-      # POST /api/v1/bookings/:id/remind — "Remind client" button, sends an
-      # SMS (Booking#send_reminder!).
-      def remind
-        return render_forbidden unless BookingPolicy.new(current_user, @booking).remind?
-
-        Bookings::Actions.remind(@booking, by: current_user)
-        render json: { status: "sent" }
       end
 
       private
