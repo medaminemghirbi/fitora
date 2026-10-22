@@ -8,10 +8,6 @@ module Web
     # behind the same checks, answered with the API's message (K-04). Any
     # staff login may open it; only one that manages sessions changes it.
     class CalendarController < BaseController
-      # The widest view, a month, asks for six weeks. A longer range never
-      # comes from the page, and would load every session the salle has had.
-      MAX_RANGE_DAYS = 62
-
       before_action :refuse_unless_managing, only: %i[create move cancel stop_series book]
       before_action -> { refuse unless current_user.admin? || current_user.staff? }, only: %i[events schedule_pdf]
       before_action -> { refuse unless pro_access? }, only: :schedule_pdf
@@ -41,7 +37,7 @@ module Web
       def events
         # A missing date is a Date::Error too (Date.parse("")), answered 400.
         days = (Date.parse(params[:to].to_s) - Date.parse(params[:from].to_s)).to_i
-        return render(json: { error: "invalid range" }, status: :bad_request) unless (0..MAX_RANGE_DAYS).cover?(days)
+        return render(json: { error: "invalid range" }, status: :bad_request) unless (0..Sessions::Planner::MAX_RANGE_DAYS).cover?(days)
 
         sessions = planner.range(from: params[:from], to: params[:to], coach_id: params[:coach_id], activity_id: params[:activity_id])
         render json: { sessions: sessions.map { |s| s.merge(labels: date_labels(s)) } }

@@ -6,6 +6,11 @@ module Sessions
     # Why a session could not be created: what was not found.
     class NotFound < StandardError; end
 
+    # The widest range the calendar reads at once: its month view asks for
+    # six weeks. A longer one never comes from it, and would load every
+    # session the salle has had into memory.
+    MAX_RANGE_DAYS = 62
+
     def initialize(company:, staff_member:)
       @company = company
       @staff_member = staff_member

@@ -3,6 +3,8 @@ class ApplicationController < ActionController::API
   rescue_from ActiveRecord::RecordInvalid, with: :render_unprocessable
   rescue_from ApplicationRecord::Refused, with: :render_refused
   rescue_from ActionController::ParameterMissing, with: :render_bad_request
+  # ?date=, ?from=, ?starts_on= that is not a date: the caller's mistake, not a 500.
+  rescue_from Date::Error, with: -> { render json: { error: "invalid date" }, status: :bad_request }
 
   private
 
