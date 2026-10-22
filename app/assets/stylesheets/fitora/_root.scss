@@ -49,12 +49,6 @@ body {
 a { color: var(--color-primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-// Route progress bar (ngx-progressbar) — brand-coloured, above everything.
-ng-progress {
-  --ng-progress-color: var(--color-primary);
-  --ng-progress-thickness: 3;
-}
-
 .text-primary { color: var(--color-primary) !important; }
 .text-muted-token { color: var(--color-text-secondary) !important; }
 .text-warning-token { color: var(--color-warning) !important; }
