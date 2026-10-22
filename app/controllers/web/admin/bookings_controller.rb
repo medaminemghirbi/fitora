@@ -8,6 +8,10 @@ module Web
 
       before_action -> { require_capability(:bookings) }, only: :index
       before_action :set_booking, only: %i[cancel remind]
+      # A booking that cannot be cancelled, an SMS that could not go: the
+      # API's 422 and its message (ApplicationController#render_refused),
+      # which the page toasts — not a 500.
+      rescue_from ApplicationRecord::Refused, with: ->(refusal) { render json: { error: refusal.message }, status: :unprocessable_content }
 
       STATUSES = [
         [ "", "common.all", "var(--color-primary)" ],
