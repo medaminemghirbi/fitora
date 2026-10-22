@@ -55,4 +55,25 @@ RSpec.describe Company do
       expect(build(:company)).to be_valid
     end
   end
+
+  # Prawn decodes a PNG whole to put it in a PDF, and a small file can declare
+  # an enormous one (Receipts::PrintableImage).
+  describe "PNG pixel ceiling, for the PDFs" do
+    it "refuses a logo or a signature larger than the PDFs can draw" do
+      company = build(:company)
+      company.logo.attach(io: png_declaring(5000, 5000), filename: "logo.png", content_type: "image/png")
+      company.signature.attach(io: png_declaring(5000, 5000), filename: "signature.png", content_type: "image/png")
+
+      expect(company).not_to be_valid
+      expect(company.errors[:logo]).to include(/megapixels/)
+      expect(company.errors[:signature]).to include(/megapixels/)
+    end
+
+    it "accepts a wide signature within the ceiling" do
+      company = build(:company)
+      company.signature.attach(io: png_declaring(4000, 1000), filename: "signature.png", content_type: "image/png")
+
+      expect(company).to be_valid
+    end
+  end
 end
