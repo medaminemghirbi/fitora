@@ -29,10 +29,7 @@ class SubscriptionStatusSerializer
       included_modules: ModuleCatalog::KEYS,
       # Both plans, priced in the account's currency — the full comparison,
       # not just the one it is on.
-      plans: plans(currency),
-      # Where to send the money. nil when no RIB is configured, and the page
-      # falls back to the generic wording.
-      payout: PayoutAccount.current&.as_json(company: subscription&.billing_company || company)
+      plans: plans(currency)
     }
   end
 

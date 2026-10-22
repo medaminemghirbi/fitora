@@ -63,10 +63,6 @@ env:
     - BACKEND_DATABASE_PASSWORD
     - SMTP_USERNAME
     - SMTP_PASSWORD
-    - FITORA_RIB
-    - FITORA_BANK_NAME
-    - FITORA_ACCOUNT_HOLDER
-    - FITORA_SWIFT
     - SENTRY_DSN
     # - SENTRY_BROWSER_DSN   # optional: browser errors (.kamal/secrets.example)
     - SIDEKIQ_WEB_PASSWORD

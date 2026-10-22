@@ -40,42 +40,18 @@ RSpec.describe "Api::V1::Subscription", type: :request do
       expect(response.parsed_body["arrears_cents"]).to eq(company.monthly_subscription_cents)
     end
 
-    # The RIB lives in the environment, never in the database. What the page
-    # needs is the "not configured" case to be a fallback, not a blank card.
-    context "the bank details a gym transfers to" do
-      # All four, set and put back: doc/openapi.yaml is written from this
-      # example, and a developer's .env must not change its shape (CI has none).
-      around do |example|
-        keys = %w[FITORA_RIB FITORA_BANK_NAME FITORA_ACCOUNT_HOLDER FITORA_SWIFT]
-        before = ENV.to_h.slice(*keys)
-        example.run
-      ensure
-        keys.each { |key| before.key?(key) ? ENV[key] = before[key] : ENV.delete(key) }
-      end
+    # Fitora's own bank details are not something the app holds or hands out —
+    # whatever the environment of a server set up before they were removed.
+    it "sends no bank details" do
+      ENV["FITORA_RIB"] = "TN59 1000 6035 0123 4567 8901"
+      create(:subscription, company: company)
 
-      it "hands the admin the account and a reference naming their gym" do
-        ENV["FITORA_RIB"] = "TN59 1000 6035 0123 4567 8901"
-        ENV["FITORA_BANK_NAME"] = "BIAT"
-        ENV["FITORA_ACCOUNT_HOLDER"] = "Fitora SARL"
-        ENV["FITORA_SWIFT"] = "BIATTNTT"
-        create(:subscription, company: company)
+      get "/api/v1/subscription", headers: auth_headers(admin)
 
-        get "/api/v1/subscription", headers: auth_headers(admin)
-
-        payout = response.parsed_body["payout"]
-        expect(payout["rib"]).to eq("TN59 1000 6035 0123 4567 8901")
-        expect(payout["bank_name"]).to eq("BIAT")
-        expect(payout["reference"]).to start_with("FIT-")
-      end
-
-      it "sends no payout at all when no RIB is configured" do
-        ENV.delete("FITORA_RIB")
-        create(:subscription, company: company)
-
-        get "/api/v1/subscription", headers: auth_headers(admin)
-
-        expect(response.parsed_body["payout"]).to be_nil
-      end
+      expect(response.parsed_body).not_to have_key("payout")
+      expect(response.body).not_to include("TN59")
+    ensure
+      ENV.delete("FITORA_RIB")
     end
 
     it "is closed to staff — it is the admin's business" do
