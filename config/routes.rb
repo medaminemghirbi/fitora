@@ -91,7 +91,6 @@ Rails.application.routes.draw do
       resources :bookings, only: [ :index, :show, :create ] do
         member do
           post :cancel
-          post :remind
         end
       end
       resources :clients, only: [ :index, :show, :create, :update, :destroy ] do
@@ -263,7 +262,6 @@ Rails.application.routes.draw do
       resources :bookings, only: :index do
         member do
           post :cancel
-          post :remind
         end
       end
       # Module 3.
@@ -379,6 +377,8 @@ Rails.application.routes.draw do
       end
       # The command palette's search (⌘K).
       get "palette", to: "palette#search"
+      # The shell's own address: Angular's "" → dashboard, in this salle.
+      get "/", to: redirect(status: 302) { |p, _| "/admin/#{p[:salle_id]}/dashboard" }
       # Anything else: Angular's `**` → "" (app.routes.ts).
       get "*page", to: redirect("/", status: 302), format: false
     end

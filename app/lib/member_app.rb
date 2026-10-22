@@ -9,6 +9,9 @@
 module MemberApp
   module_function
 
+  # How many bookings each tab lists (upcoming soonest, past latest first).
+  BOOKINGS_LIMIT = 50
+
   # The schedule (GET /me/sessions), through PublicSessionSerializer: how
   # many places are left, never what the gym charges or who else is coming.
   def sessions(client, company_ids, date: nil)
@@ -33,6 +36,7 @@ module MemberApp
           .where(sessions: { company_id: company_ids })
           .where(upcoming ? "sessions.starts_at >= ?" : "sessions.starts_at < ?", Time.current)
           .order("sessions.starts_at #{upcoming ? 'asc' : 'desc'}")
+          .limit(BOOKINGS_LIMIT)
           .map { |b| BookingSerializer.new(b).as_json }
   end
 

@@ -61,7 +61,7 @@ other environments once `SIDEKIQ_WEB_PASSWORD` is set (HTTP basic auth).
 
 All runtime configuration is via environment variables — see
 [.env.example](.env.example) for the full list and inline documentation
-(datastores, CORS origins, SMS provider, Sentry, etc). Locally these are
+(datastores, CORS origins, Sentry, etc). Locally these are
 loaded from `.env` by `dotenv-rails`; in production they're set on the host /
 in the Kamal deploy config.
 
@@ -140,7 +140,7 @@ constraints), and drops it again.
 - `app/controllers/web`, `app/views/web` — the server-rendered web UI, one namespace per shell; `app/javascript` its Stimulus controllers, `app/assets/stylesheets` its styles
 - `app/controllers/api/v1` — versioned JSON API, namespaced by role where relevant (`superadmin/`, `admin/`, `me/`)
 - `app/models` — the data and the business rules on it: booking, cancelling, selling a plan, taking a payment are model methods (`Session#book!`, `Booking#cancel!`, `Contract.sell!`, `Payment.collect!`, …). A rule a request breaks raises `ApplicationRecord::Refused`, which the API answers with a 422
-- `app/lib` — code that isn't a business rule: PDF receipts and schedules, spreadsheet reports, dashboard figures, CSV import/export, JWT, the SMS gateway client
+- `app/lib` — code that isn't a business rule: PDF receipts and schedules, spreadsheet reports, dashboard figures, CSV import/export, JWT
 - `app/models/concerns` — shared model behavior (email verification, password reset, photo attachment)
 - `app/jobs` — Sidekiq background jobs, mostly scheduled scans (see `config/sidekiq_cron.yml`)
 - `app/policies` — authorization

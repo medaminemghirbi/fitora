@@ -9,6 +9,10 @@ module Web
 
     protect_from_forgery with: :exception
 
+    # ?date= (or a form's date) that is not a date: the caller's mistake, not
+    # a 500. Answered as the calendar answers it (CalendarController).
+    rescue_from Date::Error, with: -> { render json: { error: "invalid date" }, status: :bad_request }
+
     # The Angular app's three languages and two themes, kept in cookies rather
     # than localStorage so the very first paint is already right (no flash of
     # the wrong language, direction or theme). See MIGRATION_AUDIT §11.3.

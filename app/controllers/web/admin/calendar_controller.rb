@@ -35,6 +35,10 @@ module Web
       # print (DatePipe's "HH:mm", "EEEE d MMM" and "medium"), formatted here
       # as everywhere else on the server (Web::DateFormat).
       def events
+        # A missing date is a Date::Error too (Date.parse("")), answered 400.
+        days = (Date.parse(params[:to].to_s) - Date.parse(params[:from].to_s)).to_i
+        return render(json: { error: "invalid range" }, status: :bad_request) unless (0..Sessions::Planner::MAX_RANGE_DAYS).cover?(days)
+
         sessions = planner.range(from: params[:from], to: params[:to], coach_id: params[:coach_id], activity_id: params[:activity_id])
         render json: { sessions: sessions.map { |s| s.merge(labels: date_labels(s)) } }
       end

@@ -565,8 +565,6 @@ paths:
                         type: 'null'
                       logo_url:
                         type: 'null'
-                      signature_url:
-                        type: 'null'
                       signatory_name:
                         type: 'null'
                       contract_terms:
@@ -620,14 +618,11 @@ paths:
                                 type: boolean
                               reminder_hours:
                                 type: integer
-                              reminder_sms:
-                                type: boolean
                             required:
                             - cancellation_hours
                             - booking_opens_days
                             - no_show_consumes_session
                             - reminder_hours
-                            - reminder_sms
                           hours:
                             type: object
                             properties:
@@ -696,7 +691,6 @@ paths:
                     - slug
                     - primary_color
                     - logo_url
-                    - signature_url
                     - signatory_name
                     - contract_terms
                     - included_modules
@@ -2412,73 +2406,6 @@ paths:
                     type: string
                 required:
                 - error
-  "/api/v1/bookings/{id}/remind":
-    post:
-      summary: remind
-      tags:
-      - Api::V1::Booking
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties: {}
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                required:
-                - status
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-        '422':
-          description: Unprocessable Content
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  errors:
-                    type: array
-                    items:
-                      type: string
-                required:
-                - error
-                - errors
   "/api/v1/bootstrap":
     get:
       summary: show
@@ -2667,14 +2594,11 @@ paths:
                                 type: boolean
                               reminder_hours:
                                 type: integer
-                              reminder_sms:
-                                type: boolean
                             required:
                             - cancellation_hours
                             - booking_opens_days
                             - no_show_consumes_session
                             - reminder_hours
-                            - reminder_sms
                           hours:
                             type: object
                             properties:
@@ -5340,14 +5264,11 @@ paths:
                                 type: boolean
                               reminder_hours:
                                 type: integer
-                              reminder_sms:
-                                type: boolean
                             required:
                             - cancellation_hours
                             - booking_opens_days
                             - no_show_consumes_session
                             - reminder_hours
-                            - reminder_sms
                           hours:
                             type: object
                             properties:
@@ -5855,14 +5776,11 @@ paths:
                                 type: boolean
                               reminder_hours:
                                 type: integer
-                              reminder_sms:
-                                type: boolean
                             required:
                             - cancellation_hours
                             - booking_opens_days
                             - no_show_consumes_session
                             - reminder_hours
-                            - reminder_sms
                           hours:
                             type: object
                             properties:
@@ -6092,14 +6010,11 @@ paths:
                                 type: boolean
                               reminder_hours:
                                 type: integer
-                              reminder_sms:
-                                type: boolean
                             required:
                             - cancellation_hours
                             - booking_opens_days
                             - no_show_consumes_session
                             - reminder_hours
-                            - reminder_sms
                           hours:
                             type: object
                             properties:
@@ -6388,14 +6303,11 @@ paths:
                                 type: boolean
                               reminder_hours:
                                 type: integer
-                              reminder_sms:
-                                type: boolean
                             required:
                             - cancellation_hours
                             - booking_opens_days
                             - no_show_consumes_session
                             - reminder_hours
-                            - reminder_sms
                           hours:
                             type: object
                             properties:
@@ -10164,6 +10076,17 @@ paths:
                     type: string
                 required:
                 - error
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                - error
   "/api/v1/me/profile":
     get:
       summary: show
@@ -12804,6 +12727,12 @@ paths:
       summary: index
       tags:
       - Api::V1::Session
+      parameters:
+      - name: date
+        in: query
+        required: false
+        schema:
+          type: string
       responses:
         '200':
           description: OK
@@ -12898,6 +12827,17 @@ paths:
                 required:
                 - sessions
                 - meta
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                - error
         '401':
           description: Unauthorized
           content:
@@ -14263,27 +14203,6 @@ paths:
                       - key
                       - monthly_cents
                       - annual_cents
-                  payout:
-                    type:
-                    - object
-                    - 'null'
-                    properties:
-                      rib:
-                        type: string
-                      bank_name:
-                        type: string
-                      holder:
-                        type: string
-                      swift:
-                        type: 'null'
-                      reference:
-                        type: string
-                    required:
-                    - rib
-                    - bank_name
-                    - holder
-                    - swift
-                    - reference
                 required:
                 - subscription
                 - invoices
@@ -14299,7 +14218,6 @@ paths:
                 - trial_days
                 - included_modules
                 - plans
-                - payout
         '401':
           description: Unauthorized
           content:
@@ -16948,13 +16866,6 @@ paths:
         schema:
           type: string
       responses:
-        '200':
-          description: OK
-          content:
-            image/png:
-              schema:
-                type: string
-                format: binary
         '401':
           description: Unauthorized
           content:

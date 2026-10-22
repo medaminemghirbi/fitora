@@ -1,13 +1,17 @@
 module Web
   module Admin
     # The salle's bookings (AdminBookingsComponent) — routable, deliberately
-    # not in the nav. Listed by Bookings::ListQuery, cancelled and reminded
-    # through Bookings::Actions after BookingPolicy, as /api/v1/bookings does.
+    # not in the nav. Listed by Bookings::ListQuery, cancelled through
+    # Bookings::Actions after BookingPolicy, as /api/v1/bookings does.
     class BookingsController < BaseController
       PER_PAGE = 20
 
       before_action -> { require_capability(:bookings) }, only: :index
-      before_action :set_booking, only: %i[cancel remind]
+      before_action :set_booking, only: :cancel
+      # A booking that cannot be cancelled: the API's 422 and its message
+      # (ApplicationController#render_refused), which the page toasts — not
+      # a 500.
+      rescue_from ApplicationRecord::Refused, with: ->(refusal) { render json: { error: refusal.message }, status: :unprocessable_content }
 
       STATUSES = [
         [ "", "common.all", "var(--color-primary)" ],
@@ -37,13 +41,6 @@ module Web
         return head(:forbidden) unless BookingPolicy.new(current_user, @booking).cancel?
 
         Bookings::Actions.cancel(@booking, by: current_user)
-        head :no_content
-      end
-
-      def remind
-        return head(:forbidden) unless BookingPolicy.new(current_user, @booking).remind?
-
-        Bookings::Actions.remind(@booking, by: current_user)
         head :no_content
       end
 

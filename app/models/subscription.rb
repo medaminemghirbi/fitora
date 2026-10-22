@@ -38,7 +38,7 @@ class Subscription < ApplicationRecord
   # Explicit attribute so the enum resolves even when the dev server's code
   # reloader runs before the schema cache has picked up the new column.
   attribute :billing_period, :integer
-  enum :billing_period, BILLING_PERIODS
+  enum :billing_period, BILLING_PERIODS, validate: { allow_nil: true }
   attribute :plan, :string
   enum :plan, PLANS, validate: { allow_nil: true }
 

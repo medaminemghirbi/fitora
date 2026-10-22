@@ -107,7 +107,9 @@ module Reports
         sheet.add_row [ "Nom complet", "Téléphone", "Email", "Statut", "Date d'inscription", "Paiements reçus (#{period.label})" ],
                       style: Array.new(6, header_style)
 
-        company.memberships.includes(:client).joins(:client).order("clients.first_name", "clients.last_name").find_each do |membership|
+        # By name: find_each would drop this order for the ids'. The workbook
+        # holds every row in memory anyway, so batching saved nothing.
+        company.memberships.includes(:client).joins(:client).order("clients.first_name", "clients.last_name").each do |membership|
           client = membership.client
           status_style = membership.active? ? active_style : inactive_style
           sheet.add_row [

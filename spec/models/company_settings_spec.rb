@@ -247,7 +247,15 @@ RSpec.describe CompanySettings do
       expect(settings.feature?(:drop_in)).to be(true)
       expect(settings.feature?(:packs)).to be(false)
       expect(settings.reminder_hours).to eq(24)
-      expect(settings.reminder_sms?).to be(false)
+    end
+
+    # SMS reminders are not in this version: a gym that had them on keeps a
+    # stray key in its settings, dropped like any other.
+    it "drops an old reminder_sms as an unknown key" do
+      settings = described_class.new(booking: { reminder_sms: true })
+
+      expect(settings.to_h[:booking]).not_to have_key(:reminder_sms)
+      expect(settings.unknown_keys).to include("booking.reminder_sms")
     end
 
     it "clamps the reminder window to what the scan looks ahead" do

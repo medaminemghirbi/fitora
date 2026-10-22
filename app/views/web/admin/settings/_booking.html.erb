@@ -28,12 +28,6 @@
     </select>
   </div>
 <% end %>
-<% content_for :booking_sms_row do %>
-  <div class="sb-row">
-    <%= render "web/admin/settings/booking_label", id: "sb-reminder-sms", label: "settings.booking_reminder_sms", hint: "settings.booking_reminder_sms_hint" %>
-    <input id="sb-reminder-sms" type="checkbox" class="form-check-input"<%= raw(" checked") if booking[:reminder_sms] %> data-rule="reminder_sms" data-action="settings-booking#change" />
-  </div>
-<% end %>
 <section class="sb-group">
   <h2 class="sb-group-title"><%= ngt("settings.booking_how") %></h2>
 
@@ -75,10 +69,6 @@
       <% end %>
     </select>
   </div>
-
-  <% if booking[:reminder_hours].to_i > 0 %>
-    <%= content_for(:booking_sms_row) %>
-  <% end %>
 </section>
 
 <section class="sb-group">
@@ -101,4 +91,3 @@
 </section>
 
 <template data-settings-booking-target="online"><%= content_for(:booking_online_rows) %></template>
-<template data-settings-booking-target="sms"><%= content_for(:booking_sms_row) %></template>

@@ -6,6 +6,18 @@ RSpec.describe "Api::V1::Sessions", type: :request do
   let!(:activity) { create(:activity, company: company) }
 
   describe "GET /api/v1/sessions" do
+    # Unbounded, from=2000&to=2100 loaded every session the salle has had
+    # into memory; a malformed date was a 500.
+    it "refuses a range wider than the calendar's month view, or a date it cannot read" do
+      get "/api/v1/sessions", params: { from: "2026-09-28", to: "2026-11-09" }, headers: auth_headers(admin)
+      expect(response).to have_http_status(:ok)
+
+      [ { from: "2000-01-01", to: "2100-01-01" }, { from: "2026-10-18", to: "2026-10-12" }, { from: "nope", to: "2026-10-12" }, { date: "nope" } ].each do |params|
+        get "/api/v1/sessions", params: params, headers: auth_headers(admin)
+        expect(response).to have_http_status(:bad_request), params.inspect
+      end
+    end
+
     it "never exposes another company's sessions" do
       create(:session, activity: activity, company: company)
       other_activity = create(:activity)

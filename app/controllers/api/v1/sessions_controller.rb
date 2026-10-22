@@ -22,7 +22,10 @@ module Api
         # in it, not a paginated slice — pagination only applies to the
         # unbounded list view.
         if params[:from].present? && params[:to].present?
-          scope = scope.where(starts_at: Date.parse(params[:from]).beginning_of_day..Date.parse(params[:to]).end_of_day)
+          from, to = Date.parse(params[:from]), Date.parse(params[:to])
+          return render(json: { error: "invalid range" }, status: :bad_request) unless (0..Sessions::Planner::MAX_RANGE_DAYS).cover?((to - from).to_i)
+
+          scope = scope.where(starts_at: from.beginning_of_day..to.end_of_day)
           render json: { sessions: serialize_sessions(scope.to_a) }
         else
           render json: {

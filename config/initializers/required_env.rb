@@ -20,9 +20,7 @@ module RequiredEnv
   # Worth a warning, not a refusal: the app works without them, just blind.
   RECOMMENDED = {
     "SENTRY_DSN" => "error reporting",
-    "SIDEKIQ_WEB_PASSWORD" => "the /sidekiq dashboard",
-    # PayoutAccount falls back to generic "settle with Fitora" wording.
-    "FITORA_RIB" => "Fitora's bank details on the subscription page"
+    "SIDEKIQ_WEB_PASSWORD" => "the /sidekiq dashboard"
   }.freeze
 
   def self.missing(env = ENV, keys = REQUIRED)

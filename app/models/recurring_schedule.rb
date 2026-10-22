@@ -12,7 +12,7 @@ class RecurringSchedule < ApplicationRecord
 
   has_many :sessions, dependent: :nullify
 
-  enum :recurrence_type, { weekly: 0, daily: 1, monthly: 2 }
+  enum :recurrence_type, { weekly: 0, daily: 1, monthly: 2 }, validate: true
 
   validates :weekdays, presence: true
   validates :start_time, presence: true

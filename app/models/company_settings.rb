@@ -72,10 +72,7 @@ class CompanySettings
     # How many hours before a session the member is reminded of it, on their
     # app. 0 turns reminders off. A one-to-one slot that nobody turns up to
     # is an hour the studio cannot sell again, which is why this is on.
-    reminder_hours: { default: 24, min: 0, max: 72 },
-    # Whether that reminder also goes out by SMS. Off by default: every SMS
-    # costs the gym money.
-    reminder_sms: { default: false }
+    reminder_hours: { default: 24, min: 0, max: 72 }
   }.freeze
 
   # When the business is open. Used to lay out the calendar and to stop a
@@ -160,7 +157,6 @@ class CompanySettings
   def booking_opens_days = @booking[:booking_opens_days]
   def no_show_consumes_session? = @booking[:no_show_consumes_session]
   def reminder_hours = @booking[:reminder_hours]
-  def reminder_sms? = @booking[:reminder_sms]
 
   # --- Opening hours --------------------------------------------------------
 

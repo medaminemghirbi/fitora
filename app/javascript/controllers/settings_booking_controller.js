@@ -8,7 +8,7 @@ import { toast } from "../lib/toast"
 // (it clamps and drops). A feature switch also changes the menus (rooms,
 // packs), which follow it. While a save runs, every control waits.
 export default class extends Controller {
-  static targets = ["online", "sms"]
+  static targets = ["online"]
   static values = { url: String, labels: Object }
 
   connect() {
@@ -55,7 +55,6 @@ export default class extends Controller {
     const { features, booking } = this.settings
     this.element.querySelectorAll("[data-feature]").forEach((input) => (input.checked = Boolean(features[input.dataset.feature])))
     this.toggleRows("online", Boolean(features.online_booking), "#sb-online")
-    this.toggleRows("sms", booking.reminder_hours > 0, "#sb-reminder")
     this.element.querySelectorAll("[data-rule]").forEach((input) => {
       const value = booking[input.dataset.rule]
       if (input.type === "checkbox") input.checked = Boolean(value)

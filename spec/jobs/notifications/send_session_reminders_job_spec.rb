@@ -75,23 +75,14 @@ RSpec.describe Notifications::SendSessionRemindersJob do
     expect(other.reload.reminder_sent_at).to be_nil
   end
 
-  it "sends the SMS too when the gym pays for it, and survives a gateway failure" do
-    company.update!(settings: { booking: { reminder_sms: true } })
+  # No SMS in this version: a gym that had SMS reminders on is reminded on
+  # the member's app, like every other.
+  it "reminds on the member's app only, even a gym that had SMS reminders on" do
+    company.update_column(:settings, company.settings.to_h.deep_merge(booking: { reminder_sms: true })) # rubocop:disable Rails/SkipsModelValidations
     booking = booked(session_in(10))
-    allow(Sms::TunisieSmsClient).to receive(:send_message)
-      .and_raise(Sms::TunisieSmsClient::RequestError, "gateway down")
 
-    expect { described_class.perform_now }.not_to raise_error
-    expect(Sms::TunisieSmsClient).to have_received(:send_message)
+    expect { described_class.perform_now }.to change { member.notifications.where(kind: "session_reminder").count }.by(1)
     expect(booking.reload.reminder_sent_at).to be_present
-  end
-
-  it "sends no SMS by default" do
-    booked(session_in(10))
-    allow(Sms::TunisieSmsClient).to receive(:send_message)
-
-    described_class.perform_now
-
-    expect(Sms::TunisieSmsClient).not_to have_received(:send_message)
+    expect(defined?(Sms)).to be_nil
   end
 end

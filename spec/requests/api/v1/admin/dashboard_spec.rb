@@ -32,6 +32,19 @@ RSpec.describe "Api::V1::Admin::Dashboard", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    # The image every contract is signed with is the admin's (Settings →
+    # Image de marque), and its link opens it to whoever holds it. The
+    # dashboard never needs it, and staff with `reports` read the dashboard.
+    it "never hands out the contract signature's link" do
+      company.signature.attach(io: Rails.root.join("spec/fixtures/files/sample.png").open, filename: "signature.png", content_type: "image/png")
+      moderator = create(:staff_member, company: company, role: :moderator)
+
+      [ admin, moderator.user ].each do |user|
+        get "/api/v1/admin/dashboard", headers: auth_headers(user)
+        expect(response.parsed_body["company"]).not_to have_key("signature_url")
+      end
+    end
+
     it "forbids a coach (no reports capability) from viewing the dashboard" do
       coach_staff = create(:staff_member, company: company, role: :coach)
 

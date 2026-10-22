@@ -26,7 +26,7 @@ class Activity < ApplicationRecord
   # `attribute` must precede `enum` or the dev code-reloader raises
   # "Undeclared attribute type for enum" after the column rename migration.
   attribute :session_format, :integer
-  enum :session_format, { individual: 0, small_group: 1, collective: 2 }
+  enum :session_format, { individual: 0, small_group: 1, collective: 2 }, validate: true
 
   CAPACITY_BOUNDS = {
     "individual"  => { min: 1,  max: 1 },

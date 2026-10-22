@@ -6,7 +6,7 @@
      data-bookings-list-url-value="<%= admin_page_path("bookings") %>"
      data-bookings-list-filters-value="<%= { q: @filters[:q].to_s, status: @filters[:status].to_s, date: @filters[:date].to_s }.to_json %>"
      data-bookings-list-page-value="<%= @page %>"
-     data-bookings-list-labels-value="<%= { statuses: booking_statuses.to_h { |v, k, _| [ v, ngt(k) ] }, reset: ngt("common.reset"), reminder_sent: ngt("bookings.reminder_sent"), error: ngt("common.error_generic"), confirm: ngt("common.confirm"), cancel_title: ngt("bookings.cancel_confirm_title"), cancel_body: ngt("bookings.cancel_confirm_body") }.to_json %>">
+     data-bookings-list-labels-value="<%= { statuses: booking_statuses.to_h { |v, k, _| [ v, ngt(k) ] }, reset: ngt("common.reset"), error: ngt("common.error_generic"), confirm: ngt("common.confirm"), cancel_title: ngt("bookings.cancel_confirm_title"), cancel_body: ngt("bookings.cancel_confirm_body") }.to_json %>">
   <app-filter-rail>
     <%= render layout: "web/shared/filter_rail", locals: { active_count: bookings_chip_count(@filters) } do %>
       <div class="fx-rail-block">

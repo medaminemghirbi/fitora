@@ -8,6 +8,7 @@ module Web
     # (B-14). ?fragment=1 is the page without the shell, as the filter
     # redraws it.
     class SupportController < BaseController
+      include ServesAttachments
       helper_method :support_tel_href
 
       def index
@@ -33,7 +34,7 @@ module Web
 
       def attachment
         file = SupportTicket.find(params[:id]).attachments.find(params[:attachment_id])
-        send_data file.download, filename: file.filename.to_s, type: file.content_type, disposition: "inline"
+        redirect_to_attachment(file)
       end
 
       private

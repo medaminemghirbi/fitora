@@ -5,7 +5,7 @@ module Web
     # (ReleaseNotes.publish, as POST /api/v1/superadmin/app_updates does).
     class UpdatesController < BaseController
       def index
-        @updates = JSON.parse(AppUpdate.includes(:created_by, media_attachments: :blob).recent.map { |u| AppUpdateSerializer.new(u).as_json }.to_json).map(&:deep_symbolize_keys)
+        @updates = JSON.parse(AppUpdate.includes(:created_by, media_attachments: :blob).recent.limit(AppUpdate::LIST_LIMIT).map { |u| AppUpdateSerializer.new(u).as_json }.to_json).map(&:deep_symbolize_keys)
       end
 
       def create

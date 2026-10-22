@@ -396,6 +396,7 @@ class Company < ApplicationRecord
     return unless logo.attached?
 
     errors.add(:logo, "must be smaller than #{MAX_LOGO_SIZE / 1.megabyte}MB") if logo.blob.byte_size > MAX_LOGO_SIZE
+    within_printable_pixels(:logo)
   end
 
   def signature_is_printable
@@ -403,6 +404,29 @@ class Company < ApplicationRecord
 
     errors.add(:signature, "must be a PNG or JPEG image") unless signature.content_type.in?(ALLOWED_SIGNATURE_TYPES)
     errors.add(:signature, "must be smaller than #{MAX_SIGNATURE_SIZE / 1.megabyte}MB") if signature.blob.byte_size > MAX_SIGNATURE_SIZE
+    within_printable_pixels(:signature)
+  end
+
+  # Both go on the contract PDFs, which leave off a PNG over
+  # Receipts::PrintableImage::MAX_PIXELS (Prawn would decode it whole).
+  # Refused here, from the upload's header, so the admin knows why.
+  def within_printable_pixels(name)
+    head = pending_upload_head(name)
+    return if head.nil? || Receipts::PrintableImage.drawable?(head)
+
+    errors.add(name, "must be at most #{Receipts::PrintableImage::MAX_PIXELS / 1_000_000} megapixels (e.g. 2048 × 2048 pixels)")
+  end
+
+  # The first bytes of a file attached in this save, or nil: nothing new, or a
+  # blob already stored (which PrintableImage still checks when printing).
+  def pending_upload_head(name)
+    attachable = attachment_changes[name.to_s]&.attachable
+    io = attachable.is_a?(Hash) ? attachable[:io] : attachable
+    return nil unless io.respond_to?(:read) && io.respond_to?(:rewind)
+
+    head = io.read(Receipts::PrintableImage::HEADER_BYTES)
+    io.rewind
+    head
   end
 
   def timezone_is_known

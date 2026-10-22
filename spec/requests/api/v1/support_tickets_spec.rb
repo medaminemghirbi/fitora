@@ -83,6 +83,7 @@ RSpec.describe "Api::V1::SupportTickets", type: :request do
       ticket.attachments.attach(sample_file)
 
       get "/api/v1/support_tickets/#{ticket.id}/attachments/#{ticket.attachments.first.id}", headers: auth_headers(admin)
+      follow_redirects!
 
       expect(response).to have_http_status(:ok)
       expect(response.headers["Content-Type"]).to include("image/png")

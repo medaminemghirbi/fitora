@@ -9,7 +9,7 @@ class Payment < ApplicationRecord
   # `card` is retained so historical rows keep deserialising, but card
   # payments are out of scope for now — SELECTABLE_METHODS is what any new
   # or edited payment may use. See Contract.sell! / Payment.collect!.
-  enum :payment_method, { cash: 0, card: 1, bank_transfer: 2, other: 3 }
+  enum :payment_method, { cash: 0, card: 1, bank_transfer: 2, other: 3 }, validate: true
   SELECTABLE_METHODS = %w[cash bank_transfer other].freeze
 
   validates :amount, numericality: { greater_than_or_equal_to: 0 }

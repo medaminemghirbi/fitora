@@ -143,10 +143,13 @@ export default class extends Controller {
     const form = new FormData()
     form.append("file", this.preview.file)
     let status = await this.request("POST", `${this.urlValue}/${entity}/import`, form)
-    while (status.ok && !status.data.finished) {
+    // Until the import ends — or the page is left: a job that never runs
+    // (no worker) must not be polled forever from a page nobody is on.
+    while (status.ok && !status.data.finished && this.element.isConnected) {
       await new Promise((resolve) => setTimeout(resolve, IMPORT_POLL_MS))
       status = await this.request("GET", `${this.urlValue}/imports/${status.data.id}`)
     }
+    if (!this.element.isConnected) return
     this.importing = false
     if (!status.ok || status.data.status === "failed") {
       this.render()

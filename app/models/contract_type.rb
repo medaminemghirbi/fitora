@@ -13,7 +13,7 @@ class ContractType < ApplicationRecord
   # quarter, half-year or year; a studio sells carnets with a lifetime of
   # their own — "10 séances valables 8 semaines" — which is `custom`, with
   # the day count in validity_days. #duration_days reads both.
-  enum :billing_period, { monthly: 0, quarterly: 1, semi_annual: 2, yearly: 3, custom: 4 }
+  enum :billing_period, { monthly: 0, quarterly: 1, semi_annual: 2, yearly: 3, custom: 4 }, validate: true
 
   DURATION_DAYS_BY_PERIOD = { "monthly" => 30, "quarterly" => 90, "semi_annual" => 180, "yearly" => 365 }.freeze
 

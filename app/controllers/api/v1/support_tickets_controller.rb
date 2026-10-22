@@ -4,12 +4,13 @@ module Api
     # with optional file/video attachments, reviewed by a Fitora superadmin from
     # a cross-company inbox (Api::V1::Superadmin::SupportTicketsController).
     class SupportTicketsController < BaseController
+      include ServesAttachments
       before_action :require_admin!
       before_action :set_ticket, only: [ :attachment ]
 
       # GET /api/v1/support_tickets
       def index
-        tickets = current_company.support_tickets.recent
+        tickets = current_company.support_tickets.recent.limit(SupportTicket::LIST_LIMIT)
         render json: { support_tickets: tickets.map { |t| SupportTicketSerializer.new(t).as_json } }
       end
 
@@ -32,7 +33,7 @@ module Api
 
       def attachment
         file = @ticket.attachments.find(params[:attachment_id])
-        send_data file.download, filename: file.filename.to_s, type: file.content_type, disposition: "inline"
+        redirect_to_attachment(file)
       end
 
       private
