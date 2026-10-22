@@ -20,6 +20,16 @@ RSpec.describe "Web salles", type: :request, openapi: false do
     expect(response.body).to match(/sl-card is-active" data-salle-id="#{second.id}"/)
   end
 
+  # Angular's "" → dashboard, in the salle the URL names — not the saved one,
+  # which the pre-migration /admin/<page> redirect would pick (§8.1, §8.3).
+  it "opens a bare salle address on that salle's dashboard" do
+    expect(admin.reload.current_company).to eq(company)
+    [ "/admin/#{second.id}", "/admin/#{second.id}/" ].each do |bare|
+      get bare
+      expect(response).to redirect_to("/admin/#{second.id}/dashboard"), bare
+    end
+  end
+
   it "is locked below paid Pro, without the network" do
     admin.subscription.update!(plan: :starter)
     get base
