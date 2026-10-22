@@ -71,8 +71,16 @@ PASSWORD_CHECKS = [
   [ "PATCH", "/api/v1/auth/password" ],
   [ "DELETE", "/api/v1/me/account" ]
 ].freeze
+# …and their twins in the web UI: the admin shell's (the salle is in the
+# path) and the member's own.
+WEB_PASSWORD_CHECKS = [
+  [ "PATCH", %r{\A/admin/[0-9a-f-]{36}/settings/password\z} ],
+  [ "PATCH", %r{\A/member/password\z} ],
+  [ "DELETE", %r{\A/member/account\z} ]
+].freeze
 Rack::Attack.throttle("password_checks/ip", limit: 10, period: 5.minutes) do |req|
-  req.ip if PASSWORD_CHECKS.include?([ req.request_method, req.path ])
+  req.ip if PASSWORD_CHECKS.include?([ req.request_method, req.path ]) ||
+            WEB_PASSWORD_CHECKS.any? { |method, path| req.request_method == method && req.path.match?(path) }
 end
 
 # The web UI's twins of those endpoints: the token is in the form, not the path.

@@ -61,6 +61,39 @@ RSpec.describe "Rack::Attack throttling on login", type: :request do
     end
   end
 
+  # A stolen session should not be a way to guess the password behind it —
+  # on the web UI's own forms too, not only on the API's.
+  describe "password re-checks in the web UI" do
+    let(:company) { create(:company, :pro, setup_dismissed_at: Time.current) }
+    let(:wrong) { { current_password: "wrong", password: "new-password-1" } }
+
+    it "throttles the admin's password change from one IP" do
+      web_sign_in(company.admin)
+      10.times { patch "/admin/#{company.id}/settings/password", params: wrong, as: :json }
+      expect(response).to have_http_status(:unprocessable_content)
+
+      patch "/admin/#{company.id}/settings/password", params: wrong, as: :json
+
+      expect(response).to have_http_status(:too_many_requests)
+    end
+
+    it "throttles a member's password change and account deletion together" do
+      subscription = Subscription.find_by!(admin_id: company.admin_id)
+      subscription.issue_invoice!(issued_by: create(:user, :superadmin)) unless subscription.pro_features?
+      member = create(:client, company: company)
+      member.update!(password: "password123")
+      web_sign_in(member)
+      5.times { patch "/member/password", params: wrong, as: :json }
+      5.times { delete "/member/account", params: { password: "wrong" }, as: :json }
+      expect(response).to have_http_status(:unprocessable_content)
+
+      delete "/member/account", params: { password: "wrong" }, as: :json
+
+      expect(response).to have_http_status(:too_many_requests)
+      expect(member.reload).to be_active
+    end
+  end
+
   it "never throttles the internal /api namespace at large" do
     150.times { get "/api/v1/auth/me" }
 
