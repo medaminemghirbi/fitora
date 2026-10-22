@@ -32,3 +32,10 @@ send_session_reminders:
   cron: "*/15 * * * *"
   class: "Notifications::SendSessionRemindersJob"
   queue: default
+
+# Deletes read notifications after 90 days, any after a year, audit logs
+# after two years (PruneOldRecordsJob), so neither table grows forever.
+prune_old_records:
+  cron: "40 3 * * *"
+  class: "PruneOldRecordsJob"
+  queue: default
