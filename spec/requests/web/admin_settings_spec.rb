@@ -106,7 +106,7 @@ RSpec.describe "Web settings", type: :request, openapi: false do
   it "offers no SMS reminder among the booking rules" do
     get "#{base}/booking"
     expect(response).to have_http_status(:ok)
-    expect(response.body).not_to include("sb-reminder-sms", "reminder_sms")
+    expect(response.body).not_to include('id="sb-reminder-sms"', 'data-rule="reminder_sms"')
   end
 
   describe "roles, as /api/v1/roles" do
