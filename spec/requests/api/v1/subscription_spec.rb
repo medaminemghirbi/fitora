@@ -43,17 +43,21 @@ RSpec.describe "Api::V1::Subscription", type: :request do
     # The RIB lives in the environment, never in the database. What the page
     # needs is the "not configured" case to be a fallback, not a blank card.
     context "the bank details a gym transfers to" do
+      # All four, set and put back: doc/openapi.yaml is written from this
+      # example, and a developer's .env must not change its shape (CI has none).
       around do |example|
-        before = ENV["FITORA_RIB"]
+        keys = %w[FITORA_RIB FITORA_BANK_NAME FITORA_ACCOUNT_HOLDER FITORA_SWIFT]
+        before = ENV.to_h.slice(*keys)
         example.run
       ensure
-        before.nil? ? ENV.delete("FITORA_RIB") : ENV["FITORA_RIB"] = before
-        ENV.delete("FITORA_BANK_NAME")
+        keys.each { |key| before.key?(key) ? ENV[key] = before[key] : ENV.delete(key) }
       end
 
       it "hands the admin the account and a reference naming their gym" do
         ENV["FITORA_RIB"] = "TN59 1000 6035 0123 4567 8901"
         ENV["FITORA_BANK_NAME"] = "BIAT"
+        ENV["FITORA_ACCOUNT_HOLDER"] = "Fitora SARL"
+        ENV["FITORA_SWIFT"] = "BIATTNTT"
         create(:subscription, company: company)
 
         get "/api/v1/subscription", headers: auth_headers(admin)

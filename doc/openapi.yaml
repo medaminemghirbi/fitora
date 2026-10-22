@@ -14275,7 +14275,7 @@ paths:
                       holder:
                         type: string
                       swift:
-                        type: 'null'
+                        type: string
                       reference:
                         type: string
                     required:
