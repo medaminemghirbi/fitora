@@ -12,13 +12,23 @@ service: fitora
 
 image: <REGISTRY_USER>/fitora
 
+# Memory ceilings, so one runaway process cannot starve the others (or
+# Postgres) on the shared box: Docker restarts a role that goes over. A
+# loaded app process is ~140 MB before any request; web runs Puma's master and
+# WEB_CONCURRENCY workers, worker one Sidekiq process. Watch `docker stats`
+# under real traffic and adjust. Plan on a box with at least 2 GB of RAM.
 servers:
   web:
-    - <VPS_IP>
+    hosts:
+      - <VPS_IP>
+    options:
+      memory: 1g
   worker:
     hosts:
       - <VPS_IP>
     cmd: bundle exec sidekiq
+    options:
+      memory: 768m
     env:
       clear:
         RAILS_MAX_THREADS: 10
