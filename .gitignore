@@ -41,6 +41,9 @@
 /load_test/data/*
 !/load_test/data/.keep
 
+# A local Python virtualenv (nothing in this repo is Python).
+/.venv/
+
 # SimpleCov output
 /coverage
 
