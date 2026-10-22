@@ -46,6 +46,11 @@ module Backend
     config.x.frontend_url = ENV.fetch("FRONTEND_URL") do
       Rails.env.production? ? "https://#{config.x.app_host}" : "http://localhost:3000"
     end
+    # A support ticket's video opens in the browser, as it did when the app
+    # sent the file itself (ServesAttachments): Active Storage would otherwise
+    # serve every type outside this list as a download.
+    config.active_storage.content_types_allowed_inline += %w[video/mp4 video/quicktime video/webm]
+
     # The Sentry project the web UI's browser errors go to
     # (app/javascript/lib/error_reporting.js), or nil: nothing is sent.
     config.x.sentry_browser_dsn = ENV["SENTRY_BROWSER_DSN"].presence

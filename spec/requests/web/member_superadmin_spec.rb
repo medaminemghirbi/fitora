@@ -189,6 +189,7 @@ RSpec.describe "Web member and superadmin shells", type: :request, openapi: fals
       expect(response.body).to include("Aide", "/superadmin/support/#{ticket.id}/attachments/")
 
       get "/superadmin/support/#{ticket.id}/attachments/#{ticket.attachments.first.id}"
+      follow_redirects!
       expect(response.body).to eq("pdf")
       patch "/superadmin/support/#{ticket.id}/resolve", as: :json
       expect(response.parsed_body["detail"]).not_to include("data-resolve")

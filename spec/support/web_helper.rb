@@ -4,6 +4,11 @@ module WebHelper
     post "/connexion", params: { email: account.email, password: password }
   end
 
+  # Through Active Storage's redirects to the file itself (ServesAttachments).
+  def follow_redirects!(limit: 3)
+    limit.times { response.redirect? ? follow_redirect! : break }
+  end
+
   # The members a members page lists, in order — read off the rows' links.
   def listed_client_ids(html = response.body)
     html.scan(%r{data-href="/admin/[0-9a-f-]{36}/clients/([0-9a-f-]{36})"}).flatten

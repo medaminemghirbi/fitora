@@ -4,6 +4,7 @@ module Web
     # history of what it has asked. Tickets are opened by SupportRequest, as
     # POST /api/v1/support_tickets opens them.
     class SupportController < BaseController
+      include ServesAttachments
       before_action :require_admin
 
       def index
@@ -34,7 +35,7 @@ module Web
       def attachment
         ticket = current_company.support_tickets.find(params[:id])
         file = ticket.attachments.find(params[:attachment_id])
-        send_data file.download, filename: file.filename.to_s, type: file.content_type, disposition: "inline"
+        redirect_to_attachment(file)
       end
 
       private

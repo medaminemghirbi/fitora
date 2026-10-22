@@ -5,6 +5,7 @@ module Api
       # from the "Contact" tab, reviewed here rather than per-company (unlike
       # module pre-orders, these are time-sensitive enough to need one list).
       class SupportTicketsController < BaseController
+        include ServesAttachments
         before_action :require_superadmin!
         before_action :set_ticket, only: [ :resolve, :attachment ]
 
@@ -28,7 +29,7 @@ module Api
         # GET /api/v1/superadmin/support_tickets/:id/attachments/:attachment_id
         def attachment
           file = @ticket.attachments.find(params[:attachment_id])
-          send_data file.download, filename: file.filename.to_s, type: file.content_type, disposition: "inline"
+          redirect_to_attachment(file)
         end
 
         private
