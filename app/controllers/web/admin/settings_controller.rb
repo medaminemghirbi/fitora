@@ -13,7 +13,10 @@ module Web
       before_action :refuse_without_pro, only: %i[create_role update_role destroy_role regenerate_key data_template export_data import_data show_import]
       before_action :set_strategy, only: %i[data_template export_data import_data]
       # Exporting all of an entity is a bulk copy of the gym's data: the admin's.
-      before_action :refuse_unless_admin, only: :export_data
+      # A block, not `before_action :refuse_unless_admin` again: Rails keeps one
+      # callback per method name, so a second one replaces the first and left
+      # the writes above open to every staff login.
+      before_action -> { refuse_unless_admin }, only: :export_data
 
       rescue_from ActiveRecord::RecordNotFound, with: -> { render json: { error: "Resource not found" }, status: :not_found }
       rescue_from ActionController::ParameterMissing, with: ->(missing) { render json: { error: missing.message }, status: :bad_request }

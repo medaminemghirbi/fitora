@@ -134,6 +134,40 @@ RSpec.describe "Web settings", type: :request, openapi: false do
     end
   end
 
+  # The writes the API keeps for the admin (require_admin! on /company,
+  # /roles and /mobile_app). A staff login is refused whatever its role
+  # grants, and nothing changes: one that could edit roles could grant itself
+  # every permission.
+  describe "what only the admin may change" do
+    { "no permission" => [], "every permission" => Permission::ALL }.each do |label, permissions|
+      it "is refused to a staff login with #{label}" do
+        own_role = create(:role, company: company, permissions: permissions)
+        staff = create(:staff_member, company: company, assigned_role: own_role)
+        other_role = create(:role, company: company, name: "Comptable")
+        code = company.reload.app_code
+        delete "/deconnexion"
+        web_sign_in(staff.user)
+
+        patch "#{base}/company", params: { company: { name: "Renamed" } }, as: :json
+        expect(response).to have_http_status(:forbidden)
+        post "#{base}/roles", params: { role: { name: "Escalate", permissions: Permission::ALL } }, as: :json
+        expect(response).to have_http_status(:forbidden)
+        patch "#{base}/roles/#{own_role.id}", params: { role: { permissions: Permission::ALL } }, as: :json
+        expect(response).to have_http_status(:forbidden)
+        delete "#{base}/roles/#{other_role.id}", as: :json
+        expect(response).to have_http_status(:forbidden)
+        post "#{base}/mobile-app/regenerate", params: { audience: "member" }, as: :json
+        expect(response).to have_http_status(:forbidden)
+
+        expect(company.reload.name).not_to eq("Renamed")
+        expect(company.app_code).to eq(code)
+        expect(company.roles.where(name: "Escalate")).to be_empty
+        expect(own_role.reload.permissions).to eq(permissions)
+        expect(Role.exists?(other_role.id)).to be(true)
+      end
+    end
+  end
+
   describe "the mobile app's keys, as /api/v1/mobile_app" do
     it "shows the keys and replaces one, audited" do
       get "#{base}/mobile-app"
