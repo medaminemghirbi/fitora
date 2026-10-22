@@ -10,7 +10,7 @@ module Api
           stats = Dashboard::Statistics.call(company: current_company, revenue: capability?(:revenue))
 
           render json: {
-            company: CompanySerializer.new(current_company).as_json,
+            company: CompanySerializer.new(current_company).as_json.except(:signature_url),
             stats: stats
           }
         end

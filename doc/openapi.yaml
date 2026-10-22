@@ -565,8 +565,6 @@ paths:
                         type: 'null'
                       logo_url:
                         type: 'null'
-                      signature_url:
-                        type: 'null'
                       signatory_name:
                         type: 'null'
                       contract_terms:
@@ -696,7 +694,6 @@ paths:
                     - slug
                     - primary_color
                     - logo_url
-                    - signature_url
                     - signatory_name
                     - contract_terms
                     - included_modules
@@ -14263,27 +14260,6 @@ paths:
                       - key
                       - monthly_cents
                       - annual_cents
-                  payout:
-                    type:
-                    - object
-                    - 'null'
-                    properties:
-                      rib:
-                        type: string
-                      bank_name:
-                        type: string
-                      holder:
-                        type: string
-                      swift:
-                        type: string
-                      reference:
-                        type: string
-                    required:
-                    - rib
-                    - bank_name
-                    - holder
-                    - swift
-                    - reference
                 required:
                 - subscription
                 - invoices
@@ -14299,7 +14275,6 @@ paths:
                 - trial_days
                 - included_modules
                 - plans
-                - payout
         '401':
           description: Unauthorized
           content:
