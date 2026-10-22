@@ -618,14 +618,11 @@ paths:
                                 type: boolean
                               reminder_hours:
                                 type: integer
-                              reminder_sms:
-                                type: boolean
                             required:
                             - cancellation_hours
                             - booking_opens_days
                             - no_show_consumes_session
                             - reminder_hours
-                            - reminder_sms
                           hours:
                             type: object
                             properties:
@@ -2409,73 +2406,6 @@ paths:
                     type: string
                 required:
                 - error
-  "/api/v1/bookings/{id}/remind":
-    post:
-      summary: remind
-      tags:
-      - Api::V1::Booking
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties: {}
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                required:
-                - status
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-        '422':
-          description: Unprocessable Content
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  errors:
-                    type: array
-                    items:
-                      type: string
-                required:
-                - error
-                - errors
   "/api/v1/bootstrap":
     get:
       summary: show
@@ -2664,14 +2594,11 @@ paths:
                                 type: boolean
                               reminder_hours:
                                 type: integer
-                              reminder_sms:
-                                type: boolean
                             required:
                             - cancellation_hours
                             - booking_opens_days
                             - no_show_consumes_session
                             - reminder_hours
-                            - reminder_sms
                           hours:
                             type: object
                             properties:
@@ -5337,14 +5264,11 @@ paths:
                                 type: boolean
                               reminder_hours:
                                 type: integer
-                              reminder_sms:
-                                type: boolean
                             required:
                             - cancellation_hours
                             - booking_opens_days
                             - no_show_consumes_session
                             - reminder_hours
-                            - reminder_sms
                           hours:
                             type: object
                             properties:
@@ -5852,14 +5776,11 @@ paths:
                                 type: boolean
                               reminder_hours:
                                 type: integer
-                              reminder_sms:
-                                type: boolean
                             required:
                             - cancellation_hours
                             - booking_opens_days
                             - no_show_consumes_session
                             - reminder_hours
-                            - reminder_sms
                           hours:
                             type: object
                             properties:
@@ -6089,14 +6010,11 @@ paths:
                                 type: boolean
                               reminder_hours:
                                 type: integer
-                              reminder_sms:
-                                type: boolean
                             required:
                             - cancellation_hours
                             - booking_opens_days
                             - no_show_consumes_session
                             - reminder_hours
-                            - reminder_sms
                           hours:
                             type: object
                             properties:
@@ -6385,14 +6303,11 @@ paths:
                                 type: boolean
                               reminder_hours:
                                 type: integer
-                              reminder_sms:
-                                type: boolean
                             required:
                             - cancellation_hours
                             - booking_opens_days
                             - no_show_consumes_session
                             - reminder_hours
-                            - reminder_sms
                           hours:
                             type: object
                             properties:

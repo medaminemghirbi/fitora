@@ -125,7 +125,8 @@ RSpec.describe "Api::V1::Bookings", type: :request do
   end
 
   # No SMS in this version, so no "remind" and no endpoint behind it.
-  it "has no remind endpoint" do
+  # openapi: false — a route that does not exist is not part of the contract.
+  it "has no remind endpoint", openapi: false do
     booking = create(:booking, client: client, session: session)
 
     post "/api/v1/bookings/#{booking.id}/remind", headers: auth_headers(admin)
