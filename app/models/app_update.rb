@@ -4,6 +4,9 @@
 # out a real-time "system_update" Notification to every other superadmin (see
 # Api::V1::Superadmin::AppUpdatesController#create).
 class AppUpdate < ApplicationRecord
+  # How many release notes a list shows, most recent first.
+  LIST_LIMIT = 50
+
   ALLOWED_MEDIA_TYPES = %w[
     image/jpeg image/png image/webp image/gif
     video/mp4 video/quicktime video/webm

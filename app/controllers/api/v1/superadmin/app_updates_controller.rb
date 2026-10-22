@@ -11,7 +11,7 @@ module Api
 
         # GET /api/v1/superadmin/app_updates
         def index
-          updates = AppUpdate.includes(:created_by, media_attachments: :blob).recent
+          updates = AppUpdate.includes(:created_by, media_attachments: :blob).recent.limit(AppUpdate::LIST_LIMIT)
           render json: { app_updates: updates.map { |u| AppUpdateSerializer.new(u).as_json } }
         end
 

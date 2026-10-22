@@ -41,7 +41,7 @@ module Web
       private
 
       def tickets
-        current_company.support_tickets.recent.includes(attachments_attachments: :blob).map { |t| SupportTicketSerializer.new(t).as_json }
+        current_company.support_tickets.recent.limit(SupportTicket::LIST_LIMIT).includes(attachments_attachments: :blob).map { |t| SupportTicketSerializer.new(t).as_json }
       end
     end
   end

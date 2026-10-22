@@ -6,7 +6,7 @@ module Web
       before_action :require_admin
 
       def index
-        @updates = AppUpdate.recent.includes(:created_by, media_attachments: :blob).map { |u| AppUpdateSerializer.new(u).as_json }
+        @updates = AppUpdate.recent.limit(AppUpdate::LIST_LIMIT).includes(:created_by, media_attachments: :blob).map { |u| AppUpdateSerializer.new(u).as_json }
       end
     end
   end

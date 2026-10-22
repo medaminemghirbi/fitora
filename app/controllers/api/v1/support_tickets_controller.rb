@@ -10,7 +10,7 @@ module Api
 
       # GET /api/v1/support_tickets
       def index
-        tickets = current_company.support_tickets.recent
+        tickets = current_company.support_tickets.recent.limit(SupportTicket::LIST_LIMIT)
         render json: { support_tickets: tickets.map { |t| SupportTicketSerializer.new(t).as_json } }
       end
 

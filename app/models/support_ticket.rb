@@ -2,6 +2,9 @@
 # page), with optional file/video attachments — reviewed by a Fitora superadmin
 # from a cross-company inbox rather than per-company like module requests.
 class SupportTicket < ApplicationRecord
+  # How many of a gym's tickets its history lists, most recent first.
+  LIST_LIMIT = 50
+
   ALLOWED_ATTACHMENT_TYPES = %w[
     image/jpeg image/png image/webp image/gif
     application/pdf
