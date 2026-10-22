@@ -32,6 +32,16 @@ RSpec.describe "Web calendar", type: :request, openapi: false do
     expect(sessions.first["id"]).to eq(session.id)
   end
 
+  it "reads a month view's six weeks, and refuses a range the page never asks for" do
+    get "#{base}/events", params: { from: "2026-09-28", to: "2026-11-09" }, as: :json
+    expect(response).to have_http_status(:ok)
+
+    [ {}, { from: "2026-10-12" }, { from: "2026-10-18", to: "2026-10-12" }, { from: "2000-01-01", to: "2100-01-01" } ].each do |params|
+      get "#{base}/events", params: params, as: :json
+      expect(response).to have_http_status(:bad_request), params.inspect
+    end
+  end
+
   it "creates a session as POST /api/v1/sessions, booking the member named" do
     client = create(:client, company: company)
     starts = 2.days.from_now.change(hour: 18)
