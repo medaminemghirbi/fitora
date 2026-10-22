@@ -1159,7 +1159,7 @@
       "published": "Mise à jour publiée — les autres super admins ont été notifiés."
     },
     "pricing_nav": "Tarification",
-    "pricing_subtitle": "Le prix mensuel de chaque offre par devise, et la remise annuelle. Une offre vaut pour tout le compte d'un administrateur, quel que soit son nombre de salles.",
+    "pricing_subtitle": "Le prix mensuel de chaque offre, fixé dans une devise et converti pour chaque salle dans la sienne, et la remise annuelle. Une offre vaut pour tout le compte d'un administrateur, quel que soit son nombre de salles.",
     "pricing_companies_count": "{{count}} entreprise(s) dans cette devise",
     "monthly_price": "Prix mensuel",
     "annual_discount": "Remise annuelle",
@@ -1308,7 +1308,18 @@
       "access_title": "Accès à Fitora",
       "access_suspend_desc": "Suspendre l'accès ferme toutes les salles du compte jusqu'à ce que vous le rétablissiez. L'administrateur est prévenu par notification et par e-mail.",
       "access_restore_desc": "L'accès est fermé pour toutes les salles du compte. Le rétablir les rouvre aussitôt ; l'administrateur est prévenu par notification et par e-mail."
-    }
+    },
+    "pricing_currency_label": "Devise des prix",
+    "pricing_currency_hint": "Chaque salle voit ces prix dans sa propre devise, convertis au taux du jour et arrondis à l'unité.",
+    "pricing_switch_hint": "Les prix sont fixés en {{from}} : ceux-ci en sont la conversion. Enregistrer les fixera en {{to}}.",
+    "pricing_conversions_title": "Dans chaque devise",
+    "pricing_conversions_subtitle": "Ce que voit une salle selon sa devise, au taux du jour.",
+    "pricing_rate_col": "Taux",
+    "pricing_rates_at": "Taux du {{date}} · {{source}}",
+    "pricing_rates_snapshot": "Taux de référence intégrés à l'application — pas encore actualisés.",
+    "pricing_rates_refresh": "Actualiser les taux",
+    "pricing_rates_refreshed": "Taux de change actualisés.",
+    "pricing_rates_failed": "Les taux n'ont pas pu être actualisés ; les précédents restent en vigueur."
   },
   "staff": {
     "title": "Employés",

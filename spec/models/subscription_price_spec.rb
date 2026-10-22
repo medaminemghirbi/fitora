@@ -12,14 +12,35 @@ RSpec.describe SubscriptionPrice do
       expect(described_class::DEFAULT_MONTHLY_CENTS["pro"]).to be > described_class::DEFAULT_MONTHLY_CENTS["starter"]
     end
 
-    it "seeds a newly-seen currency's plan from the same plan's TND reference price" do
-      described_class.for("TND", plan: "pro").update!(monthly_cents: 31_000)
+    it "converts the price into a gym's currency at the day's rate, rounded to whole units, and saves nothing" do
+      PlatformSetting.current.update!(price_currency: "EUR")
+      described_class.base("starter").update!(monthly_cents: 6_000)
 
-      expect(described_class.for("EUR", plan: "pro").monthly_cents).to eq(31_000)
+      # 60 € × 3.363395 = 201.80 DT
+      price = described_class.for("TND", plan: "starter")
+      expect([ price.currency, price.monthly_cents ]).to eq([ "TND", 20_200 ])
+      expect(price).to be_readonly
+      expect(described_class.where(currency: "TND")).to be_none
     end
 
-    it "defaults a blank currency to the reference" do
+    it "converts at the stored rate once there is one" do
+      PlatformSetting.current.update!(price_currency: "EUR")
+      described_class.base("starter").update!(monthly_cents: 6_000)
+      ExchangeRate.create!(currency: "TND", per_eur: 3.5, fetched_at: Time.current)
+
+      expect(described_class.for("TND", plan: "starter").monthly_cents).to eq(21_000)
+    end
+
+    it "starts a new price currency's plans from their default, converted" do
+      PlatformSetting.current.update!(price_currency: "EUR")
+
+      # 165 DT ÷ 3.363395 = 49.06 €
+      expect(described_class.base("starter").monthly_cents).to eq(4_900)
+    end
+
+    it "reads a blank or unknown currency as the price currency" do
       expect(described_class.for(nil, plan: "starter").currency).to eq("TND")
+      expect(described_class.for("XXX", plan: "starter").currency).to eq("TND")
     end
 
     it "reads an unknown plan as Starter rather than raising" do

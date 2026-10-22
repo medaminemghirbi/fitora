@@ -68,18 +68,24 @@ module PlatformMetrics
     }
   end
 
-  # Fitora's own money, not any gym's takings. Amounts are cents in the
-  # platform's reference currency; a gym billed in another currency is
-  # counted at its own tariff, which is what it will actually be invoiced.
+  # Fitora's own money, not any gym's takings, in the currency the prices
+  # are set in: an invoice or an arrear in another currency is converted at
+  # the day's rate, to the cent — adding dinars to euros as they were said
+  # nothing.
   def money
+    currency = SubscriptionPrice.price_currency
+    rates = ExchangeRate.table
+    in_price_currency = ->(cents, from) { (cents * ExchangeRate.rate(from: from, to: currency, table: rates)).round }
+
     # The money in: invoices paid this month (a bill still to pay is not).
-    invoiced = Invoice.paid.where(paid_at: current_month).sum(:amount_cents)
-    arrears = Subscription.includes(:invoices, admin: :companies).sum { |s| s.arrears_cents }
+    invoiced = Invoice.paid.where(paid_at: current_month).group(:currency).sum(:amount_cents)
+                      .sum { |from, cents| in_price_currency.(cents, from) }
+    arrears = Subscription.includes(:invoices, admin: :companies).sum { |s| in_price_currency.(s.arrears_cents, s.currency) }
 
     {
       invoiced_this_month_cents: invoiced,
       arrears_cents: arrears,
-      currency: SubscriptionPrice::REFERENCE_CURRENCY
+      currency: currency
     }
   end
 

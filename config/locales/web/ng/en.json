@@ -1159,7 +1159,7 @@
       "published": "Update published — the other super admins have been notified."
     },
     "pricing_nav": "Pricing",
-    "pricing_subtitle": "Each plan's monthly price per currency, and the annual discount. A plan covers an admin's whole account, however many gyms it runs.",
+    "pricing_subtitle": "Each plan's monthly price, set in one currency and converted for every gym into its own, and the annual discount. A plan covers an admin's whole account, however many gyms it runs.",
     "pricing_companies_count": "{{count}} company(ies) on this currency",
     "monthly_price": "Monthly price",
     "annual_discount": "Annual discount",
@@ -1308,7 +1308,18 @@
       "access_title": "Access to Fitora",
       "access_suspend_desc": "Suspending access closes every gym on the account until you restore it. The admin is told by notification and by email.",
       "access_restore_desc": "Access is closed for every gym on the account. Restoring it reopens them at once; the admin is told by notification and by email."
-    }
+    },
+    "pricing_currency_label": "Price currency",
+    "pricing_currency_hint": "Each gym sees these prices in its own currency, converted at the day's rate and rounded to whole units.",
+    "pricing_switch_hint": "Prices are set in {{from}}: these are their conversion. Saving sets them in {{to}}.",
+    "pricing_conversions_title": "In every currency",
+    "pricing_conversions_subtitle": "What a gym sees in its currency, at the day's rate.",
+    "pricing_rate_col": "Rate",
+    "pricing_rates_at": "Rates of {{date}} · {{source}}",
+    "pricing_rates_snapshot": "Built-in reference rates — not refreshed yet.",
+    "pricing_rates_refresh": "Refresh rates",
+    "pricing_rates_refreshed": "Exchange rates refreshed.",
+    "pricing_rates_failed": "The rates could not be refreshed; the previous ones still apply."
   },
   "staff": {
     "title": "Employees",

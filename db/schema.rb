@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -342,6 +342,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
     t.index ["user_id"], name: "index_data_imports_on_user_id"
   end
 
+  create_table "exchange_rates", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "currency", null: false
+    t.datetime "fetched_at", null: false
+    t.decimal "per_eur", precision: 20, scale: 10, null: false
+    t.datetime "updated_at", null: false
+    t.index ["currency"], name: "index_exchange_rates_on_currency", unique: true
+  end
+
   create_table "invoice_sequences", primary_key: "year", id: :integer, default: nil, force: :cascade do |t|
     t.integer "last_value", null: false
   end
@@ -457,6 +466,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
   create_table "platform_settings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.integer "annual_discount_percent", default: 10, null: false
     t.datetime "created_at", null: false
+    t.string "price_currency", default: "TND", null: false
     t.datetime "updated_at", null: false
   end
 

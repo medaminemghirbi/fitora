@@ -1,9 +1,10 @@
 module Web
   module Superadmin
-    # What Fitora's two plans cost, per currency, and the annual discount
-    # (SuperadminPricingComponent): SubscriptionPricing, as GET and PATCH
-    # /api/v1/superadmin/subscription_pricing answer it. ?currency= is the
-    # currency shown (M-05).
+    # What Fitora's two plans cost and the annual discount: SubscriptionPricing,
+    # as GET and PATCH /api/v1/superadmin/subscription_pricing answer it —
+    # set in one currency, shown converted into every other with its rate.
+    # ?currency= is the currency the form shows; saving there makes it the
+    # one the prices are set in.
     class PricingController < BaseController
       def show
         @pricing = JSON.parse(SubscriptionPricing.payload(SubscriptionPricing.currency(params[:currency])).to_json).deep_symbolize_keys
@@ -19,6 +20,19 @@ module Web
         # The Angular page says "Enregistrer" (common.save) here (B-13).
         flash[:success] = helpers.ngt("common.saved")
         head :no_content
+      end
+
+      # POST …/pricing/rates — today's rates now, rather than tonight
+      # (RefreshExchangeRatesJob); a source that fails keeps the ones there
+      # were, and says so.
+      def refresh_rates
+        ExchangeRate.refresh!
+        flash[:success] = helpers.ngt("superadmin.pricing_rates_refreshed")
+        redirect_to "/superadmin/pricing", status: :see_other
+      rescue ExchangeRate::Unavailable => e
+        Rails.error.report(e, handled: true, context: { source: ExchangeRate::SOURCE_URL })
+        flash[:error] = helpers.ngt("superadmin.pricing_rates_failed")
+        redirect_to "/superadmin/pricing", status: :see_other
       end
     end
   end

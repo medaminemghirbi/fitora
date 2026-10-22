@@ -108,7 +108,7 @@ class Subscription < ApplicationRecord
   end
 
   def currency
-    billing_company&.currency || SubscriptionPrice::REFERENCE_CURRENCY
+    billing_company&.currency || SubscriptionPrice.price_currency
   end
 
   # "Today" for the account is today at its first salle.

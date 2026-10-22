@@ -769,3 +769,22 @@ a.fx-kpi:hover { border-color: var(--color-primary-border); box-shadow: var(--sh
 
 .btn.sa-void { color: var(--color-text-secondary); white-space: nowrap; }
 .btn.sa-void:hover { color: var(--color-danger); }
+
+// The pricing page: the prices beside what each currency makes of them.
+.sa-pricing {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: var(--space-5);
+  align-items: start;
+
+  > .app-card { margin-bottom: 0; }
+}
+
+@media (max-width: 1199.98px) {
+  .sa-pricing { grid-template-columns: minmax(0, 1fr); }
+}
+
+.sa-warn-text { color: var(--color-warning); font-weight: 600; }
+
+// A currency's code, its name and, for the one prices are set in, a chip.
+.sa-currency { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.45rem; }

@@ -1,18 +1,19 @@
-# What one plan costs per month in one currency. A company sees its price in
-# its own Company#currency (30 TND for a Tunisian gym, 30 EUR for a European
-# one), not one fixed platform currency. The year is twelve months less the
+# What one plan costs per month. The superadmin sets it once, in the
+# currency of their choosing (PlatformSetting#price_currency: 60 EUR); a gym
+# sees it converted into its own Company#currency at the day's rate, rounded
+# to whole units (202 TND) — ExchangeRate.convert. Only the price
+# currency's rows are stored. The year is twelve months less the
 # platform-wide annual discount (PlatformSetting). Payment happens outside
 # the app — the superadmin just sets the numbers the admin sees.
 class SubscriptionPrice < ApplicationRecord
-  # The currency every plan is first priced in — a (currency, plan)
-  # combination seen for the first time copies its starting price from here
-  # (see .for).
+  # The price currency of a fresh install (PlatformSetting's default), and
+  # the currency DEFAULT_MONTHLY_CENTS are in.
   REFERENCE_CURRENCY = "TND"
 
   PLANS = Subscription::PLANS.values.freeze
 
-  # A starting point only, for a plan never priced anywhere yet; the
-  # superadmin reprices each one from there.
+  # A starting point only, for a plan never priced yet; the superadmin
+  # reprices each one from there.
   DEFAULT_MONTHLY_CENTS = { "starter" => 16_500, "pro" => 24_900 }.freeze
 
   validates :currency, presence: true, inclusion: { in: CurrencyCatalog::CODES }
@@ -20,23 +21,31 @@ class SubscriptionPrice < ApplicationRecord
   validates :plan, inclusion: { in: PLANS }
   validates :monthly_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
-  # The row for a (currency, plan) pair, creating it — seeded from that same
-  # plan's REFERENCE_CURRENCY price, or DEFAULT_MONTHLY_CENTS when even that
-  # doesn't exist yet — so a newly-seen currency never shows a price gap.
-  # An unknown plan reads as Starter rather than raising on bad input.
-  def self.for(currency, plan:)
-    currency = currency.presence || REFERENCE_CURRENCY
+  def self.price_currency = PlatformSetting.current.price_currency
+
+  # The price the superadmin sets: the plan's row in the price currency,
+  # created the first time at the default, converted from the currency
+  # that default is in. An unknown plan reads as Starter rather than
+  # raising on bad input.
+  def self.base(plan)
     plan = PLANS.include?(plan.to_s) ? plan.to_s : PLANS.first
+    currency = price_currency
 
     find_or_create_by!(currency: currency, plan: plan) do |row|
-      row.monthly_cents = seed_monthly_cents(plan)
+      row.monthly_cents = ExchangeRate.convert(DEFAULT_MONTHLY_CENTS.fetch(plan), from: REFERENCE_CURRENCY, to: currency)
     end
   end
 
-  def self.seed_monthly_cents(plan)
-    find_by(currency: REFERENCE_CURRENCY, plan: plan)&.monthly_cents || DEFAULT_MONTHLY_CENTS.fetch(plan)
+  # What a plan costs a month in `currency` (the price currency when none
+  # is given): the price itself there, its conversion anywhere else — a
+  # read-only record that is never saved.
+  def self.for(currency, plan:)
+    base = base(plan)
+    currency = CurrencyCatalog.valid?(currency) ? currency.to_s : base.currency
+    return base if currency == base.currency
+
+    new(currency: currency, plan: base.plan, monthly_cents: ExchangeRate.convert(base.monthly_cents, from: base.currency, to: currency)).tap(&:readonly!)
   end
-  private_class_method :seed_monthly_cents
 
   # Twelve months less the annual discount, rounded to the cent.
   def annual_cents(discount = PlatformSetting.current.annual_discount_percent)

@@ -166,6 +166,50 @@ RSpec.describe "The superadmin console's tables", type: :request, openapi: false
     end
   end
 
+  describe "the prices" do
+    let(:every_rate) { ExchangeRate::SNAPSHOT.merge("TND" => 3.5) }
+
+    it "shows every currency's price with its rate, and that the rates are the built-in ones until a refresh" do
+      PlatformSetting.current.update!(price_currency: "EUR")
+      SubscriptionPrice.base("starter").update!(monthly_cents: 6_000)
+      create(:company, currency: "TND")
+
+      get "/superadmin/pricing"
+      body = response.body
+      expect(body).to include("1 EUR = 3,3634 TND", "202 DT", "/superadmin/pricing/rates",
+                              ERB::Util.html_escape(Web::Translations.translate("superadmin.pricing_rates_snapshot", locale: :fr)))
+      expect(body).to match(/data-superadmin-pricing-switching-value="false"/)
+    end
+
+    it "shows another currency's prices converted, ready to become the one they are set in" do
+      SubscriptionPrice.base("starter").update!(monthly_cents: 17_000)
+
+      get "/superadmin/pricing", params: { currency: "EUR" }
+      expect(response.body).to include(%(value="51"), Web::Translations.translate("superadmin.pricing_switch_hint", { from: "TND", to: "EUR" }, locale: :fr))
+      expect(response.body).to match(/data-superadmin-pricing-switching-value="true"/)
+
+      patch "/superadmin/pricing", params: { currency: "EUR", plans: { starter: 5_100, pro: 7_400 } }, as: :json
+      expect(PlatformSetting.current.price_currency).to eq("EUR")
+      expect(SubscriptionPrice.for("TND", plan: "starter").monthly_cents).to eq(17_200)
+    end
+
+    it "refreshes the rates on demand, and says so when the source fails" do
+      answer = Net::HTTPOK.new("1.1", "200", "OK")
+      allow(answer).to receive(:body).and_return({ result: "success", rates: every_rate }.to_json)
+      allow(Net::HTTP).to receive(:start).and_return(answer)
+
+      post "/superadmin/pricing/rates"
+      expect(response).to redirect_to("/superadmin/pricing")
+      expect(flash[:success]).to be_present
+      expect(ExchangeRate.find_by!(currency: "TND").per_eur.to_f).to eq(3.5)
+
+      allow(Net::HTTP).to receive(:start).and_raise(Net::ReadTimeout)
+      post "/superadmin/pricing/rates"
+      expect(flash[:error]).to be_present
+      expect(ExchangeRate.find_by!(currency: "TND").per_eur.to_f).to eq(3.5)
+    end
+  end
+
   describe "what Ransack may read" do
     it "is nothing outside the console" do
       expect { Company.ransack!(name_cont: "a") }.to raise_error(Ransack::InvalidSearchError)

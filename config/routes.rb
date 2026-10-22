@@ -445,6 +445,7 @@ Rails.application.routes.draw do
     get "invoices", to: "invoices#index", as: :invoices
     get "pricing", to: "pricing#show", as: :pricing
     patch "pricing", to: "pricing#update"
+    post "pricing/rates", to: "pricing#refresh_rates"
     get "support", to: "support#index", as: :support
     get "support/:id", to: "support#show", as: :support_ticket
     patch "support/:id/resolve", to: "support#resolve"

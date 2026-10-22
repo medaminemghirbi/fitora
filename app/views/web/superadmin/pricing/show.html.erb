@@ -1,64 +1,132 @@
 <%# ng: superadmin-pricing %>
-<%# What Fitora's plans cost: one currency's prices for Starter and Pro, the
-    year each makes after the discount (worked out as they are typed), and
-    the discount — saved once something changed (superadmin-pricing). %>
-<% p = @pricing; currency = p[:currency] %>
+<%# What Fitora's plans cost: the prices, set in one currency, the year each
+    makes after the discount (worked out as they are typed), and the
+    discount — saved once something changed (superadmin-pricing); choosing
+    another currency shows the prices converted into it, and saving there
+    makes it the one they are set in. Beside it, what a gym sees in each
+    currency, at which rate, and when the rates were fetched. %>
+<% p = @pricing; currency = p[:currency]; price_currency = p[:price_currency]; switching = currency != price_currency %>
+<% conversions = p[:conversions].sort_by { |row| [ row[:currency] == price_currency ? 0 : 1, -row[:companies_count], row[:currency] ] } %>
 <% superadmin_crumbs [ ngt("superadmin.pricing_nav") ] %>
 <div>
   <%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.pricing_nav"), desc: ngt("superadmin.pricing_subtitle") } do %><% end %>
 
-  <div class="app-card" style="max-width: 720px" data-controller="superadmin-pricing"
-       data-superadmin-pricing-url-value="/superadmin/pricing"
-       data-superadmin-pricing-currency-value="<%= currency %>"
-       data-superadmin-pricing-symbol-value="<%= Web::Currency.symbol(currency) %>"
-       data-superadmin-pricing-discount-value="<%= p[:annual_discount_percent] %>"
-       data-superadmin-pricing-preview-value="<%= Web::Translations.translate("superadmin.pricing_annual_preview", {}, locale: I18n.locale) %>"
-       data-superadmin-pricing-labels-value="<%= { error: ngt("common.error_generic"), saving: ngt("common.saving"), save: ngt("common.save") }.to_json %>">
-    <div class="app-card-body">
-      <div class="mb-3">
-        <label class="form-label" for="pricing-currency"><%= ngt("superadmin.currency") %></label>
-        <select id="pricing-currency" class="form-select" data-action="change->superadmin-pricing#changeCurrency">
-          <% p[:currencies].each do |code| %>
-            <option value="<%= code %>"<%= raw(" selected") if code == currency %>><%= code %></option>
-          <% end %>
-        </select>
-        <div class="form-text"><%= ngt("superadmin.pricing_companies_count", count: p[:companies_count]) %></div>
+  <div class="sa-pricing">
+    <section class="app-card" data-controller="superadmin-pricing"
+         data-superadmin-pricing-url-value="/superadmin/pricing"
+         data-superadmin-pricing-currency-value="<%= currency %>"
+         data-superadmin-pricing-switching-value="<%= switching %>"
+         data-superadmin-pricing-symbol-value="<%= Web::Currency.symbol(currency) %>"
+         data-superadmin-pricing-discount-value="<%= p[:annual_discount_percent] %>"
+         data-superadmin-pricing-preview-value="<%= Web::Translations.translate("superadmin.pricing_annual_preview", {}, locale: I18n.locale) %>"
+         data-superadmin-pricing-labels-value="<%= { error: ngt("common.error_generic"), saving: ngt("common.saving"), save: ngt("common.save") }.to_json %>">
+      <div class="app-card-header">
+        <h2><%= ngt("superadmin.pricing_plans_label") %></h2>
       </div>
+      <div class="app-card-body">
+        <div class="mb-3">
+          <label class="form-label" for="pricing-currency"><%= ngt("superadmin.pricing_currency_label") %></label>
+          <select id="pricing-currency" class="form-select" data-action="change->superadmin-pricing#changeCurrency">
+            <% p[:currencies].each do |code| %>
+              <option value="<%= code %>"<%= raw(" selected") if code == currency %>><%= code %> — <%= ngt("currency.#{code}") %></option>
+            <% end %>
+          </select>
+          <% if switching %>
+            <div class="form-text sa-warn-text"><%= ngt("superadmin.pricing_switch_hint", from: price_currency, to: currency) %></div>
+          <% else %>
+            <div class="form-text"><%= ngt("superadmin.pricing_currency_hint") %></div>
+          <% end %>
+        </div>
 
-      <div class="form-label" role="heading" aria-level="3"><%= ngt("superadmin.pricing_plans_label") %></div>
-      <div class="mb-3">
-        <% p[:plans].each do |row| %>
-          <% units = row[:monthly_cents] / 100.0 %>
-          <div class="pricing-plan" data-plan="<%= row[:plan] %>" data-cents="<%= row[:monthly_cents] %>">
-            <div class="pricing-plan-head">
-              <label class="fx-strong" for="pricing-plan-<%= row[:plan] %>"><%= ngt("subscription.plan_#{row[:plan]}") %></label>
-              <span class="fx-muted"><%= ngt("superadmin.pricing_plan_#{row[:plan]}_desc") %></span>
-            </div>
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-              <div class="input-group" style="max-width: 220px">
-                <input id="pricing-plan-<%= row[:plan] %>" type="number" min="0" step="1" class="form-control" value="<%= ng_css_number(units) %>" data-action="input->superadmin-pricing#changed" />
-                <span class="input-group-text"><%= currency %> <%= ngt("subscription.per_month") %></span>
+        <div class="mb-3">
+          <% p[:plans].each do |row| %>
+            <% units = row[:monthly_cents] / 100.0 %>
+            <div class="pricing-plan" data-plan="<%= row[:plan] %>" data-cents="<%= row[:monthly_cents] %>">
+              <div class="pricing-plan-head">
+                <label class="fx-strong" for="pricing-plan-<%= row[:plan] %>"><%= ngt("subscription.plan_#{row[:plan]}") %></label>
+                <span class="fx-muted"><%= ngt("superadmin.pricing_plan_#{row[:plan]}_desc") %></span>
               </div>
-              <span class="fx-muted" data-preview><%= ngt("superadmin.pricing_annual_preview", amount: ng_money((units * 12 * (100 - p[:annual_discount_percent])).round / 100.0, currency)) %></span>
-              <span class="badge text-bg-secondary"><%= ngt("superadmin.pricing_accounts_count", count: row[:accounts_count]) %></span>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <div class="input-group" style="max-width: 220px">
+                  <input id="pricing-plan-<%= row[:plan] %>" type="number" min="0" step="1" class="form-control" value="<%= ng_css_number(units) %>" data-action="input->superadmin-pricing#changed" />
+                  <span class="input-group-text"><%= currency %> <%= ngt("subscription.per_month") %></span>
+                </div>
+                <span class="fx-muted" data-preview><%= ngt("superadmin.pricing_annual_preview", amount: ng_money((units * 12 * (100 - p[:annual_discount_percent])).round / 100.0, currency)) %></span>
+                <span class="badge text-bg-secondary"><%= ngt("superadmin.pricing_accounts_count", count: row[:accounts_count]) %></span>
+              </div>
             </div>
+          <% end %>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="pricing-discount"><%= ngt("superadmin.annual_discount") %></label>
+          <div class="input-group" style="max-width: 160px">
+            <input id="pricing-discount" type="number" min="0" max="100" step="1" class="form-control" value="<%= p[:annual_discount_percent] %>" data-action="input->superadmin-pricing#changed" />
+            <span class="input-group-text">%</span>
           </div>
+          <div class="form-text"><%= ngt("superadmin.annual_discount_hint") %></div>
+        </div>
+
+        <button type="button" class="btn btn-primary"<%= raw(" disabled") unless switching %> data-action="superadmin-pricing#save" data-superadmin-pricing-target="save">
+          <%= ngt("common.save") %>
+        </button>
+      </div>
+    </section>
+
+    <section class="app-card">
+      <div class="app-card-header">
+        <div>
+          <h2><%= ngt("superadmin.pricing_conversions_title") %></h2>
+          <p class="sa-sub mb-0"><%= ngt("superadmin.pricing_conversions_subtitle") %></p>
+        </div>
+        <%= button_to "/superadmin/pricing/rates", class: "btn btn-sm btn-outline-secondary" do %>
+          <i class="bi bi-arrow-repeat"></i> <%= ngt("superadmin.pricing_rates_refresh") %>
         <% end %>
       </div>
-
-      <div class="mb-3">
-        <label class="form-label" for="pricing-discount"><%= ngt("superadmin.annual_discount") %></label>
-        <div class="input-group" style="max-width: 160px">
-          <input id="pricing-discount" type="number" min="0" max="100" step="1" class="form-control" value="<%= p[:annual_discount_percent] %>" data-action="input->superadmin-pricing#changed" />
-          <span class="input-group-text">%</span>
-        </div>
-        <div class="form-text"><%= ngt("superadmin.annual_discount_hint") %></div>
+      <div class="sa-scroll">
+        <table class="table sa-grid">
+          <thead>
+            <tr>
+              <th scope="col"><%= ngt("superadmin.currency") %></th>
+              <th scope="col" class="sa-num"><%= ngt("superadmin.pricing_rate_col") %></th>
+              <th scope="col" class="sa-num"><%= ngt("subscription.plan_starter") %> <%= ngt("subscription.per_month") %></th>
+              <th scope="col" class="sa-num"><%= ngt("subscription.plan_pro") %> <%= ngt("subscription.per_month") %></th>
+              <th scope="col" class="sa-num"><%= ngt("superadmin.overview.gyms") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% conversions.each do |row| %>
+              <% code = row[:currency] %>
+              <tr>
+                <td>
+                  <span class="sa-currency">
+                    <span class="sa-mono"><%= code %></span>
+                    <span class="sa-sub"><%= ngt("currency.#{code}") %></span>
+                    <% if code == price_currency %>
+                      <span class="sa-chip sa-chip--primary"><%= ngt("superadmin.pricing_currency_label") %></span>
+                    <% end %>
+                  </span>
+                </td>
+                <td class="sa-num sa-sub" dir="ltr">
+                  <% unless code == price_currency %>1 <%= price_currency %> = <%= number_with_precision(row[:rate], precision: 4, strip_insignificant_zeros: true) %> <%= code %><% end %>
+                </td>
+                <td class="sa-num"><span class="sa-strong"><%= ng_money(row.dig(:monthly_cents, :starter) / 100.0, code) %></span></td>
+                <td class="sa-num"><span class="sa-strong"><%= ng_money(row.dig(:monthly_cents, :pro) / 100.0, code) %></span></td>
+                <td class="sa-num<%= " sa-sub" if row[:companies_count].zero? %>"><%= row[:companies_count] %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
       </div>
-
-      <button type="button" class="btn btn-primary" disabled data-action="superadmin-pricing#save" data-superadmin-pricing-target="save">
-        <%= ngt("common.save") %>
-      </button>
-    </div>
+      <p class="sa-card-note">
+        <i class="bi bi-clock-history"></i>
+        <% if p[:rates_fetched_at] %>
+          <%= ngt("superadmin.pricing_rates_at", date: ng_date(p[:rates_fetched_at], "dd/MM/yyyy HH:mm"), source: p[:rates_source]) %>
+        <% else %>
+          <%= ngt("superadmin.pricing_rates_snapshot") %>
+        <% end %>
+      </p>
+    </section>
   </div>
   <p class="fx-muted mt-2" style="font-size: 0.8125rem"><%= ngt("superadmin.pricing_hint") %></p>
 </div>

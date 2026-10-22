@@ -347,14 +347,15 @@ RSpec.describe "Api::V1::Companies", type: :request do
       expect(body["annual_discount_percent"]).to eq(10)
     end
 
-    it "prices in the company's own currency, auto-seeded from the TND reference" do
+    it "prices in the company's own currency, converted from the one prices are set in" do
       SubscriptionPrice.for("TND", plan: "starter").update!(monthly_cents: 18_000)
       company.update!(currency: "EUR")
 
       get "/api/v1/company", headers: auth_headers(admin)
 
-      expect(response.parsed_body["company"]["monthly_subscription_cents"]).to eq(18_000)
-      expect(SubscriptionPrice.for("EUR", plan: "starter").monthly_cents).to eq(18_000)
+      # 180 DT ÷ 3.363395 = 53.52 €, a whole 54 €
+      expect(response.parsed_body["company"]["monthly_subscription_cents"]).to eq(5_400)
+      expect(SubscriptionPrice.where(currency: "EUR")).to be_none
     end
 
     it "prices the account's own plan" do

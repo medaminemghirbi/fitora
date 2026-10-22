@@ -11,10 +11,9 @@
 # /auth/register on the frontend) after seeding.
 
 puts "Seeding the reference subscription prices + platform settings..."
-# One row per company-limit tier (1 / 3 / unlimited) — every other
-# currency's first-seen price for a tier is derived from this one (see
-# SubscriptionPrice.for), so all three need to exist up front.
-SubscriptionPrice::PLANS.each { |plan| SubscriptionPrice.for(SubscriptionPrice::REFERENCE_CURRENCY, plan: plan) }
+# One row per plan, in the currency the prices are set in — every other
+# currency's price is a conversion of it (SubscriptionPrice.for).
+SubscriptionPrice::PLANS.each { |plan| SubscriptionPrice.base(plan) }
 PlatformSetting.current # the singleton (annual discount = 10%)
 
 puts "Seeding the activity catalogue..."

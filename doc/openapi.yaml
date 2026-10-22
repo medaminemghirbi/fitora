@@ -16244,6 +16244,8 @@ paths:
                       type: string
                   currency:
                     type: string
+                  price_currency:
+                    type: string
                   annual_discount_percent:
                     type: integer
                   plans:
@@ -16266,12 +16268,47 @@ paths:
                       - accounts_count
                   companies_count:
                     type: integer
+                  rates_fetched_at:
+                    type: 'null'
+                  rates_source:
+                    type: string
+                  conversions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        currency:
+                          type: string
+                        rate:
+                          type: number
+                          format: float
+                        monthly_cents:
+                          type: object
+                          properties:
+                            starter:
+                              type: integer
+                            pro:
+                              type: integer
+                          required:
+                          - starter
+                          - pro
+                        companies_count:
+                          type: integer
+                      required:
+                      - currency
+                      - rate
+                      - monthly_cents
+                      - companies_count
                 required:
                 - currencies
                 - currency
+                - price_currency
                 - annual_discount_percent
                 - plans
                 - companies_count
+                - rates_fetched_at
+                - rates_source
+                - conversions
         '401':
           description: Unauthorized
           content:
@@ -16340,6 +16377,8 @@ paths:
                       type: string
                   currency:
                     type: string
+                  price_currency:
+                    type: string
                   annual_discount_percent:
                     type: integer
                   plans:
@@ -16362,12 +16401,49 @@ paths:
                       - accounts_count
                   companies_count:
                     type: integer
+                  rates_fetched_at:
+                    type: 'null'
+                  rates_source:
+                    type: string
+                  conversions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        currency:
+                          type: string
+                        rate:
+                          oneOf:
+                          - type: number
+                            format: float
+                          - type: integer
+                        monthly_cents:
+                          type: object
+                          properties:
+                            starter:
+                              type: integer
+                            pro:
+                              type: integer
+                          required:
+                          - starter
+                          - pro
+                        companies_count:
+                          type: integer
+                      required:
+                      - currency
+                      - rate
+                      - monthly_cents
+                      - companies_count
                 required:
                 - currencies
                 - currency
+                - price_currency
                 - annual_discount_percent
                 - plans
                 - companies_count
+                - rates_fetched_at
+                - rates_source
+                - conversions
         '401':
           description: Unauthorized
           content:

@@ -39,3 +39,11 @@ prune_old_records:
   cron: "40 3 * * *"
   class: "PruneOldRecordsJob"
   queue: default
+
+# The day's exchange rates, which convert the plans' prices into each gym's
+# currency (RefreshExchangeRatesJob). The source publishes just after
+# midnight UTC; a failed night keeps the previous rates.
+refresh_exchange_rates:
+  cron: "15 1 * * *"
+  class: "RefreshExchangeRatesJob"
+  queue: default
