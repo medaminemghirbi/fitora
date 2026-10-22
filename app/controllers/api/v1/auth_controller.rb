@@ -117,6 +117,9 @@ module Api
       # hard-coded map. Admins get every permission; a platform superadmin gets
       # none (the /superadmin surface isn't capability-gated).
       def permissions
+        # A member's login has no staff role to resolve.
+        return render_forbidden unless current_user
+
         render json: { role: current_user.role_summary, permissions: current_user.permission_keys }
       end
 

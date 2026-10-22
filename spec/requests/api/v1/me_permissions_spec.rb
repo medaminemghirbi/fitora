@@ -13,6 +13,15 @@ RSpec.describe "Api::V1 GET /api/v1/me/permissions", type: :request do
     expect(body["permissions"]).to match_array(Permission::ALL)
   end
 
+  # A member's login has no staff role to resolve: refused, not a 500.
+  it "refuses a member's login" do
+    member = create(:client, company: company)
+
+    get "/api/v1/me/permissions", headers: auth_headers(member)
+
+    expect(response).to have_http_status(:forbidden)
+  end
+
   it "returns a staff login's resolved role permissions" do
     staff = create(:staff_member, company: company, role: :moderator)
 
