@@ -1,0 +1,11 @@
+<%# A console table with no rows: none at all yet (`title`, `body`), or none
+    that match — then the way back to the whole table. %>
+<div class="sa-empty">
+  <% if table.narrowed? %>
+    <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("superadmin.console.no_match"), body: ngt("common.no_results"), icon: "bi-search" } do %>
+      <a href="<%= url %>" class="btn btn-sm btn-outline-secondary" data-turbo-frame="_top"><%= ngt("superadmin.console.clear") %></a>
+    <% end %></app-empty-state>
+  <% else %>
+    <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: title, body: local_assigns[:body].to_s, icon: icon } do %><% end %></app-empty-state>
+  <% end %>
+</div>

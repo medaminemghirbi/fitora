@@ -1,7 +1,7 @@
 <%# ng: superadmin-support-tickets %>
-<%# A ticket in its dialog: the gym, who wrote and how to reach them, when,
-    the message, its attachments (opened through this session, B-14), and
-    — while it is open — the way to resolve it. %>
+<%# A ticket on its page: the gym, who wrote and how to reach them, when,
+    the message, and its attachments (opened through this session, B-14).
+    Resolving it is the page head's. %>
 <div class="ticket-detail">
   <div class="ticket-detail-meta">
     <span><i class="bi bi-building"></i> <%= t.dig(:company, :name) %></span>
@@ -28,11 +28,4 @@
     </div>
   <% end %>
 
-  <% if t[:status] == "open" %>
-    <div class="ticket-detail-actions">
-      <button type="button" class="btn btn-primary" data-resolve="<%= t[:id] %>">
-        <i class="bi bi-check-lg"></i> <%= ngt("superadmin.support.mark_resolved") %>
-      </button>
-    </div>
-  <% end %>
 </div>

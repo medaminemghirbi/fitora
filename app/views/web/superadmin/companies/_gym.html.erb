@@ -1,36 +1,82 @@
 <%# ng: superadmin-company-detail %>
-<%# The gym tab: what this gym is — how much it is used, and the language
-    and currency a superadmin sets for it (saved once changed). %>
-<div class="app-card">
-  <div class="app-card-header ac-ledger-head">
-    <h2><%= ngt("superadmin.usage_title") %></h2>
-    <span class="fx-muted">
-      <% if c.dig(:usage, :last_session_at) %>
-        <%= ngt("superadmin.usage_last_session") %> <%= ng_date(c.dig(:usage, :last_session_at), "d MMM y") %>
-      <% else %>
-        <%= ngt("superadmin.usage_never") %>
+<%# The gym itself, beside its money: its account — who runs it, how to
+    reach them, every salle one sale opens — how much it is really used,
+    the currency and language a superadmin sets for it (saved once
+    changed), and its access, apart, being the one switch that shuts every
+    salle on the account. %>
+<section class="app-card">
+  <div class="app-card-header"><h2><%= ngt("superadmin.console.account") %></h2></div>
+  <div class="app-card-body">
+    <dl class="sa-facts">
+      <dt><%= ngt("superadmin.admin") %></dt>
+      <dd><%= c.dig(:admin, :full_name) %></dd>
+      <dt><%= ngt("superadmin.console.email") %></dt>
+      <dd><span dir="ltr"><%= c.dig(:admin, :email) %></span></dd>
+      <% if c.dig(:admin, :phone).present? %>
+        <dt><%= ngt("superadmin.console.phone") %></dt>
+        <dd><a href="tel:<%= c.dig(:admin, :phone).to_s.gsub(/[^\d+]/, "") %>" dir="ltr"><%= c.dig(:admin, :phone) %></a></dd>
       <% end %>
-    </span>
+      <% if c[:city].present? || c[:country].present? %>
+        <dt><%= ngt("superadmin.console.location") %></dt>
+        <dd><%= [ c[:city], c[:country] ].compact_blank.join(", ") %></dd>
+      <% end %>
+      <dt><%= ngt("superadmin.console.created") %></dt>
+      <dd><%= ng_date(c[:created_at], "dd/MM/yyyy") %></dd>
+    </dl>
   </div>
-  <div class="app-card-body ac-usage">
-    <div class="ac-stat"><span class="ac-stat-label"><%= ngt("nav.clients") %></span><strong><%= c.dig(:usage, :clients) %></strong></div>
-    <div class="ac-stat"><span class="ac-stat-label"><%= ngt("nav.team") %></span><strong><%= c.dig(:usage, :staff) %></strong></div>
-    <div class="ac-stat"><span class="ac-stat-label"><%= ngt("nav.activities") %></span><strong><%= c.dig(:usage, :activities) %></strong></div>
-    <div class="ac-stat">
-      <span class="ac-stat-label"><%= ngt("superadmin.usage_sessions_30") %></span>
-      <strong<%= raw(' class="ac-stat--due"') if c.dig(:usage, :sessions_last_30_days).zero? %>><%= c.dig(:usage, :sessions_last_30_days) %></strong>
-    </div>
+  <div class="sa-card-section">
+    <h3><%= ngt("superadmin.account_companies_title", count: salles.size) %></h3>
+    <p class="sa-sub"><%= ngt("superadmin.account_companies_subtitle") %></p>
   </div>
-</div>
+  <ul class="ac-account-list">
+    <% salles.each do |salle| %>
+      <li>
+        <% if salle[:current] %>
+          <span class="ac-account-item is-current">
+            <i class="bi bi-building"></i>
+            <span><%= salle[:name] %><% if salle[:city].present? %> <small> · <%= salle[:city] %></small> <% end %></span>
+            <span class="ac-tag"><%= ngt("superadmin.account_companies_here") %></span>
+          </span>
+        <% else %>
+          <a class="ac-account-item" href="/superadmin/companies/<%= salle[:id] %>">
+            <i class="bi bi-building"></i>
+            <span><%= salle[:name] %><% if salle[:city].present? %> <small> · <%= salle[:city] %></small> <% end %></span>
+            <i class="bi bi-chevron-right ms-auto sa-go"></i>
+          </a>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+</section>
 
-<div class="app-card" data-superadmin-company-target="settings" data-currency="<%= c[:currency] %>" data-locale="<%= c[:locale] %>">
+<section class="app-card">
+  <div class="app-card-header">
+    <h2><%= ngt("superadmin.usage_title") %></h2>
+  </div>
+  <div class="sa-ministats">
+    <div class="sa-ministat"><strong><%= c.dig(:usage, :clients) %></strong><span><%= ngt("nav.clients") %></span></div>
+    <div class="sa-ministat"><strong><%= c.dig(:usage, :staff) %></strong><span><%= ngt("nav.team") %></span></div>
+    <div class="sa-ministat"><strong><%= c.dig(:usage, :activities) %></strong><span><%= ngt("nav.activities") %></span></div>
+    <div class="sa-ministat<%= " is-due" if c.dig(:usage, :sessions_last_30_days).zero? %>"><strong><%= c.dig(:usage, :sessions_last_30_days) %></strong><span><%= ngt("superadmin.usage_sessions_30") %></span></div>
+  </div>
+  <p class="sa-card-note">
+    <i class="bi bi-clock-history"></i>
+    <% if c.dig(:usage, :last_session_at) %>
+      <%= ngt("superadmin.usage_last_session") %> <%= ng_date(c.dig(:usage, :last_session_at), "d MMM y") %>
+    <% else %>
+      <%= ngt("superadmin.usage_never") %>
+    <% end %>
+  </p>
+</section>
+
+<section class="app-card" data-superadmin-company-target="settings" data-currency="<%= c[:currency] %>" data-locale="<%= c[:locale] %>">
   <div class="app-card-header">
     <div>
       <h2><%= ngt("superadmin.settings_title") %></h2>
-      <p class="fx-muted mb-0" style="font-size: 0.8125rem"><%= ngt("superadmin.settings_subtitle") %></p>
+      <p class="sa-sub mb-0"><%= ngt("superadmin.settings_subtitle") %></p>
     </div>
   </div>
-  <div class="app-card-body ac-form ac-form--row">
+  <div class="app-card-body ac-form">
     <div>
       <label for="ac-currency"><%= ngt("superadmin.currency") %></label>
       <select id="ac-currency" class="form-select" name="currency" data-action="change->superadmin-company#settingsChanged">
@@ -55,4 +101,20 @@
       </button>
     </div>
   </template>
-</div>
+</section>
+
+<section class="app-card sa-danger">
+  <div class="app-card-header"><h2><i class="bi bi-shield-lock"></i> <%= ngt("superadmin.console.access_title") %></h2></div>
+  <div class="app-card-body">
+    <p class="sa-sub"><%= sub[:active] ? ngt("superadmin.console.access_suspend_desc") : ngt("superadmin.console.access_restore_desc") %></p>
+    <% if sub[:active] %>
+      <button type="button" class="btn btn-sm btn-outline-danger" data-action="superadmin-company#toggleAccess" data-superadmin-company-active-param="false">
+        <i class="bi bi-lock"></i> <%= ngt("superadmin.suspend_access") %>
+      </button>
+    <% else %>
+      <button type="button" class="btn btn-sm btn-primary" data-action="superadmin-company#toggleAccess" data-superadmin-company-active-param="true">
+        <i class="bi bi-unlock"></i> <%= ngt("superadmin.restore_access") %>
+      </button>
+    <% end %>
+  </div>
+</section>

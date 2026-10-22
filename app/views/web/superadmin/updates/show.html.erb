@@ -1,0 +1,10 @@
+<%# One release note: its version and title, then the entry as the gyms'
+    admins read it — the description, the screenshots and recordings, who
+    published it and when. %>
+<% u = @update %>
+<% superadmin_crumbs [ ngt("superadmin.updates.title"), "/superadmin/updates" ], [ "v#{u[:version]}" ] %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: u[:title], desc: ng_date(u[:published_at], "dd/MM/yyyy HH:mm") } do %>
+  <span class="sa-chip sa-chip--primary" dir="ltr">v<%= u[:version] %></span>
+<% end %>
+
+<app-update-timeline><%= render "web/shared/update_timeline", updates: [ u ], show_author: true, date_format: "dd/MM/yyyy HH:mm", mark_latest: false %></app-update-timeline>

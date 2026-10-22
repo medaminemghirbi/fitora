@@ -1,0 +1,39 @@
+<%# Under a console table's rows: which of them these are, how many a page
+    shows (in the toolbar's form, so a new size starts again from the first
+    page) and the pages, as links the table's frame follows. %>
+<% if pagy.count > 0 %>
+  <div class="sa-foot">
+    <span class="sa-foot-info"><%= ngt("superadmin.console.range", from: pagy.from, to: pagy.to, count: pagy.count) %></span>
+    <label class="sa-foot-limit">
+      <span><%= ngt("superadmin.console.rows_per_page") %></span>
+      <select name="limit" form="sa-table-form" class="form-select form-select-sm" data-default="<%= Web::DataTable::LIMITS.first %>" data-action="change->data-table#submit">
+        <% Web::DataTable::LIMITS.each do |limit| %>
+          <option value="<%= limit %>"<%= raw(" selected") if table.limit == limit %>><%= limit %></option>
+        <% end %>
+      </select>
+    </label>
+    <% if pagy.last > 1 %>
+      <nav class="sa-pager" aria-label="<%= ngt("superadmin.console.pages") %>">
+        <% if pagy.previous %>
+          <a href="<%= table.path(url, page: pagy.previous) %>" rel="prev" aria-label="<%= ngt("common.previous") %>"><i class="bi bi-chevron-left"></i></a>
+        <% else %>
+          <span aria-disabled="true"><i class="bi bi-chevron-left"></i></span>
+        <% end %>
+        <% superadmin_page_series(pagy).each do |page| %>
+          <% if page == :gap %>
+            <span aria-hidden="true">…</span>
+          <% elsif page == pagy.page %>
+            <span aria-current="page"><%= page %></span>
+          <% else %>
+            <a href="<%= table.path(url, page: page) %>"><%= page %></a>
+          <% end %>
+        <% end %>
+        <% if pagy.next %>
+          <a href="<%= table.path(url, page: pagy.next) %>" rel="next" aria-label="<%= ngt("common.next") %>"><i class="bi bi-chevron-right"></i></a>
+        <% else %>
+          <span aria-disabled="true"><i class="bi bi-chevron-right"></i></span>
+        <% end %>
+      </nav>
+    <% end %>
+  </div>
+<% end %>

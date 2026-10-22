@@ -431,7 +431,8 @@ Rails.application.routes.draw do
     get "*page", to: redirect("/", status: 302), format: false
   end
 
-  # ---- The superadmin's console (module 10): its Angular URLs (§8.1) ----
+  # ---- The superadmin's console (module 10): its Angular URLs (§8.1), and
+  # what it has grown since: the invoices, a page per ticket and release ----
   scope "superadmin", module: "web/superadmin", as: :web_superadmin do
     get "overview", to: "overview#show", as: :overview
     get "companies", to: "companies#index", as: :companies
@@ -441,13 +442,16 @@ Rails.application.routes.draw do
     post "companies/:id/impersonate", to: "companies#impersonate"
     post "companies/:id/invoices", to: "companies#create_invoice"
     delete "companies/:id/invoices/:invoice_id", to: "companies#destroy_invoice"
+    get "invoices", to: "invoices#index", as: :invoices
     get "pricing", to: "pricing#show", as: :pricing
     patch "pricing", to: "pricing#update"
     get "support", to: "support#index", as: :support
+    get "support/:id", to: "support#show", as: :support_ticket
     patch "support/:id/resolve", to: "support#resolve"
     get "support/:id/attachments/:attachment_id", to: "support#attachment", as: :support_attachment
     get "updates", to: "updates#index", as: :updates
     post "updates", to: "updates#create"
+    get "updates/:id", to: "updates#show", as: :update
     get "notifications", to: "notifications#index"
     post "notifications/read_all", to: "notifications#read_all"
     patch "notifications/:id/read", to: "notifications#read"

@@ -217,20 +217,11 @@
     "subscription": {
       "source": "features/admin/subscription/subscription.component.scss"
     },
-    "superadmin-companies": {
-      "source": "features/superadmin/companies/companies.component.scss"
-    },
     "superadmin-company-detail": {
       "source": "features/superadmin/company-detail/company-detail.component.scss"
     },
-    "superadmin-overview": {
-      "source": "features/superadmin/overview/superadmin-overview.component.scss"
-    },
     "superadmin-pricing": {
       "source": "features/superadmin/pricing/pricing.component.scss"
-    },
-    "superadmin-shell": {
-      "source": "layout/superadmin-shell/superadmin-shell.component.scss"
     },
     "superadmin-support-tickets": {
       "source": "features/superadmin/support/support-tickets.component.scss"

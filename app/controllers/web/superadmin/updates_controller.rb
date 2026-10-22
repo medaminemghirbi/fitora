@@ -1,11 +1,26 @@
 module Web
   module Superadmin
-    # The release notes (SuperadminUpdatesComponent): every update, with who
-    # published it, and publishing one with its screenshots and recordings
-    # (ReleaseNotes.publish, as POST /api/v1/superadmin/app_updates does).
+    # The release notes: every update, searched by version, title or
+    # description, with who published it; one on its own page with its
+    # screenshots and recordings; and publishing one (ReleaseNotes.publish,
+    # as POST /api/v1/superadmin/app_updates does).
     class UpdatesController < BaseController
+      TABLE = Web::DataTable::Definition.new(
+        search: :version_or_title_or_description_cont,
+        sorts: { published: "published_at", version: "version", title: "title" },
+        default: %w[published desc]
+      )
+
       def index
-        @updates = JSON.parse(AppUpdate.includes(:created_by, media_attachments: :blob).recent.limit(AppUpdate::LIST_LIMIT).map { |u| AppUpdateSerializer.new(u).as_json }.to_json).map(&:deep_symbolize_keys)
+        @table = TABLE.table(params)
+        @pagy, @updates = paginate(@table, AppUpdate.includes(:created_by, :media_attachments))
+      end
+
+      def show
+        update = AppUpdate.includes(:created_by, media_attachments: :blob).find_by(id: params[:id])
+        return redirect_to("/superadmin/updates", status: :see_other) if update.nil?
+
+        @update = JSON.parse(AppUpdateSerializer.new(update).as_json.to_json).deep_symbolize_keys
       end
 
       def create

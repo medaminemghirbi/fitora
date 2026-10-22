@@ -1,0 +1,37 @@
+<%# One console table (Web::DataTable), rendered as a layout around its
+    rows. The toolbar: the search, which runs as the typing pauses, the
+    filters as they are picked, and the way back to the whole table, shown
+    while anything narrows it — `extra` at its end. The rows sit in a frame
+    of their own, the only part redrawn (data-table); the sort travels with
+    the next search in hidden fields there, the page size in the footer's
+    select, both in the toolbar's form. Without JavaScript it is a plain GET
+    form and plain links. %>
+<section class="sa-table" data-controller="data-table">
+  <form id="sa-table-form" class="sa-toolbar" action="<%= url %>" method="get" role="search"
+        data-data-table-target="form" data-action="submit->data-table#submit">
+    <div class="fx-input-icon">
+      <i class="bi bi-search"></i>
+      <input type="search" name="search" class="form-control form-control-sm" value="<%= table.term %>" maxlength="<%= Web::DataTable::MAX_TERM %>"
+             placeholder="<%= placeholder %>" aria-label="<%= placeholder %>" autocomplete="off" data-default="" data-action="input->data-table#search" />
+    </div>
+    <% local_assigns.fetch(:filters, []).each do |filter| %>
+      <select name="<%= filter[:name] %>" class="form-select form-select-sm" aria-label="<%= filter[:label] %>" data-default="<%= filter[:default] %>" data-action="change->data-table#submit">
+        <% filter[:options].each do |value, label| %>
+          <option value="<%= value %>"<%= raw(" selected") if table.filter(filter[:name]).to_s == value.to_s %>><%= label %></option>
+        <% end %>
+      </select>
+    <% end %>
+    <a href="<%= url %>" class="sa-clear" data-turbo-frame="_top" data-data-table-target="clear"<%= raw(" hidden") unless table.narrowed? %>>
+      <i class="bi bi-x-circle"></i> <%= ngt("superadmin.console.clear") %>
+    </a>
+    <noscript><button type="submit" class="btn btn-sm btn-outline-secondary"><%= ngt("common.search") %></button></noscript>
+    <% if local_assigns[:extra].present? %><div class="sa-toolbar-end"><%= extra %></div><% end %>
+  </form>
+
+  <turbo-frame id="sa-table" class="sa-frame" data-turbo-action="advance" data-data-table-target="frame">
+    <% table.kept_fields.each do |name, value| %>
+      <input type="hidden" name="<%= name %>" value="<%= value %>" form="sa-table-form" />
+    <% end %>
+    <%= yield %>
+  </turbo-frame>
+</section>

@@ -1,98 +1,130 @@
-<%# ng: superadmin-overview %>
-<%# ng-host: superadmin-overview %>
-<%# SuperadminOverviewComponent: four numbers with a decision behind each,
-    Fitora's own money, usage, the newest gyms. %>
+<%# How Fitora is doing: four numbers with a decision behind each — gyms,
+    sign-ups, members, real use — then Fitora's own money, the newest gyms,
+    and what is waiting on a superadmin, each a click from its table. %>
 <% m = @metrics; trend = superadmin_signup_trend(m[:companies]); share = superadmin_active_share(m) %>
-<section class="ao-grid">
-  <article class="ao-tile">
-    <span class="ao-label"><%= ngt("superadmin.overview.gyms") %></span>
-    <span class="ao-value"><%= m.dig(:companies, :total) %></span>
-    <span class="ao-note">
+<% superadmin_crumbs [ ngt("superadmin.overview.nav") ] %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.overview.nav"), desc: ngt("superadmin.console.overview_desc") } do %><% end %>
+
+<section class="sa-kpis">
+  <a class="fx-kpi" href="/superadmin/companies">
+    <span class="fx-kpi-head"><span class="fx-kpi-icon"><i class="bi bi-buildings"></i></span> <%= ngt("superadmin.overview.gyms") %></span>
+    <span class="fx-kpi-value"><%= m.dig(:companies, :total) %></span>
+    <span class="sa-kpi-note">
       <%= ngt("superadmin.overview.open_count", count: m.dig(:companies, :open)) %>
       <% if m.dig(:companies, :locked) > 0 %>
-        · <span class="ao-warn"><%= ngt("superadmin.overview.locked_count", count: m.dig(:companies, :locked)) %></span>
+        · <span class="is-warn"><%= ngt("superadmin.overview.locked_count", count: m.dig(:companies, :locked)) %></span>
       <% end %>
     </span>
     <% if (plans = m.dig(:companies, :plans)) %>
-      <span class="ao-note">
-        <%= ngt("superadmin.overview.plans_split", starter: plans[:starter], pro: plans[:pro]) %>
-      </span>
+      <span class="sa-kpi-note"><%= ngt("superadmin.overview.plans_split", starter: plans[:starter], pro: plans[:pro]) %></span>
     <% end %>
-  </article>
+  </a>
 
-  <article class="ao-tile">
-    <span class="ao-label"><%= ngt("superadmin.overview.new_this_month") %></span>
-    <span class="ao-value"><%= m.dig(:companies, :new_this_month) %></span>
-    <span class="ao-note">
+  <a class="fx-kpi fx-kpi--success" href="/superadmin/companies">
+    <span class="fx-kpi-head"><span class="fx-kpi-icon"><i class="bi bi-graph-up-arrow"></i></span> <%= ngt("superadmin.overview.new_this_month") %></span>
+    <span class="fx-kpi-value"><%= m.dig(:companies, :new_this_month) %></span>
+    <span class="sa-kpi-note">
       <% if trend.nil? %>
         <%= ngt("superadmin.overview.no_comparison") %>
       <% else %>
-        <span<%= raw(%( class="#{[ ("ao-up" if trend > 0), ("ao-down" if trend < 0) ].compact.join(" ")}")) if trend != 0 %>>
-          <%= trend > 0 ? "+" : "" %><%= trend %>%
-        </span>
+        <span class="fx-kpi-trend fx-kpi-trend--<%= trend.positive? ? "up" : (trend.negative? ? "down" : "flat") %>"><%= trend > 0 ? "+" : "" %><%= trend %>%</span>
         <%= ngt("superadmin.overview.vs_last_month", count: m.dig(:companies, :new_last_month)) %>
       <% end %>
     </span>
-  </article>
+  </a>
 
-  <article class="ao-tile">
-    <span class="ao-label"><%= ngt("superadmin.overview.members") %></span>
-    <span class="ao-value"><%= m.dig(:members, :total) %></span>
-    <span class="ao-note"><%= ngt("superadmin.overview.new_members", count: m.dig(:members, :new_this_month)) %></span>
-  </article>
+  <div class="fx-kpi fx-kpi--info">
+    <span class="fx-kpi-head"><span class="fx-kpi-icon"><i class="bi bi-people"></i></span> <%= ngt("superadmin.overview.members") %></span>
+    <span class="fx-kpi-value"><%= m.dig(:members, :total) %></span>
+    <span class="sa-kpi-note"><%= ngt("superadmin.overview.new_members", count: m.dig(:members, :new_this_month)) %></span>
+  </div>
 
-  <article class="ao-tile">
-    <span class="ao-label"><%= ngt("superadmin.overview.in_use") %></span>
-    <span class="ao-value">
-      <% if share.nil? %>
-        —
-      <% else %>
-        <%= share %>%
-      <% end %>
-    </span>
-    <span class="ao-note"><%= ngt("superadmin.overview.in_use_note", count: m.dig(:activity, :companies_with_activity)) %></span>
-  </article>
+  <div class="fx-kpi">
+    <span class="fx-kpi-head"><span class="fx-kpi-icon"><i class="bi bi-activity"></i></span> <%= ngt("superadmin.overview.in_use") %></span>
+    <span class="fx-kpi-value"><%= share.nil? ? "—" : "#{share}%" %></span>
+    <span class="sa-kpi-note"><%= ngt("superadmin.overview.in_use_note", count: m.dig(:activity, :companies_with_activity)) %></span>
+  </div>
 </section>
 
-<section class="ao-grid ao-grid--two">
-  <article class="ao-tile">
-    <span class="ao-label"><%= ngt("superadmin.overview.invoiced") %></span>
-    <span class="ao-value"><%= superadmin_money(m.dig(:money, :invoiced_this_month_cents)) %> <small><%= m.dig(:money, :currency) %></small></span>
-    <span class="ao-note"><%= ngt("superadmin.overview.invoiced_note") %></span>
-  </article>
+<section class="sa-kpis">
+  <a class="fx-kpi fx-kpi--success" href="/superadmin/invoices?status=paid">
+    <span class="fx-kpi-head"><span class="fx-kpi-icon"><i class="bi bi-cash-stack"></i></span> <%= ngt("superadmin.overview.invoiced") %></span>
+    <span class="fx-kpi-value"><%= superadmin_money(m.dig(:money, :invoiced_this_month_cents)) %> <small><%= m.dig(:money, :currency) %></small></span>
+    <span class="sa-kpi-note"><%= ngt("superadmin.overview.invoiced_note") %></span>
+  </a>
 
-  <article class="ao-tile<%= " ao-tile--warn" if m.dig(:money, :arrears_cents) > 0 %>">
-    <span class="ao-label"><%= ngt("superadmin.overview.arrears") %></span>
-    <span class="ao-value"><%= superadmin_money(m.dig(:money, :arrears_cents)) %> <small><%= m.dig(:money, :currency) %></small></span>
-    <span class="ao-note"><%= ngt("superadmin.overview.arrears_note") %></span>
-  </article>
+  <div class="fx-kpi<%= m.dig(:money, :arrears_cents) > 0 ? " fx-kpi--warning sa-kpi--warn" : "" %>">
+    <span class="fx-kpi-head"><span class="fx-kpi-icon"><i class="bi bi-exclamation-triangle"></i></span> <%= ngt("superadmin.overview.arrears") %></span>
+    <span class="fx-kpi-value"><%= superadmin_money(m.dig(:money, :arrears_cents)) %> <small><%= m.dig(:money, :currency) %></small></span>
+    <span class="sa-kpi-note"><%= ngt("superadmin.overview.arrears_note") %></span>
+  </div>
 </section>
 
-<section class="ao-section">
-  <h2 class="ao-section-title"><%= ngt("superadmin.overview.usage") %></h2>
-  <p class="ao-usage">
-    <%= ngt("superadmin.overview.usage_line", sessions: m.dig(:activity, :sessions_last_30_days), bookings: m.dig(:activity, :bookings_last_30_days)) %>
-  </p>
-</section>
-
-<section class="ao-section">
-  <h2 class="ao-section-title"><%= ngt("superadmin.overview.newest") %></h2>
-
-  <ul class="ao-list">
-    <% m[:recent_companies].each do |company| %>
-      <li class="ao-row">
-        <a class="ao-row-body" href="/superadmin/companies/<%= company[:id] %>">
-          <strong><%= company[:name] %></strong>
-          <small>
-            <%= company[:admin_name] %>
-            <% if company[:city].present? %> · <%= company[:city] %> <% end %>
-            · <%= ng_date(company[:created_at], "d MMM") %>
-          </small>
-        </a>
-        <% unless company[:access_open] %>
-          <span class="ao-chip"><%= ngt("superadmin.overview.locked") %></span>
-        <% end %>
-      </li>
+<div class="sa-split">
+  <section class="app-card">
+    <div class="app-card-header">
+      <h2><%= ngt("superadmin.overview.newest") %></h2>
+      <a href="/superadmin/companies" class="btn btn-sm btn-ghost"><%= ngt("common.view_all") %> <i class="bi bi-chevron-right sa-go"></i></a>
+    </div>
+    <% if m[:recent_companies].empty? %>
+      <div class="sa-empty">
+        <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("superadmin.no_companies"), body: "", icon: "bi-buildings" } do %><% end %></app-empty-state>
+      </div>
+    <% else %>
+      <div class="sa-scroll" data-controller="data-table">
+        <table class="table sa-grid">
+          <tbody>
+            <% m[:recent_companies].each do |company| %>
+              <% href = "/superadmin/companies/#{company[:id]}" %>
+              <tr class="sa-row" data-action="click->data-table#open" data-href="<%= href %>">
+                <td>
+                  <div class="sa-lead">
+                    <span class="sa-lead-ico"><i class="bi bi-building"></i></span>
+                    <div>
+                      <a class="sa-lead-title" href="<%= href %>"><%= company[:name] %></a>
+                      <div class="sa-sub"><%= company[:admin_name] %><% if company[:city].present? %> · <%= company[:city] %><% end %></div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <% unless company[:access_open] %>
+                    <span class="sa-chip sa-chip--danger"><i class="bi bi-lock-fill"></i> <%= ngt("superadmin.overview.locked") %></span>
+                  <% end %>
+                </td>
+                <td class="sa-num sa-sub"><%= ng_date(company[:created_at], "d MMM") %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     <% end %>
-  </ul>
-</section>
+  </section>
+
+  <section class="app-card">
+    <div class="app-card-header"><h2><%= ngt("superadmin.console.to_handle") %></h2></div>
+    <ul class="sa-quick">
+      <li>
+        <a href="/superadmin/support">
+          <i class="bi bi-headset"></i> <%= ngt("superadmin.console.open_tickets") %>
+          <span class="sa-quick-count"><%= @open_tickets %></span>
+        </a>
+      </li>
+      <li>
+        <a href="/superadmin/invoices?status=due">
+          <i class="bi bi-hourglass-split"></i> <%= ngt("superadmin.console.due_invoices") %>
+          <span class="sa-quick-count"><%= @due_invoices %></span>
+        </a>
+      </li>
+      <li>
+        <a href="/superadmin/companies?access=closed">
+          <i class="bi bi-lock"></i> <%= ngt("superadmin.console.closed_gyms") %>
+          <span class="sa-quick-count"><%= m.dig(:companies, :locked) %></span>
+        </a>
+      </li>
+    </ul>
+    <div class="app-card-body">
+      <h3 class="sa-sub mb-2"><%= ngt("superadmin.overview.usage") %></h3>
+      <p class="mb-0"><%= ngt("superadmin.overview.usage_line", sessions: m.dig(:activity, :sessions_last_30_days), bookings: m.dig(:activity, :bookings_last_30_days)) %></p>
+    </div>
+  </section>
+</div>

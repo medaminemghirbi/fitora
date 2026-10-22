@@ -4,11 +4,9 @@ import { confirmAsk } from "../lib/confirm"
 import { csrfToken, interpolate } from "../lib/ng"
 import { toast } from "../lib/toast"
 
-// SuperadminCompanyDetailComponent:
+// One gym's account (web/superadmin/companies/show):
 //
-// - the tabs and the ledger's years switch in place: the one not shown
-//   waits in a <template>, as Angular's @if keeps it out of the DOM; the tab
-//   stays in the URL (?tab=gym, M-05);
+// - the ledger's years switch in place, each waiting in a <template>;
 // - every write (access, plan, billing period, an invoice in or out, the
 //   gym's language and currency) waits on its button, then the page comes
 //   back as the server has it, with the server's toast; a refusal is a toast
@@ -16,23 +14,8 @@ import { toast } from "../lib/toast"
 // - stepping inside the gym's account: the admin's dashboard, in their
 //   session (Web::Authentication#start_impersonation).
 export default class extends Controller {
-  static targets = ["pane", "year", "ledger", "settings", "settingsFoot"]
-  static values = { url: String, tab: String, labels: Object }
-
-  setTab({ params: { tab } }) {
-    if (tab === this.tabValue) return
-    const tabs = this.element.querySelector(".nav-tabs")
-    const shown = document.createElement("template")
-    shown.dataset.superadminCompanyTarget = "pane"
-    shown.dataset.tab = this.tabValue
-    while (tabs.nextElementSibling && tabs.nextElementSibling.tagName !== "TEMPLATE") shown.content.append(tabs.nextElementSibling)
-    const next = this.paneTargets.find((t) => t.dataset.tab === tab)
-    tabs.after(next.content)
-    next.replaceWith(shown)
-    this.tabValue = tab
-    tabs.querySelectorAll(".nav-link").forEach((link) => link.classList.toggle("active", link.dataset.superadminCompanyTabParam === tab))
-    history.replaceState(history.state, "", tab === "gym" ? `${this.urlValue}?tab=gym` : this.urlValue)
-  }
+  static targets = ["year", "ledger", "settings", "settingsFoot"]
+  static values = { url: String, labels: Object }
 
   showYear({ currentTarget, params: { year } }) {
     currentTarget.parentElement.querySelectorAll("button").forEach((button) => {

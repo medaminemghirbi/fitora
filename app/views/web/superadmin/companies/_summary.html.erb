@@ -1,0 +1,46 @@
+<%# ng: superadmin-company-detail %>
+<%# The four figures that say whether this gym pays, across the page: its
+    plan (or its trial), what that costs, how far it is paid, what it owes. %>
+<% plan = c[:plan]; on_trial = sub[:trial] || false; yearly = sub[:billing_period] == "yearly" %>
+<% period_key = yearly ? "subscription.plan_yearly" : "subscription.plan_monthly" %>
+<div class="ac-summary">
+  <div class="ac-stat<%= " ac-stat--trial" if on_trial %>">
+    <span class="ac-stat-label"><%= ngt("superadmin.current_formula") %></span>
+    <% if on_trial %>
+      <strong><%= ngt("superadmin.trial_running") %></strong>
+      <span class="ac-stat-sub">
+        <% if plan %>
+          <%= ngt("superadmin.trial_days_left", days: sub[:trial_days_left] || 0, plan: "#{ngt("subscription.plan_#{plan}")} · #{ngt(period_key).downcase}") %>
+        <% else %>
+          <%= ngt("superadmin.trial_days_left_no_plan", days: sub[:trial_days_left] || 0) %>
+        <% end %>
+      </span>
+    <% else %>
+      <strong><%= ngt("subscription.plan_#{plan}") %></strong>
+      <span class="ac-stat-sub"><%= ngt(period_key) %></span>
+    <% end %>
+  </div>
+  <div class="ac-stat">
+    <span class="ac-stat-label"><%= ngt("superadmin.subscription_title") %></span>
+    <% if !plan %>
+      <strong>—</strong>
+      <span class="ac-stat-sub"><%= ngt("superadmin.no_plan_yet") %></span>
+    <% elsif yearly %>
+      <strong><%= ng_money(c[:annual_subscription_cents] / 100.0, c[:currency]) %> <span class="ac-stat-unit"><%= ngt("superadmin.per_year") %></span></strong>
+      <span class="ac-stat-sub"><%= ng_money(c[:monthly_subscription_cents] / 100.0, c[:currency]) %> <%= ngt("superadmin.per_month") %></span>
+    <% else %>
+      <strong><%= ng_money(c[:monthly_subscription_cents] / 100.0, c[:currency]) %> <span class="ac-stat-unit"><%= ngt("superadmin.per_month") %></span></strong>
+      <span class="ac-stat-sub"><%= ng_money(c[:annual_subscription_cents] / 100.0, c[:currency]) %> <%= ngt("superadmin.per_year") %></span>
+    <% end %>
+  </div>
+  <div class="ac-stat">
+    <span class="ac-stat-label"><%= ngt(on_trial ? "superadmin.trial_until" : "superadmin.attention_paid_through") %></span>
+    <strong><%= sub[:paid_through] ? ng_date(sub[:paid_through], "d MMM y") : ngt("superadmin.attention_never_paid") %></strong>
+  </div>
+  <div class="ac-stat">
+    <span class="ac-stat-label"><%= ngt("superadmin.arrears_title") %></span>
+    <strong class="<%= arrears.zero? ? "ac-stat--ok" : "ac-stat--due" %>">
+      <%= ng_money(arrears, c[:currency]) %>
+    </strong>
+  </div>
+</div>

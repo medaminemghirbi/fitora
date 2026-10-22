@@ -2,17 +2,19 @@
 <%# UpdateTimelineComponent: the release notes, newest first. The caller
     writes the <app-update-timeline> host. %>
 <% date_format = local_assigns.fetch(:date_format, "dd/MM/yyyy") %>
+<%# mark_latest: false for one release shown alone, which may not be the latest. %>
+<% mark_latest = local_assigns.fetch(:mark_latest, true) %>
 <div class="updates-timeline">
   <% updates.each_with_index do |u, i| %>
     <div class="update-entry" style="animation-delay: <%= i * 40 %>ms;">
       <div class="update-entry-rail">
-        <span class="update-entry-dot<%= " is-latest" if i.zero? %>"></span>
+        <span class="update-entry-dot<%= " is-latest" if i.zero? && mark_latest %>"></span>
         <% if i < updates.size - 1 %><span class="update-entry-line"></span><% end %>
       </div>
       <div class="update-entry-card">
         <div class="update-entry-head">
           <span class="update-entry-version" dir="ltr">v<%= u[:version] %></span>
-          <% if i.zero? %><span class="update-entry-badge"><%= ngt("updates.latest") %></span><% end %>
+          <% if i.zero? && mark_latest %><span class="update-entry-badge"><%= ngt("updates.latest") %></span><% end %>
           <span class="update-entry-date"><%= ng_date(u[:published_at], date_format) %></span>
         </div>
         <h3><%= u[:title] %></h3>

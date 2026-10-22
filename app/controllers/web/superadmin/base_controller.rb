@@ -6,11 +6,25 @@ module Web
     # aggregates and accounts, never a gym's own records — the way into
     # those is impersonation, which is audited.
     class BaseController < Web::BaseController
-      layout "web/superadmin"
+      include Pagy::Method
+
+      # A table redrawn in its frame (Web::DataTable) needs only the frame:
+      # turbo-rails' bare layout, not the console around it.
+      layout -> { turbo_frame_request? ? "turbo_rails/frame" : "web/superadmin" }
 
       before_action :require_superadmin_session!
 
       private
+
+      # One page of a console table: Pagy's arithmetic over the rows the
+      # table's search, filters and sort leave (Web::DataTable#apply). A page
+      # past the last is the last, not an empty table under a total.
+      def paginate(table, scope)
+        rows = table.apply(scope)
+        pagy, records = pagy(:offset, rows, limit: table.limit)
+        pagy, records = pagy(:offset, rows, limit: table.limit, page: pagy.last, count: pagy.count) if pagy.page > pagy.last
+        [ pagy, records ]
+      end
 
       def require_superadmin_session!
         return render(json: { error: "Unauthorized" }, status: :unauthorized) if !signed_in? && request.format.json?
@@ -29,14 +43,6 @@ module Web
       def render_refusal(messages, status: :unprocessable_content)
         messages = Array(messages)
         render json: { error: messages.first || "Validation failed", errors: messages }, status: status
-      end
-
-      # Api::V1::BaseController#paginate / #pagination_meta: ?page= from 1,
-      # 20 a page.
-      def page_meta(scope, per_page: 20)
-        page = [ params[:page].to_i, 1 ].max
-        total = scope.count
-        [ scope.limit(per_page).offset((page - 1) * per_page), { page: page, per_page: per_page, total: total, total_pages: (total.to_f / per_page).ceil } ]
       end
     end
   end

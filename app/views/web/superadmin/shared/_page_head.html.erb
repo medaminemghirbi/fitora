@@ -1,0 +1,9 @@
+<%# A console page's head: its title, what the page is for, and — the
+    block — what can be done from it. Rendered as a layout, block or not. %>
+<header class="sa-page-head">
+  <div class="sa-page-titles">
+    <h1 class="sa-page-title"><%= title %></h1>
+    <% if local_assigns[:desc].present? %><p class="sa-page-desc"><%= desc %></p><% end %>
+  </div>
+  <div class="sa-page-actions"><%= yield %></div>
+</header>

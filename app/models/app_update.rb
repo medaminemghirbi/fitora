@@ -25,6 +25,9 @@ class AppUpdate < ApplicationRecord
 
   scope :recent, -> { order(published_at: :desc) }
 
+  # The superadmin console's release-notes table.
+  console_searchable attributes: %i[version title description published_at]
+
   def self.current_version
     recent.first&.version
   end

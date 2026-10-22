@@ -39,6 +39,10 @@ class User < ApplicationRecord
 
   scope :active, -> { where(active: true) }
 
+  # Who an account is, to the superadmin console's tables: its name and
+  # e-mail, its access (subscription) and its salles' names.
+  console_searchable attributes: %i[first_name last_name email], associations: %i[subscription companies]
+
   def full_name
     "#{first_name} #{last_name}"
   end

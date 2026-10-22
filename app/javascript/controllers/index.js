@@ -56,10 +56,9 @@ import CoachMembersController from "./coach_members_controller"
 import MemberScheduleController from "./member_schedule_controller"
 import MemberBookingsController from "./member_bookings_controller"
 import MemberProfileController from "./member_profile_controller"
-import SuperadminCompaniesController from "./superadmin_companies_controller"
+import DataTableController from "./data_table_controller"
 import SuperadminCompanyController from "./superadmin_company_controller"
 import SuperadminPricingController from "./superadmin_pricing_controller"
-import SuperadminSupportController from "./superadmin_support_controller"
 import SuperadminUpdatesController from "./superadmin_updates_controller"
 import LandingController from "./landing_controller"
 import CommandPaletteController from "./command_palette_controller"
@@ -121,10 +120,9 @@ application.register("coach-members", CoachMembersController)
 application.register("member-schedule", MemberScheduleController)
 application.register("member-bookings", MemberBookingsController)
 application.register("member-profile", MemberProfileController)
-application.register("superadmin-companies", SuperadminCompaniesController)
+application.register("data-table", DataTableController)
 application.register("superadmin-company", SuperadminCompanyController)
 application.register("superadmin-pricing", SuperadminPricingController)
-application.register("superadmin-support", SuperadminSupportController)
 application.register("superadmin-updates", SuperadminUpdatesController)
 application.register("landing", LandingController)
 application.register("command-palette", CommandPaletteController)

@@ -52,6 +52,9 @@ class Subscription < ApplicationRecord
 
   scope :closed, -> { where(active: false) }
 
+  # The console filters gyms and invoices on the account's access and plan.
+  console_searchable attributes: %i[active plan], associations: %i[admin]
+
   # Opens an admin's account with the free trial: the first period given
   # away as an invoice like any other, flagged `trial` so the account reads
   # as trying Fitora rather than as on a plan it never chose. Access is open

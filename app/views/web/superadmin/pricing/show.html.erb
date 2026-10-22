@@ -1,14 +1,11 @@
 <%# ng: superadmin-pricing %>
-<%# ng-host: superadmin-pricing %>
-<%# SuperadminPricingComponent: one currency's prices for Starter and Pro,
-    the year each makes after the discount (worked out as they are typed),
-    and the discount — saved once something changed (superadmin-pricing). %>
+<%# What Fitora's plans cost: one currency's prices for Starter and Pro, the
+    year each makes after the discount (worked out as they are typed), and
+    the discount — saved once something changed (superadmin-pricing). %>
 <% p = @pricing; currency = p[:currency] %>
-<div class="fx-page">
-  <header class="lst-head">
-    <h1><%= ngt("superadmin.pricing_nav") %></h1>
-  </header>
-  <p class="fx-muted mb-4"><%= ngt("superadmin.pricing_subtitle") %></p>
+<% superadmin_crumbs [ ngt("superadmin.pricing_nav") ] %>
+<div>
+  <%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.pricing_nav"), desc: ngt("superadmin.pricing_subtitle") } do %><% end %>
 
   <div class="app-card" style="max-width: 720px" data-controller="superadmin-pricing"
        data-superadmin-pricing-url-value="/superadmin/pricing"

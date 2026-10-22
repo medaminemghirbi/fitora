@@ -38,6 +38,9 @@ class SupportTicket < ApplicationRecord
 
   scope :recent, -> { order(created_at: :desc) }
 
+  # The superadmin console's support table.
+  console_searchable attributes: %i[subject message status kind created_at], associations: %i[company created_by]
+
   private
 
   def contact_phone_is_a_number

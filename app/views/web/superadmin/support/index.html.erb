@@ -1,63 +1,68 @@
-<%# ng: superadmin-support-tickets %>
-<%# ng-host: superadmin-support-tickets %>
-<%# SuperadminSupportTicketsComponent: open tickets or all, each opening in
-    a dialog (its content waits in a <template> per ticket) where it can be
-    resolved (superadmin-support). %>
-<div class="fx-page" data-controller="superadmin-support" data-superadmin-support-url-value="/superadmin/support"
-     data-superadmin-support-filter-value="<%= @filter %>"
-     data-superadmin-support-labels-value="<%= { resolved: ngt("superadmin.support.resolved"), error: ngt("common.error_generic") }.to_json %>"
-     data-action="modal:opened@window->superadmin-support#fill">
-  <header class="lst-head">
-    <h1><%= ngt("superadmin.support.title") %></h1>
-    <span class="lst-head-count" data-superadmin-support-target="count"><%= @tickets.size %></span>
-    <div class="fx-segmented">
-      <button type="button"<%= raw(' class="is-active"') if @filter == "open" %> data-action="superadmin-support#setFilter" data-superadmin-support-filter-param="open">
-        <%= ngt("superadmin.support.filter_open") %>
-      </button>
-      <button type="button"<%= raw(' class="is-active"') if @filter == "all" %> data-action="superadmin-support#setFilter" data-superadmin-support-filter-param="all">
-        <%= ngt("superadmin.support.filter_all") %>
-      </button>
-    </div>
-  </header>
+<%# Every gym's support tickets (Web::DataTable): the open ones unless asked
+    otherwise, searched by subject, message, gym or author, filtered on what
+    they are about, sorted, paged. Each row says who wrote and how to call
+    them back; it opens the ticket. %>
+<% url = "/superadmin/support" %>
+<% superadmin_crumbs [ ngt("superadmin.support.title") ] %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.support.title"), desc: ngt("superadmin.support.subtitle") } do %><% end %>
 
+<% filters = [
+     { name: "status", label: ngt("superadmin.support.status_col"), default: "open",
+       options: [ [ "open", ngt("superadmin.support.filter_open") ], [ "resolved", ngt("modules_page.contact.status_resolved") ], [ "all", ngt("superadmin.support.filter_all") ] ] },
+     { name: "kind", label: ngt("superadmin.console.filter_kind"), default: "",
+       options: [ [ "", ngt("superadmin.console.any_kind") ], [ "general", ngt("superadmin.console.kind_general") ], [ "upgrade", ngt("superadmin.support.kind_upgrade") ] ] }
+   ] %>
+<%= render layout: "web/superadmin/shared/table", locals: { table: @table, url: url, placeholder: ngt("superadmin.console.support_search"), filters: filters } do %>
   <% if @tickets.empty? %>
-    <div class="app-card">
-      <div class="app-card-body">
-        <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("superadmin.support.empty_title"), body: ngt("superadmin.support.empty_body"), icon: "bi-headset" } do %><% end %></app-empty-state>
-      </div>
-    </div>
+    <%= render "web/superadmin/shared/table_empty", table: @table, url: url, title: ngt("superadmin.support.empty_title"), body: ngt("superadmin.support.empty_body"), icon: "bi-headset" %>
   <% else %>
-    <div class="app-card">
-      <div class="fx-table-scroll">
-        <table class="table align-middle">
-          <thead>
-            <tr>
-              <th><%= ngt("superadmin.support.company_col") %></th>
-              <th><%= ngt("superadmin.support.subject_col") %></th>
-              <th><%= ngt("superadmin.support.attachments_col") %></th>
-              <th><%= ngt("superadmin.support.status_col") %></th>
-              <th><%= ngt("superadmin.support.date_col") %></th>
+    <div class="sa-scroll">
+      <table class="table sa-grid">
+        <thead>
+          <tr>
+            <%= superadmin_sort_th @table, :company, ngt("superadmin.support.company_col"), url %>
+            <%= superadmin_sort_th @table, :subject, ngt("superadmin.support.subject_col"), url %>
+            <th scope="col"><%= ngt("superadmin.support.attachments_col") %></th>
+            <th scope="col"><%= ngt("superadmin.support.status_col") %></th>
+            <%= superadmin_sort_th @table, :created, ngt("superadmin.support.date_col"), url, css: "sa-nowrap" %>
+            <th class="sa-col-go" aria-hidden="true"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @tickets.each do |ticket| %>
+            <% href = "/superadmin/support/#{ticket.id}" %>
+            <tr class="sa-row" data-action="click->data-table#open" data-href="<%= href %>">
+              <td>
+                <div class="sa-lead-title"><%= ng_highlight(ticket.company.name, @table.term) %></div>
+                <div class="sa-sub"><%= ng_highlight(ticket.created_by.full_name, @table.term) %></div>
+                <% if ticket.contact_phone.present? %>
+                  <a class="sa-sub" href="<%= support_tel_href(ticket.contact_phone) %>" dir="ltr"><i class="bi bi-telephone"></i> <%= ticket.contact_phone %></a>
+                <% end %>
+              </td>
+              <td>
+                <% if ticket.upgrade? %>
+                  <span class="sa-chip sa-chip--primary"><i class="bi bi-gem"></i> <%= ngt("superadmin.support.kind_upgrade") %></span>
+                <% end %>
+                <div><a class="sa-lead-title" href="<%= href %>" data-turbo-frame="_top"><%= ng_highlight(ticket.subject, @table.term) %></a></div>
+                <div class="sa-sub sa-clip"><%= ticket.message %></div>
+              </td>
+              <td class="sa-sub">
+                <% if ticket.attachments.any? %><i class="bi bi-paperclip"></i> <%= ticket.attachments.size %><% else %>—<% end %>
+              </td>
+              <td>
+                <% if ticket.resolved? %>
+                  <span class="sa-chip sa-chip--success"><%= ngt("modules_page.contact.status_resolved") %></span>
+                <% else %>
+                  <span class="sa-chip sa-chip--warning"><%= ngt("modules_page.contact.status_open") %></span>
+                <% end %>
+              </td>
+              <td class="sa-nowrap sa-sub"><%= ng_date(ticket.created_at, "dd/MM/yyyy HH:mm") %></td>
+              <td class="sa-col-go"><i class="bi bi-chevron-right sa-go"></i></td>
             </tr>
-          </thead>
-          <tbody>
-            <% @tickets.each do |t| %>
-              <%= render "web/superadmin/support/row", t: t %>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
+          <% end %>
+        </tbody>
+      </table>
     </div>
+    <%= render "web/superadmin/shared/table_foot", pagy: @pagy, table: @table, url: url %>
   <% end %>
-
-  <% @tickets.each do |t| %>
-    <template data-ticket="<%= t[:id] %>" data-subject="<%= t[:subject] %>"><%= render "web/superadmin/support/detail", t: t %></template>
-  <% end %>
-  <template data-superadmin-support-target="spinner"><div class="d-flex justify-content-center py-5"><app-spinner><%= render "web/shared/spinner", size: 32 %></app-spinner></div></template>
-  <template data-superadmin-support-target="error"><div class="app-card"><div class="app-card-body"><app-error-state><%= render "web/shared/error_state", retry_action: "superadmin-support#retry" %></app-error-state></div></div></template>
-</div>
-
-<app-modal data-controller="modal" data-modal-name-value="support-ticket" data-action="support-ticket:open@window->modal#open">
-  <template data-modal-target="template">
-    <%= render layout: "web/shared/modal", locals: { title: "" } do %><% end %>
-  </template>
-</app-modal>
+<% end %>

@@ -38,6 +38,11 @@ class Invoice < ApplicationRecord
   scope :newest_first, -> { order(period_start: :desc) }
   scope :covering, ->(date) { where(period_start: ..date).where(period_end: date..) }
 
+  # The superadmin console's invoices table: by number or account, sorted by
+  # issue date, amount or period, filtered on what was paid, plan and period.
+  console_searchable attributes: %i[number issued_at amount_cents period_start paid_at trial plan billing_period],
+                     associations: %i[subscription]
+
   def amount
     amount_cents / 100.0
   end

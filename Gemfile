@@ -23,6 +23,12 @@ gem "turbo-rails"
 gem "stimulus-rails"
 gem "rails-i18n", "~> 8.0"
 
+# The superadmin console's tables (Web::DataTable): Ransack turns a column,
+# a direction and the filters into SQL, only over what each model allowlists
+# for the console (ransackable_*); Pagy pages the result.
+gem "ransack", "~> 5.0.2"
+gem "pagy", "~> 43.6.3"
+
 # Password hashing for User#password
 gem "bcrypt", "~> 3.1.7"
 
