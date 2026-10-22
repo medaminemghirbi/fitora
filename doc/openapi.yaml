@@ -10161,6 +10161,17 @@ paths:
                     type: string
                 required:
                 - error
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                - error
   "/api/v1/me/profile":
     get:
       summary: show
@@ -12801,6 +12812,12 @@ paths:
       summary: index
       tags:
       - Api::V1::Session
+      parameters:
+      - name: date
+        in: query
+        required: false
+        schema:
+          type: string
       responses:
         '200':
           description: OK
@@ -12895,6 +12912,17 @@ paths:
                 required:
                 - sessions
                 - meta
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                - error
         '401':
           description: Unauthorized
           content:
@@ -16923,13 +16951,6 @@ paths:
         schema:
           type: string
       responses:
-        '200':
-          description: OK
-          content:
-            image/png:
-              schema:
-                type: string
-                format: binary
         '401':
           description: Unauthorized
           content:
