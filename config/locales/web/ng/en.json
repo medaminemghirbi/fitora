@@ -1319,7 +1319,27 @@
     "pricing_rates_snapshot": "Built-in reference rates — not refreshed yet.",
     "pricing_rates_refresh": "Refresh rates",
     "pricing_rates_refreshed": "Exchange rates refreshed.",
-    "pricing_rates_failed": "The rates could not be refreshed; the previous ones still apply."
+    "pricing_rates_failed": "The rates could not be refreshed; the previous ones still apply.",
+    "billing": {
+      "nav": "Billing",
+      "title": "Billing",
+      "subtitle": "What every invoice Fitora sends the gyms carries: its identity, the TVA and the timbre fiscal.",
+      "identity_title": "Fitora's identity",
+      "legal_name": "Company name",
+      "tax_id": "Tax ID (matricule fiscal)",
+      "address": "Address",
+      "city": "Postcode and city",
+      "phone": "Phone",
+      "email": "Email",
+      "website": "Website",
+      "taxes_title": "TVA and timbre fiscal",
+      "taxes_hint": "On invoices in dinars only, included in the TTC price. An invoice keeps the rates in force when it was issued.",
+      "vat": "TVA",
+      "stamp": "Timbre fiscal",
+      "incomplete": "Fill in the company name and the matricule fiscal: until then, invoices only say \"Fitora\".",
+      "preview": "Preview the latest invoice",
+      "pdf": "Invoice PDF"
+    }
   },
   "staff": {
     "title": "Employees",

@@ -443,9 +443,12 @@ Rails.application.routes.draw do
     post "companies/:id/invoices", to: "companies#create_invoice"
     delete "companies/:id/invoices/:invoice_id", to: "companies#destroy_invoice"
     get "invoices", to: "invoices#index", as: :invoices
+    get "invoices/:id/pdf", to: "invoices#pdf", as: :invoice_pdf
     get "pricing", to: "pricing#show", as: :pricing
     patch "pricing", to: "pricing#update"
     post "pricing/rates", to: "pricing#refresh_rates"
+    get "billing", to: "billing#show", as: :billing
+    patch "billing", to: "billing#update"
     get "support", to: "support#index", as: :support
     get "support/:id", to: "support#show", as: :support_ticket
     patch "support/:id/resolve", to: "support#resolve"

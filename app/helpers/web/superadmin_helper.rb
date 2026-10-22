@@ -74,7 +74,8 @@ module Web
           item.call("updates", "bi-megaphone", ngt("superadmin.updates_nav"))
         ] },
         { label: ngt("superadmin.console.section_settings"), items: [
-          item.call("pricing", "bi-tags", ngt("superadmin.pricing_nav"))
+          item.call("pricing", "bi-tags", ngt("superadmin.pricing_nav")),
+          item.call("billing", "bi-receipt-cutoff", ngt("superadmin.billing.nav"))
         ] }
       ]
     end

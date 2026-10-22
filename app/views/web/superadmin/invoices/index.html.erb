@@ -81,7 +81,11 @@
                 <%= ng_date(invoice.issued_at, "dd/MM/yyyy") %>
                 <% if invoice.issued_by %><div class="sa-sub"><%= ngt("superadmin.console.issued_by", name: invoice.issued_by.full_name) %></div><% end %>
               </td>
-              <td class="sa-col-go"><% if href %><i class="bi bi-chevron-right sa-go"></i><% end %></td>
+              <td class="sa-col-go sa-nowrap">
+                <a href="/superadmin/invoices/<%= invoice.id %>/pdf" class="btn btn-sm btn-ghost sa-void" target="_blank" rel="noopener" data-turbo="false"
+                   title="<%= ngt("superadmin.billing.pdf") %>" aria-label="<%= ngt("superadmin.billing.pdf") %> <%= invoice.number %>"><i class="bi bi-file-earmark-pdf"></i></a>
+                <% if href %><i class="bi bi-chevron-right sa-go"></i><% end %>
+              </td>
             </tr>
           <% end %>
         </tbody>

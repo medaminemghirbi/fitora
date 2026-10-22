@@ -132,7 +132,9 @@
                 <% end %>
               </td>
               <td class="sa-num"><span class="sa-strong"><%= ng_money(invoice[:amount], invoice[:currency]) %></span></td>
-              <td class="sa-col-go">
+              <td class="sa-col-go sa-nowrap">
+                <a href="/superadmin/invoices/<%= invoice[:id] %>/pdf" class="btn btn-sm btn-ghost sa-void" target="_blank" rel="noopener" data-turbo="false"
+                   title="<%= ngt("superadmin.billing.pdf") %>" aria-label="<%= ngt("superadmin.billing.pdf") %> <%= invoice[:number] %>"><i class="bi bi-file-earmark-pdf"></i></a>
                 <button type="button" class="btn btn-sm btn-ghost sa-void" title="<%= ngt("superadmin.void_invoice_title") %>" aria-label="<%= ngt("superadmin.void_invoice") %> <%= invoice[:number] %>"
                         data-action="superadmin-company#voidInvoice" data-superadmin-company-id-param="<%= invoice[:id] %>" data-superadmin-company-number-param="<%= invoice[:number] %>">
                   <i class="bi bi-x-circle"></i>

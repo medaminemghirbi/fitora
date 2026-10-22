@@ -95,7 +95,7 @@ RSpec.describe "The superadmin console's tables", type: :request, openapi: false
       due = create(:invoice, :due, company: company, number: "FIT-2026-0102")
 
       get "/superadmin/invoices", params: { search: "zen" }
-      expect(response.body.scan("FIT-2026-0101").size).to eq(1)
+      expect(response.body.scan("/superadmin/invoices/#{paid.id}/pdf").size).to eq(1)
       expect(response.body).to include(due.number, %(data-href="/superadmin/companies/#{company.id}"))
 
       get "/superadmin/invoices", params: { status: "due" }
@@ -207,6 +207,44 @@ RSpec.describe "The superadmin console's tables", type: :request, openapi: false
       post "/superadmin/pricing/rates"
       expect(flash[:error]).to be_present
       expect(ExchangeRate.find_by!(currency: "TND").per_eur.to_f).to eq(3.5)
+    end
+  end
+
+  describe "Fitora's billing details" do
+    it "says what the invoices still lack, and saves the identity and the taxes as people type them" do
+      get "/superadmin/billing"
+      expect(response.body).to include("sa-notice", 'name="billing[tax_id]"', 'value="19"', 'value="1,000"')
+
+      patch "/superadmin/billing", params: { billing: { legal_name: " Fitora SARL ", tax_id: "1234567/A/M/000", city: "1053 Tunis",
+                                                        email: "facturation@fitora.tn", vat_percent: "19,5", stamp_duty: "0,600" } }
+      expect(response).to redirect_to("/superadmin/billing")
+      setting = PlatformSetting.current.reload
+      expect(setting.slice(:legal_name, :tax_id, :vat_percent, :stamp_duty_millimes))
+        .to eq("legal_name" => "Fitora SARL", "tax_id" => "1234567/A/M/000", "vat_percent" => 19.5, "stamp_duty_millimes" => 600)
+
+      follow_redirect!
+      expect(response.body).not_to include("sa-notice")
+    end
+
+    it "refuses a rate that is no rate, and changes nothing" do
+      patch "/superadmin/billing", params: { billing: { legal_name: "Fitora", vat_percent: "cent", stamp_duty: "-1" } }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("sa-notice--danger")
+      expect(PlatformSetting.current.reload.legal_name).to be_nil
+    end
+
+    it "opens any invoice as the gym gets it" do
+      invoice = create(:invoice, number: "FIT-2026-0042")
+
+      get "/superadmin/invoices/#{invoice.id}/pdf"
+      expect(response.media_type).to eq("application/pdf")
+      expect(response.headers["Content-Disposition"]).to include("inline", "FIT-2026-0042.pdf")
+
+      get "/superadmin/invoices"
+      expect(response.body).to include("/superadmin/invoices/#{invoice.id}/pdf")
+
+      get "/superadmin/invoices/00000000-0000-4000-8000-000000000000/pdf"
+      expect(response).to have_http_status(:not_found)
     end
   end
 

@@ -1319,7 +1319,27 @@
     "pricing_rates_snapshot": "Taux de référence intégrés à l'application — pas encore actualisés.",
     "pricing_rates_refresh": "Actualiser les taux",
     "pricing_rates_refreshed": "Taux de change actualisés.",
-    "pricing_rates_failed": "Les taux n'ont pas pu être actualisés ; les précédents restent en vigueur."
+    "pricing_rates_failed": "Les taux n'ont pas pu être actualisés ; les précédents restent en vigueur.",
+    "billing": {
+      "nav": "Facturation",
+      "title": "Facturation",
+      "subtitle": "Ce qui figure sur chaque facture que Fitora adresse aux salles : son identité, la TVA et le timbre fiscal.",
+      "identity_title": "Identité de Fitora",
+      "legal_name": "Raison sociale",
+      "tax_id": "Matricule fiscal",
+      "address": "Adresse",
+      "city": "Code postal et ville",
+      "phone": "Téléphone",
+      "email": "E-mail",
+      "website": "Site web",
+      "taxes_title": "TVA et timbre fiscal",
+      "taxes_hint": "Sur les factures en dinars uniquement, compris dans le prix TTC. Une facture garde les taux en vigueur à son émission.",
+      "vat": "TVA",
+      "stamp": "Timbre fiscal",
+      "incomplete": "Renseignez la raison sociale et le matricule fiscal : en attendant, les factures ne portent que « Fitora ».",
+      "preview": "Aperçu de la dernière facture",
+      "pdf": "Facture PDF"
+    }
   },
   "staff": {
     "title": "Employés",

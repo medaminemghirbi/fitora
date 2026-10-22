@@ -25,6 +25,16 @@ module Web
         @table = TABLE.table(params)
         @pagy, @invoices = paginate(@table, Invoice.includes(:issued_by, subscription: { admin: :companies }))
       end
+
+      # GET /superadmin/invoices/:id/pdf — the invoice as the gym downloads
+      # it, opened in the browser.
+      def pdf
+        invoice = Invoice.find_by(id: params[:id])
+        return head(:not_found) if invoice.nil?
+
+        send_data Receipts::SubscriptionInvoicePdf.call(invoice: invoice),
+                  filename: "#{invoice.number}.pdf", type: "application/pdf", disposition: "inline"
+      end
     end
   end
 end
