@@ -68,6 +68,7 @@ env:
     - FITORA_ACCOUNT_HOLDER
     - FITORA_SWIFT
     - SENTRY_DSN
+    # - SENTRY_BROWSER_DSN   # optional: browser errors (.kamal/secrets.example)
     - SIDEKIQ_WEB_PASSWORD
     - TUNISIESMS_API_KEY
     # add S3 creds here once storage.yml :production points at a bucket

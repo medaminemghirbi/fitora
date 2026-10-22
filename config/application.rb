@@ -46,6 +46,9 @@ module Backend
     config.x.frontend_url = ENV.fetch("FRONTEND_URL") do
       Rails.env.production? ? "https://#{config.x.app_host}" : "http://localhost:3000"
     end
+    # The Sentry project the web UI's browser errors go to
+    # (app/javascript/lib/error_reporting.js), or nil: nothing is sent.
+    config.x.sentry_browser_dsn = ENV["SENTRY_BROWSER_DSN"].presence
     # config.eager_load_paths << Rails.root.join("extras")
 
     # Not API-only any more: the server-rendered web UI (app/controllers/web)

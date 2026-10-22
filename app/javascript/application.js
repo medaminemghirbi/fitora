@@ -1,6 +1,7 @@
 // The web UI's JavaScript: Turbo for navigation and form submission, and the
 // Stimulus controllers that do what the Angular components did in the
 // browser. Built by esbuild (package.json "build") into app/assets/builds.
+import "./lib/error_reporting"
 import { Turbo } from "@hotwired/turbo-rails"
 import "./controllers"
 import "./lib/live_notifications"

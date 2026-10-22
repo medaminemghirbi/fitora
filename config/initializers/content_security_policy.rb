@@ -15,6 +15,11 @@
 # https://guides.rubyonrails.org/security.html#content-security-policy-header
 
 Rails.application.configure do
+  # Browser errors are sent to the Sentry project's host, when there is one
+  # (lib/error_reporting.js): its origin, without the DSN's key.
+  sentry = config.x.sentry_browser_dsn && URI.parse(config.x.sentry_browser_dsn)
+  sentry_origin = sentry && "#{sentry.scheme}://#{sentry.host}#{":#{sentry.port}" unless sentry.port == sentry.default_port}"
+
   config.content_security_policy do |policy|
     policy.default_src :self
     policy.script_src :self
@@ -22,7 +27,7 @@ Rails.application.configure do
     policy.font_src :self, :data, "https://fonts.gstatic.com"
     policy.img_src :self, :data, :blob, :https
     policy.media_src :self, :blob, :https
-    policy.connect_src :self
+    policy.connect_src :self, *sentry_origin
     policy.object_src :none
     policy.base_uri :self
     policy.form_action :self
