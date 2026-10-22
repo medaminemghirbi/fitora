@@ -10,7 +10,7 @@ class Session < ApplicationRecord
 
   has_many :bookings, dependent: :destroy
 
-  enum :status, { scheduled: 0, cancelled: 1, completed: 2 }
+  enum :status, { scheduled: 0, cancelled: 1, completed: 2 }, validate: true
 
   # The GiST exclusion constraint that keeps a coach out of two places at
   # once. The database is the real guard; #explain_coach_overlap only turns
