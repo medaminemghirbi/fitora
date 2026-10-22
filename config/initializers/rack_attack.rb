@@ -121,3 +121,50 @@ Rack::Attack.throttled_responder = ->(request) { Web::RateLimit.respond(request)
 Rack::Attack.throttle("app_config/ip", limit: 20, period: 1.minute) do |req|
   req.ip if req.get? && req.path.match?(%r{\A/api/v1/tenants/[^/]+/app_config\z})
 end
+
+# ---- Every request ---------------------------------------------------------
+# A ceiling on every call, not only the doors above: well over what a person,
+# a page or the mobile app does, so only a flood, a scraper or a runaway
+# script meets it. Not counted: built assets, the health check, the live
+# connection, Active Storage's file links and the Sidekiq dashboard — a page
+# loads several of them, and none of them runs the app's own code.
+UNCOUNTED_PATHS = %r{\A/(assets/|cable|up\z|rails/active_storage/|sidekiq)}
+
+# Read on each request (the throttles take them as lambdas), so a spec can
+# stub them.
+REQUEST_LIMITS = {
+  # Everyone behind one gym's wifi, or a carrier's NAT, shares an address.
+  ip: { limit: 3000, period: 5.minutes },
+  # One login: a bearer token on the API, a signed-in session on the pages.
+  account: { limit: 300, period: 1.minute },
+  # …of which writes (POST, PATCH, PUT, DELETE).
+  account_writes: { limit: 60, period: 1.minute }
+}.freeze
+
+# Who is asking, for counting only (the controllers still check it): a digest
+# of the bearer token — never the token itself as a Redis key — or the
+# account the encrypted session names. The session is read only when its
+# cookie came with the request: loading it for an API call would send that
+# call a session cookie it never had.
+request_account = lambda do |req|
+  if (bearer = req.get_header("HTTP_AUTHORIZATION").presence)
+    "token:#{Digest::SHA256.hexdigest(bearer)}"
+  elsif req.cookies.key?(Rails.application.config.session_options[:key])
+    claims = req.session[Web::Authentication::SESSION_KEY.to_s]
+    "#{claims['kind']}:#{claims['id']}" if claims.is_a?(Hash)
+  end
+end
+counted = ->(req) { !req.path.match?(UNCOUNTED_PATHS) }
+request_limit = ->(name) { { limit: ->(_req) { REQUEST_LIMITS.fetch(name)[:limit] }, period: ->(_req) { REQUEST_LIMITS.fetch(name)[:period] } } }
+
+Rack::Attack.throttle("requests/ip", **request_limit.(:ip)) do |req|
+  req.ip if counted.(req)
+end
+
+Rack::Attack.throttle("requests/account", **request_limit.(:account)) do |req|
+  request_account.(req) if counted.(req)
+end
+
+Rack::Attack.throttle("writes/account", **request_limit.(:account_writes)) do |req|
+  request_account.(req) if counted.(req) && !(req.get? || req.head?)
+end

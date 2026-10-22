@@ -10,6 +10,15 @@ module Web
     ENV_KEY = "fitora.rate_limited".freeze
 
     def self.respond(request)
+      status, headers, body = refusal(request)
+      # When the window the request was counted in ends.
+      if (match = request.env["rack.attack.match_data"])
+        headers["Retry-After"] = (match[:period] - (match[:epoch_time] % match[:period])).to_s
+      end
+      [ status, headers, body ]
+    end
+
+    def self.refusal(request)
       return api_response if request.path.start_with?("/api/")
 
       env = request.env
