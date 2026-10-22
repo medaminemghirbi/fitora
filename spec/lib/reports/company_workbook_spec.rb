@@ -1,6 +1,18 @@
 require "rails_helper"
 
 RSpec.describe Reports::CompanyWorkbook do
+  # find_each ignored the sheet's order and went by id (random UUIDs).
+  it "lists the clients by name" do
+    company = create(:company)
+    names = %w[Zeineb Amal Mona Bilel Yassine Hela]
+    names.each { |first| create(:client, company: company, first_name: first, last_name: "T") }
+    period = Reports::Period.parse(period_type: "month", period: "2025-03")
+
+    sheet = described_class.call(company: company, period: period).workbook.worksheets.find { |s| s.name == "Clients" }
+
+    expect(sheet.rows.to_a.drop(1).map { |row| row.cells[0].value }).to eq(names.sort.map { |first| "#{first} T" })
+  end
+
   it "builds a summary sheet and a color-coded clients sheet scoped to the period" do
     company = create(:company, name: "Studio Test")
     period = Reports::Period.parse(period_type: "month", period: "2025-03")
