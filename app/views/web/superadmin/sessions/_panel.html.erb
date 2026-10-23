@@ -1,0 +1,17 @@
+<%# ng: pro-login %>
+<%# The console's sign-in panel: whose door this is, and the two factors it
+    asks for. %>
+<div authPanel class="auth-panel">
+  <span class="auth-panel-badge"><i aria-hidden="true"></i><%= ngt("superadmin.two_factor.badge") %></span>
+  <p class="auth-panel-title">
+    <%= ngt("superadmin.two_factor.panel_title_1") %>
+    <em><%= ngt("superadmin.two_factor.panel_title_2") %></em>
+  </p>
+  <div class="auth-panel-card">
+    <span class="auth-panel-kicker"><%= ngt("superadmin.two_factor.panel_kicker") %></span>
+    <ul class="auth-panel-list">
+      <li><i class="bi bi-key" aria-hidden="true"></i><%= ngt("superadmin.two_factor.panel_password") %></li>
+      <li><i class="bi bi-phone" aria-hidden="true"></i><%= ngt("superadmin.two_factor.panel_code") %></li>
+    </ul>
+  </div>
+</div>

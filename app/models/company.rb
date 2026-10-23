@@ -69,6 +69,11 @@ class Company < ApplicationRecord
   validates :slug, uniqueness: true, allow_nil: true,
                     format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/, message: "must contain only lowercase letters, numbers, and hyphens" }
 
+  # The superadmin console's gyms table (Web::DataTable): searched by name,
+  # city and the admin's name and email; sorted by those; filtered on the
+  # account's access and plan.
+  console_searchable attributes: %i[name city created_at], associations: %i[admin]
+
   # Superadmin company search — name / city, plus the admin's name and email.
   scope :search, ->(term) {
     next all if term.blank?

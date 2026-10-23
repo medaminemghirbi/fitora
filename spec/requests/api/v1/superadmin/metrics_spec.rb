@@ -111,6 +111,16 @@ RSpec.describe "Api::V1::Superadmin::Metrics", type: :request do
       expect(money).to have_key("arrears_cents")
     end
 
+    it "adds up invoices paid in other currencies converted into the price currency, to the cent" do
+      create(:invoice, company: create(:company), amount_cents: 12_000, currency: "TND", issued_at: Time.current)
+      create(:invoice, company: create(:company, currency: "EUR"), amount_cents: 6_000, currency: "EUR", issued_at: Time.current)
+
+      get "/api/v1/superadmin/metrics", headers: auth_headers(superadmin)
+
+      # 120 DT + 60 € × 3.363395 = 321.80 DT
+      expect(response.parsed_body["money"].values_at("invoiced_this_month_cents", "currency")).to eq([ 32_180, "TND" ])
+    end
+
     it "leaves out an invoice issued before this month" do
       create(:invoice, company: create(:company), amount_cents: 9_999, issued_at: 2.months.ago)
 

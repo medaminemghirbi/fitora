@@ -54,7 +54,7 @@ module Dashboard
     def outstanding_payments_total
       unpaid_bookings = Booking.joins(:session).merge(base_sessions_scope)
                                 .unpaid.sum(:amount)
-      unpaid_contracts = company.contracts.unpaid.sum(:final_price)
+      unpaid_contracts = company.contracts.owing.sum(:final_price)
       unpaid_bookings + unpaid_contracts
     end
 
@@ -94,13 +94,15 @@ module Dashboard
     # `key` names the screen the row opens, so adding a row never means
     # touching the frontend's routing.
     def attention
-      # A term already renewed is not running out, nor lapsed: the member's
-      # cover carries on into the next one. An old term superseded by its
-      # renewal is history, so what it owed is left to the client's balance.
-      expiring = company.contracts.expiring_soon(within: 30.days).not_renewed
-      unpaid = company.contracts.not_superseded.active.unpaid
-      # A paused membership is on hold, not lapsed: its end date moves on resume.
-      expired = company.contracts.active.not_renewed.where(paused_at: nil, expires_at: ...Time.current)
+      # The subscriptions page's own lists (Contracts::ListQuery), so a row
+      # here opens on exactly what it counted. A term already renewed is not
+      # running out, nor lapsed: the member's cover carries on into the next
+      # one. An old term superseded by its renewal is history, so what it
+      # owed is left to the client's balance.
+      current = company.contracts.not_superseded
+      expiring = current.to_renew
+      unpaid = current.owing
+      expired = current.lapsed
 
       [
         { key: "expiring", count: expiring.count, amount: nil, detail: expiring_detail(expiring) },

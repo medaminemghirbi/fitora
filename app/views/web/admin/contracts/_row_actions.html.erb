@@ -1,0 +1,56 @@
+<%# What the desk can do to one term: the one or two things it needs now
+    (collect what it owes, renew it) as buttons, everything else in the ⋯
+    menu. The subscriptions controller reads the term off
+    data-subscription. `profile`: on the member's own file, which needs no
+    link to it. %>
+<% collect = m[:amount_due].to_f > 0 && m[:state] != "cancelled" && may_collect? %>
+<% urgent = %w[expiring expired].include?(m[:state]) %>
+<div class="abo-actions" data-subscription="<%= subscription_payload(m).to_json %>">
+  <% if collect %>
+    <button type="button" class="btn btn-sm btn-primary" data-action="subscriptions#collect">
+      <i class="bi bi-cash-coin" aria-hidden="true"></i> <%= ngt("contracts.collect") %>
+    </button>
+  <% end %>
+  <% if m[:renewable] %>
+    <button type="button" class="btn btn-sm <%= urgent && !collect ? "btn-primary" : "btn-outline-secondary" %>" data-action="subscriptions#renew">
+      <i class="bi bi-arrow-repeat" aria-hidden="true"></i> <%= ngt("contracts.renew") %>
+    </button>
+  <% end %>
+  <%= render layout: "web/shared/action_menu" do %>
+    <% if !m[:renewable] && m[:renewable_on] %>
+      <button type="button" class="fx-menu-item" disabled>
+        <i class="bi bi-arrow-repeat" aria-hidden="true"></i> <%= ngt("contracts.renewable_from", date: ng_date(m[:renewable_on], "d MMM")) %>
+      </button>
+    <% end %>
+    <% if subscription_editable?(m) %>
+      <button type="button" class="fx-menu-item" data-action="subscriptions#edit">
+        <i class="bi bi-pencil" aria-hidden="true"></i> <%= ngt("contracts.edit") %>
+      </button>
+    <% end %>
+    <% if m[:paused] %>
+      <button type="button" class="fx-menu-item" data-action="subscriptions#resume">
+        <i class="bi bi-play-circle" aria-hidden="true"></i> <%= ngt("contracts.resume") %>
+      </button>
+    <% elsif subscription_pausable?(m) %>
+      <button type="button" class="fx-menu-item" data-action="subscriptions#pause">
+        <i class="bi bi-pause-circle" aria-hidden="true"></i> <%= ngt("contracts.pause") %>
+      </button>
+    <% end %>
+    <button type="button" class="fx-menu-item" data-action="subscriptions#downloadAgreement">
+      <i class="bi bi-file-earmark-text" aria-hidden="true"></i> <%= ngt("contracts.download_agreement") %>
+    </button>
+    <button type="button" class="fx-menu-item" data-action="subscriptions#downloadInvoice">
+      <i class="bi bi-receipt" aria-hidden="true"></i> <%= ngt("contracts.download_invoice") %>
+    </button>
+    <% unless profile %>
+      <a class="fx-menu-item" href="<%= admin_page_path("clients/#{m.dig(:client, :id)}") %>">
+        <i class="bi bi-person" aria-hidden="true"></i> <%= ngt("contracts.view_client") %>
+      </a>
+    <% end %>
+    <% unless m[:state] == "cancelled" %>
+      <button type="button" class="fx-menu-item is-danger" data-action="subscriptions#cancel">
+        <i class="bi bi-x-circle" aria-hidden="true"></i> <%= ngt("contracts.cancel") %>
+      </button>
+    <% end %>
+  <% end %>
+</div>

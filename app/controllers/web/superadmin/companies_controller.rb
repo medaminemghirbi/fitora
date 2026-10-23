@@ -8,24 +8,29 @@ module Web
     class CompaniesController < BaseController
       before_action :set_company, except: :index
 
-      helper_method :list_locals
+      # The gyms table: by the gym's name and city or its admin's name and
+      # e-mail; the account's access and plan as filters.
+      TABLE = Web::DataTable::Definition.new(
+        search: :name_or_city_or_admin_first_name_or_admin_last_name_or_admin_email_cont,
+        sorts: { name: "name", admin: %w[admin_last_name admin_first_name], created: "created_at" },
+        default: %w[created desc],
+        filters: {
+          access: { "open" => { admin_subscription_active_eq: true }, "closed" => { admin_subscription_active_eq: false } },
+          plan: { "starter" => { admin_subscription_plan_eq: "starter" }, "pro" => { admin_subscription_plan_eq: "pro" },
+                  "none" => { admin_subscription_plan_null: true } }
+        }
+      )
 
-      # GET /superadmin/companies?q=&closed=1&page= — ?fragment=1 for the
-      # page without the shell, as the search, the closed filter and the
-      # pages redraw it.
+      # GET /superadmin/companies?search=&access=&plan=&sort=&dir=&page=&limit=
+      # — the table alone when its frame asks.
       def index
-        @query = params[:q].to_s
-        @closed = ActiveModel::Type::Boolean.new.cast(params[:closed]) || false
-        companies = Company.includes(admin: [ :companies, { subscription: :invoices } ]).search(@query.presence)
-        closed = companies.joins(admin: :subscription).where(subscriptions: { active: false })
-        rows, @meta = page_meta((@closed ? closed : companies).reorder(:name))
-        @companies = JSON.parse(rows.map { |c| SuperadminCompanySerializer.new(c).as_json }.to_json).map(&:deep_symbolize_keys)
-        @closed_count = closed.count
-        render :index, layout: false if params[:fragment].present?
+        @table = TABLE.table(params)
+        @pagy, @companies = paginate(@table, Company.includes(admin: [ :companies, :subscription ]))
+        @closed_count = Company.joins(admin: :subscription).merge(Subscription.closed).count unless turbo_frame_request?
       end
 
-      # GET /superadmin/companies/:id — ?tab=gym for the gym's tab, kept in
-      # the URL (M-05).
+      # GET /superadmin/companies/:id — the account on one page: the money
+      # beside the gym.
       def show
         @data = JSON.parse({
           company: SuperadminCompanySerializer.new(@company).as_json,
@@ -33,7 +38,6 @@ module Web
           locale_options: Company::LOCALES,
           invoices: (@company.subscription&.invoices&.paid || Invoice.none).newest_first.map { |i| InvoiceSerializer.new(i).as_json }
         }.to_json).deep_symbolize_keys
-        @tab = params[:tab] == "gym" ? "gym" : "billing"
       end
 
       def update_subscription
@@ -96,10 +100,6 @@ module Web
         return if @company
 
         request.format.html? ? render(:missing) : render_refusal("Resource not found", status: :not_found)
-      end
-
-      def list_locals
-        { companies: @companies, meta: @meta, query: @query }
       end
     end
   end

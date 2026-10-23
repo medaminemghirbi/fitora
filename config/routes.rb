@@ -265,12 +265,14 @@ Rails.application.routes.draw do
         end
       end
       # Module 3.
-      resources :contracts, only: :index do
+      resources :contracts, only: %i[index create update] do
+        get :members, on: :collection
         member do
           post :renew
           post :pause
           post :resume
           post :collect
+          post :cancel
           get :agreement
           get :receipt
         end
@@ -354,7 +356,6 @@ Rails.application.routes.draw do
         patch "/", action: :update
         delete "/", action: :destroy
         post "invite", action: :invite
-        post "contracts", action: :sell
         post "bookings", action: :book
         get "sessions", action: :sessions
       end
@@ -431,8 +432,15 @@ Rails.application.routes.draw do
     get "*page", to: redirect("/", status: 302), format: false
   end
 
-  # ---- The superadmin's console (module 10): its Angular URLs (§8.1) ----
+  # ---- The superadmin's console (module 10): its Angular URLs (§8.1), and
+  # what it has grown since: its own sign-in, the invoices, a page per
+  # ticket and release ----
   scope "superadmin", module: "web/superadmin", as: :web_superadmin do
+    # The console's own sign-in: the password, then the authenticator's code.
+    get "connexion", to: "sessions#new", as: :sign_in
+    post "connexion", to: "sessions#create"
+    get "connexion/code", to: "sessions#code", as: :sign_in_code
+    post "connexion/code", to: "sessions#verify"
     get "overview", to: "overview#show", as: :overview
     get "companies", to: "companies#index", as: :companies
     get "companies/:id", to: "companies#show", as: :company
@@ -441,13 +449,20 @@ Rails.application.routes.draw do
     post "companies/:id/impersonate", to: "companies#impersonate"
     post "companies/:id/invoices", to: "companies#create_invoice"
     delete "companies/:id/invoices/:invoice_id", to: "companies#destroy_invoice"
+    get "invoices", to: "invoices#index", as: :invoices
+    get "invoices/:id/pdf", to: "invoices#pdf", as: :invoice_pdf
     get "pricing", to: "pricing#show", as: :pricing
     patch "pricing", to: "pricing#update"
+    post "pricing/rates", to: "pricing#refresh_rates"
+    get "billing", to: "billing#show", as: :billing
+    patch "billing", to: "billing#update"
     get "support", to: "support#index", as: :support
+    get "support/:id", to: "support#show", as: :support_ticket
     patch "support/:id/resolve", to: "support#resolve"
     get "support/:id/attachments/:attachment_id", to: "support#attachment", as: :support_attachment
     get "updates", to: "updates#index", as: :updates
     post "updates", to: "updates#create"
+    get "updates/:id", to: "updates#show", as: :update
     get "notifications", to: "notifications#index"
     post "notifications/read_all", to: "notifications#read_all"
     patch "notifications/:id/read", to: "notifications#read"

@@ -1,0 +1,67 @@
+<%# What heads Fitora's invoices: its identity, printed at the top of each
+    one, and the TVA and timbre fiscal an invoice in dinars carries — one
+    form, saved at once; a preview of the latest invoice beside it. %>
+<% s = @setting; latest = @latest %>
+<% superadmin_crumbs [ ngt("superadmin.billing.nav") ] %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.billing.title"), desc: ngt("superadmin.billing.subtitle") } do %>
+  <% if latest %>
+    <a href="/superadmin/invoices/<%= latest.id %>/pdf" class="btn btn-outline-secondary" target="_blank" rel="noopener" data-turbo="false">
+      <i class="bi bi-file-earmark-pdf"></i> <%= ngt("superadmin.billing.preview") %>
+    </a>
+  <% end %>
+<% end %>
+
+<% unless s.issuer_complete? %>
+  <div class="sa-notice"><i class="bi bi-exclamation-triangle"></i> <%= ngt("superadmin.billing.incomplete") %></div>
+<% end %>
+<% if s.errors.any? %>
+  <div class="sa-notice sa-notice--danger" role="alert">
+    <i class="bi bi-x-octagon"></i>
+    <span><%= s.errors.full_messages.to_sentence %></span>
+  </div>
+<% end %>
+
+<form action="/superadmin/billing" method="post" class="app-card sa-billing">
+  <input type="hidden" name="_method" value="patch">
+  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+  <div class="app-card-header"><h2><%= ngt("superadmin.billing.identity_title") %></h2></div>
+  <div class="app-card-body sa-form-grid">
+    <% [ [ :legal_name, "superadmin.billing.legal_name", "Fitora SARL" ], [ :tax_id, "superadmin.billing.tax_id", "1234567/A/M/000" ],
+         [ :address, "superadmin.billing.address", "" ], [ :city, "superadmin.billing.city", "1053 Tunis, Tunisie" ],
+         [ :phone, "superadmin.billing.phone", "+216 …" ], [ :email, "superadmin.billing.email", "facturation@…" ],
+         [ :website, "superadmin.billing.website", "www.…" ] ].each do |field, label, placeholder| %>
+      <div>
+        <label class="form-label" for="billing-<%= field %>"><%= ngt(label) %><%= " *" if %i[legal_name tax_id].include?(field) %></label>
+        <input id="billing-<%= field %>" name="billing[<%= field %>]" class="form-control<%= " is-invalid" if s.errors[field].any? %>" value="<%= s[field] %>" placeholder="<%= placeholder %>"
+               <%= raw(%(dir="ltr")) if %i[tax_id phone email website].include?(field) %> maxlength="200" />
+      </div>
+    <% end %>
+  </div>
+
+  <div class="sa-card-section">
+    <h3><%= ngt("superadmin.billing.taxes_title") %></h3>
+    <p class="sa-sub"><%= ngt("superadmin.billing.taxes_hint") %></p>
+  </div>
+  <div class="app-card-body sa-form-grid">
+    <div>
+      <label class="form-label" for="billing-vat"><%= ngt("superadmin.billing.vat") %></label>
+      <div class="input-group">
+        <input id="billing-vat" name="billing[vat_percent]" class="form-control<%= " is-invalid" if s.errors[:vat_percent].any? %>" inputmode="decimal"
+               value="<%= s.vat_percent.to_d.to_s("F").delete_suffix(".0").tr(".", ",") %>" />
+        <span class="input-group-text">%</span>
+      </div>
+    </div>
+    <div>
+      <label class="form-label" for="billing-stamp"><%= ngt("superadmin.billing.stamp") %></label>
+      <div class="input-group">
+        <input id="billing-stamp" name="billing[stamp_duty]" class="form-control<%= " is-invalid" if s.errors[:stamp_duty_millimes].any? %>" inputmode="decimal"
+               value="<%= format("%.3f", s.stamp_duty_millimes.to_i / 1000.0).tr(".", ",") %>" />
+        <span class="input-group-text">DT</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sa-form-foot">
+    <button type="submit" class="btn btn-primary"><%= ngt("common.save") %></button>
+  </div>
+</form>

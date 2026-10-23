@@ -6,5 +6,33 @@ class ApplicationRecord < ActiveRecord::Base
   # Raised from a model method, it rolls back the transaction it is in, and
   # ApplicationController answers it with a 422 in the same shape a failed
   # validation gets.
-  class Refused < StandardError; end
+  #
+  # `key` names the same reason in the web UI's words (Web::Translations),
+  # with `params` for its placeholders; the API answers with the message.
+  class Refused < StandardError
+    attr_reader :key, :params
+
+    def initialize(message = nil, key: nil, **params)
+      super(message)
+      @key = key
+      @params = params
+    end
+  end
+
+  # What the superadmin console's tables (Web::DataTable) may search, sort
+  # and filter a model by: Ransack's allowlists, granted to the console alone
+  # (auth_object :superadmin). Anywhere else a ransack search has nothing to
+  # search by, so a gym-scoped page can never reach across tenants through
+  # one. Never a secret here: no digest, no token, no key.
+  def self.console_searchable(attributes: [], associations: [], scopes: [])
+    attributes = attributes.map(&:to_s).freeze
+    associations = associations.map(&:to_s).freeze
+    scopes = scopes.map(&:to_sym).freeze
+    define_singleton_method(:ransackable_attributes) { |auth_object = nil| auth_object == :superadmin ? attributes : [] }
+    define_singleton_method(:ransackable_associations) { |auth_object = nil| auth_object == :superadmin ? associations : [] }
+    define_singleton_method(:ransackable_scopes) { |auth_object = nil| auth_object == :superadmin ? scopes : [] }
+  end
+
+  # Ransack asks every model; one the console does not read answers nothing.
+  console_searchable
 end

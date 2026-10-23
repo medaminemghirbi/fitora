@@ -1,0 +1,23 @@
+<%# One support ticket: its subject and whether it is resolved, the way to
+    resolve it while it is open (a PATCH that comes back here with the
+    toast), and the ticket itself (_detail). %>
+<% t = @ticket %>
+<% superadmin_crumbs [ ngt("superadmin.support.title"), "/superadmin/support" ], [ t[:subject] ] %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: t[:subject], desc: t.dig(:company, :name) } do %>
+  <% if t[:kind] == "upgrade" %>
+    <span class="sa-chip sa-chip--primary"><i class="bi bi-gem"></i> <%= ngt("superadmin.support.kind_upgrade") %></span>
+  <% end %>
+  <% if t[:status] == "resolved" %>
+    <span class="sa-chip sa-chip--success"><i class="bi bi-check2"></i> <%= ngt("modules_page.contact.status_resolved") %></span>
+  <% else %>
+    <%= button_to "/superadmin/support/#{t[:id]}/resolve", method: :patch, class: "btn btn-primary btn-sm" do %>
+      <i class="bi bi-check-lg"></i> <%= ngt("superadmin.support.mark_resolved") %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<div class="app-card">
+  <div class="app-card-body">
+    <%= render "web/superadmin/support/detail", t: t %>
+  </div>
+</div>

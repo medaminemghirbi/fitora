@@ -97,10 +97,10 @@ RSpec.describe "Web member and superadmin shells", type: :request, openapi: fals
 
     before { web_sign_in(superadmin) }
 
-    it "lands on the overview, PlatformMetrics' four numbers" do
+    it "lands on the overview, PlatformMetrics' four numbers, in the console's frame" do
       expect(response).to redirect_to("/superadmin/overview")
       get "/superadmin/overview"
-      expect(response.body).to include("<app-superadmin-shell _nghost-superadmin-shell", "ao-tile")
+      expect(response.body).to include("sa-shell", "sa-nav-item is-active", "fx-kpi")
     end
 
     it "lists the gyms, searched and narrowed to the closed ones" do
@@ -108,16 +108,18 @@ RSpec.describe "Web member and superadmin shells", type: :request, openapi: fals
       closed = create(:company, name: "Zen Club")
       create(:subscription, company: closed).update!(active: false)
 
-      get "/superadmin/companies", params: { q: "zen" }
+      get "/superadmin/companies", params: { search: "zen" }
       expect(response.body).to include("<mark class=\"fx-hl\">Zen</mark>")
       expect(response.body).not_to include(company.name)
-      get "/superadmin/companies", params: { closed: 1, fragment: 1 }
-      expect(response.body).to include("Zen Club", "btn-outline-secondary")
+      get "/superadmin/companies", params: { access: "closed" }
+      expect(response.body).to include("Zen Club")
+      expect(response.body).not_to include(company.name)
     end
 
-    it "opens a gym's account: billing, ledger, and its other tab waiting in a template" do
+    it "opens a gym's account on one page: its figures, the money beside the gym, its access apart" do
       get "/superadmin/companies/#{company.id}"
-      expect(response.body).to include("ac-ledger", "ac-summary", %(data-tab="gym"))
+      expect(response.body).to include("ac-summary", "sa-record-main", "ac-ledger", "sa-record-aside", "sa-ministats", %(id="ac-currency"), "sa-danger")
+      expect(response.body).not_to include("nav-tabs")
     end
 
     it "moves the plan and the access as the API does, with its audit trail and a toast" do
@@ -186,14 +188,19 @@ RSpec.describe "Web member and superadmin shells", type: :request, openapi: fals
       ticket = SupportRequest.open(company: company, user: company.admin, subject: "Aide", message: "Merci",
                                    attachments: [ Rack::Test::UploadedFile.new(StringIO.new("pdf"), "application/pdf", original_filename: "a.pdf") ])
       get "/superadmin/support"
-      expect(response.body).to include("Aide", "/superadmin/support/#{ticket.id}/attachments/")
+      expect(response.body).to include("Aide", %(data-href="/superadmin/support/#{ticket.id}"))
+      get "/superadmin/support/#{ticket.id}"
+      expect(response.body).to include("Merci", "/superadmin/support/#{ticket.id}/attachments/", "/superadmin/support/#{ticket.id}/resolve")
 
       get "/superadmin/support/#{ticket.id}/attachments/#{ticket.attachments.first.id}"
       follow_redirects!
       expect(response.body).to eq("pdf")
-      patch "/superadmin/support/#{ticket.id}/resolve", as: :json
-      expect(response.parsed_body["detail"]).not_to include("data-resolve")
+      patch "/superadmin/support/#{ticket.id}/resolve"
+      expect(response).to redirect_to("/superadmin/support/#{ticket.id}")
+      expect(flash[:success]).to be_present
       expect(ticket.reload.status).to eq("resolved")
+      follow_redirect!
+      expect(response.body).not_to include("/superadmin/support/#{ticket.id}/resolve")
     end
 
     it "publishes release notes, which tell every admin" do

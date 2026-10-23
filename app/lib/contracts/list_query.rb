@@ -1,69 +1,84 @@
 module Contracts
   # A salle's contracts as the desk works from them: searched by member, plan
-  # or reference, filtered by status, payment and plan, with the counts and
-  # the portfolio strip beside them. What GET /api/v1/contracts and the web
-  # UI's contracts page list (moved unchanged from Api::V1::ContractsController).
+  # or reference, narrowed to one work list (status) and one formule, with
+  # the counts and the money strip beside them. What GET /api/v1/contracts
+  # and the web UI's subscriptions page list.
   class ListQuery
     FILTERS = %i[q status payment contract_type_id].freeze
 
-    # revenue: whether the login may read what the portfolio is worth.
+    # The work lists, each one Contract scope (see Contract#state for the
+    # same rules read off one term). `expiring` is "to renew now" — the name
+    # the dashboard's link has always used.
+    LISTS = {
+      "active" => :running,
+      "expiring" => :to_renew,
+      "expired" => :lapsed,
+      "unpaid" => :owing,
+      "paused" => :paused_list,
+      "upcoming" => :upcoming,
+      "cancelled" => :cancelled
+    }.freeze
+
+    # revenue: whether the login may read what the subscriptions are worth.
     def initialize(company, params, revenue:)
       @company = company
       @revenue = revenue
       params = params.slice(*FILTERS).permit(*FILTERS) if params.respond_to?(:permit)
       @params = params.to_h.with_indifferent_access.slice(*FILTERS)
+      # ?payment=unpaid is how the dashboard used to ask for what is owed.
+      @params[:status] = "unpaid" if @params[:status].blank? && @params[:payment] == "unpaid"
+      @params.delete(:status) unless LISTS.key?(@params[:status].to_s)
     end
 
     attr_reader :params
 
-    # status=expiring is not one of Contract's four states: it is "active,
-    # and running out within the month", which is what the dashboard sends
-    # people here to act on.
+    # The list asked for, in the order its work is done: what runs out
+    # first, what lapsed last, the oldest debt first.
     def scope
       contracts = searched
-      contracts = apply_status(contracts, params[:status]) if params[:status].present?
-      contracts = apply_payment(contracts, params[:payment]) if params[:payment].present?
+      contracts = list(contracts, params[:status]) if params[:status].present?
+      contracts = contracts.owing if params[:payment] == "unpaid" && params[:status] != "unpaid"
+      contracts = contracts.where(payment_status: :paid) if params[:payment] == "paid"
       contracts = contracts.where(contract_type_id: params[:contract_type_id]) if params[:contract_type_id].present?
-      contracts
+      case params[:status]
+      when "expiring" then contracts.reorder(:expires_at, :id)
+      when "expired" then contracts.reorder(expires_at: :desc, id: :desc)
+      when "unpaid", "upcoming" then contracts.reorder(:starts_at, :id)
+      else contracts
+      end
     end
 
-    # What the filter rail and the stats strip read. Everything here follows
-    # the search term but ignores the status/plan already picked, so the
-    # numbers stay comparable while the operator clicks around.
-    # The four contract states, plus the ones the filter rail offers that
-    # are not states at all: everything, owed, running out, on hold.
+    # How many each list holds. Everything here follows the search and the
+    # formule but ignores the list already picked, so the numbers stay put
+    # while the operator moves between them.
     def counts
-      searched.reorder(nil).group(:status).count
-              .then { |by_status| Contract.statuses.keys.index_with { |status| by_status.fetch(status, 0) } }
-              .merge(
-                "all" => searched.count,
-                "unpaid" => unpaid_scope(searched).count,
-                "expiring" => expiring_scope(searched).count,
-                "paused" => paused_scope(searched).count
-              )
+      base = for_plan(searched).reorder(nil)
+      LISTS.keys.index_with { |key| list(base, key).count }.merge("all" => base.count)
     end
 
+    # The formule filter's numbers: what each holds for the current search.
     def plan_counts
       searched.reorder(nil).group(:contract_type_id).count
     end
 
-    # The portfolio is what the ACTIVE contracts were sold for — the frozen
-    # prices, never today's catalogue.
+    # What the running subscriptions were sold for — the frozen prices, never
+    # today's catalogue — and what is still owed.
     #
     # The money figures are `revenue`, like the payments strip: whoever only
-    # sells contracts still sees how many are about to expire, which is
-    # work to do, but not what the portfolio is worth.
+    # sells subscriptions still sees how many need renewing, which is work
+    # to do, but not what they are worth.
     def totals
-      totals = { expiring_soon: expiring_scope(searched).count }
+      base = for_plan(searched).reorder(nil)
+      totals = { expiring_soon: base.to_renew.count }
       return totals unless revenue
 
-      active = searched.active
-      value = active.sum(:final_price)
-      count = active.count
+      running = base.running
+      value = running.sum(:final_price)
+      count = running.count
       totals.merge(
         portfolio_value: value.to_f,
         average_basket: count.positive? ? (value.to_f / count).round(2) : 0.0,
-        unpaid_value: unpaid_scope(searched).sum(:final_price).to_f
+        unpaid_value: base.owing.sum(:final_price).to_f
       )
     end
 
@@ -71,41 +86,18 @@ module Contracts
 
     attr_reader :company, :revenue
 
-    # The list's status filter, and its counts, both read each contract's
-    # own state — the list holds no history (see #searched), so that is the
-    # term in force or a renewal queued behind it.
-    def apply_status(scope, status)
-      return expiring_scope(scope) if status == "expiring"
-      return paused_scope(scope) if status == "paused"
+    def list(scope, key)
+      name = LISTS.fetch(key)
+      return scope.where(status: :cancelled) if name == :cancelled
+      # On hold — still `active`, so not a state of its own, but the one list
+      # a studio checks to bring people back.
+      return scope.active.where.not(paused_at: nil) if name == :paused_list
 
-      scope.where(status: status)
+      scope.public_send(name)
     end
 
-    # The "Non réglés" filter has to return exactly what its count promises,
-    # so it goes through the same scope the count is built from.
-    def apply_payment(scope, payment)
-      return unpaid_scope(scope) if payment == "unpaid"
-
-      scope.active.where(payment_status: payment)
-    end
-
-    # "Running out" means the gym's COVER runs out — a contract already
-    # renewed is not work, even though the term in force still ends this
-    # month.
-    def expiring_scope(scope)
-      scope.active.not_renewed.where(paused_at: nil, expires_at: Time.current..30.days.from_now)
-    end
-
-    # On hold (Contract#pause!) — still `active`, so not a state of its
-    # own, but the one list a studio checks to bring people back.
-    def paused_scope(scope)
-      scope.active.where.not(paused_at: nil)
-    end
-
-    # Money owed — on the term in force or on a renewal queued behind it
-    # (a renewal is sold unpaid).
-    def unpaid_scope(scope)
-      scope.active.unpaid
+    def for_plan(scope)
+      params[:contract_type_id].present? ? scope.where(contract_type_id: params[:contract_type_id]) : scope
     end
 
     # The list is what the desk works from, so it leaves out history: a
@@ -121,8 +113,9 @@ module Contracts
         else
           t = "%#{params[:q].strip}%"
           scope.joins(:client).joins(:contract_type)
-               .where("clients.first_name ILIKE :t OR clients.last_name ILIKE :t OR contract_types.name ILIKE :t " \
-                      "OR contracts.invoice_ref ILIKE :t", t: t)
+               .where("clients.first_name ILIKE :t OR clients.last_name ILIKE :t " \
+                      "OR (clients.first_name || ' ' || clients.last_name) ILIKE :t OR contract_types.name ILIKE :t " \
+                      "OR contracts.invoice_ref ILIKE :t OR clients.phone ILIKE :t", t: t)
         end
       end
     end

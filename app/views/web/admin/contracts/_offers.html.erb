@@ -1,0 +1,30 @@
+<%# The offers on sale (Contracts::Offers), grouped by what they cover — an
+    activity, or a pack — one radio each: the formule, its length and
+    sessions, its price. `none`: a first choice that sells nothing (the
+    new-member wizard). %>
+<div class="abo-offers" data-offers>
+  <% if local_assigns[:none] %>
+    <label class="abo-offer abo-offer--none">
+      <input type="radio" class="abo-offer-input" name="<%= name %>" value="" />
+      <span class="abo-offer-body"><span class="abo-offer-name"><%= none %></span></span>
+    </label>
+  <% end %>
+  <% offers.group_by { |o| o[:item] }.each_value do |group| %>
+    <div class="abo-offer-group" role="group" aria-label="<%= group.first[:group_label] %>">
+      <p class="abo-offer-group-head">
+        <span><%= group.first[:group_label] %></span>
+        <% if group.first[:group_sub].present? %><small><%= group.first[:group_sub] %></small><% end %>
+      </p>
+      <% group.each do |o| %>
+        <label class="abo-offer" style="--abo-offer-color: <%= o[:color] %>;">
+          <input type="radio" class="abo-offer-input" name="<%= name %>" value="<%= o[:key] %>" />
+          <span class="abo-offer-body">
+            <span class="abo-offer-name"><%= o[:name] %></span>
+            <span class="abo-offer-meta"><%= o[:meta] %></span>
+          </span>
+          <span class="abo-offer-price"><%= ng_money(o[:price], o[:currency]) %></span>
+        </label>
+      <% end %>
+    </div>
+  <% end %>
+</div>

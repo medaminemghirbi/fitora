@@ -1,0 +1,599 @@
+// The subscriptions page, its dialogs and the subscription card on a
+// member's file (app/views/web/admin/contracts). Designed for this app, not
+// copied from Angular, so — like the superadmin console — plain global
+// classes under one prefix (`abo-`) rather than component-scoped styles.
+
+// ---- the page ----------------------------------------------------------------------
+
+.abo-page {
+  display: grid;
+  gap: var(--space-4);
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+}
+
+.abo-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+
+  h1 {
+    margin: 0;
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+  }
+
+  p {
+    margin: var(--space-1) 0 0;
+    color: var(--color-text-secondary);
+  }
+}
+
+// The work lists: pills with how many each holds, coloured when it is work.
+.abo-lists {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.abo-list {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+
+  &:hover { background: var(--color-surface-hover); color: var(--color-text); }
+
+  &:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+  &.is-active {
+    border-color: var(--color-primary-border);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
+}
+
+.abo-list-count {
+  min-width: 1.5rem;
+  padding: 0 0.45rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: 1.4rem;
+  text-align: center;
+
+  .abo-list[data-tone="warning"] &:not(.is-zero) { background: var(--color-warning-soft); color: var(--color-warning); }
+  .abo-list[data-tone="danger"] &:not(.is-zero) { background: var(--color-danger-soft); color: var(--color-danger); }
+}
+
+.abo-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.abo-search { flex: 1 1 260px; }
+
+.abo-plan-filter { flex: 0 1 260px; width: auto; }
+
+.abo-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: 0;
+
+  > div {
+    flex: 1 1 180px;
+    min-width: 0;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  dt {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .is-owed dd { color: var(--color-danger); }
+
+  // Three across even on a phone: they are three numbers, not three cards.
+  @media (max-width: 640px) {
+    gap: var(--space-2);
+
+    > div { flex-basis: 0; padding: var(--space-2) var(--space-3); }
+    dt { font-size: 0.6875rem; line-height: 1.2; }
+    dd { font-size: var(--font-size-md); }
+  }
+}
+
+#abo-totals:empty { display: none; }
+
+// ---- the table ------------------------------------------------------------------------
+
+.abo-table {
+  margin: 0;
+
+  th {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  td { vertical-align: middle; }
+
+  // What needs doing shows down the row's leading edge.
+  tbody tr > td:first-child { border-inline-start: 3px solid transparent; }
+  tbody tr[data-state="expiring"] > td:first-child { border-inline-start-color: var(--color-warning); }
+  tbody tr[data-state="expired"] > td:first-child { border-inline-start-color: var(--color-danger); }
+  tbody tr[data-state="paused"] > td:first-child,
+  tbody tr[data-state="upcoming"] > td:first-child { border-inline-start-color: var(--color-info); }
+  tbody tr[data-state="cancelled"] { opacity: 0.65; }
+
+  // On a phone each row is a card — who, then what and its state, when and
+  // what is owed, then what to do — so its buttons are never off-screen.
+  @media (max-width: 640px) {
+    thead { display: none; }
+
+    tbody,
+    td { display: block; }
+
+    tbody tr {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--space-2) var(--space-3);
+      padding: var(--space-3);
+      border-bottom: 1px solid var(--color-border);
+      border-inline-start: 3px solid transparent;
+    }
+
+    tbody tr[data-state="expiring"] { border-inline-start-color: var(--color-warning); }
+    tbody tr[data-state="expired"] { border-inline-start-color: var(--color-danger); }
+    tbody tr[data-state="paused"],
+    tbody tr[data-state="upcoming"] { border-inline-start-color: var(--color-info); }
+
+    tbody tr > td,
+    tbody tr > td:first-child { padding: 0; border: 0; }
+
+    td:nth-child(1) { grid-column: 1 / -1; }
+    td:nth-child(2) { grid-area: 2 / 1; }
+    td:nth-child(4) { grid-area: 2 / 2; text-align: end; }
+    td:nth-child(3) { grid-area: 3 / 1; }
+    td:nth-child(5) { grid-area: 3 / 2; text-align: end; }
+    td:nth-child(6) { grid-column: 1 / -1; text-align: start !important; }
+
+    .abo-actions { flex-wrap: wrap; justify-content: flex-start; }
+  }
+}
+
+.abo-payment { white-space: nowrap; }
+
+.abo-member {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: inherit;
+  text-decoration: none;
+
+  &:hover .abo-member-name { color: var(--color-primary); }
+}
+
+.abo-member-text { display: grid; min-width: 0; }
+
+.abo-member-name { font-weight: 600; white-space: nowrap; }
+
+.abo-member-text .abo-sub,
+.abo-ref { white-space: nowrap; }
+
+.abo-sub {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.abo-formule {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+
+  > span:last-child { display: grid; }
+}
+
+.abo-formule-name { font-weight: 600; }
+
+.abo-dot {
+  flex: none;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-top: 0.4rem;
+  border-radius: 50%;
+}
+
+.abo-period { white-space: nowrap; }
+
+.abo-renewed { color: var(--color-info); }
+
+// One word for a term's state, in its colour (Contract#state).
+.abo-state {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  white-space: nowrap;
+
+  &[data-state="expiring"] { background: var(--color-warning-soft); color: var(--color-warning); }
+  &[data-state="expired"] { background: var(--color-danger-soft); color: var(--color-danger); }
+  &[data-state="paused"],
+  &[data-state="upcoming"] { background: var(--color-info-soft); color: var(--color-info); }
+  &[data-state="cancelled"] { background: var(--color-border); color: var(--color-text-secondary); }
+
+  &--small { padding: 0 0.5rem; font-weight: 600; }
+}
+
+.abo-due {
+  color: var(--color-danger);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.abo-paid {
+  color: var(--color-success);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.abo-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+// ---- the dialogs ------------------------------------------------------------------------
+
+.abo-form {
+  display: grid;
+  gap: var(--space-4);
+
+  [hidden] { display: none !important; }
+
+  fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .alert { margin: 0; }
+}
+
+.abo-field {
+  display: grid;
+  gap: var(--space-2);
+
+  > label,
+  > legend {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+  }
+}
+
+.abo-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+.abo-who {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+
+  .bi { color: var(--color-text-secondary); font-size: 1.15rem; }
+}
+
+.abo-who-name { flex: 1; min-width: 0; font-weight: 600; }
+
+.abo-member-results {
+  display: grid;
+  gap: var(--space-1);
+  max-height: 14rem;
+  overflow-y: auto;
+
+  &:empty { display: none; }
+}
+
+.abo-member-result {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: start;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible { outline: none; border-color: var(--color-primary-border); background: var(--color-primary-soft); }
+
+  small { color: var(--color-text-secondary); }
+}
+
+.abo-member-note {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.abo-current {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+  font-size: var(--font-size-sm);
+}
+
+// The offers: one card a formule, grouped under what it covers.
+.abo-offers {
+  display: grid;
+  gap: var(--space-3);
+  max-height: min(46vh, 26rem);
+  overflow-y: auto;
+  padding-inline-end: 2px;
+}
+
+.abo-offer-group { display: grid; gap: var(--space-2); }
+
+.abo-offer-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+
+  small { color: var(--color-text-secondary); font-weight: 500; }
+}
+
+.abo-offer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-inline-start: 4px solid var(--abo-offer-color, var(--color-border));
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+
+  &:hover { background: var(--color-surface-hover); }
+
+  &:has(.abo-offer-input:checked) {
+    border-color: var(--color-primary);
+    border-inline-start-color: var(--abo-offer-color, var(--color-primary));
+    background: var(--color-primary-soft);
+  }
+
+  &:has(.abo-offer-input:focus-visible) { box-shadow: var(--shadow-focus); }
+
+  &--none,
+  &--current { border-inline-start-color: var(--color-border-strong); }
+}
+
+.abo-offer-input {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--color-primary);
+}
+
+.abo-offer-body { display: grid; flex: 1; min-width: 0; }
+
+.abo-offer-name { font-weight: 600; }
+
+.abo-offer-meta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.abo-offer-price {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.abo-dates {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.abo-hint {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.abo-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+
+  strong {
+    font-size: var(--font-size-lg);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.abo-pay {
+  display: grid;
+  gap: var(--space-2);
+
+  > legend {
+    margin-bottom: var(--space-2);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+  }
+}
+
+.abo-choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  cursor: pointer;
+
+  .form-check-input { flex: none; margin: 0; }
+}
+
+.abo-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-inline-start: 1.6rem;
+
+  .abo-pay > & { padding-inline-start: 0; }
+  .abo-choice + & { padding-inline-start: 1.6rem; }
+}
+
+.abo-method {
+  position: relative;
+  margin: 0;
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  span {
+    display: inline-block;
+    padding: 0.3rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+  }
+
+  input:checked + span {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
+
+  input:focus-visible + span { box-shadow: var(--shadow-focus); }
+}
+
+.abo-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+// ---- on a member's file --------------------------------------------------------------------
+
+.abo-profile {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.abo-profile-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+
+  h2 { margin: 0; }
+}
+
+.abo-profile-empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+
+  p { margin: 0; color: var(--color-text-secondary); }
+}
+
+.abo-term {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  border-top: 1px solid var(--color-border);
+
+  .abo-dot { align-self: start; margin-top: 0.45rem; }
+
+  @media (max-width: 640px) {
+    grid-template-columns: auto minmax(0, 1fr);
+
+    .abo-term-status,
+    .abo-actions { grid-column: 2; justify-self: start; justify-items: start; }
+  }
+}
+
+.abo-term-body p { margin: 0; }
+
+.abo-term-title { font-weight: 600; }
+
+.abo-term-status {
+  display: grid;
+  justify-items: end;
+  gap: var(--space-1);
+}

@@ -50,14 +50,15 @@ module Web
         end
       end
 
-      # The dialog's "Enregistrer": in cash, against what was picked.
+      # The dialog's "Enregistrer": against what was picked, by the method
+      # picked (cash unless told otherwise).
       def create
         client = current_company.clients.find_by(id: params[:client_id])
         return render(json: { error: "Client not found" }, status: :not_found) if client.nil?
 
         Payments::Actions.record(
           client, company: current_company, by: current_user,
-          params: params.permit(:amount, :notes, :contract_id, :booking_id).merge(payment_method: "cash")
+          params: params.permit(:amount, :notes, :contract_id, :booking_id).merge(payment_method: Contracts::Actions.payment_method(params))
         )
         head :no_content
       rescue ApplicationRecord::Refused => e

@@ -134,7 +134,8 @@ class Client < ApplicationRecord
   # effect of a delete.
   def remove_from!(company)
     if current_contract(company)
-      raise Refused, "This member still has an active subscription. End it before removing them."
+      raise Refused.new("This member still has an active subscription. End it before removing them.",
+                        key: "clients.errors.still_subscribed")
     end
 
     transaction do
@@ -213,11 +214,17 @@ class Client < ApplicationRecord
   # What's still owed: unpaid bookings and contracts, net of any payments
   # already recorded against them. Not a full accounting ledger — just
   # enough to flag a client with a balance due.
+  #
+  # Only what was paid towards those same payables is netted off: money for
+  # a term already settled is not credit against the next one. A cancelled
+  # term owes nothing (Contract.owing).
   def outstanding_balance(company = nil)
-    owed = bookings_for(company).unpaid.sum(:amount) + contracts_for(company).unpaid.sum(:final_price)
+    bookings = bookings_for(company).unpaid
+    contracts = contracts_for(company).owing
+    owed = bookings.sum(:amount) + contracts.sum(:final_price)
     paid_scope = payments_for(company).paid
-    received = paid_scope.where.not(booking_id: nil).sum(:amount) +
-               paid_scope.where.not(contract_id: nil).sum(:amount)
+    received = paid_scope.where(booking_id: bookings.select(:id)).sum(:amount) +
+               paid_scope.where(contract_id: contracts.select(:id)).sum(:amount)
     [ owed - received, 0 ].max
   end
 

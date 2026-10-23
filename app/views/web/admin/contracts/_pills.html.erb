@@ -1,6 +1,0 @@
-<%# The status pills (StatusFilterComponent). %>
-<app-status-filter id="ct-pills">
-  <%= render "web/shared/status_filter", name: "contract-status", legend: ngt("clients.filter_status"), value: filters[:status].to_s,
-             options: contract_statuses.map { |value, label, count_key, color| { value: value, label: ngt(label), count: counts[count_key] || 0, color: color } },
-             filter: "status", action: "change->contracts-list#setFilter" %>
-</app-status-filter>

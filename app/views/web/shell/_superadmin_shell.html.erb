@@ -1,75 +1,92 @@
-<%# ng: superadmin-shell %>
-<%# ng-host: superadmin-shell %>
-<%# SuperadminShellComponent (layout/superadmin-shell): the bar — brand,
-    version, the console's tabs, the bell, the theme, the language, the
-    user menu — the strip that says whose console this is, the page. The
-    menus are put in when they open (shell-menu). %>
+<%# The superadmin console's frame, as Administrate lays out its dashboards:
+    Fitora's resources down the side (superadmin_nav) — the page's own
+    marked, open tickets counted — and along the top where the page sits,
+    the bell, the theme, the language and the user menu. Below 992 px the
+    side folds away behind a burger (shell-menu's sidebar, Escape closes
+    it). The menus are put in when they open (shell-menu). %>
 <% user = current_user %>
-<% nav_items = [ [ "overview", "superadmin.overview.nav" ], [ "companies", "superadmin.companies" ], [ "pricing", "superadmin.pricing_nav" ], [ "support", "superadmin.support_nav" ], [ "updates", "superadmin.updates_nav" ] ] %>
-<div class="superadmin-shell" data-controller="shell-menu locale-switch">
-  <header class="superadmin-bar">
-    <a href="/superadmin/companies" class="superadmin-bar-brand">
-      <span class="superadmin-bar-mark"><i class="bi bi-lightning-charge-fill"></i></span>
-      Fitora
-      <span class="superadmin-bar-chip"><%= ngt("superadmin.chip") %></span>
-      <% if (version = shell_version) %>
-        <span class="superadmin-bar-version" data-app-version="<%= version %>">v<%= version %></span>
-      <% end %>
+<div class="sa-shell" data-controller="shell-menu locale-switch" data-shell-menu-escape-value="sidebar">
+  <aside class="sa-side" data-shell-menu-target="sidebar">
+    <a href="/superadmin/overview" class="sa-brand">
+      <span class="sa-brand-mark"><i class="bi bi-lightning-charge-fill"></i></span>
+      <span class="sa-brand-name">Fitora</span>
+      <span class="sa-brand-chip"><%= ngt("superadmin.chip") %></span>
     </a>
 
-    <nav class="superadmin-bar-nav">
-      <% nav_items.each do |page, label_key| %>
-        <a href="/superadmin/<%= page %>" class="superadmin-bar-tab<%= " is-active" if request.path.start_with?("/superadmin/#{page}") %>">
-          <%= ngt(label_key) %>
-        </a>
+    <nav class="sa-nav" aria-label="<%= ngt("superadmin.chip") %>">
+      <% superadmin_nav.each do |section| %>
+        <div class="sa-nav-section"><%= section[:label] %></div>
+        <% section[:items].each do |item| %>
+          <a href="<%= item[:path] %>" class="sa-nav-item<%= " is-active" if item[:active] %>"<%= raw(' aria-current="page"') if item[:active] %>>
+            <i class="bi <%= item[:icon] %>"></i>
+            <span class="sa-nav-label"><%= item[:label] %></span>
+            <% if item[:badge].to_i > 0 %><span class="sa-nav-badge"><%= item[:badge] %></span><% end %>
+          </a>
+        <% end %>
       <% end %>
     </nav>
 
-    <span class="superadmin-bar-spacer"></span>
-
-    <app-notification-bell><%= render "web/shell/notification_bell", url: "/superadmin/notifications", inbox: false, unread: user.notifications.unread.count %></app-notification-bell>
-
-    <button type="button" class="superadmin-bar-ic" data-action="shell-menu#toggleTheme" aria-label="<%= ngt("common.toggle_theme") %>">
-      <i class="bi <%= theme == "light" ? "bi-moon-stars" : "bi-sun" %>"></i>
-    </button>
-
-    <div class="dropdown-wrap">
-      <button type="button" class="superadmin-bar-ic" data-action="shell-menu#toggle" data-shell-menu-menu-param="language" aria-label="<%= ngt("common.change_language") %>">
-        <i class="bi bi-translate"></i>
-      </button>
-      <template data-shell-menu-target="menu" data-menu="language">
-        <div class="dropdown-menu-custom dropdown-menu-end">
-          <% [ [ "fr", "Français" ], [ "en", "English" ], [ "ar", "العربية" ] ].each do |code, label| %>
-            <button type="button" class="dropdown-item-custom<%= " active" if locale_code == code %>" data-action="locale-switch#choose" data-locale-switch-locale-param="<%= code %>">
-              <%= label %>
-            </button>
-          <% end %>
-        </div>
-      </template>
+    <div class="sa-side-foot">
+      <span class="sa-side-note"><i class="bi bi-shield-lock"></i> <%= ngt("superadmin.strip") %></span>
+      <% if (version = shell_version) %>
+        <span class="sa-side-version" data-app-version="<%= version %>" dir="ltr">v<%= version %></span>
+      <% end %>
     </div>
+  </aside>
+  <template data-shell-menu-target="backdrop"><div class="sa-backdrop" data-action="click->shell-menu#closeSidebar"></div></template>
 
-    <div class="dropdown-wrap">
-      <button type="button" class="user-menu-trigger" data-action="shell-menu#toggle" data-shell-menu-menu-param="user" aria-label="<%= user.full_name %>">
-        <app-avatar><%= render "web/shared/avatar", name: user.full_name.to_s, size: 30 %></app-avatar>
+  <div class="sa-main">
+    <header class="sa-topbar">
+      <button type="button" class="sa-topbar-ic sa-burger" data-action="shell-menu#toggleSidebar" aria-label="<%= ngt("common.toggle_menu") %>">
+        <i class="bi bi-list"></i>
       </button>
-      <template data-shell-menu-target="menu" data-menu="user">
-        <div class="dropdown-menu-custom dropdown-menu-end">
-          <div class="dropdown-user-info">
-            <strong><%= user.full_name %></strong>
-            <span><%= user.email %></span>
+      <nav class="sa-crumbs" aria-label="<%= ngt("superadmin.console.breadcrumbs") %>"><%= content_for(:superadmin_crumbs) %></nav>
+
+      <span class="sa-topbar-spacer"></span>
+
+      <app-notification-bell><%= render "web/shell/notification_bell", url: "/superadmin/notifications", inbox: false, unread: user.notifications.unread.count %></app-notification-bell>
+
+      <button type="button" class="sa-topbar-ic" data-action="shell-menu#toggleTheme" aria-label="<%= ngt("common.toggle_theme") %>">
+        <i class="bi <%= theme == "light" ? "bi-moon-stars" : "bi-sun" %>"></i>
+      </button>
+
+      <div class="dropdown-wrap">
+        <button type="button" class="sa-topbar-ic" data-action="shell-menu#toggle" data-shell-menu-menu-param="language" aria-label="<%= ngt("common.change_language") %>">
+          <i class="bi bi-translate"></i>
+        </button>
+        <template data-shell-menu-target="menu" data-menu="language">
+          <div class="dropdown-menu-custom dropdown-menu-end">
+            <% [ [ "fr", "Français" ], [ "en", "English" ], [ "ar", "العربية" ] ].each do |code, label| %>
+              <button type="button" class="dropdown-item-custom<%= " active" if locale_code == code %>" data-action="locale-switch#choose" data-locale-switch-locale-param="<%= code %>">
+                <%= label %>
+              </button>
+            <% end %>
           </div>
-          <button type="button" class="dropdown-item-custom" data-controller="form-submit" data-form-submit-form-value="sign-out-form" data-action="form-submit#submit">
-            <i class="bi bi-box-arrow-right"></i> <%= ngt("auth.logout") %>
-          </button>
-        </div>
-      </template>
-    </div>
-  </header>
+        </template>
+      </div>
 
-  <div class="superadmin-strip"><%= ngt("superadmin.strip") %></div>
+      <div class="dropdown-wrap">
+        <button type="button" class="sa-user" data-action="shell-menu#toggle" data-shell-menu-menu-param="user" aria-label="<%= user.full_name %>">
+          <app-avatar><%= render "web/shared/avatar", name: user.full_name.to_s, size: 30 %></app-avatar>
+          <span class="sa-user-name"><%= user.first_name %></span>
+          <i class="bi bi-chevron-down"></i>
+        </button>
+        <template data-shell-menu-target="menu" data-menu="user">
+          <div class="dropdown-menu-custom dropdown-menu-end">
+            <div class="dropdown-user-info">
+              <strong><%= user.full_name %></strong>
+              <span><%= user.email %></span>
+            </div>
+            <button type="button" class="dropdown-item-custom" data-controller="form-submit" data-form-submit-form-value="sign-out-form" data-action="form-submit#submit">
+              <i class="bi bi-box-arrow-right"></i> <%= ngt("auth.logout") %>
+            </button>
+          </div>
+        </template>
+      </div>
+    </header>
 
-  <main class="superadmin-content">
-    <router-outlet></router-outlet>
-    <%= yield %>
-  </main>
+    <main class="sa-content">
+      <%= yield %>
+    </main>
+  </div>
 </div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_23_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -342,6 +342,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
     t.index ["user_id"], name: "index_data_imports_on_user_id"
   end
 
+  create_table "exchange_rates", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "currency", null: false
+    t.datetime "fetched_at", null: false
+    t.decimal "per_eur", precision: 20, scale: 10, null: false
+    t.datetime "updated_at", null: false
+    t.index ["currency"], name: "index_exchange_rates_on_currency", unique: true
+  end
+
   create_table "invoice_sequences", primary_key: "year", id: :integer, default: nil, force: :cascade do |t|
     t.integer "last_value", null: false
   end
@@ -353,15 +362,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
     t.string "currency", null: false
     t.datetime "issued_at", null: false
     t.uuid "issued_by_id"
+    t.jsonb "issuer"
     t.string "notes"
     t.string "number", null: false
     t.datetime "paid_at"
     t.date "period_end", null: false
     t.date "period_start", null: false
     t.string "plan"
+    t.integer "stamp_duty_millimes", default: 0, null: false
     t.uuid "subscription_id", null: false
     t.boolean "trial", default: false, null: false
     t.datetime "updated_at", null: false
+    t.decimal "vat_percent", precision: 5, scale: 2
     t.index ["issued_by_id"], name: "index_invoices_on_issued_by_id"
     t.index ["number"], name: "index_invoices_on_number", unique: true
     t.index ["subscription_id", "paid_at"], name: "index_invoices_on_subscription_id_and_paid_at"
@@ -455,9 +467,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
   end
 
   create_table "platform_settings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "address"
     t.integer "annual_discount_percent", default: 10, null: false
+    t.string "city"
     t.datetime "created_at", null: false
+    t.string "email"
+    t.string "legal_name"
+    t.string "phone"
+    t.string "price_currency", default: "TND", null: false
+    t.integer "stamp_duty_millimes", default: 1000, null: false
+    t.string "tax_id"
     t.datetime "updated_at", null: false
+    t.decimal "vat_percent", precision: 5, scale: 2, default: "19.0", null: false
+    t.string "website"
   end
 
   create_table "recurring_schedules", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -592,6 +614,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
     t.string "first_name", null: false
     t.string "last_name", null: false
     t.string "locale", default: "fr", null: false
+    t.datetime "otp_enabled_at"
+    t.datetime "otp_last_used_at"
+    t.text "otp_secret_ciphertext"
     t.string "password_digest", null: false
     t.string "phone"
     t.datetime "reset_password_sent_at"

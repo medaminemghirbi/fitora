@@ -1,0 +1,11 @@
+<%# The work lists, one tab each with how many it holds for the search and
+    the formule picked. %>
+<nav class="abo-lists" id="abo-lists" aria-label="<%= ngt("contracts.lists_label") %>">
+  <% subscription_lists(counts, filters).each do |list| %>
+    <button type="button" class="abo-list<%= " is-active" if list[:active] %>" data-tone="<%= list[:tone] %>"
+            aria-pressed="<%= list[:active] %>" data-filter="status" data-value="<%= list[:value] %>" data-action="contracts-list#setFilter">
+      <span class="abo-list-label"><%= list[:label] %></span>
+      <span class="abo-list-count<%= " is-zero" if list[:count].zero? %>"><%= list[:count] %></span>
+    </button>
+  <% end %>
+</nav>

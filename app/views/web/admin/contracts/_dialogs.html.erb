@@ -1,0 +1,167 @@
+<%# The subscriptions controller's dialogs, the same on the subscriptions
+    page and on a member's file: selling or renewing (one form — the offer,
+    the start, the discount, the total, paid now or later), collecting, and
+    editing a term's dates and discount. Cancelling and pausing ask through
+    the app's confirmation dialog. Filled by the controller when they open. %>
+<% offers = subscription_sale_offers %>
+<% methods = Web::Admin::PaymentsController::METHODS %>
+<app-modal data-controller="modal" data-modal-name-value="abo-sale" data-action="abo-sale:open@window->modal#open abo-sale:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("contracts.sell_title"), size: "wide" } do %>
+      <form novalidate class="abo-form" data-abo-form="sale">
+        <div class="abo-field" data-part="member-pick">
+          <label for="abo-member-search"><%= ngt("contracts.member") %> *</label>
+          <div class="fx-input-icon">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input id="abo-member-search" type="search" class="form-control" autocomplete="off"
+                   placeholder="<%= ngt("contracts.member_search_placeholder") %>" data-member-search />
+          </div>
+          <div class="abo-member-results" data-member-results></div>
+        </div>
+        <div class="abo-who" data-part="member-shown">
+          <i class="bi bi-person-circle" aria-hidden="true"></i>
+          <span class="abo-who-name" data-member-name></span>
+          <button type="button" class="btn btn-link btn-sm" data-part="member-change" data-member-change><%= ngt("contracts.change_member") %></button>
+        </div>
+        <p class="abo-current" data-part="current"></p>
+
+        <fieldset class="abo-field">
+          <legend><%= ngt("contracts.formule") %> *</legend>
+          <% if offers.empty? %>
+            <div class="alert alert-warning mb-0">
+              <%= ngt("contracts.no_offers") %>
+              <a href="<%= admin_page_path("catalogue") %>"><%= ngt("contracts.no_offers_link") %></a>
+            </div>
+          <% else %>
+            <%= render "web/admin/contracts/offers", offers: offers, name: "offer" %>
+          <% end %>
+        </fieldset>
+        <div class="alert alert-warning" data-part="overlap"></div>
+        <p class="abo-hint" data-part="other-formule"><%= ngt("contracts.renew_other_formule_hint") %></p>
+
+        <div class="abo-row">
+          <div class="abo-field" data-part="start">
+            <label for="abo-start"><%= ngt("contracts.start_date") %> *</label>
+            <input id="abo-start" type="date" class="form-control" name="starts_on" />
+          </div>
+          <div class="abo-field">
+            <label for="abo-discount"><%= ngt("contracts.discount") %></label>
+            <input id="abo-discount" type="number" min="0" step="0.01" class="form-control" name="discount" value="0" />
+          </div>
+        </div>
+        <p class="abo-dates" data-part="dates"></p>
+
+        <div class="abo-total">
+          <span><%= ngt("clients.abo_total") %></span>
+          <strong data-total>—</strong>
+        </div>
+
+        <% if may_collect? %>
+          <fieldset class="abo-pay">
+            <legend><%= ngt("contracts.payment") %></legend>
+            <label class="abo-choice">
+              <input type="radio" class="form-check-input" name="pay" value="now" checked />
+              <span><%= ngt("contracts.pay_now") %></span>
+            </label>
+            <div class="abo-methods" data-part="methods">
+              <% methods.each_with_index do |(value, label, _), i| %>
+                <label class="abo-method">
+                  <input type="radio" name="payment_method" value="<%= value %>"<%= raw(" checked") if i.zero? %> />
+                  <span><%= ngt(label) %></span>
+                </label>
+              <% end %>
+            </div>
+            <label class="abo-choice">
+              <input type="radio" class="form-check-input" name="pay" value="later" />
+              <span><%= ngt("contracts.pay_later") %></span>
+            </label>
+          </fieldset>
+        <% end %>
+
+        <div class="abo-buttons">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" data-save disabled><%= ngt("contracts.sell_submit") %></button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>
+
+<%# Renewing a term the offers no longer sell as it is (all-access, or a
+    price taken off the grid): keep it, at the price it was sold at. %>
+<template data-subscriptions-target="keepCurrent">
+  <div class="abo-offer-group" role="group">
+    <label class="abo-offer abo-offer--current">
+      <input type="radio" class="abo-offer-input" name="offer" value="current" />
+      <span class="abo-offer-body">
+        <span class="abo-offer-name" data-keep-label></span>
+        <span class="abo-offer-meta"><%= ngt("contracts.keep_current") %></span>
+      </span>
+      <span class="abo-offer-price" data-keep-price></span>
+    </label>
+  </div>
+</template>
+
+<app-modal data-controller="modal" data-modal-name-value="abo-collect" data-action="abo-collect:open@window->modal#open abo-collect:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("contracts.collect_title") } do %>
+      <form novalidate class="abo-form" data-abo-form="collect">
+        <p class="abo-current" data-collect-what></p>
+        <div class="abo-total">
+          <span><%= ngt("contracts.amount") %></span>
+          <strong data-total></strong>
+        </div>
+        <fieldset class="abo-pay">
+          <legend><%= ngt("payments.method") %></legend>
+          <div class="abo-methods">
+            <% methods.each_with_index do |(value, label, _), i| %>
+              <label class="abo-method">
+                <input type="radio" name="payment_method" value="<%= value %>"<%= raw(" checked") if i.zero? %> />
+                <span><%= ngt(label) %></span>
+              </label>
+            <% end %>
+          </div>
+        </fieldset>
+        <p class="abo-hint"><%= ngt("clients.abo_pay_full_hint") %></p>
+        <div class="abo-buttons">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" data-save><%= ngt("contracts.collect") %></button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>
+
+<app-modal data-controller="modal" data-modal-name-value="abo-edit" data-action="abo-edit:open@window->modal#open abo-edit:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("contracts.edit_title") } do %>
+      <form novalidate class="abo-form" data-abo-form="edit">
+        <p class="abo-current" data-edit-what></p>
+        <div class="abo-row">
+          <div class="abo-field">
+            <label for="abo-edit-start"><%= ngt("contracts.start_date") %> *</label>
+            <input id="abo-edit-start" type="date" class="form-control" name="starts_on" />
+          </div>
+          <div class="abo-field">
+            <label for="abo-edit-end"><%= ngt("contracts.end_date") %> *</label>
+            <input id="abo-edit-end" type="date" class="form-control" name="expires_on" />
+          </div>
+        </div>
+        <p class="abo-hint"><%= ngt("contracts.edit_dates_hint") %></p>
+        <div class="abo-field">
+          <label for="abo-edit-discount"><%= ngt("contracts.discount") %></label>
+          <input id="abo-edit-discount" type="number" min="0" step="0.01" class="form-control" name="discount" />
+          <p class="abo-hint" data-part="discount-locked"><%= ngt("clients.abo_discount_locked") %></p>
+        </div>
+        <div class="abo-total">
+          <span><%= ngt("clients.abo_total") %></span>
+          <strong data-total></strong>
+        </div>
+        <div class="abo-buttons">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" data-save><%= ngt("common.save") %></button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>

@@ -1,84 +1,57 @@
-<%# ng: superadmin-updates %>
-<%# ng-host: superadmin-updates %>
-<%# SuperadminUpdatesComponent: the release notes with their authors, and
-    the drawer to publish one (superadmin-updates). %>
-<div class="fx-page" data-controller="superadmin-updates" data-superadmin-updates-url-value="/superadmin/updates"
+<%# The release notes (Web::DataTable): every one with its version, title,
+    author, screenshots and recordings counted, when it went out — searched,
+    sorted, paged; a row opens the release. Publishing one is the drawer
+    (superadmin-updates), which comes back here with the new release first. %>
+<% url = "/superadmin/updates" %>
+<% superadmin_crumbs [ ngt("superadmin.updates.title") ] %>
+<div data-controller="superadmin-updates" data-superadmin-updates-url-value="<%= url %>"
      data-superadmin-updates-labels-value="<%= { too_many: Web::Translations.translate("superadmin.updates.too_many_files", {}, locale: I18n.locale), invalid: Web::Translations.translate("superadmin.updates.invalid_file", {}, locale: I18n.locale), error: ngt("common.error_generic") }.to_json %>"
      data-action="modal:opened@window->superadmin-updates#opened">
-  <header class="lst-head">
-    <h1><%= ngt("superadmin.updates.title") %></h1>
-    <span class="lst-head-count"><%= @updates.size %></span>
+  <%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.updates.title"), desc: ngt("superadmin.updates.subtitle") } do %>
     <button type="button" class="btn btn-primary" data-action="superadmin-updates#openCreate">
       <i class="bi bi-megaphone"></i> <%= ngt("superadmin.updates.new") %>
     </button>
-  </header>
+  <% end %>
 
-  <% if @updates.empty? %>
-    <div class="app-card">
-      <div class="app-card-body">
-        <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("superadmin.updates.empty_title"), body: ngt("superadmin.updates.empty_body"), icon: "bi-megaphone" } do %>
-          <button type="button" class="btn btn-primary" data-action="superadmin-updates#openCreate">
-            <i class="bi bi-megaphone"></i> <%= ngt("superadmin.updates.new") %>
-          </button>
-        <% end %></app-empty-state>
+  <%= render layout: "web/superadmin/shared/table", locals: { table: @table, url: url, placeholder: ngt("superadmin.console.updates_search") } do %>
+    <% if @updates.empty? %>
+      <%= render "web/superadmin/shared/table_empty", table: @table, url: url, title: ngt("superadmin.updates.empty_title"), body: ngt("superadmin.updates.empty_body"), icon: "bi-megaphone" %>
+    <% else %>
+      <div class="sa-scroll">
+        <table class="table sa-grid">
+          <thead>
+            <tr>
+              <%= superadmin_sort_th @table, :version, ngt("superadmin.updates.version_label"), url %>
+              <%= superadmin_sort_th @table, :title, ngt("superadmin.updates.title_label"), url %>
+              <th scope="col"><%= ngt("superadmin.console.author") %></th>
+              <th scope="col"><%= ngt("superadmin.console.media") %></th>
+              <%= superadmin_sort_th @table, :published, ngt("superadmin.console.published"), url, css: "sa-nowrap" %>
+              <th class="sa-col-go" aria-hidden="true"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @updates.each do |update| %>
+              <% href = "/superadmin/updates/#{update.id}" %>
+              <tr class="sa-row" data-action="click->data-table#open" data-href="<%= href %>">
+                <td class="sa-nowrap"><span class="sa-chip sa-chip--primary" dir="ltr">v<%= ng_highlight(update.version, @table.term) %></span></td>
+                <td>
+                  <a class="sa-lead-title" href="<%= href %>" data-turbo-frame="_top"><%= ng_highlight(update.title, @table.term) %></a>
+                  <% if update.description.present? %><div class="sa-sub sa-clip"><%= update.description %></div><% end %>
+                </td>
+                <td class="sa-sub"><%= update.created_by.full_name %></td>
+                <td class="sa-sub">
+                  <% if update.media.any? %><i class="bi bi-images"></i> <%= update.media.size %><% else %>—<% end %>
+                </td>
+                <td class="sa-nowrap sa-sub"><%= ng_date(update.published_at, "dd/MM/yyyy HH:mm") %></td>
+                <td class="sa-col-go"><i class="bi bi-chevron-right sa-go"></i></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
       </div>
-    </div>
-  <% else %>
-    <app-update-timeline><%= render "web/shared/update_timeline", updates: @updates, show_author: true, date_format: "dd/MM/yyyy HH:mm" %></app-update-timeline>
+      <%= render "web/superadmin/shared/table_foot", pagy: @pagy, table: @table, url: url %>
+    <% end %>
   <% end %>
 </div>
 
-<app-drawer data-controller="modal" data-modal-name-value="update-create" data-action="update-create:open@window->modal#open update-create:close@window->modal#close">
-  <template data-modal-target="template">
-    <%= render layout: "web/shared/drawer", locals: { title: ngt("superadmin.updates.new"), description: ngt("superadmin.updates.new_hint") } do |slot| %>
-      <% if slot == "footer" %>
-        <div drawer-footer>
-          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
-          <button type="submit" form="update-form" class="btn btn-primary" disabled data-update-submit>
-            <i class="bi bi-broadcast"></i>
-            <%= ngt("superadmin.updates.publish") %>
-          </button>
-        </div>
-      <% else %>
-        <form id="update-form" novalidate>
-          <div class="row">
-            <div class="col-5 mb-3">
-              <label for="upd-version"><%= ngt("superadmin.updates.version_label") %> *</label>
-              <input id="upd-version" class="form-control" dir="ltr" name="version" placeholder="1.4.0" required />
-            </div>
-            <div class="col-7 mb-3">
-              <label for="upd-title"><%= ngt("superadmin.updates.title_label") %> *</label>
-              <input id="upd-title" class="form-control" name="title" placeholder="<%= ngt("superadmin.updates.title_placeholder") %>" required />
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="upd-desc"><%= ngt("superadmin.updates.description_label") %></label>
-            <textarea id="upd-desc" class="form-control" rows="5" name="description" placeholder="<%= ngt("superadmin.updates.description_placeholder") %>"></textarea>
-          </div>
-
-          <div class="mb-3">
-            <div class="form-label"><%= ngt("superadmin.updates.media_label") %></div>
-            <label class="update-file-drop" for="update-files">
-              <i class="bi bi-cloud-arrow-up"></i>
-              <span><%= ngt("superadmin.updates.media_hint") %></span>
-            </label>
-            <input id="update-files" type="file" class="visually-hidden" multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm" />
-          </div>
-        </form>
-      <% end %>
-    <% end %>
-  </template>
-  <template data-update-error><div class="alert alert-danger"></div></template>
-  <template data-update-file-error><p class="update-file-error"></p></template>
-  <template data-update-file-list><ul class="update-file-list"></ul></template>
-  <template data-update-file-item>
-    <li>
-      <i class="bi"></i>
-      <span class="update-file-name"></span>
-      <button type="button" class="icon-btn" aria-label="<%= ngt("common.cancel") %>">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </li>
-  </template>
-  <template data-update-spinner><app-spinner><%= render "web/shared/spinner", size: 16 %></app-spinner></template>
-</app-drawer>
+<%= render "web/superadmin/updates/create_drawer" %>

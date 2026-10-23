@@ -4,6 +4,7 @@ class User < ApplicationRecord
   include PasswordResettable
   include EmailVerifiable
   include TokenVersioned
+  include TwoFactor
 
   # A User is always staff: the Fitora-operator ("superadmin", manages every
   # company's SaaS subscription via /superadmin) or an in-gym account
@@ -38,6 +39,10 @@ class User < ApplicationRecord
   validates :locale, inclusion: { in: %w[fr en ar] }
 
   scope :active, -> { where(active: true) }
+
+  # Who an account is, to the superadmin console's tables: its name and
+  # e-mail, its access (subscription) and its salles' names.
+  console_searchable attributes: %i[first_name last_name email], associations: %i[subscription companies]
 
   def full_name
     "#{first_name} #{last_name}"

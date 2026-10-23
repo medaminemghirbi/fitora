@@ -44,6 +44,13 @@ class ContractSerializer
       # Whether "Renouveler" applies: the last term of its chain, within
       # Contract::RENEWAL_WINDOW of its end (or ended, or out of sessions).
       renewable: contract.renewable?,
+      # When it will, for a term still too far from its end.
+      renewable_on: contract.renewable_on,
+      # Where a renewal sold now would start.
+      next_term_starts_at: contract.next_term_starts_at,
+      # The one word the desk reads (Contract#state), and the days to its end.
+      state: contract.state,
+      days_left: contract.days_left,
       all_access: contract.all_access?,
       activity_label: contract.activity_label,
       client: { id: contract.client.id, full_name: contract.client.full_name, phone: contract.client.phone }

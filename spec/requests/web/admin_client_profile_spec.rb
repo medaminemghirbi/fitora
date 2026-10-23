@@ -32,16 +32,42 @@ RSpec.describe "Web member file", type: :request, openapi: false do
     expect(response.body).not_to include(stranger.full_name)
   end
 
-  it "sells a subscription as POST /api/v1/contracts does, audited" do
-    post "#{base}/contracts", params: { contract_type_id: plan.id, activity_id: activity.id, starts_on: Date.current.iso8601, discount: 20, collect_payment: true, payment_method: "cash" }, as: :json
+  it "sells from the file through the subscriptions dialogs, audited" do
+    get base
+    expect(response.body).to include('data-controller="subscriptions"', "subscriptions#sell", "abo-sale")
+
+    post "/admin/#{company.id}/contracts", params: { client_id: client.id, contract_type_id: plan.id, activity_id: activity.id, starts_on: Date.current.iso8601, discount: 20, collect_payment: true, payment_method: "cash" }, as: :json
     expect(response).to have_http_status(:created)
     contract = client.contracts_for(company).sole
     expect([ contract.final_price.to_f, contract.payment_status ]).to eq([ 100.0, "paid" ])
     expect(AuditLog.where(action: "contract.created", auditable_id: contract.id)).to exist
 
-    post "#{base}/contracts", params: { contract_type_id: plan.id, activity_id: SecureRandom.uuid }, as: :json
+    post "/admin/#{company.id}/contracts", params: { client_id: client.id, contract_type_id: plan.id, activity_id: SecureRandom.uuid }, as: :json
     expect(response).to have_http_status(:not_found)
     expect(response.parsed_body["error"]).to eq("Activity not found")
+  end
+
+  it "shows the subscription card: its state, what is owed, renewing only once it is due" do
+    far = Contracts::Actions.sell(client, company: company, by: admin, params: ActionController::Parameters.new(contract_type_id: plan.id, activity_id: activity.id))
+    get base
+    card = response.body[%r{<section[^>]*class="abo-profile".*?</section>}m]
+    expect(card).to include("Yoga · Mensuel", %(data-state="active"), "subscriptions#collect", "subscriptions#cancel")
+    expect(card).not_to include("subscriptions#renew")
+
+    far.update!(expires_at: 3.days.from_now)
+    get base
+    card = response.body[%r{<section[^>]*class="abo-profile".*?</section>}m]
+    expect(card).to include(%(data-state="expiring"), "subscriptions#renew")
+  end
+
+  it "owes what is unpaid, even after an earlier term was paid — and nothing for a cancelled one" do
+    paid = Contracts::Actions.sell(client, company: company, by: admin, params: ActionController::Parameters.new(contract_type_id: plan.id, activity_id: activity.id, starts_on: 40.days.ago.to_date.iso8601, collect_payment: true))
+    due = Contracts::Actions.sell(client, company: company, by: admin, params: ActionController::Parameters.new(contract_type_id: plan.id, activity_id: activity.id))
+    expect(paid.reload).to be_paid
+    expect(client.outstanding_balance(company)).to eq(120)
+
+    Contracts::Actions.cancel(due, company: company, by: admin)
+    expect(client.outstanding_balance(company)).to eq(0)
   end
 
   it "books a seat, a trial when asked, and lists the day's sessions for the dialog" do

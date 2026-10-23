@@ -14,7 +14,8 @@
 
       <form novalidate action="<%= admin_page_path("clients") %>" method="post"
             data-controller="client-wizard"
-            data-client-wizard-catalogue-value="<%= catalogue.to_json %>"
+            data-client-wizard-offers-value="<%= subscription_sale_offers.to_json %>"
+            data-client-wizard-currency-symbol-value="<%= catalogue[:currency_symbol] %>"
             data-client-wizard-today-value="<%= Date.current.iso8601 %>"
             data-client-wizard-labels-value="<%= { next: ngt("common.next"), finish: ngt("clients.finish"), finish_without_plan: ngt("clients.finish_without_plan"), saving: ngt("common.saving") }.to_json %>"
             data-action="submit->client-wizard#next">
@@ -84,29 +85,17 @@
           </div>
         </template>
 
-        <%# 2 — what they buy: the activity (or pack) first, then the plans that price it. %>
-        <template data-client-wizard-target="item">
-          <div class="mb-3">
-            <label for="cl-activity"><%= ngt("clients.abo_activity_or_pack") %></label>
-            <select id="cl-activity" class="form-select" data-action="change->client-wizard#itemChanged">
-              <option value=""><%= ngt("clients.no_subscription_yet") %></option>
-              <optgroup label="<%= ngt("nav.activities") %>" data-group="activities"></optgroup>
-              <optgroup label="<%= ngt("catalogue.tab_packs") %>" data-group="packs"></optgroup>
-            </select>
-          </div>
-        </template>
-
-        <template data-client-wizard-target="plan">
-          <div class="mb-3">
-            <label for="cl-plan"><%= ngt("clients.abo_formula") %></label>
-            <select id="cl-plan" class="form-select" data-action="change->client-wizard#planChanged">
-              <option value="">—</option>
-            </select>
-          </div>
-        </template>
-
-        <template data-client-wizard-target="noPlan">
-          <div class="form-text text-warning"><%= ngt("clients.no_plan_for_activity") %></div>
+        <%# 2 — what they buy: one offer (a formule for one activity or pack, at
+            its price — the subscriptions dialogs' own list), or nothing yet. %>
+        <template data-client-wizard-target="offers">
+          <fieldset class="abo-field mb-3">
+            <legend><%= ngt("contracts.formule") %></legend>
+            <% if subscription_sale_offers.empty? %>
+              <div class="alert alert-warning mb-0"><%= ngt("contracts.no_offers") %></div>
+            <% else %>
+              <%= render "web/admin/contracts/offers", offers: subscription_sale_offers, name: "cl-offer", none: ngt("clients.no_subscription_yet") %>
+            <% end %>
+          </fieldset>
         </template>
 
         <template data-client-wizard-target="pricing">

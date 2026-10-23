@@ -1,0 +1,96 @@
+<%# Every invoice Fitora has issued (Web::DataTable): its number, the account
+    it covers (the admin, the salles), the plan and the period, the amount,
+    whether it is paid, waiting or a free trial, when and by whom it was
+    issued — searched by number or account, filtered, sorted, paged. A row
+    opens the account's first salle, where invoices are recorded and taken
+    back. %>
+<% url = "/superadmin/invoices" %>
+<% superadmin_crumbs [ ngt("superadmin.console.invoices") ] %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.console.invoices"), desc: ngt("superadmin.console.invoices_desc") } do %><% end %>
+
+<% filters = [
+     { name: "status", label: ngt("common.status"), default: "",
+       options: [ [ "", ngt("superadmin.console.any_status") ], [ "paid", ngt("superadmin.console.invoice_paid") ], [ "due", ngt("subscription.invoice_due") ], [ "trial", ngt("superadmin.console.invoice_trial") ] ] },
+     { name: "plan", label: ngt("superadmin.plan_label"), default: "",
+       options: [ [ "", ngt("superadmin.console.any_plan") ], [ "starter", ngt("subscription.plan_starter") ], [ "pro", ngt("subscription.plan_pro") ] ] },
+     { name: "period", label: ngt("superadmin.billing_period"), default: "",
+       options: [ [ "", ngt("superadmin.console.any_period") ], [ "monthly", ngt("subscription.plan_monthly") ], [ "yearly", ngt("subscription.plan_yearly") ] ] }
+   ] %>
+<%= render layout: "web/superadmin/shared/table", locals: { table: @table, url: url, placeholder: ngt("superadmin.console.invoices_search"), filters: filters } do %>
+  <% if @invoices.empty? %>
+    <%= render "web/superadmin/shared/table_empty", table: @table, url: url, title: ngt("superadmin.no_invoices"), icon: "bi-receipt" %>
+  <% else %>
+    <div class="sa-scroll">
+      <table class="table sa-grid">
+        <thead>
+          <tr>
+            <%= superadmin_sort_th @table, :number, ngt("subscription.invoice_number"), url %>
+            <th scope="col"><%= ngt("superadmin.console.account") %></th>
+            <th scope="col"><%= ngt("superadmin.plan_label") %></th>
+            <%= superadmin_sort_th @table, :period, ngt("subscription.period"), url %>
+            <%= superadmin_sort_th @table, :amount, ngt("superadmin.console.amount"), url, css: "sa-num" %>
+            <th scope="col"><%= ngt("common.status") %></th>
+            <%= superadmin_sort_th @table, :issued, ngt("superadmin.console.issued"), url, css: "sa-nowrap" %>
+            <th class="sa-col-go" aria-hidden="true"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @invoices.each do |invoice| %>
+            <% admin = invoice.subscription.admin; salles = admin.companies.sort_by(&:created_at) %>
+            <% href = salles.first && "/superadmin/companies/#{salles.first.id}" %>
+            <tr<%= raw(%( class="sa-row" data-action="click->data-table#open" data-href="#{href}")) if href %>>
+              <td class="sa-nowrap">
+                <span class="sa-mono" dir="ltr"><%= ng_highlight(invoice.number, @table.term) %></span>
+              </td>
+              <td>
+                <% if href %>
+                  <a class="sa-lead-title" href="<%= href %>" data-turbo-frame="_top"><%= ng_highlight(admin.full_name, @table.term) %></a>
+                <% else %>
+                  <span class="sa-lead-title"><%= ng_highlight(admin.full_name, @table.term) %></span>
+                <% end %>
+                <div class="sa-sub">
+                  <%= ng_highlight(salles.first&.name, @table.term) %>
+                  <% if salles.size > 1 %> · <%= ngt("superadmin.account_salles", count: salles.size) %><% end %>
+                </div>
+              </td>
+              <td>
+                <% if invoice.plan %>
+                  <span class="sa-chip" data-plan="<%= invoice.plan %>"><%= invoice.plan == "pro" ? ngt("subscription.plan_pro") : ngt("subscription.plan_starter") %></span>
+                <% else %>
+                  <span class="sa-sub">—</span>
+                <% end %>
+              </td>
+              <td class="sa-nowrap">
+                <span dir="ltr"><%= ng_date(invoice.period_start, "dd/MM/yyyy") %> → <%= ng_date(invoice.period_end, "dd/MM/yyyy") %></span>
+                <% unless invoice.trial? %>
+                  <div class="sa-sub"><%= invoice.covers_yearly? ? ngt("subscription.plan_yearly") : ngt("subscription.plan_monthly") %></div>
+                <% end %>
+              </td>
+              <td class="sa-num"><span class="sa-strong"><%= ng_money(invoice.amount, invoice.currency) %></span></td>
+              <td>
+                <% if invoice.trial? %>
+                  <span class="sa-chip sa-chip--primary"><i class="bi bi-gift"></i> <%= ngt("superadmin.console.invoice_trial") %></span>
+                <% elsif invoice.paid? %>
+                  <span class="sa-chip sa-chip--success"><i class="bi bi-check2"></i> <%= ngt("superadmin.console.invoice_paid") %></span>
+                  <div class="sa-sub"><%= ng_date(invoice.paid_at, "dd/MM/yyyy") %></div>
+                <% else %>
+                  <span class="sa-chip sa-chip--warning"><i class="bi bi-hourglass-split"></i> <%= ngt("subscription.invoice_due") %></span>
+                <% end %>
+              </td>
+              <td class="sa-nowrap">
+                <%= ng_date(invoice.issued_at, "dd/MM/yyyy") %>
+                <% if invoice.issued_by %><div class="sa-sub"><%= ngt("superadmin.console.issued_by", name: invoice.issued_by.full_name) %></div><% end %>
+              </td>
+              <td class="sa-col-go sa-nowrap">
+                <a href="/superadmin/invoices/<%= invoice.id %>/pdf" class="btn btn-sm btn-ghost sa-void" target="_blank" rel="noopener" data-turbo="false"
+                   title="<%= ngt("superadmin.billing.pdf") %>" aria-label="<%= ngt("superadmin.billing.pdf") %> <%= invoice.number %>"><i class="bi bi-file-earmark-pdf"></i></a>
+                <% if href %><i class="bi bi-chevron-right sa-go"></i><% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <%= render "web/superadmin/shared/table_foot", pagy: @pagy, table: @table, url: url %>
+  <% end %>
+<% end %>

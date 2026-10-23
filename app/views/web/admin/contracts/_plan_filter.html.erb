@@ -1,0 +1,10 @@
+<%# One formule, or all of them, with how many each holds for the search. %>
+<select class="form-select abo-plan-filter" id="abo-plan" aria-label="<%= ngt("contract_types.plan") %>"
+        data-filter="contract_type_id" data-action="change->contracts-list#setFilter">
+  <option value=""><%= ngt("contracts.all_formules") %></option>
+  <% plans.each do |plan| %>
+    <% count = plan_counts[plan[:id]] || 0 %>
+    <% next if count.zero? && !plan[:active] && filters[:contract_type_id].to_s != plan[:id] %>
+    <option value="<%= plan[:id] %>"<%= raw(" selected") if filters[:contract_type_id].to_s == plan[:id] %>><%= plan[:name] %> (<%= count %>)</option>
+  <% end %>
+</select>

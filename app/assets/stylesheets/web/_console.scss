@@ -1,0 +1,903 @@
+// ============================================================================
+// THE SUPERADMIN CONSOLE
+// ----------------------------------------------------------------------------
+// Fitora's own back office, laid out the way Administrate lays out its
+// dashboards: the resources down a dark side menu, the page's place along a
+// light top bar, and each resource a table — searched, filtered, sorted and
+// paged (Web::DataTable) — that opens a page per row.
+//
+// Built on the design tokens like everything else, so it follows the theme
+// and the reading direction; every class is `sa-` so nothing here can reach
+// another shell. Tables reuse the data grid's sortable headers (.fx-th-sort).
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// Frame: the side menu, the top bar, the page
+// ---------------------------------------------------------------------------
+.sa-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+.sa-side {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sidebar);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border-inline-end: 1px solid var(--sidebar-border);
+}
+
+.sa-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: var(--topbar-height);
+  padding: 0 1.15rem;
+  border-bottom: 1px solid var(--sidebar-border);
+  color: var(--sidebar-text-strong);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+
+  &:hover { color: var(--sidebar-text-active); text-decoration: none; }
+}
+
+.sa-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--sidebar-active-bg);
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.sa-brand-chip {
+  margin-inline-start: auto;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-xs);
+  background: rgba(232, 0, 95, 0.22);
+  color: #ff9dc0;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.sa-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem 0.65rem 1rem;
+}
+
+.sa-nav-section {
+  padding: 1rem 0.6rem 0.4rem;
+  color: var(--sidebar-section);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  &:first-child { padding-top: 0.35rem; }
+}
+
+.sa-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-sm);
+  color: var(--sidebar-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  > i { width: 1.15rem; font-size: 1rem; text-align: center; opacity: 0.85; }
+
+  &:hover { background: var(--sidebar-hover-bg); color: var(--sidebar-text-strong); text-decoration: none; }
+
+  &.is-active {
+    background: var(--sidebar-bg-elevated);
+    color: var(--sidebar-text-active);
+    font-weight: 600;
+
+    > i { opacity: 1; color: #ff9dc0; }
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset-block: 0.45rem;
+      inset-inline-start: -0.65rem;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: var(--sidebar-active-bg);
+    }
+  }
+}
+
+[dir="rtl"] .sa-nav-item.is-active::before { border-radius: 3px 0 0 3px; }
+
+.sa-nav-label { flex: 1; min-width: 0; }
+
+.sa-nav-badge {
+  min-width: 20px;
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--radius-pill);
+  background: var(--sidebar-active-bg);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.sa-side-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem 1.15rem;
+  border-top: 1px solid var(--sidebar-border);
+  color: var(--sidebar-section);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.sa-side-note { display: flex; gap: 0.45rem; }
+
+.sa-side-version {
+  color: var(--sidebar-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.sa-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.sa-topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-topbar);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: var(--topbar-height);
+  padding: 0 var(--space-6);
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: saturate(1.4) blur(8px);
+}
+
+.sa-topbar-spacer { flex: 1; }
+
+.sa-topbar-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 1.05rem;
+  cursor: pointer;
+
+  &:hover { background: var(--color-surface-sunken); color: var(--color-text); }
+}
+
+.sa-burger { display: none; margin-inline-start: -0.5rem; font-size: 1.35rem; }
+
+.sa-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+}
+
+.sa-crumb {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover { color: var(--color-primary); text-decoration: none; }
+  &.is-current { color: var(--color-text); font-weight: 600; }
+}
+
+.sa-crumb-sep { color: var(--color-muted); font-size: 0.65rem; }
+
+.sa-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-inline-start: 0.35rem;
+  padding: 0.2rem 0.55rem 0.2rem 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+
+  > i { font-size: 0.65rem; color: var(--color-muted); }
+  &:hover { border-color: var(--color-border-strong); }
+}
+
+[dir="rtl"] .sa-user { padding: 0.2rem 0.25rem 0.2rem 0.55rem; }
+
+.sa-content {
+  flex: 1;
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+  padding: var(--space-6) var(--space-6) var(--space-8);
+}
+
+// Below 992 px the side menu slides over the page from its edge.
+@media (max-width: 991.98px) {
+  .sa-side {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    visibility: hidden;
+    transform: translateX(-100%);
+    transition: transform var(--transition-base), visibility var(--transition-base);
+
+    &.is-open { visibility: visible; transform: none; box-shadow: var(--shadow-lg); }
+  }
+
+  [dir="rtl"] .sa-side:not(.is-open) { transform: translateX(100%); }
+
+  .sa-burger { display: inline-flex; }
+
+  .sa-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-sidebar) - 1);
+    background: rgba(23, 11, 46, 0.45);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .sa-topbar { padding: 0 var(--space-4); }
+  .sa-content { padding: var(--space-4) var(--space-4) var(--space-7); }
+  .sa-user-name, .sa-user > i { display: none; }
+  .sa-user { padding: 0.15rem; }
+}
+
+[dir="rtl"] .sa-crumb-sep,
+[dir="rtl"] .sa-pager .bi-chevron-left,
+[dir="rtl"] .sa-pager .bi-chevron-right,
+[dir="rtl"] .sa-go { transform: scaleX(-1); }
+
+// ---------------------------------------------------------------------------
+// A page's head: what it is, what it is for, what can be done from it
+// ---------------------------------------------------------------------------
+.sa-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.sa-page-titles { min-width: 0; }
+
+.sa-page-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.sa-page-desc {
+  max-width: 72ch;
+  margin: 0.35rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.sa-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+// ---------------------------------------------------------------------------
+// Tables: the toolbar, the grid, the footer
+// ---------------------------------------------------------------------------
+.sa-table {
+  margin-bottom: var(--space-5);
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.sa-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+
+  .fx-input-icon { flex: 1 1 260px; max-width: 420px; }
+  .form-select { width: auto; min-width: 150px; max-width: 220px; }
+}
+
+.sa-toolbar-end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+.sa-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.4rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover { color: var(--color-danger); text-decoration: none; }
+  &[hidden] { display: none; }
+}
+
+// The table while its next page is on the way: still there, quieter, and a
+// bar along its top edge.
+.sa-frame {
+  position: relative;
+  display: block;
+
+  &[aria-busy="true"] {
+    .sa-grid, .sa-empty { opacity: 0.5; transition: opacity var(--transition-base) 120ms; }
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset-inline: 0;
+      top: 0;
+      z-index: 1;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+      background-size: 50% 100%;
+      background-repeat: no-repeat;
+      animation: sa-busy 1s linear infinite;
+    }
+  }
+}
+
+@keyframes sa-busy {
+  from { background-position: -50% 0; }
+  to { background-position: 150% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sa-frame[aria-busy="true"]::before { animation: none; background: var(--color-primary); }
+}
+
+.sa-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+
+.table.sa-grid {
+  > :not(caption) > * > * { padding: 0.7rem var(--space-4); }
+
+  thead th {
+    background: var(--color-surface-sunken);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+
+    &.is-sorted { color: var(--color-primary); }
+    &.is-sorted .fx-th-sort i { opacity: 1; }
+  }
+
+  tbody td { border-bottom: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent); }
+  tbody tr:last-child td { border-bottom: 0; }
+}
+
+.sa-row {
+  cursor: pointer;
+
+  &:hover { background: var(--color-surface-hover); }
+  &:hover .sa-go { color: var(--color-primary); }
+}
+
+.sa-num { text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sa-nowrap { white-space: nowrap; }
+.sa-col-go { width: 1px; text-align: end; }
+.sa-go { color: var(--color-muted); }
+
+.sa-lead {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.sa-lead-ico {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+  color: var(--color-accent);
+  font-size: 1rem;
+}
+
+.sa-lead-title {
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover { color: var(--color-primary); text-decoration: underline; }
+}
+
+.sa-sub { color: var(--color-text-secondary); font-size: var(--font-size-xs); }
+
+// An e-mail or a phone under a name: the text's own colour until pointed at.
+.sa-contact {
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+
+  i { margin-inline-end: 0.3rem; }
+  &:hover { color: var(--color-primary); text-decoration: underline; }
+}
+
+.sa-contact-row { display: flex; align-items: center; gap: 0.25rem; }
+
+// Copies what sits beside it (copy_controller.js).
+.sa-copy {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+
+  &:hover, &:focus-visible { background: var(--color-surface-sunken); color: var(--color-primary); }
+  .bi-clipboard-check { color: var(--color-success); }
+}
+.sa-clip { max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.sa-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
+.sa-badges .status-badge { white-space: nowrap; }
+
+.sa-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  white-space: nowrap;
+
+  &[data-plan] { letter-spacing: 0.04em; text-transform: uppercase; }
+  &[data-plan="pro"], &--primary { background: var(--color-primary-soft); color: var(--color-primary); }
+  &--success { background: var(--color-success-soft); color: var(--color-success); }
+  &--warning { background: var(--color-warning-soft); color: var(--color-warning); }
+  &--danger { background: var(--color-danger-soft); color: var(--color-danger); }
+}
+
+.sa-mono {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sa-strong { color: var(--color-primary); font-weight: 700; }
+
+.sa-empty {
+  padding: var(--space-8) var(--space-5);
+  text-align: center;
+
+  .fx-state { margin: 0 auto; }
+}
+
+.sa-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.sa-foot-info { font-variant-numeric: tabular-nums; }
+
+.sa-foot-limit {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  .form-select { width: auto; }
+}
+
+.sa-pager {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-inline-start: auto;
+
+  a, span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 0.5rem;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-decoration: none;
+  }
+
+  a { border: 1px solid var(--color-border); background: var(--color-surface); }
+  a:hover { border-color: var(--color-primary-border); color: var(--color-primary); text-decoration: none; }
+  [aria-current="page"] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+  [aria-disabled="true"] { opacity: 0.45; }
+}
+
+// On a phone a table keeps its columns and scrolls sideways in its card,
+// rather than squeezing every cell into a word a line.
+@media (max-width: 767.98px) {
+  .table.sa-grid { min-width: 760px; }
+}
+
+@media (max-width: 575.98px) {
+  .sa-toolbar .form-select { flex: 1 1 140px; max-width: none; }
+  .sa-pager { margin-inline-start: 0; }
+}
+
+// ---------------------------------------------------------------------------
+// Pages: the overview's figures, a record's facts
+// ---------------------------------------------------------------------------
+.sa-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+a.fx-kpi { color: inherit; text-decoration: none; transition: border-color var(--transition-fast), box-shadow var(--transition-fast); }
+a.fx-kpi:hover { border-color: var(--color-primary-border); box-shadow: var(--shadow-sm); text-decoration: none; }
+
+.sa-kpi-note { color: var(--color-text-secondary); font-size: var(--font-size-xs); }
+.sa-kpi-note .is-warn { color: var(--color-warning); font-weight: 600; }
+.fx-kpi.sa-kpi--warn { border-color: color-mix(in srgb, var(--color-warning) 35%, var(--color-border)); }
+
+.sa-split {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+
+  > * { margin-bottom: 0; }
+}
+
+@media (max-width: 991.98px) {
+  .sa-split { grid-template-columns: minmax(0, 1fr); }
+}
+
+.sa-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.6rem var(--space-5);
+  margin: 0;
+  font-size: var(--font-size-sm);
+
+  dt { color: var(--color-text-secondary); font-weight: 500; }
+  dd { margin: 0; min-width: 0; color: var(--color-text); overflow-wrap: anywhere; }
+}
+
+.sa-quick {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.75rem var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    text-decoration: none;
+
+    > i:first-child { color: var(--color-primary); font-size: 1rem; }
+    &:hover { background: var(--color-surface-hover); text-decoration: none; }
+  }
+
+  li:last-child a { border-bottom: 0; }
+}
+
+.sa-quick-count { margin-inline-start: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+// ---------------------------------------------------------------------------
+// A record's page (a gym): who it is across the top, the figures across the
+// page, then a main column and a narrower one beside it
+// ---------------------------------------------------------------------------
+.sa-record-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+
+  .sa-page-actions { margin-inline-start: auto; }
+}
+
+.sa-record-ico {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+  color: var(--color-accent);
+  font-size: 1.6rem;
+}
+
+.sa-record-titles { flex: 1 1 320px; min-width: 0; }
+
+@media (max-width: 575.98px) {
+  .sa-record-ico { display: none; }
+}
+
+.sa-record-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.sa-record-fact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+
+  i { color: var(--color-muted); }
+}
+
+.sa-record {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.sa-record-main,
+.sa-record-aside { min-width: 0; }
+
+// Side by side needs the room; below that the gym's cards follow the money,
+// two abreast while they fit.
+@media (max-width: 1279.98px) {
+  .sa-record { grid-template-columns: minmax(0, 1fr); }
+
+  .sa-record-aside {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0 var(--space-5);
+    align-items: start;
+  }
+}
+
+.sa-count {
+  margin-inline-start: 0.35rem;
+  padding: 0.05rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+// A sub-heading inside a card, under a rule.
+.sa-card-section {
+  padding: var(--space-4) var(--space-5) 0;
+  border-top: 1px solid var(--color-border);
+
+  h3 { margin: 0; font-size: var(--font-size-sm); font-weight: 700; }
+  p { margin: 0.2rem 0 0; }
+}
+
+.sa-card-note {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+// Small figures in a card: two abreast, ruled between.
+.sa-ministats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sa-ministat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: var(--space-4) var(--space-5);
+
+  &:nth-child(odd) { border-inline-end: 1px solid var(--color-border); }
+  &:nth-child(n + 3) { border-top: 1px solid var(--color-border); }
+
+  strong { font-size: 1.5rem; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  span { color: var(--color-text-secondary); font-size: var(--font-size-xs); font-weight: 500; }
+  &.is-due strong { color: var(--color-danger); }
+}
+
+// The card with the switch that shuts every salle on an account.
+.app-card.sa-danger {
+  border-color: color-mix(in srgb, var(--color-danger) 30%, var(--color-border));
+
+  .app-card-header h2 { display: flex; align-items: center; gap: 0.45rem; }
+  .app-card-header i { color: var(--color-danger); }
+  .sa-sub { margin: 0 0 var(--space-3); font-size: var(--font-size-sm); }
+}
+
+.btn.sa-void { color: var(--color-text-secondary); white-space: nowrap; }
+.btn.sa-void:hover { color: var(--color-danger); }
+
+// The pricing page: the prices beside what each currency makes of them.
+.sa-pricing {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: var(--space-5);
+  align-items: start;
+
+  > .app-card { margin-bottom: 0; }
+}
+
+@media (max-width: 1199.98px) {
+  .sa-pricing { grid-template-columns: minmax(0, 1fr); }
+}
+
+.sa-warn-text { color: var(--color-warning); font-weight: 600; }
+
+// A currency's code, its name and, for the one prices are set in, a chip.
+.sa-currency { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.45rem; }
+
+// A form page (Fitora's billing details): its fields two abreast, its notices
+// above it, its button at its foot.
+.sa-billing { max-width: 900px; }
+
+.sa-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+
+.sa-form-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.sa-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  max-width: 900px;
+  margin-bottom: var(--space-4);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+
+  > i { margin-top: 0.1rem; }
+  &--danger { background: var(--color-danger-soft); color: var(--color-danger); }
+}
+
+// ---------------------------------------------------------------------------
+// The console's sign-in: setting up the authenticator app, and its code
+// ---------------------------------------------------------------------------
+
+.sa-2fa-setup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-5);
+  padding-inline-start: 1.25rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+
+  li::marker { color: var(--color-primary); font-weight: 700; }
+}
+
+.sa-2fa-qr {
+  width: 176px;
+  margin: var(--space-3) 0 var(--space-2);
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  // The code is black on white whatever the theme: a phone reads it so.
+  background: #fff;
+
+  svg { display: block; width: 100%; height: auto; }
+}
+
+.sa-2fa-manual {
+  margin: 0;
+  font-size: var(--font-size-xs);
+
+  code {
+    display: inline-block;
+    margin-top: 0.25rem;
+    color: var(--color-text);
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: var(--font-size-sm);
+    letter-spacing: 0.06em;
+    overflow-wrap: anywhere;
+  }
+}
+
+.form-control.sa-2fa-input {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 1.5rem;
+  letter-spacing: 0.4em;
+  text-align: center;
+}

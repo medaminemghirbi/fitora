@@ -38,6 +38,37 @@ class Invoice < ApplicationRecord
   scope :newest_first, -> { order(period_start: :desc) }
   scope :covering, ->(date) { where(period_start: ..date).where(period_end: date..) }
 
+  # The superadmin console's invoices table: by number or account, sorted by
+  # issue date, amount or period, filtered on what was paid, plan and period.
+  console_searchable attributes: %i[number issued_at amount_cents period_start paid_at trial plan billing_period],
+                     associations: %i[subscription]
+
+  # The terms the invoice is issued at, frozen with its amount: a TVA rate or
+  # a timbre changed later must never rewrite a past invoice. A bill
+  # brought up to date (Subscription#bill!) is issued again, and takes
+  # today's. Settling it changes neither.
+  before_save :freeze_tax_terms, if: -> { new_record? || will_save_change_to_issued_at? }
+
+  # The TTC amount as the invoice prints it, in thousandths of its currency
+  # (millimes, in dinars): HT, the TVA on it, and the timbre fiscal — which
+  # add up to the TTC to the thousandth. The price was always TTC, timbre
+  # included; outside dinars there is neither TVA nor timbre (vat_percent
+  # nil).
+  Totals = Data.define(:ht, :vat, :stamp, :ttc, :vat_percent)
+
+  def totals
+    ttc = amount_cents * 10
+    stamp = [ stamp_duty_millimes, ttc ].min
+    ht = vat_percent ? ((ttc - stamp) * 100 / (100 + vat_percent)).round : ttc - stamp
+    Totals.new(ht: ht, vat: ttc - stamp - ht, stamp: stamp, ttc: ttc, vat_percent: vat_percent)
+  end
+
+  # Who issued it: as it stood then, once Fitora's identity was complete;
+  # as it stands now for an invoice issued before.
+  def issuer_details
+    issuer.presence || PlatformSetting.current.issuer
+  end
+
   def amount
     amount_cents / 100.0
   end
@@ -70,6 +101,16 @@ class Invoice < ApplicationRecord
   end
 
   private
+
+  # TVA and timbre fiscal are Tunisian: on an invoice in dinars for an
+  # amount (a free trial carries neither), at the rates the superadmin set.
+  def freeze_tax_terms
+    setting = PlatformSetting.current
+    taxed = currency == "TND" && amount_cents.to_i.positive?
+    self.vat_percent = taxed ? setting.vat_percent : nil
+    self.stamp_duty_millimes = taxed ? setting.stamp_duty_millimes : 0
+    self.issuer = setting.issuer_complete? ? setting.issuer : nil
+  end
 
   def period_runs_forwards
     return if period_start.blank? || period_end.blank?

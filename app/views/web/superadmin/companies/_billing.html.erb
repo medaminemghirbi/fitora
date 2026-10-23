@@ -1,54 +1,80 @@
 <%# ng: superadmin-company-detail %>
-<%# The billing tab: is this gym paying — the four figures, the ledger (a
-    year's months and their invoices; each year the invoices touch waits in
-    a <template>), the invoices, the plan, the access and the next invoice,
-    and every salle one sale opens. %>
+<%# The money, in the order it is handled: the subscription — the plan and
+    the billing period side by side, then what "payment received" would
+    issue, with the button that issues it — the ledger (a year's months and
+    their invoices; each year the invoices touch waits in a <template>), and
+    the invoices, the bill still to pay first. %>
 <% plan = c[:plan]; on_trial = sub[:trial] || false; yearly = sub[:billing_period] == "yearly" %>
-<% period_key = yearly ? "subscription.plan_yearly" : "subscription.plan_monthly" %>
 <% years = Web::PaymentLedger.years(invoices); since = superadmin_since(c, invoices) %>
-<div class="ac-summary">
-  <div class="ac-stat<%= " ac-stat--trial" if on_trial %>">
-    <span class="ac-stat-label"><%= ngt("superadmin.current_formula") %></span>
-    <% if on_trial %>
-      <strong><%= ngt("superadmin.trial_running") %></strong>
-      <span class="ac-stat-sub">
+<section class="app-card">
+  <div class="app-card-header">
+    <div>
+      <h2><%= ngt("superadmin.subscription_title") %></h2>
+      <p class="sa-sub mb-0"><%= ngt("superadmin.subscription_access_subtitle") %></p>
+    </div>
+  </div>
+  <div class="app-card-body ac-form">
+    <div class="ac-form-row">
+      <div>
+        <label for="ac-plan"><%= ngt("superadmin.plan_label") %></label>
+        <select id="ac-plan" class="form-select" data-action="change->superadmin-company#changePlan">
+          <% unless plan %>
+            <option value="" disabled selected><%= ngt("superadmin.choose_plan") %></option>
+          <% end %>
+          <% superadmin_plan_keys.each do |key| %>
+            <option value="<%= key %>"<%= raw(" selected") if key == plan %>><%= ngt("subscription.plan_#{key}") %> — <%= ngt("subscription.plan_#{key}_for") %></option>
+          <% end %>
+        </select>
         <% if plan %>
-          <%= ngt("superadmin.trial_days_left", days: sub[:trial_days_left] || 0, plan: "#{ngt("subscription.plan_#{plan}")} · #{ngt(period_key).downcase}") %>
+          <p class="fx-muted ac-hint">
+            <%= ngt("superadmin.plan_hint", gyms: c.dig(:admin, :companies_count), price: ng_money(c[:monthly_subscription_cents] / 100.0, c[:currency])) %>
+          </p>
         <% else %>
-          <%= ngt("superadmin.trial_days_left_no_plan", days: sub[:trial_days_left] || 0) %>
+          <p class="fx-muted ac-hint"><%= ngt("superadmin.no_plan_hint") %></p>
         <% end %>
-      </span>
-    <% else %>
-      <strong><%= ngt("subscription.plan_#{plan}") %></strong>
-      <span class="ac-stat-sub"><%= ngt(period_key) %></span>
-    <% end %>
-  </div>
-  <div class="ac-stat">
-    <span class="ac-stat-label"><%= ngt("superadmin.subscription_title") %></span>
-    <% if !plan %>
-      <strong>—</strong>
-      <span class="ac-stat-sub"><%= ngt("superadmin.no_plan_yet") %></span>
-    <% elsif yearly %>
-      <strong><%= ng_money(c[:annual_subscription_cents] / 100.0, c[:currency]) %> <span class="ac-stat-unit"><%= ngt("superadmin.per_year") %></span></strong>
-      <span class="ac-stat-sub"><%= ng_money(c[:monthly_subscription_cents] / 100.0, c[:currency]) %> <%= ngt("superadmin.per_month") %></span>
-    <% else %>
-      <strong><%= ng_money(c[:monthly_subscription_cents] / 100.0, c[:currency]) %> <span class="ac-stat-unit"><%= ngt("superadmin.per_month") %></span></strong>
-      <span class="ac-stat-sub"><%= ng_money(c[:annual_subscription_cents] / 100.0, c[:currency]) %> <%= ngt("superadmin.per_year") %></span>
-    <% end %>
-  </div>
-  <div class="ac-stat">
-    <span class="ac-stat-label"><%= ngt(on_trial ? "superadmin.trial_until" : "superadmin.attention_paid_through") %></span>
-    <strong><%= sub[:paid_through] ? ng_date(sub[:paid_through], "d MMM y") : ngt("superadmin.attention_never_paid") %></strong>
-  </div>
-  <div class="ac-stat">
-    <span class="ac-stat-label"><%= ngt("superadmin.arrears_title") %></span>
-    <strong class="<%= arrears.zero? ? "ac-stat--ok" : "ac-stat--due" %>">
-      <%= ng_money(arrears, c[:currency]) %>
-    </strong>
-  </div>
-</div>
+      </div>
+      <div>
+        <label for="ac-period"><%= ngt("superadmin.billing_period") %></label>
+        <select id="ac-period" class="form-select" data-action="change->superadmin-company#changeBillingPeriod">
+          <option value="monthly"<%= raw(" selected") unless yearly %>><%= ngt("subscription.plan_monthly") %></option>
+          <option value="yearly"<%= raw(" selected") if yearly %>><%= ngt("subscription.plan_yearly") %></option>
+        </select>
+        <p class="fx-muted ac-hint"><%= ngt("superadmin.billing_period_hint") %></p>
+      </div>
+    </div>
 
-<div class="app-card">
+    <% member_app = sub[:member_app] || false %>
+    <p class="ac-hint ac-member-app<%= " is-on" if member_app %>">
+      <i class="bi <%= member_app ? "bi-phone" : "bi-dash-circle" %>"></i>
+      <%= ngt(on_trial ? "superadmin.member_app_trial" : member_app ? "superadmin.member_app_on" : "superadmin.member_app_off") %>
+    </p>
+
+    <% if (next_invoice = c[:next_invoice]) %>
+      <div class="ac-next">
+        <div class="ac-next-main">
+          <span class="ac-stat-label"><%= ngt("superadmin.next_invoice") %></span>
+          <% if next_invoice[:amount_cents].nil? %>
+            <strong>—</strong>
+          <% else %>
+            <strong><%= ng_money(next_invoice[:amount_cents] / 100.0, c[:currency]) %></strong>
+          <% end %>
+          <span class="fx-muted"><%= ng_date(next_invoice[:period_start], "d MMM y") %> → <%= ng_date(next_invoice[:period_end], "d MMM y") %></span>
+          <% if on_trial %>
+            <p class="fx-muted ac-hint mb-0"><%= ngt("superadmin.next_invoice_after_trial") %></p>
+          <% end %>
+          <% unless plan %>
+            <p class="ac-hint mb-0"><%= ngt("superadmin.choose_plan_first") %></p>
+          <% end %>
+        </div>
+        <button type="button" class="btn btn-primary"<%= raw(" disabled") unless plan %> data-action="superadmin-company#issueInvoice">
+          <i class="bi bi-check2-circle"></i> <%= ngt("superadmin.record_payment") %>
+        </button>
+      </div>
+    <% end %>
+  </div>
+</section>
+
+<section class="app-card">
   <div class="app-card-header ac-ledger-head">
     <div>
       <h2><%= ngt("superadmin.ledger_title") %></h2>
@@ -60,7 +86,7 @@
       <% end %>
     </div>
   </div>
-  <div class="app-card-body">
+  <div class="app-card-body ac-ledger-box">
     <div class="ac-ledger" data-superadmin-company-target="ledger">
       <%= render "web/superadmin/companies/ledger_cells", cells: Web::PaymentLedger.for(Time.current.year, invoices, since: since) %>
     </div>
@@ -69,147 +95,55 @@
   <% years.each do |y| %>
     <template data-superadmin-company-target="year" data-year="<%= y %>"><% cells = Web::PaymentLedger.for(y, invoices, since: since) %><%= render "web/superadmin/companies/ledger_summary", cells: cells, currency: c[:currency] %><%= render "web/superadmin/companies/ledger_cells", cells: cells %></template>
   <% end %>
-</div>
+</section>
 
 <%# The bill a change of plan left to pay, first; then every one paid. %>
 <% invoices = [ sub[:due_invoice], *invoices ].compact %>
-<div class="ac-grid">
-  <div class="app-card">
-    <div class="app-card-header"><h2><%= ngt("superadmin.invoices_title") %></h2></div>
-    <% if invoices.empty? %>
-      <div class="app-card-body"><p class="fx-muted mb-0"><%= ngt("superadmin.no_invoices") %></p></div>
-    <% else %>
-      <div class="fx-table-scroll">
-        <table class="table table-hover">
-          <thead>
+<section class="app-card">
+  <div class="app-card-header">
+    <h2><%= ngt("superadmin.invoices_title") %> <span class="sa-count"><%= invoices.size %></span></h2>
+  </div>
+  <% if invoices.empty? %>
+    <div class="app-card-body"><p class="fx-muted mb-0"><%= ngt("superadmin.no_invoices") %></p></div>
+  <% else %>
+    <div class="sa-scroll">
+      <table class="table sa-grid">
+        <thead>
+          <tr>
+            <th scope="col"><%= ngt("subscription.invoice_number") %></th>
+            <th scope="col"><%= ngt("subscription.period") %></th>
+            <th scope="col"><%= ngt("common.status") %></th>
+            <th scope="col" class="sa-num"><%= ngt("superadmin.console.amount") %></th>
+            <th class="sa-col-go" aria-hidden="true"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% invoices.each do |invoice| %>
             <tr>
-              <th><%= ngt("subscription.invoice_number") %></th>
-              <th><%= ngt("subscription.period") %></th>
-              <th><%= ngt("payments.amount") %></th>
-              <th class="text-end"></th>
+              <td class="sa-nowrap"><span class="sa-mono" dir="ltr"><%= invoice[:number] %></span></td>
+              <td class="sa-nowrap"><%= ng_date(invoice[:period_start], "d MMM") %> — <%= ng_date(invoice[:period_end], "d MMM y") %></td>
+              <td>
+                <% if invoice[:trial] %>
+                  <span class="sa-chip sa-chip--primary"><i class="bi bi-gift"></i> <%= ngt("superadmin.console.invoice_trial") %></span>
+                <% elsif invoice[:paid_at].nil? %>
+                  <span class="sa-chip sa-chip--warning"><i class="bi bi-hourglass-split"></i> <%= ngt("subscription.invoice_due") %></span>
+                <% else %>
+                  <span class="sa-chip sa-chip--success"><i class="bi bi-check2"></i> <%= ngt("superadmin.console.invoice_paid") %></span>
+                <% end %>
+              </td>
+              <td class="sa-num"><span class="sa-strong"><%= ng_money(invoice[:amount], invoice[:currency]) %></span></td>
+              <td class="sa-col-go sa-nowrap">
+                <a href="/superadmin/invoices/<%= invoice[:id] %>/pdf" class="btn btn-sm btn-ghost sa-void" target="_blank" rel="noopener" data-turbo="false"
+                   title="<%= ngt("superadmin.billing.pdf") %>" aria-label="<%= ngt("superadmin.billing.pdf") %> <%= invoice[:number] %>"><i class="bi bi-file-earmark-pdf"></i></a>
+                <button type="button" class="btn btn-sm btn-ghost sa-void" title="<%= ngt("superadmin.void_invoice_title") %>" aria-label="<%= ngt("superadmin.void_invoice") %> <%= invoice[:number] %>"
+                        data-action="superadmin-company#voidInvoice" data-superadmin-company-id-param="<%= invoice[:id] %>" data-superadmin-company-number-param="<%= invoice[:number] %>">
+                  <i class="bi bi-x-circle"></i>
+                </button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            <% invoices.each do |invoice| %>
-              <tr>
-                <td class="fx-strong" dir="ltr">
-                  <%= invoice[:number] %>
-                  <% if invoice[:trial] %> <span class="ac-tag"><%= ngt("superadmin.trial") %></span> <% end %>
-                  <% if invoice[:paid_at].nil? %> <span class="ac-tag"><%= ngt("subscription.invoice_due") %></span> <% end %>
-                </td>
-                <td><%= ng_date(invoice[:period_start], "d MMM") %> — <%= ng_date(invoice[:period_end], "d MMM y") %></td>
-                <td class="fx-num"><%= ng_money(invoice[:amount], invoice[:currency]) %></td>
-                <td class="text-end">
-                  <button type="button" class="btn btn-sm btn-outline-secondary" data-action="superadmin-company#voidInvoice" data-superadmin-company-id-param="<%= invoice[:id] %>" data-superadmin-company-number-param="<%= invoice[:number] %>">
-                    <%= ngt("superadmin.void_invoice") %>
-                  </button>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    <% end %>
-  </div>
-
-  <div class="ac-col">
-    <div class="app-card">
-      <div class="app-card-header">
-        <div>
-          <h2><%= ngt("superadmin.subscription_access_title") %></h2>
-          <p class="fx-muted mb-0" style="font-size: 0.8125rem"><%= ngt("superadmin.subscription_access_subtitle") %></p>
-        </div>
-      </div>
-      <div class="app-card-body ac-form">
-        <div>
-          <label for="ac-plan"><%= ngt("superadmin.plan_label") %></label>
-          <select id="ac-plan" class="form-select" data-action="change->superadmin-company#changePlan">
-            <% unless plan %>
-              <option value="" disabled selected><%= ngt("superadmin.choose_plan") %></option>
-            <% end %>
-            <% superadmin_plan_keys.each do |key| %>
-              <option value="<%= key %>"<%= raw(" selected") if key == plan %>><%= ngt("subscription.plan_#{key}") %> — <%= ngt("subscription.plan_#{key}_for") %></option>
-            <% end %>
-          </select>
-          <% if plan %>
-            <p class="fx-muted ac-hint">
-              <%= ngt("superadmin.plan_hint", gyms: c.dig(:admin, :companies_count), price: ng_money(c[:monthly_subscription_cents] / 100.0, c[:currency])) %>
-            </p>
-          <% else %>
-            <p class="fx-muted ac-hint"><%= ngt("superadmin.no_plan_hint") %></p>
           <% end %>
-          <% member_app = sub[:member_app] || false %>
-          <p class="ac-hint ac-member-app<%= " is-on" if member_app %>">
-            <i class="bi <%= member_app ? "bi-phone" : "bi-dash-circle" %>"></i>
-            <%= ngt(on_trial ? "superadmin.member_app_trial" : member_app ? "superadmin.member_app_on" : "superadmin.member_app_off") %>
-          </p>
-        </div>
-
-        <div>
-          <label for="ac-period"><%= ngt("superadmin.billing_period") %></label>
-          <select id="ac-period" class="form-select" data-action="change->superadmin-company#changeBillingPeriod">
-            <option value="monthly"<%= raw(" selected") unless yearly %>><%= ngt("subscription.plan_monthly") %></option>
-            <option value="yearly"<%= raw(" selected") if yearly %>><%= ngt("subscription.plan_yearly") %></option>
-          </select>
-          <p class="fx-muted ac-hint"><%= ngt("superadmin.billing_period_hint") %></p>
-        </div>
-
-        <% if (next_invoice = c[:next_invoice]) %>
-          <div class="ac-next">
-            <div class="ac-next-main">
-              <span class="ac-stat-label"><%= ngt("superadmin.next_invoice") %></span>
-              <% if next_invoice[:amount_cents].nil? %>
-                <strong>—</strong>
-              <% else %>
-                <strong><%= ng_money(next_invoice[:amount_cents] / 100.0, c[:currency]) %></strong>
-              <% end %>
-              <span class="fx-muted"><%= ng_date(next_invoice[:period_start], "d MMM y") %> → <%= ng_date(next_invoice[:period_end], "d MMM y") %></span>
-              <% if on_trial %>
-                <p class="fx-muted ac-hint mb-0"><%= ngt("superadmin.next_invoice_after_trial") %></p>
-              <% end %>
-            </div>
-            <% unless plan %>
-              <p class="ac-hint mb-0"><%= ngt("superadmin.choose_plan_first") %></p>
-            <% end %>
-            <button type="button" class="btn btn-primary btn-sm"<%= raw(" disabled") unless plan %> data-action="superadmin-company#issueInvoice">
-              <%= ngt("superadmin.record_payment") %>
-            </button>
-          </div>
-        <% end %>
-      </div>
-      <div class="ac-card-foot">
-        <button type="button" class="btn btn-sm btn-outline-danger" data-action="superadmin-company#toggleAccess" data-superadmin-company-active-param="<%= !sub[:active] %>">
-          <%= ngt(sub[:active] ? "superadmin.suspend_access" : "superadmin.restore_access") %>
-        </button>
-      </div>
+        </tbody>
+      </table>
     </div>
-
-    <div class="app-card">
-      <div class="app-card-header">
-        <div>
-          <h2><%= ngt("superadmin.account_companies_title", count: (c[:account_companies] || []).size) %></h2>
-          <p class="fx-muted mb-0" style="font-size: 0.8125rem"><%= ngt("superadmin.account_companies_subtitle") %></p>
-        </div>
-      </div>
-      <ul class="ac-account-list">
-        <% (c[:account_companies] || []).each do |salle| %>
-          <li>
-            <% if salle[:current] %>
-              <span class="ac-account-item is-current">
-                <i class="bi bi-building"></i>
-                <span><%= salle[:name] %><% if salle[:city].present? %> <small> · <%= salle[:city] %></small> <% end %></span>
-                <span class="ac-tag"><%= ngt("superadmin.account_companies_here") %></span>
-              </span>
-            <% else %>
-              <a class="ac-account-item" href="/superadmin/companies/<%= salle[:id] %>">
-                <i class="bi bi-building"></i>
-                <span><%= salle[:name] %><% if salle[:city].present? %> <small> · <%= salle[:city] %></small> <% end %></span>
-                <i class="bi bi-chevron-right ms-auto"></i>
-              </a>
-            <% end %>
-          </li>
-        <% end %>
-      </ul>
-    </div>
-  </div>
-</div>
+  <% end %>
+</section>

@@ -1,0 +1,58 @@
+<%# ng: superadmin-updates %>
+<%# The drawer that publishes a release (superadmin-updates): version and
+    title required, a description, screenshots and recordings — kept in a
+    <template> until it opens, with the pieces the controller puts in. %>
+<app-drawer data-controller="modal" data-modal-name-value="update-create" data-action="update-create:open@window->modal#open update-create:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/drawer", locals: { title: ngt("superadmin.updates.new"), description: ngt("superadmin.updates.new_hint") } do |slot| %>
+      <% if slot == "footer" %>
+        <div drawer-footer>
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" form="update-form" class="btn btn-primary" disabled data-update-submit>
+            <i class="bi bi-broadcast"></i>
+            <%= ngt("superadmin.updates.publish") %>
+          </button>
+        </div>
+      <% else %>
+        <form id="update-form" novalidate>
+          <div class="row">
+            <div class="col-5 mb-3">
+              <label for="upd-version"><%= ngt("superadmin.updates.version_label") %> *</label>
+              <input id="upd-version" class="form-control" dir="ltr" name="version" placeholder="1.4.0" required />
+            </div>
+            <div class="col-7 mb-3">
+              <label for="upd-title"><%= ngt("superadmin.updates.title_label") %> *</label>
+              <input id="upd-title" class="form-control" name="title" placeholder="<%= ngt("superadmin.updates.title_placeholder") %>" required />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="upd-desc"><%= ngt("superadmin.updates.description_label") %></label>
+            <textarea id="upd-desc" class="form-control" rows="5" name="description" placeholder="<%= ngt("superadmin.updates.description_placeholder") %>"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <div class="form-label"><%= ngt("superadmin.updates.media_label") %></div>
+            <label class="update-file-drop" for="update-files">
+              <i class="bi bi-cloud-arrow-up"></i>
+              <span><%= ngt("superadmin.updates.media_hint") %></span>
+            </label>
+            <input id="update-files" type="file" class="visually-hidden" multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm" />
+          </div>
+        </form>
+      <% end %>
+    <% end %>
+  </template>
+  <template data-update-error><div class="alert alert-danger"></div></template>
+  <template data-update-file-error><p class="update-file-error"></p></template>
+  <template data-update-file-list><ul class="update-file-list"></ul></template>
+  <template data-update-file-item>
+    <li>
+      <i class="bi"></i>
+      <span class="update-file-name"></span>
+      <button type="button" class="icon-btn" aria-label="<%= ngt("common.cancel") %>">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </li>
+  </template>
+  <template data-update-spinner><app-spinner><%= render "web/shared/spinner", size: 16 %></app-spinner></template>
+</app-drawer>

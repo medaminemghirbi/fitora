@@ -3,13 +3,15 @@ import { Turbo } from "@hotwired/turbo-rails"
 import { csrfToken, interpolate, money } from "../lib/ng"
 import { toast } from "../lib/toast"
 
-// SuperadminPricingComponent: another currency loads its prices (?currency=,
-// M-05); each year is worked out as the prices and the discount are typed
-// (#annualUnits); "save" only once something differs from what is saved
-// (#dirty), then the page comes back as the server has it, with its toast.
+// The plans' prices: another currency shows them converted into it
+// (?currency=, M-05); each year is worked out as the prices and the discount
+// are typed (#annualUnits); "save" once something differs from what is
+// saved (#dirty) — or at once in another currency than the prices are set
+// in, which saving makes theirs — then the page comes back as the server has
+// it, with its toast.
 export default class extends Controller {
   static targets = ["save"]
-  static values = { url: String, currency: String, symbol: String, discount: Number, preview: String, labels: Object }
+  static values = { url: String, currency: String, switching: Boolean, symbol: String, discount: Number, preview: String, labels: Object }
 
   changeCurrency(event) {
     Turbo.visit(`${this.urlValue}?currency=${encodeURIComponent(event.target.value)}`, { action: "replace" })
@@ -59,6 +61,6 @@ export default class extends Controller {
   }
 
   dirty() {
-    return this.discount() !== this.discountValue || this.rows().some((row) => Math.round(this.units(row) * 100) !== Number(row.dataset.cents))
+    return this.switchingValue || this.discount() !== this.discountValue || this.rows().some((row) => Math.round(this.units(row) * 100) !== Number(row.dataset.cents))
   }
 }

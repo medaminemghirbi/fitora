@@ -144,7 +144,10 @@ module Clients
       when "active" then scope.where(memberships: { active: true })
       when "inactive" then scope.where(memberships: { active: false })
       when "contract_active" then scope.where(id: company_contracts.currently_active.select(:client_id))
-      when "contract_expired" then scope.where(id: company_contracts.expired.select(:client_id))
+      # Lapsed and not followed by anything running: someone to bring back.
+      when "contract_expired"
+        scope.where(id: company_contracts.lapsed.select(:client_id))
+             .where.not(id: company_contracts.currently_active.select(:client_id))
       when "no_contract" then scope.where.not(id: company_contracts.select(:client_id))
       else scope
       end

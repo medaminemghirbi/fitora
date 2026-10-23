@@ -1,35 +1,44 @@
 module Web
   module Superadmin
-    # Every gym's support tickets (SuperadminSupportTicketsComponent): the
-    # open ones, or all (?status=all, M-05), as GET
-    # /api/v1/superadmin/support_tickets lists them (its first page), each
-    # opening in a dialog; resolving one (SupportRequest.resolve); and its
-    # attachments, through this session rather than the API's bearer token
-    # (B-14). ?fragment=1 is the page without the shell, as the filter
-    # redraws it.
+    # Every gym's support tickets: the open ones first-hand (?status=all or
+    # resolved for the rest), searched by subject, message, gym or author;
+    # each on its own page, where it is resolved (SupportRequest.resolve) and
+    # its attachments are opened through this session rather than the API's
+    # bearer token (B-14).
     class SupportController < BaseController
       include ServesAttachments
       helper_method :support_tel_href
 
+      TABLE = Web::DataTable::Definition.new(
+        search: :subject_or_message_or_company_name_or_created_by_first_name_or_created_by_last_name_cont,
+        sorts: { created: "created_at", company: "company_name", subject: "subject" },
+        default: %w[created desc],
+        filters: {
+          status: { "open" => { status_eq: SupportTicket.statuses[:open] }, "resolved" => { status_eq: SupportTicket.statuses[:resolved] }, "all" => {} },
+          kind: SupportTicket.kinds.to_h { |name, value| [ name, { kind_eq: value } ] }
+        },
+        defaults: { status: "open" }
+      )
+
       def index
-        @filter = params[:status] == "all" ? "all" : "open"
-        scope = SupportTicket.includes(:company, :created_by, attachments_attachments: :blob).recent
-        scope = scope.where(status: :open) if @filter == "open"
-        rows, = page_meta(scope)
-        @tickets = rows.map { |t| ticket_json(t) }
-        render :index, layout: false if params[:fragment].present?
+        @table = TABLE.table(params)
+        @pagy, @tickets = paginate(@table, SupportTicket.includes(:company, :created_by, :attachments_attachments))
       end
 
-      # PATCH …/support/:id/resolve — the ticket's row and dialog, redrawn.
+      def show
+        ticket = SupportTicket.includes(:company, :created_by, attachments_attachments: :blob).find_by(id: params[:id])
+        return redirect_to("/superadmin/support", status: :see_other) if ticket.nil?
+
+        @ticket = ticket_json(ticket)
+      end
+
+      # PATCH …/support/:id/resolve — back to the ticket, resolved, with the toast.
       def resolve
         ticket = SupportRequest.resolve(SupportTicket.find(params[:id]), by: current_user)
-        t = ticket_json(ticket)
-        render json: {
-          row: render_to_string(partial: "web/superadmin/support/row", formats: [ :html ], locals: { t: t }),
-          detail: render_to_string(partial: "web/superadmin/support/detail", formats: [ :html ], locals: { t: t })
-        }
+        flash[:success] = helpers.ngt("superadmin.support.resolved")
+        redirect_to "/superadmin/support/#{ticket.id}", status: :see_other
       rescue ActiveRecord::RecordNotFound
-        render_refusal("Resource not found", status: :not_found)
+        redirect_to "/superadmin/support", status: :see_other
       end
 
       def attachment

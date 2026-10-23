@@ -38,7 +38,7 @@ module Web
         flash[:success] = helpers.ngt("clients.created")
         redirect_to admin_page_path("clients/#{result.client.id}"), status: :see_other
       rescue ApplicationRecord::Refused => refusal
-        render_wizard_error(refusal.message)
+        render_wizard_error(refusal_message(refusal))
       rescue ActiveRecord::RecordInvalid => invalid
         # The API's English messages, as the Angular wizard shows them (K-04).
         render_wizard_error(I18n.with_locale(:en) { invalid.record.errors.full_messages.first })

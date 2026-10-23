@@ -8,20 +8,21 @@ module Web
     # capability, answered with the API's message (K-04).
     class ClientProfilesController < BaseController
       before_action -> { require_capability(:clients) }, only: :show
-      before_action -> { refuse_without(:clients) }, except: %i[show sell book sessions]
-      before_action -> { refuse_without(:contracts) }, only: :sell
+      before_action -> { refuse_without(:clients) }, except: %i[show book sessions]
       before_action -> { refuse_without(:bookings) }, only: :book
       before_action -> { refuse unless current_user.admin? }, only: :destroy
       before_action :set_client
 
       rescue_from ActiveRecord::RecordInvalid, with: ->(invalid) { render_messages(I18n.with_locale(:en) { invalid.record.errors.full_messages }) }
-      rescue_from ApplicationRecord::Refused, with: ->(refusal) { render_messages([ refusal.message ]) }
+      rescue_from ApplicationRecord::Refused, with: ->(refusal) { render_messages([ refusal_message(refusal) ]) }
 
       def show
         return render(:missing) if @client.nil?
 
         @profile = JSON.parse(Clients::Profile.payload(@client, current_company).to_json).deep_symbolize_keys
-        @plans = JSON.parse(CatalogueListing.plans(current_company).map { |p| ContractTypeSerializer.new(p).as_json }.to_json).map(&:deep_symbolize_keys)
+        # Who the subscription dialogs sell to, and what they already hold.
+        held = current_company.contracts.currently_active.where(client: @client).includes(:contract_type, :activity, :pack)
+        @member = helpers.subscription_member(@client, held)
         @activities = CatalogueListing.activities(current_company).map { |a| ActivitySerializer.new(a).as_json }
         render partial: "web/admin/client_profiles/body", locals: { p: @profile } if params[:fragment].present?
       end
@@ -52,14 +53,6 @@ module Web
         Clients::Profile.remove(@client, company: current_company, by: current_user)
         flash[:success] = helpers.ngt("clients.removed", name: name)
         head :no_content
-      end
-
-      # POST …/contracts — a subscription sold, as POST /api/v1/contracts.
-      def sell
-        Contracts::Actions.sell(@client, company: current_company, by: current_user, params: params)
-        head :created
-      rescue Contracts::Actions::NotFound => e
-        render json: { error: e.message }, status: :not_found
       end
 
       # POST …/bookings — a seat booked for them, as POST /api/v1/bookings.

@@ -96,9 +96,13 @@ RSpec.describe Dashboard::Statistics do
       company = create(:company)
       plan = create(:contract_type, company: company, price: 100)
 
-      # expires in a fortnight, paid — chase the renewal, not the money
+      # ends within the renewal window, paid — chase the renewal, not the money
       soon = create(:contract, client: create(:client, company: company), contract_type: plan)
-      soon.update!(expires_at: 14.days.from_now, payment_status: :paid)
+      soon.update!(expires_at: 7.days.from_now, payment_status: :paid)
+
+      # ends in a fortnight: "Renouveler" is not open yet, so it is not work
+      later = create(:contract, client: create(:client, company: company), contract_type: plan)
+      later.update!(expires_at: 14.days.from_now, payment_status: :paid)
 
       # live but never paid
       owing = create(:contract, client: create(:client, company: company), contract_type: plan)

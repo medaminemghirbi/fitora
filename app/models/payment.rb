@@ -31,7 +31,7 @@ class Payment < ApplicationRecord
       # the second behind the first, which then finds nothing left to pay.
       payable = contract || booking
       payable&.lock!
-      raise Refused, "This is already paid." if payable&.paid?
+      raise Refused.new("This is already paid.", key: "payments.errors.already_paid") if payable&.paid?
 
       payment = create!(
         client: client, company: company, created_by: created_by,

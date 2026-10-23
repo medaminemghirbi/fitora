@@ -23,6 +23,12 @@ gem "turbo-rails"
 gem "stimulus-rails"
 gem "rails-i18n", "~> 8.0"
 
+# The superadmin console's tables (Web::DataTable): Ransack turns a column,
+# a direction and the filters into SQL, only over what each model allowlists
+# for the console (ransackable_*); Pagy pages the result.
+gem "ransack", "~> 5.0.2"
+gem "pagy", "~> 43.6.3"
+
 # Password hashing for User#password
 gem "bcrypt", "~> 3.1.7"
 
@@ -68,6 +74,10 @@ gem "matrix"
 # QR code for the company mobile pairing key — generated server-side (SVG)
 # so the key itself never leaves the app to a third-party QR API.
 gem "rqrcode"
+
+# The superadmin console's second factor: the six-digit codes of an
+# authenticator app (TOTP, RFC 6238), checked by SuperadminTwoFactor.
+gem "rotp", "~> 6.3"
 
 # Background jobs (expiry scans, notification fan-out) + the ActionCable
 # Redis pub/sub backend for real-time notifications. Redis already runs

@@ -35,3 +35,26 @@ RSpec.describe ContractType, "unlimited or counted" do
     expect(plan.reload.session_count).to be_nil
   end
 end
+
+# What the formule form asks for is "a number of sessions" (session_count);
+# what a sale counts down is booking_limit. Apart, "Carte 10 séances" sold
+# with no limit at all.
+RSpec.describe ContractType, "counting what the gym typed" do
+  let(:company) { create(:company) }
+  let(:activity) { create(:activity, company: company) }
+
+  it "limits bookings to the session count, so a sale counts down from it" do
+    plan = create(:contract_type, company: company, unlimited_bookings: false, session_count: 10, booking_limit: nil)
+    expect(plan.booking_limit).to eq(10)
+
+    plan.contract_type_activities.find_or_create_by!(activity: activity) { |row| row.price = 80 }
+    contract = Contract.sell!(client: create(:client, company: company), contract_type: plan, activity: activity, created_by: nil)
+    expect(contract.remaining_bookings).to eq(10)
+  end
+
+  it "follows the count when it changes" do
+    plan = create(:contract_type, company: company, unlimited_bookings: false, session_count: 10)
+    plan.update!(session_count: 12)
+    expect(plan.reload.booking_limit).to eq(12)
+  end
+end
