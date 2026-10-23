@@ -7,8 +7,10 @@ class SuperadminCompanySerializer
     {
       id: company.id,
       name: company.name,
+      address: company.address,
       city: company.city,
       country: company.country,
+      phone: company.phone,
       currency: company.currency,
       currency_symbol: company.currency_symbol,
       locale: company.locale,
@@ -18,7 +20,9 @@ class SuperadminCompanySerializer
       admin: {
         id: company.admin.id,
         full_name: company.admin.full_name,
-        email: EmailMask.call(company.admin.email),
+        # Whole, not masked: it is where Fitora bills the account and
+        # writes to its admin — Fitora's own customer, not someone else's.
+        email: company.admin.email,
         phone: company.admin.phone,
         companies_count: company.admin.companies.size
       },

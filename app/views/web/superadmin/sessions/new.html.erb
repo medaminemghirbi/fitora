@@ -1,0 +1,47 @@
+<%# ng: pro-login %>
+<%# ng-host: pro-login %>
+<%# The console's sign-in, first step: the password, in /connexion's own
+    form (web/sessions/new) and checks — then the authenticator's code
+    (code.html.erb). No sign-up or reset here: the console has neither. %>
+<% content_for :auth_panel do %>
+  <%= render "web/superadmin/sessions/panel" %>
+<% end %>
+<app-auth-pro-shell>
+  <%= render layout: "web/shared/auth_pro_shell" do %>
+    <h1 class="auth-title"><%= ngt("superadmin.two_factor.title") %></h1>
+    <p class="auth-subtitle"><%= ngt("superadmin.two_factor.subtitle") %></p>
+    <%= render "web/superadmin/sessions/steps", step: 1 %>
+
+    <form action="<%= web_superadmin_sign_in_path %>" method="post" novalidate data-controller="form-checks" data-form-checks-scope-value="pro-login" data-action="submit->form-checks#submit turbo:submit-start->form-checks#busy turbo:submit-end->form-checks#idle">
+      <% if @error %>
+        <div class="alert alert-danger" role="alert"><%= @error %></div>
+      <% end %>
+
+      <div class="mb-3">
+        <label for="email"><%= ngt("auth.email") %></label>
+        <input id="email" name="email" type="email" class="form-control" autocomplete="email" dir="ltr" value="<%= @email %>" data-checks="required email" data-check-message="<%= ngt("common.required") %>">
+        <% if @invalid&.include?(:email) %>
+          <div class="invalid-feedback d-block" data-check-error="email"><%= ngt("common.required") %></div>
+        <% end %>
+      </div>
+
+      <div class="mb-3">
+        <label for="password"><%= ngt("auth.password") %></label>
+        <div class="auth-password">
+          <input id="password" name="password" type="password" class="form-control" autocomplete="current-password" dir="ltr" data-password data-checks="required" data-check-message="<%= ngt("common.required") %>" data-check-anchor=".auth-password">
+          <button type="button" class="auth-eye" data-action="form-checks#togglePassword" data-form-checks-target="eye" data-show-label="<%= ngt("auth.show_password") %>" data-hide-label="<%= ngt("auth.hide_password") %>" aria-label="<%= ngt("auth.show_password") %>" aria-pressed="false">
+            <i class="bi bi-eye" aria-hidden="true"></i>
+          </button>
+        </div>
+        <% if @invalid&.include?(:password) %>
+          <div class="invalid-feedback d-block" data-check-error="password"><%= ngt("common.required") %></div>
+        <% end %>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100 mt-2" data-form-checks-target="submit">
+        <%= ngt("superadmin.two_factor.continue") %>
+      </button>
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+    </form>
+  <% end %>
+</app-auth-pro-shell>

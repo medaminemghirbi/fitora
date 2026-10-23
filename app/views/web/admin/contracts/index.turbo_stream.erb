@@ -1,5 +1,4 @@
-<%= turbo_stream.replace "ct-count", partial: "web/admin/contracts/count", locals: { counts: @counts }, method: :morph %>
-<%= turbo_stream.replace "ct-tabs", partial: "web/admin/contracts/tabs", locals: { plans: @plans, counts: @counts, plan_counts: @plan_counts, filters: @filters }, method: :morph %>
-<%= turbo_stream.replace "ct-stats", partial: "web/admin/contracts/stats", locals: { totals: @totals }, method: :morph %>
-<%= turbo_stream.replace "ct-pills", partial: "web/admin/contracts/pills", locals: { counts: @counts, filters: @filters }, method: :morph %>
-<%= turbo_stream.replace "ct-card", partial: "web/admin/contracts/card", locals: { contracts: @contracts, meta: @meta, filters: @filters, plans: @plans }, method: :morph %>
+<%= turbo_stream.replace "abo-lists", partial: "web/admin/contracts/lists", locals: { counts: @counts, filters: @filters }, method: :morph %>
+<%= turbo_stream.replace "abo-plan", partial: "web/admin/contracts/plan_filter", locals: { plans: @plans, plan_counts: @plan_counts, filters: @filters }, method: :morph %>
+<%= turbo_stream.replace "abo-totals", partial: "web/admin/contracts/totals", locals: { totals: @totals }, method: :morph %>
+<%= turbo_stream.replace "ct-card", partial: "web/admin/contracts/card", locals: { contracts: @contracts, meta: @meta, filters: @filters }, method: :morph %>

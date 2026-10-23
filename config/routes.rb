@@ -265,12 +265,14 @@ Rails.application.routes.draw do
         end
       end
       # Module 3.
-      resources :contracts, only: :index do
+      resources :contracts, only: %i[index create update] do
+        get :members, on: :collection
         member do
           post :renew
           post :pause
           post :resume
           post :collect
+          post :cancel
           get :agreement
           get :receipt
         end
@@ -354,7 +356,6 @@ Rails.application.routes.draw do
         patch "/", action: :update
         delete "/", action: :destroy
         post "invite", action: :invite
-        post "contracts", action: :sell
         post "bookings", action: :book
         get "sessions", action: :sessions
       end
@@ -432,8 +433,14 @@ Rails.application.routes.draw do
   end
 
   # ---- The superadmin's console (module 10): its Angular URLs (§8.1), and
-  # what it has grown since: the invoices, a page per ticket and release ----
+  # what it has grown since: its own sign-in, the invoices, a page per
+  # ticket and release ----
   scope "superadmin", module: "web/superadmin", as: :web_superadmin do
+    # The console's own sign-in: the password, then the authenticator's code.
+    get "connexion", to: "sessions#new", as: :sign_in
+    post "connexion", to: "sessions#create"
+    get "connexion/code", to: "sessions#code", as: :sign_in_code
+    post "connexion/code", to: "sessions#verify"
     get "overview", to: "overview#show", as: :overview
     get "companies", to: "companies#index", as: :companies
     get "companies/:id", to: "companies#show", as: :company

@@ -1,0 +1,13 @@
+<%# How the money is taken — cash first — for the dialogs that record a
+    payment (the payments page, a member's file). %>
+<fieldset class="abo-pay mb-3">
+  <legend><%= ngt("payments.method") %></legend>
+  <div class="abo-methods">
+    <% Web::Admin::PaymentsController::METHODS.each_with_index do |(value, label, _), i| %>
+      <label class="abo-method">
+        <input type="radio" name="payment_method" value="<%= value %>"<%= raw(" checked") if i.zero? %> />
+        <span><%= ngt(label) %></span>
+      </label>
+    <% end %>
+  </div>
+</fieldset>

@@ -26,6 +26,12 @@ module Web
         [ pagy, records ]
       end
 
+      # No session: the console's own sign-in, not /connexion, which refuses
+      # a superadmin.
+      def sign_in_first
+        redirect_to web_superadmin_sign_in_path
+      end
+
       def require_superadmin_session!
         return render(json: { error: "Unauthorized" }, status: :unauthorized) if !signed_in? && request.format.json?
         return sign_in_first unless signed_in?

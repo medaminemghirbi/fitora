@@ -43,6 +43,7 @@ import ThemeSwitchController from "./theme_switch_controller"
 import ChangePasswordController from "./change_password_controller"
 import DataExchangeController from "./data_exchange_controller"
 import SubscriptionPageController from "./subscription_page_controller"
+import SubscriptionsController from "./subscriptions_controller"
 import CheckinPanelController from "./checkin_panel_controller"
 import DashboardPageController from "./dashboard_page_controller"
 import ClientProfileController from "./client_profile_controller"
@@ -57,6 +58,7 @@ import MemberScheduleController from "./member_schedule_controller"
 import MemberBookingsController from "./member_bookings_controller"
 import MemberProfileController from "./member_profile_controller"
 import DataTableController from "./data_table_controller"
+import CopyController from "./copy_controller"
 import SuperadminCompanyController from "./superadmin_company_controller"
 import SuperadminPricingController from "./superadmin_pricing_controller"
 import SuperadminUpdatesController from "./superadmin_updates_controller"
@@ -107,6 +109,7 @@ application.register("theme-switch", ThemeSwitchController)
 application.register("change-password", ChangePasswordController)
 application.register("data-exchange", DataExchangeController)
 application.register("subscription-page", SubscriptionPageController)
+application.register("subscriptions", SubscriptionsController)
 application.register("checkin-panel", CheckinPanelController)
 application.register("dashboard-page", DashboardPageController)
 application.register("client-profile", ClientProfileController)
@@ -121,6 +124,7 @@ application.register("member-schedule", MemberScheduleController)
 application.register("member-bookings", MemberBookingsController)
 application.register("member-profile", MemberProfileController)
 application.register("data-table", DataTableController)
+application.register("copy", CopyController)
 application.register("superadmin-company", SuperadminCompanyController)
 application.register("superadmin-pricing", SuperadminPricingController)
 application.register("superadmin-updates", SuperadminUpdatesController)

@@ -4,6 +4,7 @@ class User < ApplicationRecord
   include PasswordResettable
   include EmailVerifiable
   include TokenVersioned
+  include TwoFactor
 
   # A User is always staff: the Fitora-operator ("superadmin", manages every
   # company's SaaS subscription via /superadmin) or an in-gym account

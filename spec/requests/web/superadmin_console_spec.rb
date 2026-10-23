@@ -79,6 +79,17 @@ RSpec.describe "The superadmin console's tables", type: :request, openapi: false
       expect(listed_names).to eq([ "Alpha" ])
     end
 
+    it "shows where each gym is and how to reach its admin: the e-mail it is billed at, whole, and a phone" do
+      admin = create(:user, :admin, email: "meriem@studiolumen.tn", phone: nil)
+      create(:company, admin: admin, name: "Studio Lumen", city: "La Marsa", country: "TN",
+                       address: "12 rue Habib Thameur", phone: "+216 71 774 200")
+
+      get "/superadmin/companies"
+      expect(response.body).to include('href="mailto:meriem@studiolumen.tn"', 'href="tel:+21671774200"', "+216 71 774 200",
+                                       "La Marsa, TN", "12 rue Habib Thameur")
+      expect(response.body).not_to include(EmailMask::STARS)
+    end
+
     it "says so when nothing matches, with the way back" do
       create(:company, name: "Alpha")
       get "/superadmin/companies", params: { search: "zzz" }

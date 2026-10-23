@@ -78,6 +78,33 @@ class Contract < ApplicationRecord
                           .select(:renewed_from_id))
   }
 
+  # The desk's work lists, one rule each, so the subscriptions page, its
+  # counts and the dashboard all say the same thing (#state reads one term
+  # the same way).
+  #
+  # Running now: begun, not over, not on hold.
+  scope :running, -> { in_force.where(paused_at: nil) }
+  # Sold to follow on, not begun yet — a renewal queued behind a term.
+  scope :upcoming, -> { currently_active.where("contracts.starts_at > ?", Time.current) }
+  # To renew now: running, nothing sold after it, and within RENEWAL_WINDOW
+  # of its end — or out of the sessions it bought. Exactly when "Renouveler"
+  # opens (#renewable?).
+  scope :to_renew, -> {
+    running.not_renewed.where(
+      "contracts.expires_at <= :until OR (contracts.remaining_bookings IS NOT NULL AND contracts.remaining_bookings <= 0)",
+      until: RENEWAL_WINDOW.from_now
+    )
+  }
+  # Over. Nothing turns the stored status to `expired` when a term ends, so
+  # the end date decides; a row stored as expired (an import, the demo)
+  # counts too. A paused term is not over: its end moves when it resumes.
+  scope :lapsed, -> {
+    where("contracts.status = :expired OR (contracts.status = :active AND contracts.paused_at IS NULL AND contracts.expires_at < :now)",
+          expired: statuses[:expired], active: statuses[:active], now: Time.current)
+  }
+  # Money still owed on it. Cancelling a term forgives what it owed.
+  scope :owing, -> { unpaid.where.not(status: :cancelled) }
+
   # Sells a client a plan for an activity, optionally taking the money in
   # the same transaction, and returns the new Contract (with its #payments
   # when collected).
@@ -154,8 +181,9 @@ class Contract < ApplicationRecord
     # Says what to do, not only what is wrong: whoever hits this is at a
     # desk with someone waiting, and the fix is two screens away.
     sold = pack ? "the pack #{pack.name}" : (activity&.name || "every activity")
-    raise Refused, "\"#{contract_type.name}\" has no price for #{sold}. " \
-                   "Set one in Offre → Tarifs before selling it."
+    raise Refused.new("\"#{contract_type.name}\" has no price for #{sold}. " \
+                      "Set one in Formules & tarifs before selling it.",
+                      key: "contracts.errors.no_price", plan: contract_type.name, item: pack&.name || activity&.name || "—")
   end
 
   # Sells the term that follows this one and returns it — a new contract,
@@ -167,7 +195,10 @@ class Contract < ApplicationRecord
   # end (#renewable?). A term still running keeps its dates, its price and
   # its remaining sessions until its last day — the renewal starts where it
   # ends.
-  def renew!(contract_type: self.contract_type, activity: self.activity, pack: self.pack, created_by: nil)
+  #
+  # `discount` is the one agreed for the new term; left out, the current
+  # one carries over on the same formule and none does onto another.
+  def renew!(contract_type: self.contract_type, activity: self.activity, pack: self.pack, created_by: nil, discount: nil)
     refuse_renewal!
     activity = nil if pack
     same_formule = contract_type == self.contract_type && activity == self.activity && pack == self.pack
@@ -179,9 +210,7 @@ class Contract < ApplicationRecord
     tariff ||= base_price if same_formule
     tariff ||= self.class.price_of(contract_type, activity: activity, pack: pack)
 
-    # Starts where this term ends — or today, when it already has, or when
-    # every session it bought is spent and there is nothing left to wait for.
-    starts_at = sessions_used_up? ? Time.current : [ expires_at, Time.current ].compact.max
+    starts_at = next_term_starts_at
 
     # Through the association, so the renewal is visible on this very object
     # (#renewal, #renewable?) without a reload.
@@ -195,16 +224,25 @@ class Contract < ApplicationRecord
       remaining_bookings: contract_type.unlimited_bookings? ? nil : contract_type.booking_limit,
       # A discount was agreed for a formule; it does not follow the member
       # onto another one.
-      discount: same_formule ? discount : 0,
+      discount: discount.nil? ? (same_formule ? self.discount : 0) : discount,
       base_price: tariff
     )
+  end
+
+  # Where the term that follows this one starts: where this one ends — or
+  # today, when it already has, or when every session it bought is spent
+  # and there is nothing left to wait for.
+  def next_term_starts_at
+    sessions_used_up? ? Time.current : [ expires_at, Time.current ].compact.max
   end
 
   # Edits this term — start date, end date and (while still unpaid) the
   # discount. Changing the start date re-derives the end date from the
   # plan's billing period unless an explicit end date is given.
   def update_term!(starts_on: nil, expires_on: nil, discount: nil)
-    raise Refused, "This subscription can no longer be edited" unless active? || pending?
+    unless active? || pending?
+      raise Refused.new("This subscription can no longer be edited", key: "contracts.errors.not_editable")
+    end
 
     attrs = {}
 
@@ -216,19 +254,27 @@ class Contract < ApplicationRecord
 
     attrs[:expires_at] = Date.parse(expires_on.to_s).in_time_zone if expires_on.present?
 
-    if discount.present?
-      raise Refused, "Discount can only change while the subscription is unpaid" unless unpaid?
+    starts = attrs[:starts_at] || self.starts_at
+    if attrs[:expires_at] && starts && attrs[:expires_at] <= starts
+      raise Refused.new("The end date must come after the start date", key: "contracts.errors.end_before_start")
+    end
+
+    # The same figure is no change, so a paid term's form can send it back.
+    if discount.present? && discount.to_f != self.discount.to_f
+      unless unpaid?
+        raise Refused.new("Discount can only change while the subscription is unpaid", key: "contracts.errors.discount_locked")
+      end
 
       attrs[:discount] = discount.to_f
     end
 
     update!(attrs) if attrs.any?
   rescue ArgumentError
-    raise Refused, "Invalid date"
+    raise Refused.new("Invalid date", key: "contracts.errors.invalid_date")
   end
 
   def cancel!
-    raise Refused, "This contract is already cancelled." if cancelled?
+    raise Refused.new("This contract is already cancelled.", key: "contracts.errors.already_cancelled") if cancelled?
 
     update!(status: :cancelled, paused_at: nil)
   end
@@ -238,9 +284,11 @@ class Contract < ApplicationRecord
   # spends paused is given back on #resume!. Bookings already made are left
   # alone: the desk cancels the ones that should go, one by one.
   def pause!
-    raise Refused, "No active subscription to pause." unless active?
-    raise Refused, "This subscription is already paused." if paused?
-    raise Refused, "This subscription has already ended." if expires_at.present? && expires_at < Time.current
+    raise Refused.new("No active subscription to pause.", key: "contracts.errors.nothing_to_pause") unless active?
+    raise Refused.new("This subscription is already paused.", key: "contracts.errors.already_paused") if paused?
+    if expires_at.present? && expires_at < Time.current
+      raise Refused.new("This subscription has already ended.", key: "contracts.errors.already_ended")
+    end
 
     update!(paused_at: Time.current)
     self
@@ -250,7 +298,7 @@ class Contract < ApplicationRecord
   # Renewals queued behind this term move by the same amount, so they still
   # start where it now ends instead of overlapping it.
   def resume!
-    raise Refused, "This subscription is not paused." unless paused?
+    raise Refused.new("This subscription is not paused.", key: "contracts.errors.not_paused") unless paused?
 
     held = Time.current - paused_at
     transaction do
@@ -274,6 +322,41 @@ class Contract < ApplicationRecord
   # days before a date it will never use).
   def renewable?
     renewal_refusal.nil?
+  end
+
+  # The day "Renouveler" opens on a term still too far from its end, so the
+  # desk can say when; nil when it is open, or will not open at all.
+  def renewable_on
+    return nil if renewable? || renewal || !(active? || expired?) || expires_at.nil?
+
+    (expires_at - RENEWAL_WINDOW).to_date
+  end
+
+  # What the desk reads off this term, in one word — the same rules as the
+  # work lists above (scope for scope):
+  #
+  #   cancelled   ended on purpose
+  #   paused      on hold (#pause!)
+  #   expired     its end has passed (lapsed)
+  #   upcoming    sold, not begun — a renewal waiting its turn
+  #   expiring    running, and time to renew it (to_renew)
+  #   active      running
+  def state
+    return "cancelled" if cancelled?
+    return "paused" if paused?
+    return "expired" if expired? || (expires_at.present? && expires_at < Time.current)
+    return "upcoming" if starts_at.present? && starts_at > Time.current
+    return "expiring" if renewable?
+
+    "active"
+  end
+
+  # Whole days until it ends, counting today's remainder as one; nil when
+  # it has no end or is over.
+  def days_left
+    return nil if expires_at.nil? || expires_at < Time.current
+
+    ((expires_at - Time.current) / 1.day).ceil
   end
 
   def expiring_soon?(within: NOTIFY_WITHIN)
@@ -380,18 +463,25 @@ class Contract < ApplicationRecord
   end
 
   def refuse_renewal!
-    reason = renewal_refusal
-    raise Refused, reason if reason
+    message, options = renewal_refusal
+    raise Refused.new(message, **options) if message
   end
 
-  # Why this term cannot be renewed, or nil when it can.
+  # Why this term cannot be renewed — [message, key:, params] for Refused —
+  # or nil when it can.
   def renewal_refusal
-    return "Only an active or expired subscription can be renewed." unless active? || expired?
-    return "This subscription has already been renewed — renew the latest term instead." if renewal
+    unless active? || expired?
+      return [ "Only an active or expired subscription can be renewed.", { key: "contracts.errors.renew_status" } ]
+    end
+    if renewal
+      return [ "This subscription has already been renewed — renew the latest term instead.",
+               { key: "contracts.errors.already_renewed" } ]
+    end
     return nil if sessions_used_up?
     return nil if expires_at.present? && expires_at <= RENEWAL_WINDOW.from_now
 
-    "This subscription can be renewed from #{RENEWAL_WINDOW.in_days.to_i} days before it ends."
+    [ "This subscription can be renewed from #{RENEWAL_WINDOW.in_days.to_i} days before it ends.",
+      { key: "contracts.errors.renew_too_early", date: expires_at && (expires_at - RENEWAL_WINDOW).to_date } ]
   end
 
   def sessions_used_up?

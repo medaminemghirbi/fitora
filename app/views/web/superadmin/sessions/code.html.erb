@@ -1,0 +1,54 @@
+<%# ng: pro-login %>
+<%# ng-host: pro-login %>
+<%# The console's sign-in, second step: the authenticator app's six-digit
+    code. The first time, the app is set up here first — a QR code to scan,
+    or its key to type in — and the code it then shows proves it was. %>
+<% content_for :auth_panel do %>
+  <%= render "web/superadmin/sessions/panel" %>
+<% end %>
+<app-auth-pro-shell>
+  <%= render layout: "web/shared/auth_pro_shell" do %>
+    <% if @secret %>
+      <h1 class="auth-title"><%= ngt("superadmin.two_factor.setup_title") %></h1>
+      <p class="auth-subtitle"><%= ngt("superadmin.two_factor.setup_subtitle") %></p>
+    <% else %>
+      <h1 class="auth-title"><%= ngt("superadmin.two_factor.code_title") %></h1>
+      <p class="auth-subtitle"><%= ngt("superadmin.two_factor.code_subtitle") %></p>
+    <% end %>
+    <%= render "web/superadmin/sessions/steps", step: 2 %>
+
+    <% if @secret %>
+      <ol class="sa-2fa-setup">
+        <li><%= ngt("superadmin.two_factor.setup_step_1") %></li>
+        <li>
+          <%= ngt("superadmin.two_factor.setup_step_2") %>
+          <div class="sa-2fa-qr"><%= raw @qr_svg %></div>
+          <p class="sa-2fa-manual">
+            <%= ngt("superadmin.two_factor.setup_manual") %>
+            <code dir="ltr"><%= @secret.scan(/.{1,4}/).join(" ") %></code>
+          </p>
+        </li>
+        <li><%= ngt("superadmin.two_factor.setup_step_3") %></li>
+      </ol>
+    <% end %>
+
+    <form action="<%= web_superadmin_sign_in_code_path %>" method="post" novalidate data-controller="form-checks" data-form-checks-scope-value="pro-login" data-action="submit->form-checks#submit turbo:submit-start->form-checks#busy turbo:submit-end->form-checks#idle">
+      <% if @error %>
+        <div class="alert alert-danger" role="alert"><%= @error %></div>
+      <% end %>
+
+      <div class="mb-3">
+        <label for="otp"><%= ngt("superadmin.two_factor.code_label") %></label>
+        <input id="otp" name="otp" type="text" class="form-control sa-2fa-input" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]*" maxlength="7" dir="ltr" autofocus placeholder="000000" data-checks="required" data-check-message="<%= ngt("common.required") %>">
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100 mt-2" data-form-checks-target="submit">
+        <%= @secret ? ngt("superadmin.two_factor.activate") : ngt("superadmin.two_factor.verify") %>
+      </button>
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+    </form>
+
+    <p class="auth-divider"><%= ngt("superadmin.two_factor.signed_in_as", email: @user.email) %></p>
+    <a href="<%= web_superadmin_sign_in_path %>" class="auth-btn-outline"><%= ngt("superadmin.two_factor.restart") %></a>
+  <% end %>
+</app-auth-pro-shell>

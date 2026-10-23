@@ -77,10 +77,6 @@
   <button type="button" class="btn btn-outline-secondary" data-action="client-profile#checkIn">
     <i class="bi bi-check2-circle"></i> <%= ngt("clients.check_in") %>
   </button>
-  <button type="button" class="btn btn-outline-secondary" data-action="client-profile#openContract">
-    <i class="bi bi-file-earmark-text"></i>
-    <%= ngt(contract ? "contracts.renew" : "clients.add_subscription") %>
-  </button>
   <button type="button" class="btn btn-outline-secondary" data-action="client-profile#openBooking">
     <i class="bi bi-calendar-plus"></i> <%= ngt("clients.add_booking") %>
   </button>
@@ -105,12 +101,6 @@
         </button>
       <% end %>
     <% end %>
-    <% if contract && contract[:status] == "active" %>
-      <button type="button" class="fx-menu-item" data-contract-id="<%= contract[:id] %>" data-paused="<%= contract[:paused] %>" data-action="client-profile#togglePause">
-        <i class="bi <%= contract[:paused] ? "bi-play-circle" : "bi-pause-circle" %>"></i>
-        <%= ngt(contract[:paused] ? "contracts.resume" : "contracts.pause") %>
-      </button>
-    <% end %>
     <button type="button" class="fx-menu-item" data-action="client-profile#openHealth">
       <i class="bi bi-heart-pulse"></i> <%= ngt("clients.health_edit") %>
     </button>
@@ -121,6 +111,57 @@
     <% end %>
   <% end %>
 </div>
+
+<%# The subscription: what is current (or the last one that ended), each
+    with what to do about it — the subscriptions page's own actions. %>
+<% current = subscription_current(p[:contracts]) %>
+<section class="abo-profile" aria-labelledby="abo-profile-h">
+  <header class="abo-profile-head">
+    <h2 id="abo-profile-h" class="prof-label"><%= ngt("contracts.profile_title") %></h2>
+    <% if may_sell? && current.any? %>
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-action="subscriptions#sell">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i> <%= ngt("contracts.sell_another") %>
+      </button>
+    <% end %>
+  </header>
+  <% if current.empty? %>
+    <div class="abo-profile-empty">
+      <p><%= ngt("contracts.profile_none") %></p>
+      <% if may_sell? %>
+        <button type="button" class="btn btn-primary btn-sm" data-action="subscriptions#sell">
+          <i class="bi bi-plus-lg" aria-hidden="true"></i> <%= ngt("contracts.sell") %>
+        </button>
+      <% end %>
+    </div>
+  <% else %>
+    <% current.each do |m| %>
+      <article class="abo-term" data-state="<%= m[:state] %>">
+        <span class="abo-dot" style="background: <%= m.dig(:plan, :color) %>;" aria-hidden="true"></span>
+        <div class="abo-term-body">
+          <p class="abo-term-title"><%= subscription_label(m) %></p>
+          <p class="abo-sub">
+            <span class="fx-num" dir="ltr"><%= ng_date(m[:starts_at], "dd/MM/yy") %> → <%= ng_date(m[:expires_at], "dd/MM/yy") %></span>
+            <% [ subscription_period_note(m), subscription_sessions_note(m) ].compact.each do |note| %> · <%= note %><% end %>
+          </p>
+          <% if (renewal = m[:renewal]) %>
+            <p class="abo-sub abo-renewed"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> <%= ngt("contracts.renewed_until", date: ng_date(renewal[:expires_at], "dd/MM/yy")) %></p>
+          <% end %>
+        </div>
+        <div class="abo-term-status">
+          <span class="abo-state" data-state="<%= m[:state] %>"><%= subscription_state_label(m) %></span>
+          <% if m[:amount_due].to_f > 0 && m[:state] != "cancelled" %>
+            <span class="abo-due"><%= ngt("contracts.due_amount", amount: ng_money(m[:amount_due], m.dig(:plan, :currency))) %></span>
+          <% else %>
+            <span class="abo-paid"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> <%= ngt("contracts.paid") %></span>
+          <% end %>
+        </div>
+        <% if may_sell? %>
+          <%= render "web/admin/contracts/row_actions", m: m, profile: true %>
+        <% end %>
+      </article>
+    <% end %>
+  <% end %>
+</section>
 
 <section class="prof-health<%= " has-notes" if c[:health_notes].to_s != "" %>">
   <i class="bi bi-heart-pulse prof-health-icon" aria-hidden="true"></i>
@@ -183,11 +224,12 @@
 <div class="prof-foot">
   <% if p[:contracts].any? %>
     <section>
-      <h2 class="prof-label"><%= ngt("clients.tab_contracts") %></h2>
+      <h2 class="prof-label"><%= ngt("contracts.history_title") %></h2>
       <ul class="prof-history">
         <% p[:contracts].each do |row| %>
           <li>
-            <span><%= row.dig(:plan, :name) %></span>
+            <span><%= subscription_label(row) %></span>
+            <span class="abo-state abo-state--small" data-state="<%= row[:state] %>"><%= subscription_state_label(row) %></span>
             <span class="fx-contract-ref" dir="ltr"><%= row[:invoice_ref] %></span>
             <span class="fx-muted"><%= ng_date(row[:starts_at], "MMM y") %></span>
             <span class="prof-history-docs">

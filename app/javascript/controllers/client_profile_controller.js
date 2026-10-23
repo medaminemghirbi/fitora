@@ -5,36 +5,16 @@ import { csrfToken, downloadBlob, interpolate, money, scoped } from "../lib/ng"
 import { toast } from "../lib/toast"
 
 // ClientProfileComponent's actions. Each write goes to the server, then
-// load(): the file drawn again from what it now holds. The four dialogs are
-// filled here when they open — a subscription (the formule's items, its
-// price after the discount, collecting now), a booking (the day's sessions
-// for an activity, how the seat is paid), a payment (what is owed, one line
-// each), the health file.
+// load(): the file drawn again from what it now holds — also after the
+// subscriptions controller changed a subscription (subscriptions:changed).
+// The three dialogs are filled here when they open — a booking (the day's
+// sessions for an activity, how the seat is paid), a payment (what is owed,
+// one line each), the health file.
 const SCOPE = "client-profile"
-
-// sellableItems (contract-type.model.ts): the formule's activities, then its packs.
-function sellableItems(plan) {
-  if (!plan) return []
-  const activities = (plan.activity_prices ?? []).map((row) => ({
-    kind: "activity", id: row.activity_id, key: `activity:${row.activity_id}`,
-    label: row.activity_emoji ? `${row.activity_emoji} ${row.activity_name}` : row.activity_name, price: Number(row.price),
-  }))
-  const packs = (plan.pack_prices ?? []).map((row) => ({
-    kind: "pack", id: row.pack_id, key: `pack:${row.pack_id}`,
-    label: `${row.pack_name} (${row.activity_names.join(" + ")})`, price: Number(row.price),
-  }))
-  return [...activities, ...packs]
-}
-
-function sellableTarget(key) {
-  if (!key) return {}
-  const [kind, id] = key.split(":")
-  return kind === "pack" ? { pack_id: id } : { activity_id: id }
-}
 
 export default class extends Controller {
   static targets = ["data", "noActivity"]
-  static values = { url: String, paymentsUrl: String, attendanceUrl: String, contractsUrl: String, clientsUrl: String, plans: Array, dropIn: Boolean, today: String, labels: Object }
+  static values = { url: String, paymentsUrl: String, attendanceUrl: String, clientsUrl: String, dropIn: Boolean, today: String, labels: Object }
 
   connect() {
     this.read()
@@ -116,20 +96,6 @@ export default class extends Controller {
     Turbo.visit(this.clientsUrlValue)
   }
 
-  async togglePause(event) {
-    const button = event.currentTarget
-    const id = button.dataset.contractId
-    const pausing = button.dataset.paused !== "true"
-    if (pausing) {
-      const ok = await confirmAsk({ title: this.labelsValue.pause_title, body: interpolate(this.labelsValue.pause_body, { name: this.profile.client.full_name }) })
-      if (!ok) return
-    }
-    const result = await this.request("POST", `${this.contractsUrlValue}/${id}/${pausing ? "pause" : "resume"}`)
-    if (!result.ok) return toast("error", result.error ?? this.labelsValue.error)
-    toast("success", pausing ? this.labelsValue.paused_done : this.labelsValue.resumed_done)
-    this.load()
-  }
-
   async download(event) {
     const button = event.currentTarget
     const response = await fetch(button.dataset.url, { credentials: "same-origin" }).catch(() => null)
@@ -138,10 +104,6 @@ export default class extends Controller {
   }
 
   // ---- the dialogs ----------------------------------------------------------------
-
-  openContract() {
-    window.dispatchEvent(new CustomEvent("profile-contract:open"))
-  }
 
   openBooking() {
     window.dispatchEvent(new CustomEvent("profile-booking:open"))
@@ -158,115 +120,9 @@ export default class extends Controller {
   fill(event) {
     const { name, panel } = event.detail
     this.saving = false
-    if (name === "profile-contract") this.fillContract(panel)
-    else if (name === "profile-booking") this.fillBooking(panel)
+    if (name === "profile-booking") this.fillBooking(panel)
     else if (name === "profile-payment") this.fillPayment(panel)
     else if (name === "profile-health") this.fillHealth(panel)
-  }
-
-  // ---- a subscription ----------------------------------------------------------------
-
-  fillContract(panel) {
-    const form = panel.querySelector('[data-profile-form="contract"]')
-    const f = form.elements
-    f.starts_on.value = this.todayValue
-    const extras = form.querySelector("template[data-plan-extras]").content
-    this.contract = {
-      form, panel,
-      noPrice: extras.querySelector("[data-no-price]"), total: extras.querySelector("[data-total]"),
-      collect: extras.querySelector("[data-collect]"), hint: extras.querySelector("[data-collect-hint]"),
-    }
-    this.contract.collect.querySelector("input").addEventListener("change", () => this.drawContract())
-    f.contract_type_id.addEventListener("change", () => {
-      // A new formule may not sell what was picked; when it sells one thing, that is the answer.
-      const items = sellableItems(this.plan)
-      if (!items.some((i) => i.key === f.namedItem("item").value)) this.chosenItem = items.length === 1 ? items[0].key : ""
-      this.drawItems()
-      this.drawContract()
-    })
-    // namedItem: "item" is also HTMLFormControlsCollection's own method.
-    f.namedItem("item").addEventListener("change", () => {
-      this.chosenItem = f.namedItem("item").value
-      this.drawContract()
-    })
-    f.discount.addEventListener("input", () => this.drawContract())
-    form.addEventListener("submit", (e) => {
-      e.preventDefault()
-      this.submitContract()
-    })
-    this.chosenItem = ""
-  }
-
-  get plan() {
-    return this.plansValue.find((p) => p.id === this.contract?.form.elements.contract_type_id.value) ?? null
-  }
-
-  // The item list: "—" (or "pick a formule first"), the activities, then the packs.
-  drawItems() {
-    const select = this.contract.form.elements.namedItem("item")
-    const plan = this.plan
-    const items = sellableItems(plan)
-    const option = (value, text, disabled = false) => {
-      const o = scoped(document.createElement("option"), SCOPE)
-      o.value = value
-      o.textContent = text
-      o.disabled = disabled
-      return o
-    }
-    const first = option("", plan ? "—" : this.labelsValue.pick_plan_first, true)
-    const activities = select.querySelector("optgroup")
-    activities.replaceChildren(...items.filter((i) => i.kind === "activity").map((i) => option(i.key, i.label)))
-    const children = [first, activities]
-    if (plan?.pack_prices?.length) {
-      const packs = scoped(document.createElement("optgroup"), SCOPE)
-      packs.label = this.labelsValue.packs
-      packs.append(...items.filter((i) => i.kind === "pack").map((i) => option(i.key, i.label)))
-      children.push(packs)
-    }
-    select.replaceChildren(...children)
-    select.value = this.chosenItem
-    if (select.value !== this.chosenItem) select.value = ""
-  }
-
-  get price() {
-    return sellableItems(this.plan).find((i) => i.key === this.chosenItem)?.price ?? null
-  }
-
-  get total() {
-    const price = this.price
-    if (price === null) return 0
-    return Math.max(0, price - (Number(this.contract.form.elements.discount.value) || 0))
-  }
-
-  // Under the dates: nothing until a formule is picked; then the missing
-  // price, or the total and "collect now" (with what it records).
-  drawContract() {
-    const { form, noPrice, total, collect, hint } = this.contract
-    const anchor = form.querySelector(":scope > .row")
-    for (const node of [noPrice, total, collect, hint]) node.remove()
-    const plan = this.plan
-    const save = form.querySelector("[data-save]")
-    save.disabled = this.saving || this.price === null
-    if (!plan) return
-    if (this.price === null) return anchor.after(noPrice)
-    const symbol = this.labelsValue.symbols[plan.currency] ?? plan.currency
-    total.querySelector("strong").textContent = money(this.total, symbol)
-    anchor.after(total, collect)
-    if (collect.querySelector("input").checked) {
-      hint.textContent = ` ${interpolate(this.labelsValue.collect_hint, { amount: money(this.total, symbol) })} `
-      collect.append(hint)
-    }
-  }
-
-  async submitContract() {
-    const { form, panel } = this.contract
-    const f = form.elements
-    if (!f.contract_type_id.value || !this.chosenItem || !f.starts_on.value || this.saving) return
-    const collect = this.contract.collect.querySelector("input").checked
-    await this.save(panel, form, "profile-contract", "POST", `${this.urlValue}/contracts`, {
-      contract_type_id: f.contract_type_id.value, ...sellableTarget(this.chosenItem), starts_on: f.starts_on.value,
-      discount: Number(f.discount.value) || 0, collect_payment: collect || undefined, payment_method: collect ? "cash" : undefined,
-    }, this.labelsValue.save, this.labelsValue.abo_create)
   }
 
   // ---- a booking ----------------------------------------------------------------------
@@ -363,7 +219,8 @@ export default class extends Controller {
       if (!select.value || this.saving) return
       const [kind, id] = select.value.split(":")
       this.save(panel, form, "profile-payment", "POST", this.paymentsUrlValue, {
-        client_id: this.profile.client.id, payment_method: "cash",
+        client_id: this.profile.client.id,
+        payment_method: form.querySelector('input[name="payment_method"]:checked')?.value ?? "cash",
         contract_id: kind === "contract" ? id : undefined, booking_id: kind === "booking" ? id : undefined,
       }, this.labelsValue.save, ` ${this.labelsValue.save} `)
     })
@@ -405,7 +262,6 @@ export default class extends Controller {
     }
     button.disabled = false
     button.textContent = idleLabel
-    if (name === "profile-contract") this.drawContract()
     this.showError(panel, result.error ?? this.labelsValue.error)
   }
 

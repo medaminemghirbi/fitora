@@ -7,7 +7,7 @@
 <% now = Time.current %>
 <% targets = {
      "expiring" => [ "contracts", { status: "expiring" }, "bi-hourglass-split", "warning" ],
-     "unpaid" => [ "contracts", { payment: "unpaid" }, "bi-cash-coin", "danger" ],
+     "unpaid" => [ "contracts", { status: "unpaid" }, "bi-cash-coin", "danger" ],
      "expired" => [ "contracts", { status: "expired" }, "bi-x-octagon", "danger" ],
      "sessions_without_coach" => [ "calendar", {}, "bi-person-dash", "warning" ]
    } %>

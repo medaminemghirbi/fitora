@@ -51,15 +51,44 @@ module Contracts
       contract
     end
 
-    # Sells the next term, a new contract linked to this one.
+    # Sells the next term, a new contract linked to this one — with the
+    # discount the request names (Contract#renew! decides when it names
+    # none), and collected at once when it asks, as a sale can be.
     def self.renew(contract, company:, by:, params:)
       plan, activity, pack = renewal_formule(contract, company, params)
-      renewal = contract.renew!(contract_type: plan, activity: activity, pack: pack, created_by: by)
-      AuditLog.record!(
-        company: company, user: by, action: "contract.renewed",
-        auditable: renewal, metadata: { client: contract.client.full_name, plan: plan.name, renewed_from: contract.id }
-      )
-      renewal
+      Contract.transaction do
+        renewal = contract.renew!(contract_type: plan, activity: activity, pack: pack, created_by: by,
+                                  discount: params[:discount].presence)
+        AuditLog.record!(
+          company: company, user: by, action: "contract.renewed",
+          auditable: renewal, metadata: { client: contract.client.full_name, plan: plan.name, renewed_from: contract.id }
+        )
+        if ActiveModel::Type::Boolean.new.cast(params[:collect_payment])
+          Payments::Actions.record(renewal.client, company: company, by: by,
+                                                   params: { contract_id: renewal.id, payment_method: payment_method(params) })
+        end
+        renewal
+      end
+    end
+
+    # Its dates, or its discount while unpaid (Contract#update_term!).
+    def self.update(contract, company:, by:, params:)
+      contract.update_term!(starts_on: params[:starts_on], expires_on: params[:expires_on], discount: params[:discount])
+      audit(contract, company, by, "contract.updated")
+    end
+
+    # Ended on purpose: nothing books against it any more, and whatever it
+    # still owed is forgiven. Payments already taken stay where they are.
+    def self.cancel(contract, company:, by:)
+      contract.cancel!
+      audit(contract, company, by, "contract.cancelled")
+    end
+
+    # A method the gym takes money by (Payment::SELECTABLE_METHODS), cash
+    # unless the request names another.
+    def self.payment_method(params)
+      method = params[:payment_method].to_s
+      Payment::SELECTABLE_METHODS.include?(method) ? method : "cash"
     end
 
     # Membership on hold (Contract#pause!).

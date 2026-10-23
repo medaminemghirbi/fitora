@@ -1,7 +1,8 @@
-<div class="fx-stats-bar" id="ct-stats">
-  <dl class="fx-stats">
-    <%# Only for a login holding `revenue`; everyone sees what expires. %>
-    <% if totals.key?(:portfolio_value) %>
+<%# What the running subscriptions are worth and what is owed — for a login
+    holding `revenue` only (Contracts::ListQuery#totals). %>
+<div id="abo-totals">
+  <% if totals.key?(:portfolio_value) %>
+    <dl class="abo-totals">
       <div>
         <dt><%= ngt("contracts.portfolio_value") %></dt>
         <dd><%= ng_money(totals[:portfolio_value], currency) %></dd>
@@ -10,14 +11,10 @@
         <dt><%= ngt("contracts.average_basket") %></dt>
         <dd><%= ng_money(totals[:average_basket], currency) %></dd>
       </div>
-      <div>
+      <div class="<%= "is-owed" if totals[:unpaid_value].to_f > 0 %>">
         <dt><%= ngt("contracts.unpaid_value") %></dt>
         <dd><%= ng_money(totals[:unpaid_value], currency) %></dd>
       </div>
-    <% end %>
-    <div>
-      <dt><%= ngt("contracts.expiring_soon") %></dt>
-      <dd class="text-warning-token"><%= totals[:expiring_soon] %></dd>
-    </div>
-  </dl>
+    </dl>
+  <% end %>
 </div>

@@ -1,32 +1,42 @@
 module Web
   module Admin
-    # The salle's contracts (ContractsComponent): listed by
-    # Contracts::ListQuery; renewed, paused and resumed through
-    # Contracts::Actions; settled in cash through Payments::Actions — the
-    # same rules /api/v1/contracts and /api/v1/payments apply, with the same
-    # capability checks and the same refusals.
+    # The salle's subscriptions: the desk's work lists (Contracts::ListQuery)
+    # and everything it does to one — sell, renew, collect, edit, pause,
+    # resume, cancel — through Contracts::Actions and Payments::Actions, the
+    # rules /api/v1/contracts and /api/v1/payments apply, behind the same
+    # capabilities. The dialogs are the subscriptions controller's, shared
+    # with the member's file; a refusal answers in the page's language.
     class ContractsController < BaseController
       PER_PAGE = 20
 
+      # The lists, as the tabs show them: [status, label, tone, shown when
+      # empty]. The work comes first; the lists that are usually empty only
+      # show while they hold something (or are the one open).
+      LISTS = [
+        [ "", "contracts.list_all", "neutral", true ],
+        [ "active", "contracts.list_active", "success", true ],
+        [ "expiring", "contracts.list_expiring", "warning", true ],
+        [ "expired", "contracts.list_expired", "danger", true ],
+        [ "unpaid", "contracts.list_unpaid", "danger", true ],
+        [ "upcoming", "contracts.list_upcoming", "info", false ],
+        [ "paused", "contracts.list_paused", "info", false ],
+        [ "cancelled", "contracts.list_cancelled", "neutral", false ]
+      ].freeze
+
       before_action -> { require_capability(:contracts) }, only: :index
       before_action :refuse_without_contracts, except: :index
-      before_action :set_contract, except: :index
+      before_action :refuse_collect_without_payments, only: %i[create renew collect]
+      before_action :set_contract, except: %i[index create members]
 
-      # Four colours across the whole app: green in order, orange worth
-      # watching, red needs doing, grey no longer applies (statusOptions).
-      STATUSES = [
-        [ "", "clients.filter_all", "all", "var(--color-primary)" ],
-        [ "active", "contract.status_active", "active", "var(--color-success)" ],
-        [ "expiring", "contract.status_expiring", "expiring", "var(--color-warning)" ],
-        [ "expired", "contract.status_expired", "expired", "var(--color-danger)" ],
-        [ "pending", "contract.status_pending", "pending", "var(--color-info)" ],
-        [ "paused", "contract.status_paused", "paused", "var(--color-info)" ],
-        [ "cancelled", "contract.status_cancelled", "cancelled", "var(--color-muted)" ]
-      ].freeze
-      helper_method :contract_statuses, :currency
+      rescue_from ApplicationRecord::Refused, with: ->(refusal) { render json: { error: refusal_message(refusal) }, status: :unprocessable_content }
+      rescue_from Contracts::Actions::NotFound, with: ->(missing) { render json: { error: missing.message }, status: :not_found }
+      rescue_from ActiveRecord::RecordInvalid, with: ->(invalid) { render json: { error: invalid.record.errors.full_messages.first }, status: :unprocessable_content }
+      rescue_from Date::Error, with: -> { render json: { error: page_words("contracts.errors.invalid_date") }, status: :unprocessable_content }
+
+      helper_method :currency
 
       def index
-        list = Contracts::ListQuery.new(current_company, list_params, revenue: capability?(:revenue))
+        list = Contracts::ListQuery.new(current_company, params.permit(*Contracts::ListQuery::FILTERS).to_h, revenue: capability?(:revenue))
         @filters = list.params
         @page = [ params[:page].to_i, 1 ].max
         scope = list.scope
@@ -36,56 +46,73 @@ module Web
         @counts = list.counts
         @plan_counts = list.plan_counts
         @totals = list.totals
-        # Every plan, as ContractTypesService#list returns them: the tabs and
-        # the formules a renewal can move onto.
-        @plans = CatalogueListing.plans(current_company).map { |p| ContractTypeSerializer.new(p).as_json }
+        @plans = CatalogueListing.plans(current_company).map { |p| { id: p.id, name: p.name, color: p.color, active: p.active } }
         respond_to do |format|
           format.html
           format.turbo_stream
         end
       end
 
-      def renew
-        Contracts::Actions.renew(@contract, company: current_company, by: current_user, params: params)
+      # The sale dialog's member search: who they are, and what they already
+      # hold, so the dialog can say when a sale would overlap it.
+      def members
+        clients = Clients::ListQuery.new(current_company, { search: params[:search] }).scope.limit(PER_PAGE).to_a
+        held = current_company.contracts.currently_active.where(client_id: clients.map(&:id))
+                              .includes(:contract_type, :activity, :pack).group_by(&:client_id)
+        render json: {
+          members: clients.map { |c| helpers.subscription_member(c, held.fetch(c.id, [])) }
+        }
+      end
+
+      # "Vendre un abonnement": the offer picked, from the day picked, paid
+      # now or later.
+      def create
+        client = current_company.clients.find_by(id: params[:client_id])
+        return render(json: { error: page_words("contracts.errors.member_not_found") }, status: :not_found) if client.nil?
+
+        Contracts::Actions.sell(client, company: current_company, by: current_user,
+                                        params: sale_params.merge(payment_method: Contracts::Actions.payment_method(params)))
+        head :created
+      end
+
+      # "Modifier": the dates, and the discount while unpaid.
+      def update
+        Contracts::Actions.update(@contract, company: current_company, by: current_user, params: params.permit(:starts_on, :expires_on, :discount))
         head :no_content
-      rescue Contracts::Actions::NotFound => e
-        render json: { error: e.message }, status: :not_found
-      rescue ApplicationRecord::Refused => e
-        render json: { error: e.message }, status: :unprocessable_content
+      end
+
+      def renew
+        Contracts::Actions.renew(@contract, company: current_company, by: current_user, params: sale_params)
+        head :no_content
       end
 
       def pause
         Contracts::Actions.pause(@contract, company: current_company, by: current_user)
         head :no_content
-      rescue ApplicationRecord::Refused => e
-        render json: { error: e.message }, status: :unprocessable_content
       end
 
       def resume
         Contracts::Actions.resume(@contract, company: current_company, by: current_user)
         head :no_content
-      rescue ApplicationRecord::Refused => e
-        render json: { error: e.message }, status: :unprocessable_content
       end
 
-      # The row's "Encaisser": the whole amount, in cash — what the Angular
-      # page sends to POST /api/v1/payments, which asks `payments`.
-      def collect
-        return render(json: { error: "You are not allowed to perform this action" }, status: :forbidden) unless capability?(:payments)
+      # "Résilier".
+      def cancel
+        Contracts::Actions.cancel(@contract, company: current_company, by: current_user)
+        head :no_content
+      end
 
+      # "Encaisser": the whole amount, by the method the desk picked.
+      def collect
         Payments::Actions.record(
           @contract.client, company: current_company, by: current_user,
-          params: { payment_method: "cash", contract_id: @contract.id }
+          params: { payment_method: Contracts::Actions.payment_method(params), contract_id: @contract.id }
         )
         head :no_content
-      rescue ApplicationRecord::Refused => e
-        render json: { error: e.message }, status: :unprocessable_content
-      rescue ActiveRecord::RecordInvalid => e
-        render json: { error: e.record.errors.full_messages.first }, status: :unprocessable_content
       end
 
-      # The documents, fetched by the page and saved under the Angular names
-      # (contrat-<ref>.pdf / facture-<ref>.pdf).
+      # The documents, fetched by the page and saved as contrat-<ref>.pdf /
+      # facture-<ref>.pdf.
       def agreement
         send_data Receipts::ContractAgreementPdf.call(contract: @contract), type: "application/pdf", disposition: "attachment",
                   filename: "contrat-#{@contract.invoice_ref}.pdf"
@@ -98,26 +125,23 @@ module Web
 
       private
 
-      # The Angular page reads ?status= and ?payment= (unpaid or paid only)
-      # from the URL; the plan and the search it keeps in the URL as the
-      # other migrated lists do (MIGRATION_AUDIT M-05).
-      def list_params
-        filters = params.permit(*Contracts::ListQuery::FILTERS).to_h
-        filters.delete("payment") unless %w[unpaid paid].include?(filters["payment"])
-        filters
+      def sale_params
+        params.permit(:contract_type_id, :activity_id, :pack_id, :starts_on, :discount, :collect_payment, :payment_method)
       end
 
       def refuse_without_contracts
-        head :forbidden unless capability?(:contracts)
+        render json: { error: page_words("contracts.errors.not_allowed") }, status: :forbidden unless capability?(:contracts)
+      end
+
+      # Taking money is `payments`, whichever dialog asks for it.
+      def refuse_collect_without_payments
+        collecting = action_name == "collect" || ActiveModel::Type::Boolean.new.cast(params[:collect_payment])
+        render json: { error: page_words("contracts.errors.not_allowed") }, status: :forbidden if collecting && !may_collect?
       end
 
       def set_contract
         @contract = current_company.contracts.find_by(id: params[:id])
-        head :not_found if @contract.nil?
-      end
-
-      def contract_statuses
-        STATUSES
+        render json: { error: page_words("contracts.errors.not_found") }, status: :not_found if @contract.nil?
       end
 
       def currency

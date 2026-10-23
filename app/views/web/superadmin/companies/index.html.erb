@@ -1,5 +1,5 @@
-<%# The gyms (Web::DataTable): every salle on Fitora with its admin, its
-    account's access, trial and arrears, plan and price — searched by name,
+<%# The gyms (Web::DataTable): every salle on Fitora with its admin and
+    how to reach them, where it is, its account's access, trial and arrears, plan and price — searched by name,
     city or admin, filtered on access and plan, sorted, paged. A row opens
     the gym. The shut ones are counted at the toolbar's end, a click from
     listing only them. %>
@@ -30,6 +30,7 @@
           <tr>
             <%= superadmin_sort_th @table, :name, ngt("superadmin.console.gym"), url %>
             <%= superadmin_sort_th @table, :admin, ngt("superadmin.admin"), url %>
+            <th scope="col"><%= ngt("superadmin.console.location") %></th>
             <th scope="col"><%= ngt("common.status") %></th>
             <th scope="col"><%= ngt("superadmin.plan_label") %></th>
             <th scope="col" class="sa-num"><%= ngt("superadmin.total_month") %></th>

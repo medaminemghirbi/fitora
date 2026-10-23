@@ -75,6 +75,10 @@ gem "matrix"
 # so the key itself never leaves the app to a third-party QR API.
 gem "rqrcode"
 
+# The superadmin console's second factor: the six-digit codes of an
+# authenticator app (TOTP, RFC 6238), checked by SuperadminTwoFactor.
+gem "rotp", "~> 6.3"
+
 # Background jobs (expiry scans, notification fan-out) + the ActionCable
 # Redis pub/sub backend for real-time notifications. Redis already runs
 # locally; set REDIS_URL to point elsewhere.

@@ -1,4 +1,5 @@
 require_relative "demo/studio_lumen"
+require_relative "demo/abonnements"
 
 # Studio Lumen, the demo studio (lib/tasks/demo/studio_lumen.rb). Two ways
 # to get it, neither of them ever in production:
@@ -9,6 +10,10 @@ require_relative "demo/studio_lumen"
 #
 #   DATABASE_URL=postgres:///backend_demo bin/rails db:prepare demo:seed
 #     A database of its own, emptied first — the clean slate to present on.
+#
+# And a gym to test the subscriptions pages on, beside the rest:
+#
+#   bin/rails demo:abonnements
 #
 # Logins go to tmp/demo.json.
 namespace :demo do
@@ -21,6 +26,19 @@ namespace :demo do
       Demo::StudioLumen.build!
     end
     Demo::StudioLumen.announce(fixtures)
+  end
+
+  desc "Add (or rebuild) Salle Test Abonnements — every subscription state, to try the subscriptions pages on — development only"
+  task abonnements: :environment do
+    abort("demo:abonnements only runs in development (RAILS_ENV is #{Rails.env}).") unless Rails.env.development?
+
+    logins = ActiveRecord::Base.transaction do
+      Demo::Abonnements.remove!
+      Demo::Abonnements.build!
+    end
+    company = Company.joins(:admin).find_by!(users: { email: Demo::Abonnements::ADMIN_EMAIL })
+    puts "Salle Test Abonnements ready — #{company.memberships.count} members, #{company.contracts.count} subscriptions."
+    puts JSON.pretty_generate(logins)
   end
 
   desc "Reset the demo database to Studio Lumen (DATABASE_URL must name a *_demo database)"

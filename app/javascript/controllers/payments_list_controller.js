@@ -6,7 +6,7 @@ import { toast } from "../lib/toast"
 // AdminPaymentsComponent: the list (ServerListController) plus what its
 // signals redraw at once — the chips, "reset", the active method tab, the
 // checked pill — the refund (the admin's, confirmed first), and the record
-// dialog: find the member, pick what they owe, take it in cash.
+// dialog: find the member, pick what they owe, say how it was paid.
 export default class extends ServerListController {
   static targets = [...ServerListController.targets, "rail"]
   static values = { ...ServerListController.values, labels: Object, open: Boolean }
@@ -146,6 +146,7 @@ export default class extends ServerListController {
       client_id: this.client.id,
       amount: Number(amount.value),
       notes: notes.value || undefined,
+      payment_method: this.form.querySelector('input[name="payment_method"]:checked')?.value ?? "cash",
       contract_id: kind === "contract" ? id : undefined,
       booking_id: kind === "booking" ? id : undefined,
     })

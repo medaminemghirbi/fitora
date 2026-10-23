@@ -47,7 +47,7 @@ module Api
 
       # PATCH /api/v1/contracts/:id — edit this term (dates, discount)
       def update
-        @contract.update_term!(starts_on: params[:starts_on], expires_on: params[:expires_on], discount: params[:discount])
+        Contracts::Actions.update(@contract, company: current_company, by: current_user, params: params)
         render json: { contract: ContractSerializer.new(@contract.reload).as_json }
       end
 
@@ -64,11 +64,7 @@ module Api
 
       # POST /api/v1/contracts/:id/cancel
       def cancel
-        @contract.cancel!
-        AuditLog.record!(
-          company: current_company, user: current_user, action: "contract.cancelled",
-          auditable: @contract, metadata: { client: @contract.client.full_name, plan: @contract.contract_type.name }
-        )
+        Contracts::Actions.cancel(@contract, company: current_company, by: current_user)
         render json: { contract: ContractSerializer.new(@contract.reload).as_json }
       end
 

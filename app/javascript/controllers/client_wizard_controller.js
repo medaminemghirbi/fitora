@@ -5,11 +5,12 @@ import { csrfToken } from "../lib/ng"
 //
 //   1 who they are — first name, last name and phone required; the rest
 //     folded under "more details";
-//   2 what they buy — an activity or a pack first, then the plans that price
-//     it, then the start date, a discount and the total;
+//   2 what they buy — one offer (a formule for one activity or pack, at its
+//     price: the subscriptions dialogs' own list), then the start date, a
+//     discount and the total;
 //   3 whether they pay now — and how.
 //
-// Only the first step is compulsory: with no plan picked, step 2's button
+// Only the first step is compulsory: with no offer picked, step 2's button
 // finishes there. The state lives here, as it lives in the component's
 // signals and forms, and the markup is put in and taken out the way its
 // @if blocks are, from the <template>s _wizard.html.erb renders. Moving
@@ -20,9 +21,9 @@ import { csrfToken } from "../lib/ng"
 export default class extends Controller {
   static targets = [
     "actions", "cancel", "back", "primary", "finish", "stepsTemplate",
-    "identity", "details", "item", "plan", "noPlan", "pricing", "total", "payment", "method", "payLater"
+    "identity", "details", "offers", "pricing", "total", "payment", "method", "payLater"
   ]
-  static values = { catalogue: Object, today: String, labels: Object }
+  static values = { offers: Array, currencySymbol: String, today: String, labels: Object }
 
   static IDENTITY = ["first_name", "last_name", "phone", "email", "date_of_birth", "gender", "emergency_contact_name", "emergency_contact_phone", "notes"]
   static REQUIRED = ["first_name", "last_name", "phone"]
@@ -31,8 +32,7 @@ export default class extends Controller {
     this.step = 0
     this.moreDetails = false
     this.person = Object.fromEntries(this.constructor.IDENTITY.map((k) => [k, ""]))
-    this.selectedItem = ""
-    this.selectedPlanId = ""
+    this.offerKey = ""
     this.discount = 0
     this.startsOn = this.todayValue
     this.collect = true
@@ -46,48 +46,15 @@ export default class extends Controller {
     this.render()
   }
 
-  // ---- the catalogue, as the component reads it ------------------------
+  // ---- what is on sale ----------------------------------------------------
 
-  get plans() {
-    return this.catalogueValue.plans
-  }
-
-  get activities() {
-    return this.catalogueValue.activities
-  }
-
-  // sellableItems(plan): its activities, then its packs.
-  sellableItems(plan) {
-    if (!plan) return []
-    const activities = (plan.activity_prices ?? []).map((row) => ({ key: `activity:${row.activity_id}`, price: Number(row.price) }))
-    const packs = (plan.pack_prices ?? []).map((row) => ({ key: `pack:${row.pack_id}`, price: Number(row.price) }))
-    return [...activities, ...packs]
-  }
-
-  // The packs some plan sells, read off the plans (packsForSale).
-  get packsForSale() {
-    const labels = new Map()
-    for (const plan of this.plans) {
-      for (const row of plan.pack_prices ?? []) {
-        if (!labels.has(row.pack_id)) labels.set(row.pack_id, `${row.pack_name} (${row.activity_names.join(" + ")})`)
-      }
-    }
-    return [...labels].map(([id, label]) => ({ key: `pack:${id}`, label }))
-  }
-
-  get plansForItem() {
-    if (!this.selectedItem) return []
-    return this.plans.filter((p) => this.sellableItems(p).some((i) => i.key === this.selectedItem))
-  }
-
-  get basePrice() {
-    const plan = this.plans.find((p) => p.id === this.selectedPlanId)
-    return this.sellableItems(plan).find((i) => i.key === this.selectedItem)?.price ?? null
+  get offer() {
+    return this.offersValue.find((o) => o.key === this.offerKey) ?? null
   }
 
   get total() {
-    const base = this.basePrice
-    return base === null ? null : Math.max(base - (this.discount || 0), 0)
+    const offer = this.offer
+    return offer ? Math.max(offer.price - (this.discount || 0), 0) : null
   }
 
   get identityValid() {
@@ -97,7 +64,7 @@ export default class extends Controller {
   // canAdvance(): the step's own requirements, never a later step's.
   get canAdvance() {
     if (this.step === 0) return this.identityValid
-    if (this.step === 1) return !this.selectedPlanId || this.total !== null
+    if (this.step === 1) return !this.offer || this.total !== null
     return true
   }
 
@@ -113,15 +80,9 @@ export default class extends Controller {
     this.renderStep()
   }
 
-  itemChanged(event) {
-    this.selectedItem = event.target.value
-    // A plan that does not price the new activity or pack cannot stay.
-    if (!this.plansForItem.some((p) => p.id === this.selectedPlanId)) this.selectedPlanId = ""
-    this.renderStep()
-  }
-
-  planChanged(event) {
-    this.selectedPlanId = event.target.value
+  offerChanged(event) {
+    if (event.target.name !== "cl-offer") return
+    this.offerKey = event.target.value
     this.renderStep()
   }
 
@@ -156,7 +117,7 @@ export default class extends Controller {
     if (this.saving) return
     if (this.step === 0 && !this.identityValid) return
     // Nothing was bought, so there is nothing to collect: skip step 3.
-    if (this.step === 1 && !this.selectedPlanId) {
+    if (this.step === 1 && !this.offer) {
       this.submit()
       return
     }
@@ -187,10 +148,10 @@ export default class extends Controller {
     }
     add("authenticity_token", csrfToken())
     for (const key of this.constructor.IDENTITY) add(`client[${key}]`, this.person[key])
-    if (this.selectedPlanId) {
-      const [kind, id] = this.selectedItem.split(":")
-      add("subscription[contract_type_id]", this.selectedPlanId)
-      add(kind === "pack" ? "subscription[pack_id]" : "subscription[activity_id]", id)
+    const offer = this.offer
+    if (offer) {
+      add("subscription[contract_type_id]", offer.contract_type_id)
+      add(offer.pack_id ? "subscription[pack_id]" : "subscription[activity_id]", offer.pack_id ?? offer.activity_id)
       add("subscription[starts_on]", this.startsOn)
       add("subscription[discount]", String(this.discount))
       add("subscription[collect_payment]", String(this.collect))
@@ -234,9 +195,8 @@ export default class extends Controller {
   blocksFor(step) {
     if (step === 0) return [this.identityNodes(), this.moreDetails ? this.block("details") : []]
     if (step === 1) {
-      const blocks = [this.itemNodes()]
-      if (this.selectedItem) blocks.push(this.planNodes())
-      if (this.selectedItem && this.selectedPlanId) blocks.push(this.pricingNodes(), this.block("total"))
+      const blocks = [this.offerNodes()]
+      if (this.offer) blocks.push(this.pricingNodes(), this.block("total"))
       return blocks
     }
     return [this.block("total"), this.paymentNodes(), this.collect ? this.methodNodes() : this.block("payLater")]
@@ -265,36 +225,14 @@ export default class extends Controller {
     return nodes
   }
 
-  itemNodes() {
-    const nodes = this.block("item")
-    const select = nodes[0].querySelector("select")
-    if (!select.dataset.filled) {
-      const activities = select.querySelector('[data-group="activities"]')
-      for (const a of this.activities) activities.append(new Option(`${a.emoji ? `${a.emoji} ` : ""}${a.name}`, `activity:${a.id}`))
-      const packs = select.querySelector('[data-group="packs"]')
-      if (this.packsForSale.length > 0) {
-        for (const pack of this.packsForSale) packs.append(new Option(pack.label, pack.key))
-      } else {
-        packs.remove()
-      }
-      select.dataset.filled = "true"
+  offerNodes() {
+    const nodes = this.block("offers")
+    const fieldset = nodes.find((n) => n.querySelector)
+    if (!fieldset.dataset.wired) {
+      fieldset.addEventListener("change", (event) => this.offerChanged(event))
+      fieldset.dataset.wired = "true"
     }
-    select.value = this.selectedItem
-    return nodes
-  }
-
-  planNodes() {
-    const nodes = this.block("plan")
-    const wrapper = nodes[0]
-    const select = wrapper.querySelector("select")
-    select.replaceChildren(new Option("—", ""), ...this.plansForItem.map((p) => new Option(p.name, p.id)))
-    select.value = this.selectedPlanId
-    const warning = this.block("noPlan")[0]
-    if (this.plansForItem.length === 0) {
-      if (warning.parentNode !== wrapper) wrapper.append(warning)
-    } else {
-      warning.remove()
-    }
+    for (const radio of fieldset.querySelectorAll('input[name="cl-offer"]')) radio.checked = radio.value === this.offerKey
     return nodes
   }
 
@@ -335,7 +273,7 @@ export default class extends Controller {
 
     if (this.step < 2) {
       primary.disabled = !this.canAdvance
-      primary.textContent = ` ${this.step === 1 && !this.selectedPlanId ? (this.saving ? labels.saving : labels.finish_without_plan) : labels.next} `
+      primary.textContent = ` ${this.step === 1 && !this.offer ? (this.saving ? labels.saving : labels.finish_without_plan) : labels.next} `
     } else {
       finish.disabled = this.saving
       finish.textContent = ` ${this.saving ? labels.saving : labels.finish} `
@@ -351,7 +289,7 @@ export default class extends Controller {
   money(value) {
     if (value === null || value === undefined) return "—"
     const formatted = Number.isFinite(value) ? value.toFixed(2).replace(/\.00$/, "") : String(value)
-    return `${formatted} ${this.catalogueValue.currency_symbol}`
+    return `${formatted} ${this.currencySymbolValue}`
   }
 
   clearError() {

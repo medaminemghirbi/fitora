@@ -41,8 +41,10 @@ module Web
         return redirect_to("/superadmin/overview", status: :see_other)
       end
 
+      # The console's own door for the superadmin, who has no other.
+      door = current_user&.superadmin? ? web_superadmin_sign_in_path : web_sign_in_path
       sign_out
-      to = params[:to] == "/inscription" ? "/inscription" : web_sign_in_path
+      to = params[:to] == "/inscription" ? "/inscription" : door
       redirect_to to, status: :see_other
     end
 

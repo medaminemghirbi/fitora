@@ -37,9 +37,6 @@ module Web
       t = ->(key) { Web::Translations.translate(key, {}, locale: I18n.locale) }
       {
         error: ngt("common.error_generic"), save: ngt("common.save"), saved: ngt("common.saved"), saving: ngt("common.saving"), confirm: ngt("common.confirm"),
-        abo_create: ngt("clients.abo_create"), pick_plan_first: ngt("clients.abo_pick_formula_first"), packs: ngt("catalogue.tab_packs"),
-        collect_hint: t.call("clients.abo_collect_hint"), paused_done: ngt("contracts.paused_done"), resumed_done: ngt("contracts.resumed_done"),
-        pause_title: ngt("contracts.pause_confirm_title"), pause_body: t.call("contracts.pause_confirm_body"),
         present: ngt("coach.attendance_present"), no_session_today: ngt("clients.no_session_today"),
         invite_title: ngt("clients.invite_confirm_title"), invite_body: t.call("clients.invite_confirm_body"), invite_sent: t.call("clients.invite_sent"),
         remove_title: t.call("clients.remove_confirm_title"), remove_body: ngt("clients.remove_confirm_body"), remove: ngt("clients.remove"), removed: t.call("clients.removed"),

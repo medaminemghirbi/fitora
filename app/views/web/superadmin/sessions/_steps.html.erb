@@ -1,0 +1,10 @@
+<%# ng: pro-login %>
+<%# Where the sign-in is: the password (1), then the code (2). %>
+<ol class="auth-steps">
+  <li class="<%= "is-done" if step > 1 %>"<%= raw(' aria-current="step"') if step == 1 %>>
+    <span><% if step > 1 %><i class="bi bi-check-lg" aria-hidden="true"></i><% else %>1<% end %></span><%= ngt("auth.password") %>
+  </li>
+  <li<%= raw(' aria-current="step"') if step == 2 %>>
+    <span>2</span><%= ngt("superadmin.two_factor.step_code") %>
+  </li>
+</ol>

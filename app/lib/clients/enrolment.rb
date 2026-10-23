@@ -46,7 +46,8 @@ module Clients
     attr_reader :company, :user
 
     def sell_plan_to(client, subscription)
-      plan = company.contract_types.find_by(id: subscription[:contract_type_id])
+      # Only a formule on sale: the one the other ways to sell accept.
+      plan = company.contract_types.active.find_by(id: subscription[:contract_type_id])
       raise ApplicationRecord::Refused, "Plan not found" if plan.nil?
 
       # A pack is sold in place of an activity — one or the other.

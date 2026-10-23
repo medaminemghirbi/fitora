@@ -1,6 +1,7 @@
 <%# ng: superadmin-company-detail %>
 <%# The gym itself, beside its money: its account — who runs it, how to
-    reach them, every salle one sale opens — how much it is really used,
+    reach them (the e-mail it is billed at, a phone: the admin's, or else
+    the gym's), where it is, every salle one sale opens — how much it is really used,
     the currency and language a superadmin sets for it (saved once
     changed), and its access, apart, being the one switch that shuts every
     salle on the account. %>
@@ -11,14 +12,18 @@
       <dt><%= ngt("superadmin.admin") %></dt>
       <dd><%= c.dig(:admin, :full_name) %></dd>
       <dt><%= ngt("superadmin.console.email") %></dt>
-      <dd><span dir="ltr"><%= c.dig(:admin, :email) %></span></dd>
-      <% if c.dig(:admin, :phone).present? %>
+      <dd><a href="mailto:<%= c.dig(:admin, :email) %>" dir="ltr"><%= c.dig(:admin, :email) %></a></dd>
+      <% if (phone = c.dig(:admin, :phone).presence || c[:phone].presence) %>
         <dt><%= ngt("superadmin.console.phone") %></dt>
-        <dd><a href="tel:<%= c.dig(:admin, :phone).to_s.gsub(/[^\d+]/, "") %>" dir="ltr"><%= c.dig(:admin, :phone) %></a></dd>
+        <dd><a href="tel:<%= phone.gsub(/[^\d+]/, "") %>" dir="ltr"><%= phone %></a></dd>
       <% end %>
       <% if c[:city].present? || c[:country].present? %>
         <dt><%= ngt("superadmin.console.location") %></dt>
         <dd><%= [ c[:city], c[:country] ].compact_blank.join(", ") %></dd>
+      <% end %>
+      <% if c[:address].present? %>
+        <dt><%= ngt("superadmin.console.address") %></dt>
+        <dd><%= c[:address] %></dd>
       <% end %>
       <dt><%= ngt("superadmin.console.created") %></dt>
       <dd><%= ng_date(c[:created_at], "dd/MM/yyyy") %></dd>

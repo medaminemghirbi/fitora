@@ -56,6 +56,10 @@ class ContractType < ApplicationRecord
   # Normalised rather than rejected: a validation would make every existing
   # row in that state unsaveable, including to fix it.
   before_validation :clear_counts_when_unlimited
+  # The formule form asks for "a number of sessions" (session_count); what a
+  # sale counts down is booking_limit. Left apart, "Carte 10 séances" sold
+  # with no limit at all — so the count the gym typed is the limit.
+  before_validation :limit_bookings_to_session_count
   # A fixed period carries its own length; a validity left behind from when
   # the formule was custom would only mislead whoever reads the row.
   before_validation { self.validity_days = nil unless custom? }
@@ -88,5 +92,12 @@ class ContractType < ApplicationRecord
 
     self.session_count = nil
     self.booking_limit = nil
+  end
+
+  def limit_bookings_to_session_count
+    return if unlimited_bookings? || session_count.blank?
+    return unless booking_limit.nil? || will_save_change_to_session_count?
+
+    self.booking_limit = session_count
   end
 end

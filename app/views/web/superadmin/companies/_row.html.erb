@@ -1,9 +1,13 @@
-<%# One gym in the table: its name and city, its admin, whether its door is
-    open, its trial and what it owes, its account's plan and price, when it
-    joined — the search term marked. The whole row opens the gym; the name is
-    the link itself, for the keyboard and a new tab. %>
+<%# One gym in the table: its name, its admin and how to reach them — the
+    e-mail its account is billed at, whole, a click from the clipboard, and
+    a phone (the admin's, or else the gym's) — where it is, whether its door is open, its trial and
+    what it owes, its account's plan and price, when it joined — the search
+    term marked. The whole row opens the gym; the name is the link itself,
+    for the keyboard and a new tab. %>
 <% sub = company.subscription; admin = company.admin; salles = admin.companies.size %>
 <% door_open = sub&.active || false; arrears = sub ? sub.arrears_cents : 0 %>
+<% phone = admin.phone.presence || company.phone.presence %>
+<% place = [ company.city, company.country ].compact_blank.join(", ") %>
 <% href = "/superadmin/companies/#{company.id}" %>
 <tr class="sa-row" data-action="click->data-table#open" data-href="<%= href %>">
   <td>
@@ -11,13 +15,30 @@
       <span class="sa-lead-ico"><i class="bi bi-building"></i></span>
       <div>
         <a class="sa-lead-title" href="<%= href %>" data-turbo-frame="_top"><%= ng_highlight(company.name, query) %></a>
-        <% if company.city.present? %><div class="sa-sub"><%= ng_highlight(company.city, query) %></div><% end %>
       </div>
     </div>
   </td>
   <td>
     <div><%= ng_highlight(admin.full_name, query) %></div>
-    <div class="sa-sub"><span dir="ltr"><%= ng_highlight(EmailMask.call(admin.email), query) %></span></div>
+    <div class="sa-sub sa-contact-row">
+      <a class="sa-contact" href="mailto:<%= admin.email %>" dir="ltr"><i class="bi bi-envelope"></i><%= ng_highlight(admin.email, query) %></a>
+      <button type="button" class="sa-copy" data-controller="copy" data-action="copy#copy" data-copy-text-value="<%= admin.email %>" data-copy-done-value="<%= ngt("superadmin.console.email_copied") %>" data-copy-error-value="<%= ngt("common.error_generic") %>" title="<%= ngt("superadmin.console.copy_email") %>" aria-label="<%= ngt("superadmin.console.copy_email") %>">
+        <i class="bi bi-clipboard" aria-hidden="true"></i>
+      </button>
+    </div>
+    <% if phone %>
+      <div class="sa-sub"><a class="sa-contact" href="tel:<%= phone.gsub(/[^\d+]/, "") %>" dir="ltr"><i class="bi bi-telephone"></i><%= phone %></a></div>
+    <% else %>
+      <div class="sa-sub"><span class="sa-contact"><i class="bi bi-telephone"></i>—</span></div>
+    <% end %>
+  </td>
+  <td>
+    <% if place.present? || company.address.present? %>
+      <% if place.present? %><div><%= ng_highlight(place, query) %></div><% end %>
+      <% if company.address.present? %><div class="sa-sub sa-clip" title="<%= company.address %>"><%= company.address %></div><% end %>
+    <% else %>
+      <span class="sa-sub">—</span>
+    <% end %>
   </td>
   <td>
     <div class="sa-badges">

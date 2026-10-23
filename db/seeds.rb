@@ -1,6 +1,7 @@
 # Fitora seed data — minimal bootstrap only.
 #
-# Platform superadmin: admin@fitora.test / password123
+# Platform superadmin: admin@fitora.test / password123, at /superadmin/connexion
+# (an authenticator app is set up at the first sign-in — TwoFactor).
 #
 # No demo gym, admin, staff, or clients — this used to seed a full "Fitora
 # Fitness Sousse" dataset (coaches, activities, sessions, contracts,
@@ -29,4 +30,4 @@ User.find_or_create_by!(email: "admin@fitora.test") do |u|
 end
 
 puts "Seed complete."
-puts "Platform superadmin: admin@fitora.test / password123"
+puts "Platform superadmin: admin@fitora.test / password123 — sign in at /superadmin/connexion"

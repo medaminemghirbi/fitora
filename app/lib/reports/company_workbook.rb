@@ -81,7 +81,7 @@ module Reports
         [ "Clients actifs", company.memberships.active.count ],
         [ "Clients inactifs", company.memberships.where(active: false).count ],
         [ "Abonnements actifs", company.contracts.in_force.count ],
-        [ "Abonnements expirés", company.contracts.expired.count ],
+        [ "Abonnements expirés", company.contracts.lapsed.count ],
         [ "Membres d'équipe", company.staff_members.count ]
       ]
     end

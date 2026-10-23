@@ -30,8 +30,9 @@ Rack::Attack.cache.store = ActiveSupport::Cache::RedisCacheStore.new(
 # per-email throttle below is the real brute-force defense; this one is
 # a backstop against a single-IP flood, not the primary defense.
 # The API's login and the web UI's sign-in form (Web::SessionsController)
-# are the same door: one budget for both.
-LOGIN_PATHS = %w[/api/v1/auth/login /connexion].freeze
+# are the same door: one budget for both — and the console's, password and
+# code (Web::Superadmin::SessionsController), on the same.
+LOGIN_PATHS = %w[/api/v1/auth/login /connexion /superadmin/connexion /superadmin/connexion/code].freeze
 
 Rack::Attack.throttle("logins/ip/burst", limit: 60, period: 20.seconds) do |req|
   req.ip if req.post? && LOGIN_PATHS.include?(req.path)

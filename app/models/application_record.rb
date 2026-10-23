@@ -6,7 +6,18 @@ class ApplicationRecord < ActiveRecord::Base
   # Raised from a model method, it rolls back the transaction it is in, and
   # ApplicationController answers it with a 422 in the same shape a failed
   # validation gets.
-  class Refused < StandardError; end
+  #
+  # `key` names the same reason in the web UI's words (Web::Translations),
+  # with `params` for its placeholders; the API answers with the message.
+  class Refused < StandardError
+    attr_reader :key, :params
+
+    def initialize(message = nil, key: nil, **params)
+      super(message)
+      @key = key
+      @params = params
+    end
+  end
 
   # What the superadmin console's tables (Web::DataTable) may search, sort
   # and filter a model by: Ransack's allowlists, granted to the console alone

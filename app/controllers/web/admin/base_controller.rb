@@ -15,7 +15,7 @@ module Web
       before_action :enter_salle!
       before_action :refuse_when_locked!
 
-      helper_method :admin_page_path, :nav
+      helper_method :admin_page_path, :nav, :may_sell?, :may_collect?
 
       # Which TenantRules::ADMIN_ALLOWED_WHEN_LOCKED area a controller is,
       # if any: a locked admin may still use those actions.
@@ -73,6 +73,34 @@ module Web
 
       def nav
         @nav ||= Web::Navigation.new(user: current_user, bootstrap: bootstrap, salle: salle)
+      end
+
+      # Selling, renewing or changing a subscription is `contracts`; taking
+      # the money for it is `payments` — what the subscription dialogs offer.
+      def may_sell?
+        capability?(:contracts)
+      end
+
+      def may_collect?
+        capability?(:payments)
+      end
+
+      # A refusal in the page's language when the model named its reason
+      # (ApplicationRecord::Refused#key), in the API's words otherwise.
+      def refusal_message(refusal)
+        return refusal.message if refusal.key.blank?
+
+        params = refusal.params.transform_values do |value|
+          value.is_a?(Date) || value.is_a?(Time) ? Web::DateFormat.angular(value.in_time_zone, "d MMM y", locale: locale_code) : value
+        end
+        page_words(refusal.key, **params)
+      end
+
+      # ngt, in the page's language even where the request's own has been
+      # put back — a rescue_from handler runs after the around_action that
+      # set it (Web::BaseController#with_locale) has returned.
+      def page_words(key, **params)
+        Web::Translations.translate(key, params, locale: locale_code)
       end
     end
   end
