@@ -49,7 +49,7 @@ export default class extends Controller {
     save.textContent = ` ${this.labelsValue.saving} `
     const company = {
       name: f.name.value, description: f.description.value, phone: f.phone.value, email: f.email.value,
-      country: this.country, city: f.city.value, address: f.address.value, timezone: f.timezone.value,
+      country: this.country, city: f.city.value, address: f.address.value, tax_id: f.tax_id.value, timezone: f.timezone.value,
     }
     const result = await saveCompany(this.urlValue, { company })
     save.disabled = false

@@ -1,0 +1,80 @@
+<%# CGU/CGV, the French text — the one that binds. %>
+<section>
+  <h2>1. Objet</h2>
+  <p>Les présentes conditions générales d'utilisation et de vente (les « Conditions ») régissent l'accès et l'utilisation de Fitora, un logiciel en ligne de gestion pour salles de sport, studios et clubs (le « Service »), ainsi que la souscription des offres payantes. Créer un compte ou utiliser le Service vaut acceptation des Conditions.</p>
+</section>
+
+<section>
+  <h2>2. Éditeur</h2>
+  <p>Le Service est édité par <%= legal_identity(tax_label: "matricule fiscal") %>. Contact : <a href="mailto:<%= legal_contact %>"><%= legal_contact %></a><% if issuer.phone.present? %>, <%= issuer.phone %><% end %>.</p>
+</section>
+
+<section>
+  <h2>3. Définitions</h2>
+  <ul>
+    <li><strong>Client</strong> : la personne ou l'entreprise qui exploite une ou plusieurs salles et ouvre un compte administrateur.</li>
+    <li><strong>Utilisateur</strong> : toute personne qui se connecte au Service pour le compte du Client (administrateur, accueil, coach).</li>
+    <li><strong>Membre</strong> : un adhérent de la salle du Client, dont le Client enregistre les informations, et qui peut recevoir un accès à l'application membre.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>4. Compte et essai gratuit</h2>
+  <p>Le Client crée son compte en ligne et confirme son adresse e-mail. Les <%= Subscription::TRIAL_DAYS %> premiers jours sont offerts, sans engagement ni moyen de paiement. À la fin de l'essai, l'accès est suspendu tant qu'aucune offre n'a été souscrite ; les données sont conservées.</p>
+  <p>Le Client est responsable des identifiants de ses Utilisateurs et des actions réalisées avec ceux-ci. Il crée les accès de son équipe et leur attribue des rôles adaptés.</p>
+</section>
+
+<section>
+  <h2>5. Offres et prix</h2>
+  <p>Fitora est proposé en deux offres, Starter et Pro, décrites sur le site et dans l'espace « Abonnement Fitora » du compte, avec un paiement mensuel ou annuel. Les prix sont indiqués hors taxes ; la facture ajoute la TVA et le timbre fiscal en vigueur. Fitora peut faire évoluer ses prix ; un nouveau prix s'applique à partir de la période suivante, après information du Client.</p>
+</section>
+
+<section>
+  <h2>6. Facturation, paiement et suspension</h2>
+  <p>Chaque période est facturée par Fitora au Client. Le Client dispose de <%= Subscription::GRACE_DAYS %> jours après la fin de la période payée pour régler la suivante. Passé ce délai, l'accès au Service est suspendu jusqu'au paiement ; aucune donnée n'est supprimée du fait de la suspension. Les sommes versées ne sont pas remboursables, sauf manquement de Fitora à ses obligations.</p>
+</section>
+
+<section>
+  <h2>7. Engagements du Client</h2>
+  <ul>
+    <li>Utiliser le Service conformément à la loi et aux présentes Conditions.</li>
+    <li>Saisir des informations exactes, et n'enregistrer sur ses Membres que les données nécessaires à la gestion de leur adhésion.</li>
+    <li>Informer ses Membres du traitement de leurs données et recueillir leur consentement explicite lorsque la loi l'exige, notamment pour les informations de santé et la photo.</li>
+    <li>Ne pas tenter d'accéder aux données d'une autre salle, ni perturber le fonctionnement du Service.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>8. Données des Membres</h2>
+  <p>Le Client reste responsable du traitement des données de ses Membres ; Fitora les traite pour son compte, uniquement pour fournir le Service, et ne les vend ni ne les cède. Les détails figurent dans la <a href="/confidentialite">politique de confidentialité</a>.</p>
+</section>
+
+<section>
+  <h2>9. Disponibilité et assistance</h2>
+  <p>Fitora met en œuvre les moyens raisonnables pour assurer l'accès au Service 24 h/24 et 7 j/7, sauf maintenance, incident d'un prestataire ou cas de force majeure. Le Client peut contacter l'assistance depuis son compte (Support). Les données sont sauvegardées chaque jour.</p>
+</section>
+
+<section>
+  <h2>10. Propriété intellectuelle</h2>
+  <p>Le Service, son code, ses textes et ses éléments graphiques appartiennent à l'éditeur. Le Client reçoit un droit d'utilisation personnel et non exclusif, pour la durée de son abonnement. Les données saisies par le Client restent sa propriété.</p>
+</section>
+
+<section>
+  <h2>11. Responsabilité</h2>
+  <p>Fitora est tenu d'une obligation de moyens. Sa responsabilité ne saurait être engagée pour les dommages indirects (perte de chiffre d'affaires, de clientèle…), ni pour les décisions prises par le Client à partir des informations du Service. En tout état de cause, la responsabilité de Fitora est limitée aux sommes payées par le Client au cours des douze derniers mois.</p>
+</section>
+
+<section>
+  <h2>12. Durée, résiliation et récupération des données</h2>
+  <p>L'abonnement court par période (mois ou année) et se poursuit tant que le Client le règle. Le Client peut cesser à tout moment ; la période en cours reste due. Avant de partir, il peut exporter ses membres et ses données (Paramètres → Import / Export). Sur demande, Fitora supprime le compte et ses données, à l'exception de celles qu'il doit conserver en vertu de la loi (notamment comptables).</p>
+</section>
+
+<section>
+  <h2>13. Modification des Conditions</h2>
+  <p>Fitora peut modifier les Conditions ; la nouvelle version est publiée sur cette page et le Client en est informé. Continuer à utiliser le Service après son entrée en vigueur vaut acceptation.</p>
+</section>
+
+<section>
+  <h2>14. Droit applicable et litiges</h2>
+  <p>Les Conditions sont soumises au droit tunisien. À défaut d'accord amiable, tout litige relève des tribunaux compétents de Tunis.</p>
+</section>

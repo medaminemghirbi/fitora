@@ -8,7 +8,8 @@ module Web
     # capability, answered with the API's message (K-04).
     class ClientProfilesController < BaseController
       before_action -> { require_capability(:clients) }, only: :show
-      before_action -> { refuse_without(:clients) }, except: %i[show book sessions]
+      before_action -> { refuse_without(:clients) }, except: %i[show book sessions card]
+      before_action -> { refuse unless capability?(:clients) || capability?(:checkin) }, only: :card
       before_action -> { refuse_without(:bookings) }, only: :book
       before_action -> { refuse unless current_user.admin? }, only: :destroy
       before_action :set_client
@@ -20,6 +21,7 @@ module Web
         return render(:missing) if @client.nil?
 
         @profile = JSON.parse(Clients::Profile.payload(@client, current_company).to_json).deep_symbolize_keys
+        @membership = current_company.memberships.with_attached_photo.find_by(client: @client)
         # Who the subscription dialogs sell to, and what they already hold.
         held = current_company.contracts.currently_active.where(client: @client).includes(:contract_type, :activity, :pack)
         @member = helpers.subscription_member(@client, held)
@@ -45,6 +47,34 @@ module Web
         head :accepted
       rescue Clients::Profile::Refusal => e
         render json: { error: e.code, message: e.message, errors: e.errors }, status: :unprocessable_content
+      end
+
+      # GET …/card — the member's card, to print: their face, their name and
+      # the QR code the door scans.
+      def card
+        membership = @client.membership_for(current_company)
+        send_data Receipts::MemberCardPdf.call(membership: membership), type: "application/pdf", disposition: "inline",
+                  filename: "carte-#{membership.card_code}.pdf"
+      end
+
+      # POST …/photo (multipart) — the face the desk checks at the door,
+      # taken with the camera or picked from a file. This gym's alone.
+      def photo
+        file = params.require(:photo)
+        membership = @client.membership_for(current_company)
+        membership.photo.attach(file)
+        membership.save!
+        AuditLog.record!(company: current_company, user: current_user, action: "client.photo_updated",
+                         auditable: @client, metadata: { name: @client.full_name })
+        render json: { photo_url: helpers.member_photo_path(membership) }, status: :created
+      rescue ActionController::ParameterMissing
+        render json: { error: page_words("clients.photo_missing") }, status: :unprocessable_content
+      end
+
+      # DELETE …/photo.
+      def remove_photo
+        @client.membership_for(current_company).photo.purge_later
+        head :no_content
       end
 
       # DELETE — the admin's alone, as DELETE /api/v1/clients/:id.

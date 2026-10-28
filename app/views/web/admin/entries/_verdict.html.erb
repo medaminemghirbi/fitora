@@ -1,0 +1,87 @@
+<%# One member at the door (`verdict`: Visit.verdict_for): the colour and
+    why, who they are — their face, to check against the person — what they
+    hold, and what the desk can do: let them in, open their file, remind
+    them on WhatsApp. %>
+<% contract = verdict.contract %>
+<% name = client.full_name %>
+<% icon = { "green" => "bi-check-circle-fill", "amber" => "bi-exclamation-circle-fill", "red" => "bi-x-octagon-fill" }[verdict.tone] %>
+<% left = contract && !contract.contract_type.unlimited_bookings? ? contract.remaining_bookings : nil %>
+<% wa_kind = whatsapp_kind(balance: verdict.balance, state: contract&.state) %>
+<% wa = member_whatsapp_link(name: name, phone: client.phone, kind: wa_kind, plan: contract&.contract_type&.name,
+                             date: contract&.expires_at, amount: ng_money(verdict.balance, salle.currency)) %>
+<article class="ent-verdict is-<%= verdict.tone %>" data-entries-verdict data-tone="<%= verdict.tone %>" data-client-id="<%= client.id %>">
+  <div class="ent-verdict-band">
+    <i class="bi <%= icon %>" aria-hidden="true"></i>
+    <div>
+      <strong><%= entry_headline(verdict) %></strong>
+      <% if (reason = entry_reason(verdict)) %>
+        <span><%= reason %></span>
+      <% end %>
+      <% entry_notices(verdict).each do |notice| %>
+        <span><%= notice %></span>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="ent-verdict-body">
+    <%= member_face(name, membership, size: 112, css_class: "ent-verdict-face") %>
+    <div class="ent-verdict-id">
+      <h2><a href="<%= admin_page_path("clients/#{client.id}") %>"><%= name %></a></h2>
+      <% if membership&.card_code %>
+        <p class="ent-card-no"><i class="bi bi-qr-code" aria-hidden="true"></i> N° <%= membership.card_code %></p>
+      <% end %>
+      <dl class="ent-facts">
+        <div>
+          <dt><%= ngt("entries.fact_plan") %></dt>
+          <dd><%= contract ? "#{contract.contract_type.name} · #{contract.activity_label}" : ngt("entries.no_plan") %></dd>
+        </div>
+        <% if contract&.expires_at %>
+          <div>
+            <dt><%= ngt("entries.fact_until") %></dt>
+            <dd>
+              <%= ng_date(contract.expires_at, "d MMM y") %>
+              <% if contract.days_left %> <small>(<%= ngt("entries.days_left", count: contract.days_left) %>)</small><% end %>
+            </dd>
+          </div>
+        <% end %>
+        <% unless left.nil? %>
+          <div>
+            <dt><%= ngt("entries.fact_sessions") %></dt>
+            <dd><%= left %></dd>
+          </div>
+        <% end %>
+        <% if verdict.balance.positive? %>
+          <div>
+            <dt><%= ngt("entries.fact_owed") %></dt>
+            <dd class="is-owed"><%= ng_money(verdict.balance, salle.currency) %></dd>
+          </div>
+        <% end %>
+        <div>
+          <dt><%= ngt("entries.fact_last_visit") %></dt>
+          <dd><%= verdict.last_visit_at ? "#{ng_date(verdict.last_visit_at, "d MMM y")} · #{ng_date(verdict.last_visit_at, "HH:mm")}" : ngt("entries.first_visit") %></dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="ent-verdict-actions">
+    <% if verdict.refused? %>
+      <button type="button" class="btn btn-outline-danger" data-action="entries#admit" data-force="true">
+        <i class="bi bi-unlock" aria-hidden="true"></i> <%= ngt("entries.let_in_anyway") %>
+      </button>
+    <% else %>
+      <button type="button" class="btn btn-lg ent-admit" data-action="entries#admit" data-entries-target="admit">
+        <i class="bi bi-door-open" aria-hidden="true"></i> <%= ngt("entries.admit") %>
+      </button>
+    <% end %>
+    <a class="btn btn-outline-secondary" href="<%= admin_page_path("clients/#{client.id}") %>">
+      <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+      <%= verdict.balance.positive? || %w[expired no_subscription no_sessions_left].include?(verdict.reason) ? ngt("entries.settle_on_file") : ngt("entries.open_file") %>
+    </a>
+    <% if wa %>
+      <a class="btn ent-wa" href="<%= wa %>" target="_blank" rel="noopener">
+        <i class="bi bi-whatsapp" aria-hidden="true"></i> <%= ngt("whatsapp.button_#{wa_kind}") %>
+      </a>
+    <% end %>
+  </div>
+</article>

@@ -15,7 +15,7 @@ module Web
       @values = registration_params.to_h.symbolize_keys
       return render_form if form_invalid?
 
-      user = AccountRecovery.register(@values.merge(locale: locale_code))
+      user = AccountRecovery.register(@values.merge(locale: locale_code, terms_accepted_at: Time.current))
       # The API's English message, as the Angular page shows it (K-04).
       return render_form(I18n.with_locale(:en) { user.errors.full_messages.first }) unless user.persisted?
 
@@ -34,11 +34,13 @@ module Web
     end
 
     # The Angular form's validators: all required, the e-mail well-formed,
-    # the password 8 characters or more. Only the e-mail has a message.
+    # the password 8 characters or more — and Fitora's terms accepted. The
+    # e-mail and the terms have a message.
     def form_invalid?
       v = @values
       @email_invalid = v[:email].blank? || !v[:email].match?(SessionsController::EMAIL_FORMAT)
-      @email_invalid || v[:first_name].blank? || v[:last_name].blank? || v[:password].to_s.length < 8
+      @terms_missing = params[:accept_terms] != "1"
+      @email_invalid || @terms_missing || v[:first_name].blank? || v[:last_name].blank? || v[:password].to_s.length < 8
     end
 
     def render_form(error = nil, status: :unprocessable_content)

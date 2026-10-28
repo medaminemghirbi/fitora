@@ -1,0 +1,32 @@
+<%# Who a typed name matches (`clients`, at most six), each opening their
+    verdict — or why there is nobody. %>
+<% if query.length < 2 %>
+  <div class="ent-idle">
+    <i class="bi bi-person-badge" aria-hidden="true"></i>
+    <p><%= ngt("entries.idle") %></p>
+  </div>
+<% elsif clients.empty? %>
+  <div class="ent-idle is-empty">
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <p><%= query.match?(/\A[\d\s]+\z/) ? ngt("entries.unknown_card", code: query) : ngt("desk.no_match", term: query) %></p>
+  </div>
+<% else %>
+  <ul class="ent-matches">
+    <% clients.each do |client| %>
+      <% membership = memberships[client.id] %>
+      <li>
+        <button type="button" class="ent-match" data-action="entries#pick" data-client-id="<%= client.id %>">
+          <%= member_face(client.full_name, membership, size: 40) %>
+          <span class="ent-match-body">
+            <strong><%= client.full_name %></strong>
+            <small><%= [ client.phone, membership&.card_code && "N° #{membership.card_code}" ].compact_blank.join(" · ") %></small>
+          </span>
+          <% unless membership&.active %>
+            <span class="badge text-bg-secondary"><%= ngt("common.inactive") %></span>
+          <% end %>
+          <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        </button>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

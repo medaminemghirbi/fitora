@@ -26,6 +26,9 @@
                placeholder="<%= ngt("payments.search_placeholder") %>" aria-label="<%= ngt("payments.search_placeholder") %>"
                data-payments-list-target="search" data-action="input->payments-list#searchChanged" />
       </div>
+      <a class="btn btn-outline-secondary" href="<%= admin_page_path("cash") %>">
+        <i class="bi bi-safe"></i> <%= ngt("nav.cash") %>
+      </a>
       <button type="button" class="btn btn-primary" data-action="payments-list#openRecord">
         <i class="bi bi-plus-lg"></i> <%= ngt("payments.record") %>
       </button>

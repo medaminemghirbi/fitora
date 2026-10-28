@@ -49,7 +49,10 @@ module MemberApp
       client: identity(client),
       gyms: gyms.map { |c| { id: c.id, name: c.name } },
       subscription: subscription(client, company),
-      attendance: attendance(client, company)
+      attendance: attendance(client, company),
+      # The card the gym's door scans, to show from the phone when the
+      # plastic one is at home.
+      card_code: client.membership_for(company)&.card_code
     }
   end
 

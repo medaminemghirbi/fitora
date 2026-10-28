@@ -25,6 +25,8 @@ class Client < ApplicationRecord
   has_many :bookings, dependent: :destroy
   has_many :contracts, dependent: :destroy
   has_many :payments, dependent: :destroy
+  # Every time they came through a gym's door (Visit).
+  has_many :visits, dependent: :delete_all
   # What their own app tells them: a class called off, a seat from the
   # waitlist, a subscription running out.
   has_many :notifications, as: :recipient, dependent: :destroy
@@ -166,8 +168,10 @@ class Client < ApplicationRecord
       bookings.where(status: %i[confirmed waitlisted]).joins(:session).where(sessions: { starts_at: Time.current.. })
               .find_each(&:cancel!)
 
+      # Their face and their cards go with the rest of what the gyms wrote.
+      memberships.includes(:photo_attachment).each { |membership| membership.photo.purge_later }
       memberships.update_all( # rubocop:disable Rails/SkipsModelValidations
-        Membership::PROFILE_FIELDS.index_with(nil).merge("notes" => nil, "active" => false, "updated_at" => Time.current)
+        Membership::PROFILE_FIELDS.index_with(nil).merge("notes" => nil, "active" => false, "card_code" => nil, "updated_at" => Time.current)
       )
 
       # Past validation on purpose: a placeholder has no phone, and the

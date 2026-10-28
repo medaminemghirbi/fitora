@@ -15,7 +15,7 @@ RSpec.describe "Web account pages", type: :request, openapi: false do
 
     it "opens the account, signs in, and waits for the address" do
       expect do
-        post "/inscription", params: { first_name: "Sana", last_name: "Ali", email: "sana@example.com", password: "password123" }
+        post "/inscription", params: { first_name: "Sana", last_name: "Ali", email: "sana@example.com", password: "password123", accept_terms: "1" }
       end.to change(User.admin, :count).by(1).and have_enqueued_mail(AccountMailer, :email_verification)
 
       expect(response).to redirect_to("/confirmation-email")
@@ -25,21 +25,21 @@ RSpec.describe "Web account pages", type: :request, openapi: false do
 
     it "keeps the page's language for the account" do
       cookies[:fitora_locale] = "ar"
-      post "/inscription", params: { first_name: "Sana", last_name: "Ali", email: "sana@example.com", password: "password123" }
+      post "/inscription", params: { first_name: "Sana", last_name: "Ali", email: "sana@example.com", password: "password123", accept_terms: "1" }
       expect(User.find_by!(email: "sana@example.com").locale).to eq("ar")
     end
 
     it "an address already taken: the API's message, as the Angular page shows it" do
-      post "/inscription", params: { first_name: "A", last_name: "B", email: admin.email, password: "password123" }
+      post "/inscription", params: { first_name: "A", last_name: "B", email: admin.email, password: "password123", accept_terms: "1" }
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Email has already been taken")
     end
 
     it "the form's own checks: a malformed address says so; a short password does not" do
-      post "/inscription", params: { first_name: "A", last_name: "B", email: "nope", password: "password123" }
+      post "/inscription", params: { first_name: "A", last_name: "B", email: "nope", password: "password123", accept_terms: "1" }
       expect(response.body).to include(%(data-check-error="reg-email"))
 
-      post "/inscription", params: { first_name: "A", last_name: "B", email: "ok@example.com", password: "short" }
+      post "/inscription", params: { first_name: "A", last_name: "B", email: "ok@example.com", password: "short", accept_terms: "1" }
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).not_to include("data-check-error")
       expect(User.find_by(email: "ok@example.com")).to be_nil

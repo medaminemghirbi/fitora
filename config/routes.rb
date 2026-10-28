@@ -228,6 +228,9 @@ Rails.application.routes.draw do
     post "admin/setup-company", to: "company_setups#create"
     # The landing page (module 11).
     get "/", to: "landing#show", as: :web_landing, format: false
+    # Fitora's terms and privacy policy, for anyone.
+    get "cgu", to: "legal#terms", as: :web_terms
+    get "confidentialite", to: "legal#privacy", as: :web_privacy
     # Where the earlier layouts put these (app.routes.ts), with the query
     # kept as redirectTo keeps it.
     {
@@ -358,6 +361,23 @@ Rails.application.routes.draw do
         post "invite", action: :invite
         post "bookings", action: :book
         get "sessions", action: :sessions
+        # The member's card (a PDF to print) and the face the desk checks.
+        get "card", action: :card
+        post "photo", action: :photo
+        delete "photo", action: :remove_photo
+      end
+      # The door: a card scanned or a name typed, the verdict, the visit.
+      scope "entries", controller: :entries do
+        get "/", action: :index, as: :entries
+        get "lookup", action: :lookup
+        get "check/:client_id", action: :check, constraints: { client_id: Web::Routing::SALLE }
+        post "/", action: :create
+        delete ":id", action: :destroy, constraints: { id: Web::Routing::SALLE }
+      end
+      # The till: a day's takings, and each login closing its drawer.
+      scope "cash", controller: :cash do
+        get "/", action: :show, as: :cash
+        post "closings", action: :close
       end
       # Module 7.
       get "dashboard", to: "dashboard#show", as: :dashboard

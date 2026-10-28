@@ -1,0 +1,84 @@
+// Fitora's terms and privacy policy (app/views/web/legal): a page of text
+// to read, at a reading width. Global classes under `legal-`.
+
+.legal-page {
+  min-height: 100vh;
+  padding: var(--space-5) var(--space-4) var(--space-8);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.legal-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  max-width: 760px;
+  margin: 0 auto var(--space-5);
+}
+
+.legal-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.legal-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+
+  a {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    text-decoration: none;
+
+    &[aria-current="page"] { color: var(--color-primary); font-weight: 700; }
+    &:hover { text-decoration: underline; }
+  }
+}
+
+.legal-body {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  line-height: 1.65;
+  text-align: start;
+
+  h1 { margin: 0; font-size: var(--font-size-2xl); font-weight: 800; }
+  h2 { margin: var(--space-6) 0 var(--space-2); font-size: var(--font-size-lg); font-weight: 700; }
+  ul { padding-inline-start: 1.25rem; }
+  li { margin-bottom: var(--space-1); }
+  a { color: var(--color-primary); }
+
+  @media (max-width: 640px) { padding: var(--space-4); }
+}
+
+.legal-updated {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.legal-note {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-info-soft);
+  color: var(--color-info);
+  font-weight: 600;
+}
+
+// The sign-up form's consent.
+.legal-consent {
+  font-size: var(--font-size-sm);
+
+  a { color: var(--color-primary); }
+}

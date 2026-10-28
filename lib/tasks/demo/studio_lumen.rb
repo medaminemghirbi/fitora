@@ -1,8 +1,9 @@
 module Demo
   # Studio Lumen, La Marsa — a private studio to demo the product on: two
   # EMS cabins, a Reformer studio, a yoga room, four coaches, twenty members
-  # with three months of history, contracts renewed as chains, a member on
-  # hold and a prospect booked on a trial. Shared by the two demo tasks
+  # with three months of history, contracts renewed as chains, three weeks
+  # of visits at the door (one forced), a member on hold and a prospect
+  # booked on a trial. Shared by the two demo tasks
   # (lib/tasks/demo.rake), which only differ in what they clear first.
   class StudioLumen
     ADMIN_EMAIL = "meriem@studiolumen.tn".freeze
@@ -28,6 +29,7 @@ module Demo
       company.update!(
         setup_dismissed_at: Time.current,
         signatory_name: "Meriem Ben Ammar, gérante",
+        tax_id: "1789456/K/A/M/000",
         settings: {
           features: { spaces: true, waitlist: true, drop_in: true },
           booking: { cancellation_hours: 12, booking_opens_days: 14, reminder_hours: 24 },
@@ -119,7 +121,7 @@ module Demo
           paid = !current || i % 5 != 3
           contract = Contract.sell!(client: client, contract_type: plan, activity: activity, created_by: admin,
                                     starts_on: start_on, discount: (i % 6 == 0 ? 20 : 0),
-                                    collect_payment: paid, payment_method: (i.odd? ? "cash" : "bank_transfer"))
+                                    collect_payment: paid, payment_method: [ "cash", "card", "cash", "bank_transfer" ][i % 4])
           contract.payments.update_all(paid_at: start_on.in_time_zone(zone).change(hour: 10), created_at: start_on.in_time_zone(zone).change(hour: 10)) # rubocop:disable Rails/SkipsModelValidations
           # Each term renews the one before it, so the history reads as a chain.
           contract.update_columns(renewed_from_id: previous&.id) # rubocop:disable Rails/SkipsModelValidations
@@ -198,6 +200,20 @@ module Demo
         end
         session.update_columns(status: :completed) if session.ends_at < now # rubocop:disable Rails/SkipsModelValidations
       end
+      # ---- the door: everyone who came for a class came in through it -------
+      came = Booking.completed.joins(:session).where(sessions: { company_id: company.id }).includes(:session).to_a
+      came.group_by { |b| [ b.client_id, b.session.starts_at.in_time_zone(zone).to_date ] }.each_value do |day|
+        first = day.min_by { |b| b.session.starts_at }
+        Visit.create!(company: company, client_id: first.client_id, contract_id: first.contract_id, checked_in_by: admin,
+                      checked_in_at: first.session.starts_at - rand(5..15).minutes)
+      end
+      # And one let in yesterday despite what she owed — what the owner reads.
+      owing = members.find { |m| m.outstanding_balance(company).positive? }
+      if owing
+        Visit.create!(company: company, client: owing, contract: owing.current_contract(company), checked_in_by: admin,
+                      checked_in_at: zone.now.yesterday.change(hour: 18, min: 40), forced: true, reason: "unpaid")
+      end
+
       # Reminders already went out for the bookings inside the next 24 hours.
       Booking.confirmed.joins(:session).where(sessions: { starts_at: now..(now + 24.hours) }).update_all(reminder_sent_at: now) # rubocop:disable Rails/SkipsModelValidations
 

@@ -1,0 +1,68 @@
+<%# The privacy policy, the English translation. %>
+<section>
+  <h2>1. Who is responsible for your data?</h2>
+  <p>For the accounts of gyms and their teams, the controller is <%= legal_identity(tax_label: "tax ID") %> ("Fitora").</p>
+  <p>For the data of a gym's members, the controller is the gym itself: it enters the data and decides how it is used. Fitora processes it on the gym's behalf, as a processor, only to provide the Service.</p>
+</section>
+
+<section>
+  <h2>2. What data?</h2>
+  <ul>
+    <li><strong>Gym and team accounts</strong>: name, email, phone, password (hashed, never readable), role.</li>
+    <li><strong>The gym</strong>: name, address, contact details, tax ID, logo, the signature on its contracts.</li>
+    <li><strong>Members</strong>: identity and contact details, date of birth, address, emergency contact, photo (if the gym takes one), health information (if the gym enters any), subscriptions, payments, bookings, attendance and entries.</li>
+    <li><strong>Technical data</strong>: sign-in and error logs, IP address, cookies the session needs.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>3. Why?</h2>
+  <ul>
+    <li>To provide the Service: manage members, subscriptions, the schedule, entries and payments (performance of the contract).</li>
+    <li>To invoice the Fitora subscription and keep the accounts (legal obligation).</li>
+    <li>To keep the Service secure, prevent abuse and fix errors (legitimate interest).</li>
+    <li>To send the account's emails: confirmation, forgotten password, invitation to the member app.</li>
+  </ul>
+  <p>Fitora does not use members' data for its own purposes, shows no targeted advertising and sells no data.</p>
+</section>
+
+<section>
+  <h2>4. Sensitive data: health and photo</h2>
+  <p>A member's health information (contraindications) and photo are only recorded if the gym decides to. The gym must then tell the member and obtain their explicit consent, as required by Tunisian Organic Law No. 2004-63 of 27 July 2004. This data is visible only to that gym's team, never to another gym.</p>
+</section>
+
+<section>
+  <h2>5. How long?</h2>
+  <ul>
+    <li>Members' data: as long as the gym keeps it. A member removed by every gym, with no account of their own, is anonymised.</li>
+    <li>Notifications: <%= PruneOldRecordsJob::READ_NOTIFICATIONS_KEPT.in_days.to_i %> days once read, a year at most.</li>
+    <li>Activity log (who did what): <%= PruneOldRecordsJob::AUDIT_LOGS_KEPT.in_years.to_i %> years.</li>
+    <li>Invoices and accounting records: as long as the law requires (ten years).</li>
+    <li>Encrypted backups: fourteen days.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>6. Who can see it?</h2>
+  <p>The gym's team, within the rights the administrator gives them; the member, for their own data, if they have access to the app; Fitora's team, only for support and maintenance. Fitora uses technical providers (hosting, email delivery, error tracking) bound to confidentiality, who receive only what their task needs.</p>
+</section>
+
+<section>
+  <h2>7. Security</h2>
+  <p>Encrypted connections (HTTPS), hashed passwords, role-based access, strict separation between gyms, two-factor authentication for Fitora's team, a log of sensitive actions and encrypted daily backups.</p>
+</section>
+
+<section>
+  <h2>8. Your rights</h2>
+  <p>You have the right to access, correct, object on legitimate grounds to, and delete your data. A member first contacts their gym; they may also write to Fitora, which will pass it on. A member with an account can delete it themselves from their profile. For any request: <a href="mailto:<%= legal_contact %>"><%= legal_contact %></a>. You may also contact Tunisia's data protection authority (INPDP).</p>
+</section>
+
+<section>
+  <h2>9. Cookies</h2>
+  <p>Fitora only uses the cookies it needs to work: the sign-in session, and the language and theme chosen. No advertising or third-party analytics cookies.</p>
+</section>
+
+<section>
+  <h2>10. Changes</h2>
+  <p>This policy may change; the version in force is always the one published on this page, with its date.</p>
+</section>

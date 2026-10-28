@@ -8,11 +8,12 @@
      data-client-profile-url-value="<%= admin_page_path("clients/#{@client.id}") %>"
      data-client-profile-payments-url-value="<%= admin_page_path("payments") %>"
      data-client-profile-attendance-url-value="<%= admin_page_path("attendance") %>"
+     data-client-profile-entries-url-value="<%= admin_page_path("entries", member: @client.id) %>"
      data-client-profile-clients-url-value="<%= admin_page_path("clients") %>"
      data-client-profile-drop-in-value="<%= bootstrap.dig(:features, :drop_in) != false %>"
      data-client-profile-today-value="<%= Date.current.iso8601 %>"
      data-client-profile-labels-value="<%= client_profile_labels.to_json %>"
-     data-action="modal:opened@window->client-profile#fill subscriptions:changed@window->client-profile#load">
+     data-action="modal:opened@window->client-profile#fill subscriptions:changed@window->client-profile#load member-photo:changed@window->client-profile#load">
   <%= render "web/admin/client_profiles/body", p: @profile %>
 </div>
 

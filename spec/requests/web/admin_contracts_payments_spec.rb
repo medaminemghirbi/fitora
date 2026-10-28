@@ -139,7 +139,9 @@ RSpec.describe "Web contracts and payments", type: :request, openapi: false do
       get "/admin/#{company.id}/contracts/members", params: { search: "sami" }
       member = response.parsed_body["members"].sole
       expect(member).to include("id" => sami.id, "name" => "Sami Ben Ali")
-      expect(member["holds"].pluck("item")).to include("activity|#{yoga.activities.first.id}")
+      # The activity Sami's term was sold for — not `yoga.activities.first`,
+      # which orders by a random UUID once Boxe is on the formule too.
+      expect(member["holds"].pluck("item")).to include(*sami.contracts.currently_active.where(contract_type: yoga).map { |c| "activity|#{c.activity_id}" })
     end
 
     it "sells an offer, collected now by the method picked, audited" do

@@ -15,6 +15,7 @@ class CompanySerializer
       country: company.country,
       city: company.city,
       address: company.address,
+      tax_id: company.tax_id,
       latitude: company.latitude,
       longitude: company.longitude,
       timezone: company.timezone,

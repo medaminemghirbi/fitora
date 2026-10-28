@@ -1,0 +1,65 @@
+<%# One day at the door: its figures, its visits per hour, and the visits
+    themselves, newest first. Also the ?fragment=day answer the page
+    redraws from after each visit. %>
+<% stats = entry_stats(visits) %>
+<% peak = stats[:hours].map(&:last).max.to_i %>
+<section class="ent-stats" aria-label="<%= ngt("entries.day_figures") %>">
+  <div class="ent-stat">
+    <span class="ent-stat-value"><%= stats[:visits] %></span>
+    <span class="ent-stat-label"><%= ngt("entries.stat_visits") %></span>
+  </div>
+  <div class="ent-stat">
+    <span class="ent-stat-value"><%= stats[:members] %></span>
+    <span class="ent-stat-label"><%= ngt("entries.stat_members") %></span>
+  </div>
+  <div class="ent-stat<%= " is-warning" if stats[:forced].positive? %>">
+    <span class="ent-stat-value"><%= stats[:forced] %></span>
+    <span class="ent-stat-label"><%= ngt("entries.stat_forced") %></span>
+  </div>
+  <div class="ent-hours" role="img" aria-label="<%= ngt("entries.by_hour") %>">
+    <% stats[:hours].each do |hour, count| %>
+      <span class="ent-hour<%= " is-peak" if peak.positive? && count == peak %>" title="<%= format("%02dh", hour) %> · <%= count %>">
+        <span class="ent-hour-bar" style="height: <%= peak.zero? ? 0 : (count * 100.0 / peak).round %>%"></span>
+        <span class="ent-hour-label"><%= hour %></span>
+      </span>
+    <% end %>
+  </div>
+</section>
+
+<section class="ent-list app-card">
+  <header class="ent-list-head">
+    <h2><%= date == Date.current ? ngt("entries.today_list") : ngt("entries.day_list", date: ng_date(date, "d MMM y")) %></h2>
+  </header>
+  <% if visits.empty? %>
+    <p class="ent-empty"><%= ngt("entries.none") %></p>
+  <% else %>
+    <ul>
+      <% visits.each do |visit| %>
+        <% client = visit.client %>
+        <li class="ent-row<%= " is-forced" if visit.forced? %>">
+          <time class="ent-row-time" datetime="<%= visit.checked_in_at.iso8601 %>"><%= ng_date(visit.checked_in_at, "HH:mm") %></time>
+          <%= member_face(client.full_name, memberships[client.id], size: 36) %>
+          <div class="ent-row-body">
+            <a href="<%= admin_page_path("clients/#{client.id}") %>"><strong><%= client.full_name %></strong></a>
+            <small>
+              <%= visit.contract&.contract_type&.name || ngt("entries.no_plan") %>
+              <% if visit.consumed_session? %> · <%= ngt("entries.session_used") %><% end %>
+              <% if visit.checked_in_by %> · <%= ngt("entries.by", name: visit.checked_in_by.first_name) %><% end %>
+            </small>
+          </div>
+          <% if visit.forced? %>
+            <span class="ent-badge is-red" title="<%= ngt("entries.forced_hint") %>">
+              <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <%= ngt("entries.forced_#{visit.reason || "other"}") %>
+            </span>
+          <% end %>
+          <% if visit.checked_in_at >= Web::Admin::EntriesController::UNDO_WITHIN.ago %>
+            <button type="button" class="btn btn-sm btn-ghost" data-action="entries#undo" data-visit-id="<%= visit.id %>"
+                    aria-label="<%= ngt("entries.undo") %>" title="<%= ngt("entries.undo") %>">
+              <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+            </button>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>

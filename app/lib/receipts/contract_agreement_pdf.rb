@@ -93,6 +93,7 @@ module Receipts
         [ company.address, company.city ].compact_blank.join(", "),
         company.phone.presence && "Tél. : #{company.phone}",
         company.email.presence && "E-mail : #{company.email}",
+        company.tax_id.presence && "Matricule fiscal : #{company.tax_id}",
         company.signatory_name.presence && "Représenté par : #{company.signatory_name}"
       ].compact_blank
       member = [

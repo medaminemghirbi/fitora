@@ -64,6 +64,9 @@ import SuperadminPricingController from "./superadmin_pricing_controller"
 import SuperadminUpdatesController from "./superadmin_updates_controller"
 import LandingController from "./landing_controller"
 import CommandPaletteController from "./command_palette_controller"
+import EntriesController from "./entries_controller"
+import MemberPhotoController from "./member_photo_controller"
+import CashClosingController from "./cash_closing_controller"
 
 const application = Application.start()
 application.register("form-checks", FormChecksController)
@@ -130,3 +133,6 @@ application.register("superadmin-pricing", SuperadminPricingController)
 application.register("superadmin-updates", SuperadminUpdatesController)
 application.register("landing", LandingController)
 application.register("command-palette", CommandPaletteController)
+application.register("entries", EntriesController)
+application.register("member-photo", MemberPhotoController)
+application.register("cash-closing", CashClosingController)

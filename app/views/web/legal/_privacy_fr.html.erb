@@ -1,0 +1,68 @@
+<%# The privacy policy, the French text — the one that binds. %>
+<section>
+  <h2>1. Qui est responsable de vos données ?</h2>
+  <p>Pour les comptes des salles et de leurs équipes, le responsable du traitement est <%= legal_identity(tax_label: "matricule fiscal") %> (« Fitora »).</p>
+  <p>Pour les données des membres d'une salle, le responsable du traitement est la salle elle-même : c'est elle qui les saisit et décide de leur usage. Fitora les traite pour son compte, comme sous-traitant, uniquement pour fournir le Service.</p>
+</section>
+
+<section>
+  <h2>2. Quelles données ?</h2>
+  <ul>
+    <li><strong>Comptes de la salle et de l'équipe</strong> : nom, prénom, e-mail, téléphone, mot de passe (chiffré, jamais lisible), rôle.</li>
+    <li><strong>La salle</strong> : nom, adresse, coordonnées, matricule fiscal, logo, signature des contrats.</li>
+    <li><strong>Les membres</strong> : identité et coordonnées, date de naissance, adresse, contact d'urgence, photo (si la salle en prend une), informations de santé (si la salle en saisit), abonnements, paiements, réservations, présences et entrées.</li>
+    <li><strong>Données techniques</strong> : journaux de connexion et d'erreurs, adresse IP, cookies nécessaires à la session.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>3. Pourquoi ?</h2>
+  <ul>
+    <li>Fournir le Service : gérer les membres, les abonnements, le planning, les entrées et les paiements (exécution du contrat).</li>
+    <li>Facturer l'abonnement Fitora et tenir la comptabilité (obligation légale).</li>
+    <li>Assurer la sécurité du Service, prévenir les abus et corriger les erreurs (intérêt légitime).</li>
+    <li>Envoyer les e-mails du compte : confirmation, mot de passe oublié, invitation à l'application membre.</li>
+  </ul>
+  <p>Fitora n'utilise pas les données des membres à ses propres fins, ne fait pas de publicité ciblée et ne vend aucune donnée.</p>
+</section>
+
+<section>
+  <h2>4. Données sensibles : santé et photo</h2>
+  <p>Les informations de santé (contre-indications) et la photo d'un membre ne sont enregistrées que si la salle le décide. La salle doit alors en informer le membre et recueillir son consentement explicite, conformément à la loi organique n° 2004-63 du 27 juillet 2004. Ces données ne sont visibles que par l'équipe de la salle concernée, jamais par une autre salle.</p>
+</section>
+
+<section>
+  <h2>5. Combien de temps ?</h2>
+  <ul>
+    <li>Données des membres : tant que la salle les conserve. Un membre retiré par toutes ses salles, sans compte personnel, est anonymisé.</li>
+    <li>Notifications : <%= PruneOldRecordsJob::READ_NOTIFICATIONS_KEPT.in_days.to_i %> jours une fois lues, un an au plus.</li>
+    <li>Journal d'activité (qui a fait quoi) : <%= PruneOldRecordsJob::AUDIT_LOGS_KEPT.in_years.to_i %> ans.</li>
+    <li>Factures et données comptables : la durée imposée par la loi (dix ans).</li>
+    <li>Sauvegardes chiffrées : quatorze jours.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>6. Qui y a accès ?</h2>
+  <p>L'équipe de la salle, selon les droits que lui donne l'administrateur ; le membre lui-même, pour ses propres données, s'il a accès à l'application ; l'équipe Fitora, uniquement pour l'assistance et la maintenance. Fitora fait appel à des prestataires techniques (hébergement, envoi d'e-mails, suivi des erreurs) tenus à la confidentialité, qui ne reçoivent que ce qui est nécessaire à leur mission.</p>
+</section>
+
+<section>
+  <h2>7. Sécurité</h2>
+  <p>Connexions chiffrées (HTTPS), mots de passe chiffrés, accès par rôle, cloisonnement strict entre les salles, double authentification pour l'équipe Fitora, journal des actions sensibles et sauvegardes chiffrées quotidiennes.</p>
+</section>
+
+<section>
+  <h2>8. Vos droits</h2>
+  <p>Vous disposez d'un droit d'accès, de rectification, d'opposition pour motif légitime et de suppression de vos données. Un membre s'adresse d'abord à sa salle ; il peut aussi écrire à Fitora, qui transmettra. Un membre ayant un compte peut le supprimer lui-même depuis son profil. Pour toute demande : <a href="mailto:<%= legal_contact %>"><%= legal_contact %></a>. Vous pouvez également saisir l'Instance nationale de protection des données personnelles (INPDP).</p>
+</section>
+
+<section>
+  <h2>9. Cookies</h2>
+  <p>Fitora n'utilise que les cookies nécessaires à son fonctionnement : la session de connexion, la langue et le thème choisis. Aucun cookie publicitaire ni de mesure d'audience tierce.</p>
+</section>
+
+<section>
+  <h2>10. Modifications</h2>
+  <p>Cette politique peut évoluer ; la version en vigueur est toujours celle publiée sur cette page, avec sa date.</p>
+</section>

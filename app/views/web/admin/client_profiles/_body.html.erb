@@ -11,7 +11,22 @@
 </a>
 
 <section class="prof-banner">
-  <span class="prof-banner-avatar" aria-hidden="true"><%= ng_initials(c[:full_name]) %></span>
+  <%# The face the door checks: the photo (or the initials), and the button
+      that takes one (member-photo). %>
+  <div class="prof-photo" data-controller="member-photo"
+       data-member-photo-url-value="<%= admin_page_path("clients/#{c[:id]}/photo") %>"
+       data-member-photo-has-photo-value="<%= @membership&.photo&.attached? ? true : false %>"
+       data-member-photo-labels-value="<%= member_photo_labels.to_json %>">
+    <% if (photo = member_photo_path(@membership)) %>
+      <img class="prof-banner-avatar prof-photo-img" src="<%= photo %>" alt="<%= c[:full_name] %>" />
+    <% else %>
+      <span class="prof-banner-avatar" aria-hidden="true"><%= ng_initials(c[:full_name]) %></span>
+    <% end %>
+    <button type="button" class="prof-photo-edit" data-action="member-photo#open" aria-label="<%= ngt("clients.photo_change") %>" title="<%= ngt("clients.photo_change") %>">
+      <i class="bi bi-camera-fill" aria-hidden="true"></i>
+    </button>
+    <input type="file" accept="image/*" capture="user" hidden data-member-photo-target="file" data-action="change->member-photo#picked" />
+  </div>
 
   <div class="prof-banner-id">
     <div class="prof-banner-name">
@@ -38,6 +53,9 @@
         ·
       <% end %>
       <%= ngt("clients.member_since") %> <%= ng_date(c[:joined_at], "MMM y") %>
+      <% if @membership&.card_code %>
+        · <span class="prof-card-no"><i class="bi bi-qr-code"></i> N° <%= @membership.card_code %></span>
+      <% end %>
     </p>
   </div>
 
@@ -80,6 +98,14 @@
   <button type="button" class="btn btn-outline-secondary" data-action="client-profile#openBooking">
     <i class="bi bi-calendar-plus"></i> <%= ngt("clients.add_booking") %>
   </button>
+  <% focus = subscription_current(p[:contracts]).first %>
+  <% wa_kind = whatsapp_kind(balance: owed, state: focus&.dig(:state)) %>
+  <% if (wa = member_whatsapp_link(name: c[:full_name], phone: c[:phone], kind: wa_kind, plan: focus&.dig(:plan, :name),
+                                   date: focus&.dig(:expires_at), amount: ng_money(owed, salle.currency))) %>
+    <a class="btn btn-outline-secondary prof-wa" href="<%= wa %>" target="_blank" rel="noopener">
+      <i class="bi bi-whatsapp"></i> <%= ngt("whatsapp.button_#{wa_kind}") %>
+    </a>
+  <% end %>
 
   <div class="prof-actions-spacer"></div>
 
@@ -104,6 +130,12 @@
     <button type="button" class="fx-menu-item" data-action="client-profile#openHealth">
       <i class="bi bi-heart-pulse"></i> <%= ngt("clients.health_edit") %>
     </button>
+    <a class="fx-menu-item" href="<%= admin_page_path("clients/#{c[:id]}/card") %>" target="_blank" rel="noopener">
+      <i class="bi bi-person-badge"></i> <%= ngt("clients.member_card") %>
+    </a>
+    <a class="fx-menu-item" href="<%= admin_page_path("entries", member: c[:id]) %>">
+      <i class="bi bi-qr-code-scan"></i> <%= ngt("clients.open_at_door") %>
+    </a>
     <% if current_user.admin? %>
       <button type="button" class="fx-menu-item is-danger" data-action="client-profile#remove">
         <i class="bi bi-person-x"></i> <%= ngt("clients.remove") %>

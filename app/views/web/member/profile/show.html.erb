@@ -44,6 +44,15 @@
       </section>
     <% end %>
 
+    <% if p[:card_code].present? %>
+      <section class="mb-card mb-door-card">
+        <h2 class="mb-card-head"><%= ngt("member.card_title") %></h2>
+        <div class="mb-door-qr" role="img" aria-label="<%= ngt("member.card_title") %> <%= p[:card_code] %>"><%= member_card_qr(p[:card_code]) %></div>
+        <p class="mb-door-code" dir="ltr"><%= p[:card_code].scan(/.{1,4}/).join(" ") %></p>
+        <p class="mb-muted"><%= ngt("member.card_hint") %></p>
+      </section>
+    <% end %>
+
     <section class="mb-card">
       <h2 class="mb-card-head"><%= ngt("member.attendance") %></h2>
       <% unless p.dig(:attendance, :rate).nil? %>
