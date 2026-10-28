@@ -1,0 +1,178 @@
+<%# The till: the day picked, what came in by each method, this login's
+    drawer to close, each login's drawer (with the gym's takings only), and
+    the day's payments one by one — printable as the day's sheet. %>
+<% currency = salle.currency %>
+<% labels = { closed: ngt("cash.closed_toast"), error: ngt("common.error_generic") } %>
+<div class="till-page" data-controller="cash-closing"
+     data-cash-closing-url-value="<%= admin_page_path("cash/closings") %>"
+     data-cash-closing-page-value="<%= admin_page_path("cash") %>"
+     data-cash-closing-date-value="<%= @date.iso8601 %>"
+     data-cash-closing-labels-value="<%= labels.to_json %>">
+  <header class="till-head">
+    <div>
+      <h1><%= whole_gym? ? ngt("cash.title") : ngt("cash.title_mine") %></h1>
+      <p><%= ng_intl_date(@date, :weekday_day_month_long) %> · <%= salle.name %></p>
+    </div>
+    <div class="till-head-actions">
+      <a class="btn btn-sm btn-outline-secondary" href="<%= admin_page_path("cash", date: (@date - 1).iso8601) %>" aria-label="<%= ngt("entries.previous_day") %>">
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </a>
+      <input type="date" class="form-control form-control-sm" value="<%= @date.iso8601 %>" max="<%= Date.current.iso8601 %>"
+             aria-label="<%= ngt("entries.pick_day") %>" data-action="change->cash-closing#changeDate" />
+      <% if @date < Date.current %>
+        <a class="btn btn-sm btn-outline-secondary" href="<%= admin_page_path("cash", date: (@date + 1).iso8601) %>" aria-label="<%= ngt("entries.next_day") %>">
+          <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        </a>
+      <% end %>
+      <button type="button" class="btn btn-sm btn-primary" data-action="cash-closing#print">
+        <i class="bi bi-printer" aria-hidden="true"></i> <%= ngt("cash.print") %>
+      </button>
+    </div>
+  </header>
+
+  <section class="till-totals" aria-label="<%= ngt("cash.totals") %>">
+    <div class="till-total is-main">
+      <span class="till-total-label"><%= ngt("cash.total") %></span>
+      <span class="till-total-value"><%= ng_money(@till.total, currency) %></span>
+      <small><%= ngt("cash.payments_count", count: @till.taken.size) %></small>
+    </div>
+    <% @till.by_method.each do |method, amount| %>
+      <div class="till-total">
+        <span class="till-total-label"><%= ngt("payments.method_#{method}") %></span>
+        <span class="till-total-value"><%= ng_money(amount, currency) %></span>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="till-drawer app-card">
+    <header>
+      <h2><i class="bi bi-safe" aria-hidden="true"></i> <%= ngt("cash.my_drawer") %></h2>
+      <p><%= ngt("cash.my_drawer_hint") %></p>
+    </header>
+    <div class="till-drawer-body">
+      <dl class="till-drawer-figures">
+        <div>
+          <dt><%= ngt("cash.expected") %></dt>
+          <dd><%= ng_money(@expected, currency) %></dd>
+        </div>
+        <% if @mine %>
+          <div>
+            <dt><%= ngt("cash.counted") %></dt>
+            <dd><%= ng_money(@mine.counted_cash, currency) %></dd>
+          </div>
+          <div>
+            <dt><%= ngt("cash.difference") %></dt>
+            <dd class="till-diff <%= @mine.difference.zero? ? "is-even" : (@mine.difference.negative? ? "is-short" : "is-over") %>">
+              <%= @mine.difference.positive? ? "+" : "" %><%= ng_money(@mine.difference, currency) %>
+            </dd>
+          </div>
+        <% end %>
+      </dl>
+      <form class="till-drawer-form" novalidate data-action="submit->cash-closing#close">
+        <div>
+          <label for="till-counted" class="form-label"><%= ngt("cash.counted_label") %></label>
+          <input id="till-counted" name="counted_cash" type="text" inputmode="decimal" class="form-control" required
+                 value="<%= @mine&.counted_cash&.to_s("F") %>" placeholder="0" autocomplete="off" />
+        </div>
+        <div>
+          <label for="till-notes" class="form-label"><%= ngt("cash.notes_label") %></label>
+          <input id="till-notes" name="notes" type="text" class="form-control" maxlength="200" value="<%= @mine&.notes %>"
+                 placeholder="<%= ngt("cash.notes_placeholder") %>" />
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-lock" aria-hidden="true"></i> <%= @mine ? ngt("cash.recount") : ngt("cash.close") %>
+        </button>
+      </form>
+    </div>
+    <% if @mine %>
+      <p class="till-drawer-done">
+        <i class="bi bi-check-circle" aria-hidden="true"></i>
+        <%= ngt("cash.closed_at", time: ng_date(@mine.updated_at, "HH:mm")) %>
+      </p>
+    <% end %>
+  </section>
+
+  <% if whole_gym? %>
+    <section class="till-staff app-card">
+      <h2><%= ngt("cash.by_staff") %></h2>
+      <% rows = @till.by_staff %>
+      <% if rows.empty? %>
+        <p class="till-empty"><%= ngt("cash.none") %></p>
+      <% else %>
+        <div class="table-responsive">
+          <table class="table till-table">
+            <thead>
+              <tr>
+                <th><%= ngt("cash.col_staff") %></th>
+                <th class="is-num"><%= ngt("cash.col_count") %></th>
+                <th class="is-num"><%= ngt("payments.method_cash") %></th>
+                <th class="is-num"><%= ngt("cash.total") %></th>
+                <th class="is-num"><%= ngt("cash.counted") %></th>
+                <th class="is-num"><%= ngt("cash.difference") %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% rows.each do |row| %>
+                <% closing = row[:closing] %>
+                <tr>
+                  <td><%= row[:user]&.then { |u| "#{u.first_name} #{u.last_name}" } || ngt("cash.nobody") %></td>
+                  <td class="is-num"><%= row[:count] %></td>
+                  <td class="is-num"><%= ng_money(row[:cash], currency) %></td>
+                  <td class="is-num"><%= ng_money(row[:total], currency) %></td>
+                  <td class="is-num"><%= closing ? ng_money(closing.counted_cash, currency) : ngt("cash.not_closed") %></td>
+                  <td class="is-num">
+                    <% if closing %>
+                      <span class="till-diff <%= closing.difference.zero? ? "is-even" : (closing.difference.negative? ? "is-short" : "is-over") %>">
+                        <%= closing.difference.positive? ? "+" : "" %><%= ng_money(closing.difference, currency) %>
+                      </span>
+                      <% if closing.notes.present? %><small class="till-note"><%= closing.notes %></small><% end %>
+                    <% else %>
+                      —
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </section>
+  <% end %>
+
+  <section class="till-payments app-card">
+    <h2><%= ngt("cash.payments") %></h2>
+    <% if @till.payments.empty? %>
+      <p class="till-empty"><%= ngt("cash.none") %></p>
+    <% else %>
+      <div class="table-responsive">
+        <table class="table till-table">
+          <thead>
+            <tr>
+              <th><%= ngt("cash.col_time") %></th>
+              <th><%= ngt("cash.col_member") %></th>
+              <th><%= ngt("payments.for") %></th>
+              <th><%= ngt("payments.method") %></th>
+              <th><%= ngt("cash.col_staff") %></th>
+              <th class="is-num"><%= ngt("cash.col_amount") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @till.payments.each do |payment| %>
+              <tr class="<%= "is-refunded" if payment.refunded? %>">
+                <td><%= ng_date(payment.paid_at, "HH:mm") %></td>
+                <td><a href="<%= admin_page_path("clients/#{payment.client_id}") %>"><%= payment.client.full_name %></a></td>
+                <td><%= payment.contract&.contract_type&.name || payment.booking&.session&.activity&.name || "—" %></td>
+                <td><%= ngt("payments.method_#{payment.payment_method}") %></td>
+                <td><%= payment.created_by&.first_name || "—" %></td>
+                <td class="is-num">
+                  <%= ng_money(payment.amount, currency) %>
+                  <% if payment.refunded? %><small class="till-refunded"><%= ngt("payments.status_refunded") %></small><% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </section>
+</div>

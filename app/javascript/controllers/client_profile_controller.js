@@ -14,7 +14,7 @@ const SCOPE = "client-profile"
 
 export default class extends Controller {
   static targets = ["data", "noActivity"]
-  static values = { url: String, paymentsUrl: String, attendanceUrl: String, clientsUrl: String, dropIn: Boolean, today: String, labels: Object }
+  static values = { url: String, paymentsUrl: String, attendanceUrl: String, entriesUrl: String, clientsUrl: String, dropIn: Boolean, today: String, labels: Object }
 
   connect() {
     this.read()
@@ -65,7 +65,8 @@ export default class extends Controller {
   async checkIn() {
     const today = this.todayValue
     const booking = this.profile.bookings.find((b) => b.status === "confirmed" && b.starts_at.slice(0, 10) === today)
-    if (!booking) return toast("info", this.labelsValue.no_session_today)
+    // No class today: they came to train, so the door records the visit.
+    if (!booking) return Turbo.visit(this.entriesUrlValue)
     const result = await this.request("POST", this.attendanceUrlValue, { booking_id: booking.id, status: "present" })
     if (!result.ok) return toast("error", result.error ?? this.labelsValue.error)
     toast("success", this.labelsValue.present)

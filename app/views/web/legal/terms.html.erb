@@ -1,0 +1,4 @@
+<%# Fitora's terms of use and sale (CGU/CGV). %>
+<%= render layout: "web/legal/frame", locals: { title: ngt("legal.terms_title") } do %>
+  <%= render "web/legal/terms_#{legal_locale}" %>
+<% end %>

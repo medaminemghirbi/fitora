@@ -26,6 +26,7 @@ class Contract < ApplicationRecord
 
   has_many :payments, dependent: :nullify
   has_many :bookings, dependent: :nullify
+  has_many :visits, dependent: :nullify
 
   enum :status, { pending: 0, active: 1, expired: 2, cancelled: 3 }
   enum :payment_status, { unpaid: 0, paid: 1 }

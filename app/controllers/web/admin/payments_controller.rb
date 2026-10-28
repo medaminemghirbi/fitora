@@ -20,9 +20,10 @@ module Web
         [ "cancelled", "payments.status_cancelled", "var(--color-muted)" ]
       ].freeze
 
-      # No card: Fitora takes nothing online, and the API refuses `card`.
+      # Card is the desk's own terminal (TPE); Fitora takes nothing online.
       METHODS = [
         [ "cash", "payments.method_cash", "var(--color-success)" ],
+        [ "card", "payments.method_card", "var(--color-primary)" ],
         [ "bank_transfer", "payments.method_bank_transfer", "var(--color-info)" ],
         [ "other", "payments.method_other", "var(--color-muted)" ]
       ].freeze

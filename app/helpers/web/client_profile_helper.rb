@@ -46,6 +46,16 @@ module Web
       }
     end
 
+    # The words member-photo says.
+    def member_photo_labels
+      {
+        title: ngt("clients.photo_title"), take: ngt("clients.photo_take"), capture: ngt("clients.photo_capture"),
+        choose: ngt("clients.photo_choose"), remove: ngt("clients.photo_remove"), cancel: ngt("common.cancel"),
+        saved: ngt("clients.photo_saved"), removed: ngt("clients.photo_removed"), camera_error: ngt("entries.camera_error"),
+        error: ngt("common.error_generic")
+      }
+    end
+
     # JavaScript's +x printed: "79", "79.5".
     def profile_number(value)
       Web::LineChart.num(value.to_f)

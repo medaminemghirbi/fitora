@@ -20,6 +20,8 @@ module CompanyProfile
     permitted = params.require(:company).permit(
       :name, :description, :phone, :email, :country, :city,
       :address, :latitude, :longitude, :timezone, :currency,
+      # The matricule fiscal its receipts carry.
+      :tax_id,
       :slug, :logo,
       # Who signs the gym's contracts, and what they print (Settings).
       :signature, :signatory_name, :contract_terms,

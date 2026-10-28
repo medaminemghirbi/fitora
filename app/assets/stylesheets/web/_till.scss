@@ -1,0 +1,172 @@
+// The till (app/views/web/admin/cash): the day's takings, the drawer to
+// close, each login's drawer and the payments — and the same page printed
+// as the day's sheet, without the shell around it. Global classes under
+// `till-`, like the door's.
+
+.till-page {
+  display: grid;
+  gap: var(--space-4);
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+
+  h2 {
+    margin: 0 0 var(--space-3);
+    font-size: var(--font-size-md);
+    font-weight: 700;
+  }
+}
+
+.till-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+
+  h1 { margin: 0; font-size: var(--font-size-2xl); font-weight: 700; }
+  p { margin: var(--space-1) 0 0; color: var(--color-text-secondary); text-transform: capitalize; }
+}
+
+.till-head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  input { width: auto; }
+}
+
+.till-totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+}
+
+.till-total {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+
+  &.is-main {
+    border-color: var(--color-primary-border);
+    background: var(--color-primary-soft);
+  }
+
+  small { color: var(--color-text-secondary); }
+}
+
+.till-total-label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.till-total-value {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.till-drawer,
+.till-staff,
+.till-payments {
+  padding: var(--space-5);
+}
+
+.till-drawer {
+  header p { margin: calc(-1 * var(--space-2)) 0 var(--space-4); color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+}
+
+.till-drawer-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: var(--space-5);
+  align-items: end;
+
+  @media (max-width: 760px) { grid-template-columns: 1fr; }
+}
+
+.till-drawer-figures {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+
+  div { display: flex; justify-content: space-between; gap: var(--space-3); }
+  dt { color: var(--color-text-secondary); font-weight: 600; }
+  dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+}
+
+.till-drawer-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
+  gap: var(--space-3);
+  align-items: end;
+
+  .form-label { margin-bottom: var(--space-1); font-size: var(--font-size-sm); font-weight: 600; }
+
+  @media (max-width: 760px) { grid-template-columns: 1fr; }
+}
+
+.till-drawer-done {
+  margin: var(--space-3) 0 0;
+  color: var(--color-success);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.till-diff {
+  font-weight: 700;
+
+  &.is-even { color: var(--color-success); }
+  &.is-short { color: var(--color-danger); }
+  &.is-over { color: var(--color-warning); }
+}
+
+.till-table {
+  margin: 0;
+
+  th { color: var(--color-muted); font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.04em; }
+  .is-num { text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.is-refunded td { color: var(--color-muted); text-decoration: line-through; }
+  tr.is-refunded td .till-refunded { text-decoration: none; }
+}
+
+.till-refunded,
+.till-note {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.till-empty {
+  margin: 0;
+  padding: var(--space-4) 0;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+// The day's sheet: the page alone, in ink.
+@media print {
+  app-rail,
+  app-navbar,
+  app-mobile-bar,
+  .till-head-actions,
+  .till-drawer-form,
+  #toasts {
+    display: none !important;
+  }
+
+  .till-page { max-width: none; }
+
+  .till-total,
+  .till-drawer,
+  .till-staff,
+  .till-payments {
+    border-color: #999 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+}

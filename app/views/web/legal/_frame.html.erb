@@ -1,0 +1,21 @@
+<%# The frame both legal pages share: the way home, the title, the date it
+    applies from, a note for an Arabic reader, then the text (yield). %>
+<div class="legal-page">
+  <header class="legal-head">
+    <a href="/" class="legal-brand"><i class="bi bi-arrow-left" aria-hidden="true"></i> Fitora</a>
+    <nav class="legal-switch" aria-label="<%= ngt("legal.documents") %>">
+      <a href="/cgu"<%= raw(' aria-current="page"') if action_name == "terms" %>><%= ngt("legal.terms_title") %></a>
+      <a href="/confidentialite"<%= raw(' aria-current="page"') if action_name == "privacy" %>><%= ngt("legal.privacy_title") %></a>
+    </nav>
+  </header>
+  <article class="legal-body" lang="<%= legal_locale %>" dir="ltr">
+    <h1><%= title %></h1>
+    <p class="legal-updated"><%= ngt("legal.updated", date: ng_date(Web::LegalHelper::UPDATED_ON, "d MMM y")) %></p>
+    <% if locale_code.to_s == "ar" %>
+      <p class="legal-note" lang="ar" dir="rtl"><%= ngt("legal.french_binds") %></p>
+    <% elsif legal_locale == "en" %>
+      <p class="legal-note"><%= ngt("legal.french_binds") %></p>
+    <% end %>
+    <%= yield %>
+  </article>
+</div>

@@ -27,6 +27,7 @@ class Company < ApplicationRecord
   ALLOWED_SIGNATURE_TYPES = %w[image/png image/jpeg].freeze
   MAX_SIGNATURE_SIZE = 2.megabytes
 
+  validates :tax_id, length: { maximum: 40 }
   validate :logo_is_an_image
   validate :logo_is_not_too_large
   validate :signature_is_printable
@@ -39,6 +40,9 @@ class Company < ApplicationRecord
   has_many :memberships, dependent: :destroy
   has_many :clients, through: :memberships
   has_many :contract_types, dependent: :destroy
+  # Before contracts: a visit points at the subscription it counted against.
+  has_many :visits, dependent: :delete_all
+  has_many :cash_closings, dependent: :delete_all
   has_many :contracts, dependent: :destroy
   # After contracts: a pack that was sold refuses to go while its contracts remain.
   has_many :packs, dependent: :destroy

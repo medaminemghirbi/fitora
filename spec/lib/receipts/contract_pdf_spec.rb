@@ -37,6 +37,15 @@ RSpec.describe Receipts::ContractPdf do
     expect(pdf_with_discount.bytesize).not_to eq(pdf_no_discount.bytesize)
   end
 
+  it "prints the gym's matricule fiscal when it has one" do
+    company = create(:company)
+    without = described_class.call(contract: build_contract(company: company))
+    company.update!(tax_id: "1234567/A/M/000")
+    with = described_class.call(contract: build_contract(company: company))
+
+    expect(with.bytesize).to be > without.bytesize
+  end
+
   it "does not raise when the client has no email on file" do
     company = create(:company)
     plan = create(:contract_type, company: company)

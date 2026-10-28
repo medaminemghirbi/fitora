@@ -5,8 +5,13 @@ RSpec.describe Payment do
   let(:client) { create(:client, company: company) }
   let(:booking) { create(:booking, client: client, session: create(:session, activity: create(:activity, company: company))) }
 
-  it "rejects a new card payment (card is out of scope for now)" do
+  it "accepts a card paid on the desk's terminal" do
     payment = build(:payment, client: client, company: company, booking: booking, payment_method: :card)
+    expect(payment).to be_valid
+  end
+
+  it "rejects a method that is not one of the selectable ones" do
+    payment = build(:payment, client: client, company: company, booking: booking, payment_method: :cheque)
     expect(payment).not_to be_valid
     expect(payment.errors[:payment_method]).to be_present
   end
@@ -18,11 +23,10 @@ RSpec.describe Payment do
     end
   end
 
-  it "still lets a legacy card payment be re-saved without changing the method" do
-    legacy = build(:payment, client: client, company: company, booking: booking, payment_method: :card)
-    legacy.save!(validate: false)
+  it "keeps a payment's method when it is re-saved" do
+    payment = create(:payment, client: client, company: company, booking: booking, payment_method: :card)
 
-    legacy.update!(notes: "reconciled")
-    expect(legacy.reload.payment_method).to eq("card")
+    payment.update!(notes: "reconciled")
+    expect(payment.reload.payment_method).to eq("card")
   end
 end

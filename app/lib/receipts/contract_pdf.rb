@@ -70,6 +70,7 @@ module Receipts
       right << addr if addr.present?
       right << "E-mail: #{company.email}" if company.email.present?
       right << "Téléphone: #{company.phone}" if company.phone.present?
+      right << "Matricule fiscal: #{company.tax_id}" if company.tax_id.present?
       right << company.country if company.country.present? && addr.blank?
 
       pdf.fill_color GREY

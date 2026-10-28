@@ -1,0 +1,4 @@
+<%# Fitora's privacy policy. %>
+<%= render layout: "web/legal/frame", locals: { title: ngt("legal.privacy_title") } do %>
+  <%= render "web/legal/privacy_#{legal_locale}" %>
+<% end %>

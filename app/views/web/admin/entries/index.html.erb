@@ -1,0 +1,81 @@
+<%# The door: the scan (a card's QR code, its number, or a name), the
+    verdict for the member found, and the day's visits (entries). An
+    earlier day shows its visits only — nobody comes in yesterday. %>
+<% today = @date == Date.current %>
+<% labels = {
+     admitted: ngt("entries.admitted"), admitted_forced: ngt("entries.admitted_forced"),
+     force_title: ngt("entries.force_title"), force_body: ngt("entries.force_body"), force_confirm: ngt("entries.force_confirm"),
+     undo_title: ngt("entries.undo_title"), undo_body: ngt("entries.undo_body"), undo_confirm: ngt("entries.undo"),
+     undone: ngt("entries.undone"), camera_error: ngt("entries.camera_error"), error: ngt("common.error_generic")
+   } %>
+<div class="ent-page" data-controller="entries"
+     data-entries-url-value="<%= admin_page_path("entries") %>"
+     data-entries-date-value="<%= @date.iso8601 %>"
+     data-entries-member-value="<%= @member&.id %>"
+     data-entries-labels-value="<%= labels.to_json %>">
+  <header class="ent-head">
+    <div>
+      <h1><%= ngt("entries.title") %></h1>
+      <p><%= ngt("entries.subtitle") %></p>
+    </div>
+    <div class="ent-date">
+      <a class="btn btn-sm btn-outline-secondary" href="<%= admin_page_path("entries", date: (@date - 1).iso8601) %>" aria-label="<%= ngt("entries.previous_day") %>">
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </a>
+      <input type="date" class="form-control form-control-sm" value="<%= @date.iso8601 %>" max="<%= Date.current.iso8601 %>"
+             aria-label="<%= ngt("entries.pick_day") %>" data-action="change->entries#changeDate" />
+      <% unless today %>
+        <a class="btn btn-sm btn-outline-secondary" href="<%= admin_page_path("entries", date: (@date + 1).iso8601) %>" aria-label="<%= ngt("entries.next_day") %>">
+          <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        </a>
+        <a class="btn btn-sm btn-primary" href="<%= admin_page_path("entries") %>"><%= ngt("entries.back_to_today") %></a>
+      <% end %>
+    </div>
+  </header>
+
+  <% if today %>
+    <section class="ent-desk">
+      <div class="ent-scan">
+        <label for="ent-query" class="ent-scan-label"><%= ngt("entries.scan_label") %></label>
+        <div class="ent-scan-field">
+          <i class="bi bi-qr-code-scan" aria-hidden="true"></i>
+          <input id="ent-query" type="search" class="form-control" autocomplete="off" autofocus
+                 placeholder="<%= ngt("entries.scan_placeholder") %>"
+                 data-entries-target="query" data-action="input->entries#search keydown.enter->entries#submit" />
+          <button type="button" class="btn btn-outline-secondary" hidden
+                  data-entries-target="cameraButton" data-action="entries#openCamera">
+            <i class="bi bi-camera" aria-hidden="true"></i> <%= ngt("entries.camera") %>
+          </button>
+        </div>
+        <label class="ent-auto">
+          <input type="checkbox" class="form-check-input" data-entries-target="auto" data-action="entries#toggleAuto" />
+          <span><%= ngt("entries.auto_admit") %></span>
+        </label>
+        <div class="ent-camera" hidden data-entries-target="camera">
+          <video playsinline muted data-entries-target="video"></video>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-action="entries#closeCamera">
+            <i class="bi bi-x-lg" aria-hidden="true"></i> <%= ngt("common.close") %>
+          </button>
+        </div>
+        <p class="ent-scan-hint"><i class="bi bi-info-circle" aria-hidden="true"></i> <%= ngt("entries.scan_hint") %></p>
+      </div>
+
+      <div class="ent-result" data-entries-target="result" aria-live="polite">
+        <div class="ent-idle">
+          <i class="bi bi-person-badge" aria-hidden="true"></i>
+          <p><%= ngt("entries.idle") %></p>
+        </div>
+      </div>
+      <template data-entries-target="idle">
+        <div class="ent-idle">
+          <i class="bi bi-person-badge" aria-hidden="true"></i>
+          <p><%= ngt("entries.idle") %></p>
+        </div>
+      </template>
+    </section>
+  <% end %>
+
+  <div data-entries-target="day">
+    <%= render "web/admin/entries/day", date: @date, visits: @visits, memberships: @memberships %>
+  </div>
+</div>

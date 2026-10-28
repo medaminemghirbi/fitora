@@ -537,6 +537,8 @@ paths:
                         type: 'null'
                       address:
                         type: 'null'
+                      tax_id:
+                        type: 'null'
                       latitude:
                         type: 'null'
                       longitude:
@@ -678,6 +680,7 @@ paths:
                     - country
                     - city
                     - address
+                    - tax_id
                     - latitude
                     - longitude
                     - timezone
@@ -2511,6 +2514,8 @@ paths:
                         type: 'null'
                       address:
                         type: 'null'
+                      tax_id:
+                        type: 'null'
                       latitude:
                         type: 'null'
                       longitude:
@@ -2654,6 +2659,7 @@ paths:
                     - country
                     - city
                     - address
+                    - tax_id
                     - latitude
                     - longitude
                     - timezone
@@ -3195,6 +3201,16 @@ paths:
                               type: 'null'
                             renewable:
                               type: boolean
+                            renewable_on:
+                              type:
+                              - string
+                              - 'null'
+                            next_term_starts_at:
+                              type: string
+                            state:
+                              type: string
+                            days_left:
+                              type: integer
                             all_access:
                               type: boolean
                             activity_label:
@@ -3233,6 +3249,10 @@ paths:
                           - renewed_from_id
                           - renewal
                           - renewable
+                          - renewable_on
+                          - next_term_starts_at
+                          - state
+                          - days_left
                           - all_access
                           - activity_label
                           - client
@@ -3624,6 +3644,14 @@ paths:
                             type: 'null'
                           renewable:
                             type: boolean
+                          renewable_on:
+                            type: string
+                          next_term_starts_at:
+                            type: string
+                          state:
+                            type: string
+                          days_left:
+                            type: integer
                           all_access:
                             type: boolean
                           activity_label:
@@ -3662,6 +3690,10 @@ paths:
                         - renewed_from_id
                         - renewal
                         - renewable
+                        - renewable_on
+                        - next_term_starts_at
+                        - state
+                        - days_left
                         - all_access
                         - activity_label
                         - client
@@ -3839,6 +3871,14 @@ paths:
                         type: 'null'
                       renewable:
                         type: boolean
+                      renewable_on:
+                        type: string
+                      next_term_starts_at:
+                        type: string
+                      state:
+                        type: string
+                      days_left:
+                        type: integer
                       all_access:
                         type: boolean
                       activity_label:
@@ -3877,6 +3917,10 @@ paths:
                     - renewed_from_id
                     - renewal
                     - renewable
+                    - renewable_on
+                    - next_term_starts_at
+                    - state
+                    - days_left
                     - all_access
                     - activity_label
                     - client
@@ -5181,6 +5225,8 @@ paths:
                         type: 'null'
                       address:
                         type: 'null'
+                      tax_id:
+                        type: 'null'
                       latitude:
                         type: 'null'
                       longitude:
@@ -5324,6 +5370,7 @@ paths:
                     - country
                     - city
                     - address
+                    - tax_id
                     - latitude
                     - longitude
                     - timezone
@@ -5693,6 +5740,8 @@ paths:
                         type: 'null'
                       address:
                         type: 'null'
+                      tax_id:
+                        type: 'null'
                       latitude:
                         type: 'null'
                       longitude:
@@ -5836,6 +5885,7 @@ paths:
                     - country
                     - city
                     - address
+                    - tax_id
                     - latitude
                     - longitude
                     - timezone
@@ -5927,6 +5977,8 @@ paths:
                         type: 'null'
                       address:
                         type: 'null'
+                      tax_id:
+                        type: 'null'
                       latitude:
                         type: 'null'
                       longitude:
@@ -6070,6 +6122,7 @@ paths:
                     - country
                     - city
                     - address
+                    - tax_id
                     - latitude
                     - longitude
                     - timezone
@@ -6207,6 +6260,8 @@ paths:
                       city:
                         type: 'null'
                       address:
+                        type: 'null'
+                      tax_id:
                         type: 'null'
                       latitude:
                         type: 'null'
@@ -6365,6 +6420,7 @@ paths:
                     - country
                     - city
                     - address
+                    - tax_id
                     - latitude
                     - longitude
                     - timezone
@@ -7144,6 +7200,16 @@ paths:
                           - plan_name
                         renewable:
                           type: boolean
+                        renewable_on:
+                          type:
+                          - string
+                          - 'null'
+                        next_term_starts_at:
+                          type: string
+                        state:
+                          type: string
+                        days_left:
+                          type: integer
                         all_access:
                           type: boolean
                         activity_label:
@@ -7182,6 +7248,10 @@ paths:
                       - renewed_from_id
                       - renewal
                       - renewable
+                      - renewable_on
+                      - next_term_starts_at
+                      - state
+                      - days_left
                       - all_access
                       - activity_label
                       - client
@@ -7204,31 +7274,31 @@ paths:
                   counts:
                     type: object
                     properties:
-                      pending:
-                        type: integer
                       active:
                         type: integer
+                      expiring:
+                        type: integer
                       expired:
+                        type: integer
+                      unpaid:
+                        type: integer
+                      paused:
+                        type: integer
+                      upcoming:
                         type: integer
                       cancelled:
                         type: integer
                       all:
                         type: integer
-                      unpaid:
-                        type: integer
-                      expiring:
-                        type: integer
-                      paused:
-                        type: integer
                     required:
-                    - pending
                     - active
+                    - expiring
                     - expired
+                    - unpaid
+                    - paused
+                    - upcoming
                     - cancelled
                     - all
-                    - unpaid
-                    - expiring
-                    - paused
                   plan_counts:
                     type: object
                     additionalProperties:
@@ -7506,6 +7576,14 @@ paths:
                         type: 'null'
                       renewable:
                         type: boolean
+                      renewable_on:
+                        type: string
+                      next_term_starts_at:
+                        type: string
+                      state:
+                        type: string
+                      days_left:
+                        type: integer
                       all_access:
                         type: boolean
                       activity_label:
@@ -7544,6 +7622,10 @@ paths:
                     - renewed_from_id
                     - renewal
                     - renewable
+                    - renewable_on
+                    - next_term_starts_at
+                    - state
+                    - days_left
                     - all_access
                     - activity_label
                     - client
@@ -7868,6 +7950,16 @@ paths:
                         - plan_name
                       renewable:
                         type: boolean
+                      renewable_on:
+                        type:
+                        - string
+                        - 'null'
+                      next_term_starts_at:
+                        type: string
+                      state:
+                        type: string
+                      days_left:
+                        type: integer
                       all_access:
                         type: boolean
                       activity_label:
@@ -7906,6 +7998,10 @@ paths:
                     - renewed_from_id
                     - renewal
                     - renewable
+                    - renewable_on
+                    - next_term_starts_at
+                    - state
+                    - days_left
                     - all_access
                     - activity_label
                     - client
@@ -8102,6 +8198,16 @@ paths:
                         type: 'null'
                       renewable:
                         type: boolean
+                      renewable_on:
+                        type:
+                        - string
+                        - 'null'
+                      next_term_starts_at:
+                        type: string
+                      state:
+                        type: string
+                      days_left:
+                        type: integer
                       all_access:
                         type: boolean
                       activity_label:
@@ -8140,6 +8246,10 @@ paths:
                     - renewed_from_id
                     - renewal
                     - renewable
+                    - renewable_on
+                    - next_term_starts_at
+                    - state
+                    - days_left
                     - all_access
                     - activity_label
                     - client
@@ -8390,6 +8500,14 @@ paths:
                         type: 'null'
                       renewable:
                         type: boolean
+                      renewable_on:
+                        type: 'null'
+                      next_term_starts_at:
+                        type: string
+                      state:
+                        type: string
+                      days_left:
+                        type: integer
                       all_access:
                         type: boolean
                       activity_label:
@@ -8428,6 +8546,10 @@ paths:
                     - renewed_from_id
                     - renewal
                     - renewable
+                    - renewable_on
+                    - next_term_starts_at
+                    - state
+                    - days_left
                     - all_access
                     - activity_label
                     - client
@@ -8705,6 +8827,14 @@ paths:
                         type: 'null'
                       renewable:
                         type: boolean
+                      renewable_on:
+                        type: string
+                      next_term_starts_at:
+                        type: string
+                      state:
+                        type: string
+                      days_left:
+                        type: integer
                       all_access:
                         type: boolean
                       activity_label:
@@ -8743,6 +8873,10 @@ paths:
                     - renewed_from_id
                     - renewal
                     - renewable
+                    - renewable_on
+                    - next_term_starts_at
+                    - state
+                    - days_left
                     - all_access
                     - activity_label
                     - client
@@ -8938,6 +9072,14 @@ paths:
                         type: 'null'
                       renewable:
                         type: boolean
+                      renewable_on:
+                        type: string
+                      next_term_starts_at:
+                        type: string
+                      state:
+                        type: string
+                      days_left:
+                        type: integer
                       all_access:
                         type: boolean
                       activity_label:
@@ -8976,6 +9118,10 @@ paths:
                     - renewed_from_id
                     - renewal
                     - renewable
+                    - renewable_on
+                    - next_term_starts_at
+                    - state
+                    - days_left
                     - all_access
                     - activity_label
                     - client
@@ -10189,11 +10335,14 @@ paths:
                     required:
                     - rate
                     - recent
+                  card_code:
+                    type: string
                 required:
                 - client
                 - gyms
                 - subscription
                 - attendance
+                - card_code
         '401':
           description: Unauthorized
           content:
@@ -14496,11 +14645,15 @@ paths:
                           type: string
                         name:
                           type: string
+                        address:
+                          type: 'null'
                         city:
                           type:
                           - string
                           - 'null'
                         country:
+                          type: 'null'
+                        phone:
                           type: 'null'
                         currency:
                           type: string
@@ -14656,8 +14809,10 @@ paths:
                       required:
                       - id
                       - name
+                      - address
                       - city
                       - country
+                      - phone
                       - currency
                       - currency_symbol
                       - locale
@@ -14756,9 +14911,13 @@ paths:
                         type: string
                       name:
                         type: string
+                      address:
+                        type: 'null'
                       city:
                         type: 'null'
                       country:
+                        type: 'null'
+                      phone:
                         type: 'null'
                       currency:
                         type: string
@@ -14922,8 +15081,10 @@ paths:
                     required:
                     - id
                     - name
+                    - address
                     - city
                     - country
+                    - phone
                     - currency
                     - currency_symbol
                     - locale
@@ -15190,9 +15351,13 @@ paths:
                         type: string
                       name:
                         type: string
+                      address:
+                        type: 'null'
                       city:
                         type: 'null'
                       country:
+                        type: 'null'
+                      phone:
                         type: 'null'
                       currency:
                         type: string
@@ -15342,8 +15507,10 @@ paths:
                     required:
                     - id
                     - name
+                    - address
                     - city
                     - country
+                    - phone
                     - currency
                     - currency_symbol
                     - locale
@@ -15417,9 +15584,13 @@ paths:
                         type: string
                       name:
                         type: string
+                      address:
+                        type: 'null'
                       city:
                         type: 'null'
                       country:
+                        type: 'null'
+                      phone:
                         type: 'null'
                       currency:
                         type: string
@@ -15565,8 +15736,10 @@ paths:
                     required:
                     - id
                     - name
+                    - address
                     - city
                     - country
+                    - phone
                     - currency
                     - currency_symbol
                     - locale
@@ -15641,9 +15814,13 @@ paths:
                         type: string
                       name:
                         type: string
+                      address:
+                        type: 'null'
                       city:
                         type: 'null'
                       country:
+                        type: 'null'
+                      phone:
                         type: 'null'
                       currency:
                         type: string
@@ -15734,8 +15911,10 @@ paths:
                     required:
                     - id
                     - name
+                    - address
                     - city
                     - country
+                    - phone
                     - currency
                     - currency_symbol
                     - locale
@@ -15831,9 +16010,13 @@ paths:
                         type: string
                       name:
                         type: string
+                      address:
+                        type: 'null'
                       city:
                         type: 'null'
                       country:
+                        type: 'null'
+                      phone:
                         type: 'null'
                       currency:
                         type: string
@@ -16035,8 +16218,10 @@ paths:
                     required:
                     - id
                     - name
+                    - address
                     - city
                     - country
+                    - phone
                     - currency
                     - currency_symbol
                     - locale

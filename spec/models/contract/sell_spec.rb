@@ -52,13 +52,24 @@ RSpec.describe Contract, ".sell!" do
     expect(contract).to be_paid
   end
 
-  it "falls back to cash when given an unsupported payment method (card is out of scope)" do
+  it "records a card paid on the desk's terminal" do
     activity = create(:activity)
     plan = create(:contract_type, company: activity.company, activity: activity, price: 50)
     client = create(:client, company: plan.company)
     staff = create(:user, :admin)
 
     contract = Contract.sell!(client: client, contract_type: plan, activity: activity, created_by: staff, collect_payment: true, payment_method: "card")
+
+    expect(contract.payments.first.payment_method).to eq("card")
+  end
+
+  it "falls back to cash when given an unsupported payment method" do
+    activity = create(:activity)
+    plan = create(:contract_type, company: activity.company, activity: activity, price: 50)
+    client = create(:client, company: plan.company)
+    staff = create(:user, :admin)
+
+    contract = Contract.sell!(client: client, contract_type: plan, activity: activity, created_by: staff, collect_payment: true, payment_method: "cheque")
 
     expect(contract.payments.first.payment_method).to eq("cash")
   end

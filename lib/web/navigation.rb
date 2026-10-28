@@ -9,11 +9,15 @@ module Web
 
     DASHBOARD = Item.new(page: "dashboard", icon: "bi-sun", label_key: "nav.today", permission: "reports")
 
-    # Six entries, in the order a gym's day runs. "Bookings" is deliberately
+    # Seven entries, in the order a gym's day runs. "Bookings" is deliberately
     # absent (see navigation.ts).
     GROUPS = [
       Group.new(id: "clients", icon: "bi-people", label_key: "nav.clients", items: [
         Item.new(page: "clients", icon: "bi-people", label_key: "nav.clients", permission: "clients")
+      ]),
+      # The door: members coming in, whether they booked a class or not.
+      Group.new(id: "entries", icon: "bi-qr-code-scan", label_key: "nav.entries", items: [
+        Item.new(page: "entries", icon: "bi-qr-code-scan", label_key: "nav.entries", permission: "checkin")
       ]),
       Group.new(id: "planning", icon: "bi-calendar3", label_key: "nav.planning", items: [
         Item.new(page: "calendar", icon: "bi-calendar3", label_key: "nav.planning"),
@@ -24,7 +28,8 @@ module Web
         Item.new(page: "catalogue", icon: "bi-award", label_key: "nav.catalogue", permission: "contract_types")
       ]),
       Group.new(id: "finances", icon: "bi-cash-coin", label_key: "nav.payments", items: [
-        Item.new(page: "payments", icon: "bi-cash-coin", label_key: "nav.payments", permission: "payments")
+        Item.new(page: "payments", icon: "bi-cash-coin", label_key: "nav.payments", permission: "payments"),
+        Item.new(page: "cash", icon: "bi-safe", label_key: "nav.cash", permission: "payments")
       ]),
       Group.new(id: "team", icon: "bi-person-vcard", label_key: "nav.team", admin_only: true, items: [
         Item.new(page: "team", icon: "bi-person-vcard", label_key: "nav.team", permission: "coaches")

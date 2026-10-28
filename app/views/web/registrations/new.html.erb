@@ -68,6 +68,19 @@
         <div id="reg-password-hint" class="form-text"><%= ngt("auth.password_min") %></div>
       </div>
 
+      <div class="mb-3 form-check legal-consent">
+        <input id="reg-terms" name="accept_terms" type="checkbox" value="1" class="form-check-input"<%= raw(" checked") if params[:accept_terms] == "1" %><%= raw(' aria-invalid="true" aria-describedby="reg-terms-error"') if @terms_missing %> />
+        <label for="reg-terms" class="form-check-label">
+          <%= ngt("legal.accept_before") %>
+          <a href="/cgu" target="_blank" rel="noopener"><%= ngt("legal.terms_title") %></a>
+          <%= ngt("legal.accept_and") %>
+          <a href="/confidentialite" target="_blank" rel="noopener"><%= ngt("legal.privacy_title") %></a>
+        </label>
+        <% if @terms_missing %>
+          <div id="reg-terms-error" class="invalid-feedback d-block"><%= ngt("legal.accept_required") %></div>
+        <% end %>
+      </div>
+
       <button type="submit" class="btn btn-primary w-100 mt-2" data-form-checks-target="submit">
         <%= ngt("auth.register_cta") %>
       </button>
