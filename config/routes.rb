@@ -5,17 +5,25 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   # The Sidekiq dashboard. Open in development; HTTP basic auth everywhere
-  # else, and only mounted at all once SIDEKIQ_WEB_PASSWORD is set.
+  # else, and only mounted at all once SIDEKIQ_WEB_PASSWORD is set, 24
+  # characters or more (Web::SidekiqDashboard).
   unless Rails.env.development?
     Sidekiq::Web.use Rack::Auth::Basic do |user, password|
-      expected_user = ENV.fetch("SIDEKIQ_WEB_USER", "fitora")
-      expected_pass = ENV["SIDEKIQ_WEB_PASSWORD"].to_s
-      expected_pass.present? &&
-        ActiveSupport::SecurityUtils.secure_compare(::Digest::SHA256.hexdigest(user), ::Digest::SHA256.hexdigest(expected_user)) &
-        ActiveSupport::SecurityUtils.secure_compare(::Digest::SHA256.hexdigest(password), ::Digest::SHA256.hexdigest(expected_pass))
+      Web::SidekiqDashboard.valid_credentials?(user, password)
     end
   end
-  mount Sidekiq::Web => "/sidekiq" if Rails.env.development? || ENV["SIDEKIQ_WEB_PASSWORD"].present?
+  mount Sidekiq::Web => "/sidekiq" if Web::SidekiqDashboard.mount?
+
+  # Active Storage's direct-upload routes. The first creates a blob of any
+  # declared size for anyone holding a CSRF token — every visitor of the
+  # sign-in page holds one — and the disk PUT then writes the body into
+  # storage/, the disk Postgres lives on. Nothing in Fitora uploads straight
+  # to storage: every file comes through a form the app checks first
+  # (HasPhoto, SupportTicket, DataImport…). Drawn ahead of the engine's own
+  # routes, so these answer 404; the routes that serve files stay.
+  not_found = ->(_env) { [ 404, { "content-type" => "text/plain" }, [ "Not Found" ] ] }
+  match "#{ActiveStorage.routes_prefix}/direct_uploads", to: not_found, via: :all
+  put "#{ActiveStorage.routes_prefix}/disk/*token", to: not_found, format: false
 
   namespace :api do
     namespace :v1 do
@@ -171,28 +179,10 @@ Rails.application.routes.draw do
         get "reports/export", to: "reports#export"
       end
 
-      namespace :superadmin do
-        resources :companies, only: [ :index, :show ] do
-          member do
-            patch :subscription, to: "companies#update_subscription"
-            patch :settings, to: "companies#update_settings"
-            post :impersonate, to: "companies#impersonate"
-            get :invoices, to: "companies#invoices"
-            post :invoices, to: "companies#create_invoice"
-            delete "invoices/:invoice_id", to: "companies#destroy_invoice", as: :invoice
-          end
-        end
-        get "metrics", to: "metrics#show"
-        get "subscription_pricing", to: "subscription_pricing#show"
-        patch "subscription_pricing", to: "subscription_pricing#update"
-        resources :app_updates, only: [ :index, :create ]
-        resources :support_tickets, only: [ :index ] do
-          member do
-            patch :resolve
-            get "attachments/:attachment_id", action: :attachment, as: :attachment
-          end
-        end
-      end
+      # No superadmin namespace: the console is the web UI's alone
+      # (/superadmin, behind its two-factor sign-in). No login on the API
+      # can be a superadmin's (SignIn), so an API twin could only ever have
+      # been reached with a token minted some other way — past the code.
     end
   end
 
@@ -218,6 +208,9 @@ Rails.application.routes.draw do
     patch "auth/accept-invitation", to: "invitations#update"
     get "verify-email", to: "email_verifications#show"
     patch "verify-email", to: "email_verifications#update"
+    # A gym asking to add someone Fitora already knows (MembershipRequest).
+    get "adhesion", to: "membership_requests#show"
+    patch "adhesion", to: "membership_requests#update"
     get "confirmation-email", to: "confirmations#show"
     get "confirmation-email/status", to: "confirmations#status"
     post "confirmation-email/resend", to: "confirmations#resend"

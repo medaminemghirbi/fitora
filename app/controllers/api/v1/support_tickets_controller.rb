@@ -2,7 +2,7 @@ module Api
   module V1
     # The "Contact" tab on the modules marketplace page — a problem report
     # with optional file/video attachments, reviewed by a Fitora superadmin from
-    # a cross-company inbox (Api::V1::Superadmin::SupportTicketsController).
+    # a cross-company inbox (Web::Superadmin::SupportController).
     class SupportTicketsController < BaseController
       include ServesAttachments
       before_action :require_admin!

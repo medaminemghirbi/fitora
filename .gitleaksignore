@@ -1,0 +1,9 @@
+# Gitleaks findings checked by hand and found not to be secrets. One line per
+# finding (commit:file:rule:line), never a file or a rule: a new finding in
+# the same file still fails the scan. Add a line only with the reason above it.
+
+# 2026-10-29: APP_KEY_ALPHABET, the characters a member/coach app key is made
+# of (now in app/lib/mobile_app_keys.rb). A character set, not a key.
+b6a5137a051b8fee313ab650a661a2d8e438301f:app/models/company.rb:generic-api-key:225
+# 2026-10-29: the same alphabet, under its earlier name.
+e076ca1913c9ee027a55a572c2b847f178d27619:app/models/company.rb:generic-api-key:258

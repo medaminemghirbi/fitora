@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe PruneOldRecordsJob do
+  include ActiveJob::TestHelper
+
   let(:company) { create(:company) }
 
   def notification(age, read:)
@@ -26,6 +28,20 @@ RSpec.describe PruneOldRecordsJob do
     expect(Notification.where(id: [ old_read, old_unread, recent_read, ancient_unread ].map(&:id)).ids)
       .to contain_exactly(old_unread.id, recent_read.id)
     expect(AuditLog.where(id: [ old_log, recent_log ].map(&:id)).ids).to eq([ recent_log.id ])
+  end
+
+  it "purges files nothing is attached to after a day, and never an attached one" do
+    upload = ->(name) { ActiveStorage::Blob.create_and_upload!(io: StringIO.new(name), filename: "#{name}.bin") }
+    orphan = upload.call("orphan").tap { |blob| blob.update_columns(created_at: 2.days.ago) } # rubocop:disable Rails/SkipsModelValidations
+    fresh_orphan = upload.call("fresh")
+    kept = upload.call("kept").tap { |blob| blob.update_columns(created_at: 2.days.ago) } # rubocop:disable Rails/SkipsModelValidations
+    ActiveStorage::Attachment.create!(name: "logo", record: company, blob: kept)
+
+    perform_enqueued_jobs { described_class.perform_now }
+
+    expect(ActiveStorage::Blob.where(id: [ orphan, fresh_orphan, kept ].map(&:id)).ids)
+      .to contain_exactly(fresh_orphan.id, kept.id)
+    expect(orphan.service.exist?(orphan.key)).to be(false)
   end
 
   it "runs every night" do

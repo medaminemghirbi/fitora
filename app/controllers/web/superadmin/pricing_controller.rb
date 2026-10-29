@@ -1,7 +1,6 @@
 module Web
   module Superadmin
     # What Fitora's two plans cost and the annual discount: SubscriptionPricing,
-    # as GET and PATCH /api/v1/superadmin/subscription_pricing answer it —
     # set in one currency, shown converted into every other with its rate.
     # ?currency= is the currency the form shows; saving there makes it the
     # one the prices are set in.

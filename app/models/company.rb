@@ -7,7 +7,7 @@ class Company < ApplicationRecord
   MAX_LOGO_SIZE = 10.megabytes
 
   # The company's display language — one setting for the whole tenant, set by
-  # a Fitora superadmin (Api::V1::Superadmin::CompaniesController#update_settings). The
+  # a Fitora superadmin (Web::Superadmin::CompaniesController#update_settings). The
   # frontend applies it from the bootstrap payload; there is no per-user
   # language switch inside a company's app.
   LOCALES = %w[fr en ar].freeze
@@ -39,6 +39,8 @@ class Company < ApplicationRecord
   has_many :recurring_schedules, dependent: :destroy
   has_many :memberships, dependent: :destroy
   has_many :clients, through: :memberships
+  # People this gym asked to add, who have not accepted (yet).
+  has_many :membership_requests, dependent: :delete_all
   has_many :contract_types, dependent: :destroy
   # Before contracts: a visit points at the subscription it counted against.
   has_many :visits, dependent: :delete_all

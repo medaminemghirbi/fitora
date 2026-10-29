@@ -2,9 +2,8 @@
 # what's new, screenshots and screen recordings. Publishing one notifies
 # every other superadmin AND every admin in real time (NotificationChannel):
 # the team knows the update went out, and every customer sees what's new.
-# Shared by POST /api/v1/superadmin/app_updates and the web UI's superadmin
-# updates page (MIGRATION_AUDIT §3.2); moved here unchanged from
-# Api::V1::Superadmin::AppUpdatesController.
+# Published from the superadmin console's updates page
+# (Web::Superadmin::UpdatesController).
 module ReleaseNotes
   module_function
 

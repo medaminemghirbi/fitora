@@ -174,4 +174,38 @@ RSpec.describe "Rack::Attack throttling on login", type: :request do
       expect(response.headers["Set-Cookie"].to_s).not_to include("_fitora_session")
     end
   end
+
+  # Its basic auth answers every guess on its own (Web::SidekiqDashboard).
+  # The dashboard is not mounted in test — what is checked is the ban,
+  # which Rack::Attack answers before any route.
+  describe "the Sidekiq dashboard" do
+    before do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("SIDEKIQ_WEB_PASSWORD").and_return(right)
+    end
+
+    let(:right) { "the-right-one-and-long-enough" }
+
+    def basic(user, password)
+      { "HTTP_AUTHORIZATION" => ActionController::HttpAuthentication::Basic.encode_credentials(user, password) }
+    end
+
+    it "shuts out an address after ten wrong passwords, the right one included, and no other address" do
+      10.times { get "/sidekiq", headers: basic("fitora", "guess") }
+      expect(response).not_to have_http_status(:forbidden)
+
+      get "/sidekiq", headers: basic("fitora", right)
+      expect(response).to have_http_status(:forbidden)
+
+      get "/sidekiq", headers: basic("fitora", right).merge("REMOTE_ADDR" => "10.9.9.9")
+      expect(response).not_to have_http_status(:forbidden)
+    end
+
+    it "never counts the right password, nor a request without one" do
+      20.times { get "/sidekiq", headers: basic("fitora", right) }
+      20.times { get "/sidekiq" }
+
+      expect(response).not_to have_http_status(:forbidden)
+    end
+  end
 end

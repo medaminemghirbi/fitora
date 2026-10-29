@@ -1,8 +1,7 @@
 # A gym writing to Fitora (a problem report, or a plan request with a phone
 # number): the ticket, its attachments and the audit trail — and Fitora
-# answering it. Shared by POST /api/v1/support_tickets, PATCH
-# /api/v1/superadmin/support_tickets/:id/resolve and the web UI's support
-# pages.
+# answering it. Shared by POST /api/v1/support_tickets, the web UI's support
+# pages and the superadmin console's (PATCH /superadmin/support/:id/resolve).
 module SupportRequest
   # Returns the ticket, saved or carrying its errors.
   def self.open(company:, user:, subject:, message:, kind: nil, contact_phone: nil, attachments: nil)

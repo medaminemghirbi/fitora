@@ -1,17 +1,76 @@
-# Weekly pull requests for outdated gems and GitHub Actions. Security
-# updates come as soon as an advisory is published, whatever the schedule.
+# Weekly pull requests for outdated dependencies, kept apart from feature
+# work: one ecosystem per pull request, minor and patch releases grouped,
+# each pull request running the full CI (.github/workflows/ci.yml) before
+# anyone merges it. Nothing is merged automatically.
+#
+# Major versions are left to a person, who reads the upgrade notes first:
+# `ignore` with update-types holds back version updates only. A security
+# advisory still opens its own pull request at once, major or not.
+#
+# cooldown: a release is proposed once it is a week old, so a bad release
+# pulled within days never reaches a pull request (security fixes are not
+# held back).
 version: 2
 updates:
   - package-ecosystem: bundler
     directory: "/"
     schedule:
       interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Africa/Tunis
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
     groups:
+      # Rails moves as one: its gems are released together.
       rails:
         patterns: [ "rails", "action*", "active*", "railties" ]
+      gems:
+        patterns: [ "*" ]
+        update-types: [ "minor", "patch" ]
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major" ]
 
+  # The web UI's build (esbuild, Sass, the CSS scoper) and its browser
+  # libraries.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Africa/Tunis
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
+    groups:
+      npm:
+        patterns: [ "*" ]
+        update-types: [ "minor", "patch" ]
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major" ]
+
+  # No docker entry: the Dockerfile's Ruby image has to match .ruby-version
+  # exactly (the Gemfile reads it), which Dependabot cannot change with it,
+  # and node:20-slim is a floating tag it has nothing to bump. CI does not
+  # build the image either, so such a pull request would pass untested.
+  # Both move by hand, Ruby together with .ruby-version (doc/ci.md).
+
+  # The workflow's actions, pinned by SHA: Dependabot updates the SHA and the
+  # version comment together. All in one pull request.
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Africa/Tunis
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: [ "*" ]

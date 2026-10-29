@@ -1,7 +1,5 @@
-# What Fitora itself looks like this month: GET /api/v1/superadmin/metrics
-# and the web UI's superadmin overview, from one definition
-# (MIGRATION_AUDIT §3.2). Moved here unchanged from
-# Api::V1::Superadmin::MetricsController.
+# What Fitora itself looks like this month: the superadmin console's
+# overview (Web::Superadmin::OverviewController).
 #
 # Deliberately small. A platform dashboard grows statistics nobody acts on
 # faster than anything else in a product, so every number here has a
@@ -11,6 +9,7 @@
 # Cross-tenant by design — the superadmin's is the one namespace that is,
 # and it reads aggregates only. No member, booking or payment row from any
 # gym is reachable from here (see docs/PERMISSIONS.md §6).
+# rubocop:disable Fitora/UnscopedTenantQuery
 module PlatformMetrics
   module_function
 
@@ -110,3 +109,4 @@ module PlatformMetrics
     (Time.current - 1.month).beginning_of_month..(Time.current - 1.month).end_of_month
   end
 end
+# rubocop:enable Fitora/UnscopedTenantQuery

@@ -19,6 +19,7 @@ class SignIn
     return Result.new(user: user) if user&.authenticate(password)
 
     client = Client.active.where.not(password_digest: nil).find_by(email: email)
+    spend_a_password_check(password) if user.nil? && client.nil?
     if client&.authenticate(password)
       # The member app is a Pro feature. Said only after the password checked
       # out, so it tells nobody but the member which gyms exist.
@@ -36,6 +37,22 @@ class SignIn
   # superadmin whose password this is, or nil.
   def self.superadmin(email, password)
     user = User.active.superadmin.find_by(email: email.to_s.downcase.strip)
+    spend_a_password_check(password) if user.nil?
     user if user&.authenticate(password)
   end
+
+  # An address with no account is checked against a password nobody has, so
+  # it takes as long to refuse as a wrong password does: bcrypt is the one
+  # slow step, and skipping it told anyone timing the answer which addresses
+  # exist.
+  def self.spend_a_password_check(password)
+    BCrypt::Password.new(unknown_account_digest).is_password?(password.to_s)
+  end
+
+  # At the cost real digests are made at (has_secure_password's: the
+  # minimum in tests).
+  def self.unknown_account_digest
+    @unknown_account_digest ||= User.new(password: SecureRandom.base58(24)).password_digest
+  end
+  private_class_method :spend_a_password_check, :unknown_account_digest
 end

@@ -16,7 +16,7 @@ module TenantRules
   # their status, and nothing that operates the gym. Staff get no exceptions
   # at all: once the free trial expires, only the admin has any access, and
   # only to this much, until a platform superadmin manually grants access
-  # again (Api::V1::Superadmin::CompaniesController#update_subscription).
+  # again (SuperadminActions.update_subscription, from the console).
   # Keyed by area, so each front end names the same three things.
   ADMIN_ALLOWED_WHEN_LOCKED = {
     # A locked admin still sees what they owe and can download the invoices
@@ -38,7 +38,7 @@ module TenantRules
   # #salle_for allowed (a tab's X-Company-Id, a web URL's salle), and for
   # staff only ever one it still works in (User#current_company). Never
   # confuse either with User#role == "superadmin", the Fitora platform
-  # operator handled entirely by Api::V1::Superadmin::*.
+  # operator handled entirely by the console (Web::Superadmin::*).
   def current_company
     @current_company ||= current_user&.current_company
   end

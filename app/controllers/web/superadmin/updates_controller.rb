@@ -2,8 +2,7 @@ module Web
   module Superadmin
     # The release notes: every update, searched by version, title or
     # description, with who published it; one on its own page with its
-    # screenshots and recordings; and publishing one (ReleaseNotes.publish,
-    # as POST /api/v1/superadmin/app_updates does).
+    # screenshots and recordings; and publishing one (ReleaseNotes.publish).
     class UpdatesController < BaseController
       TABLE = Web::DataTable::Definition.new(
         search: :version_or_title_or_description_cont,

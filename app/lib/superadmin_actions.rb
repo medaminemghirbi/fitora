@@ -1,10 +1,9 @@
 # What a Fitora superadmin does to a gym's account, reached through any one
 # of its salles: open or close its door, move its plan or its billing
 # period, set the salle's currency and language, record a payment (an
-# invoice) or take one back, and step inside to help. Shared by
-# Api::V1::Superadmin::CompaniesController and the web UI's superadmin
-# console (MIGRATION_AUDIT §3.2); moved here unchanged from the controller.
-# Audit-log actions are the API's.
+# invoice) or take one back, and step inside to help. Called by the
+# superadmin console (Web::Superadmin::CompaniesController). The audit-log
+# actions are named as the API's were.
 module SuperadminActions
   module_function
 

@@ -56,10 +56,12 @@ module Api
 
       # POST /api/v1/auth/logout — { all_devices: true } to sign out everywhere.
       #
-      # A plain logout is the client discarding its token. Every device at
-      # once moves the account's token_version on, which ends every token
-      # issued before it (see TokenVersioned).
+      # A plain logout ends this token, a copy of it too: its id is kept as
+      # signed out until it would have expired (RevokedSessions). Every
+      # device at once moves the account's token_version on, which ends
+      # every token issued before it (see TokenVersioned).
       def logout
+        RevokedSessions.revoke!(@token_claims[:jti], @token_claims[:expires_at])
         current_account.revoke_all_tokens! if ActiveModel::Type::Boolean.new.cast(params[:all_devices])
         head :no_content
       end

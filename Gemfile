@@ -55,9 +55,6 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
 
-# Deploy as a Docker container to any host (see config/deploy.yml).
-gem "kamal", require: false
-
 # S3-compatible object storage for Active Storage in production
 # (config/storage.yml :production).
 gem "aws-sdk-s3", require: false
@@ -106,6 +103,13 @@ group :development, :test do
 
   # Known-vulnerable gem versions, checked in CI against the ruby-advisory-db.
   gem "bundler-audit", require: false
+end
+
+# Deploy as a Docker container to any host (see config/deploy.yml). Run
+# from a developer's machine, never inside the app: it stays out of the
+# production image, and its SSH stack (net-ssh) with it.
+group :development do
+  gem "kamal", require: false
 end
 
 group :test do

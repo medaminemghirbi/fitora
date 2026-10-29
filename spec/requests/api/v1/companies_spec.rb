@@ -407,6 +407,19 @@ RSpec.describe "Api::V1::Companies", type: :request do
       expect(body).to include("signatory_name" => "Sami, gérant", "contract_terms" => "Serviette obligatoire.")
     end
 
+    it "links the signature for an hour, not for good" do
+      company.signature.attach(fixture_file_upload("sample.png", "image/png"))
+      get "/api/v1/company", headers: auth_headers(admin)
+      link = response.parsed_body.dig("company", "signature_url")
+
+      get link
+      expect(response).to have_http_status(:found)
+      travel CompanySerializer::SIGNATURE_LINK_EXPIRES_IN + 1.minute do
+        get link
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
     it "refuses a signature the PDF could not print" do
       patch "/api/v1/company", params: { company: { signature: fixture_file_upload("sample.txt", "text/plain") } },
                                headers: auth_headers(admin)

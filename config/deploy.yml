@@ -40,6 +40,16 @@ proxy:
   healthcheck:
     path: /up
 
+# Docker keeps a container's logs without limit by default, on the disk the
+# database shares: five files of 100 MB per container at most. Long enough
+# to read back an incident, short enough that the logs (which hold IP
+# addresses and filtered request lines) do not pile up for years.
+logging:
+  driver: json-file
+  options:
+    max-size: 100m
+    max-file: 5
+
 registry:
   server: ghcr.io            # or docker.io
   username: <REGISTRY_USER>
@@ -75,7 +85,7 @@ env:
     - SMTP_PASSWORD
     - SENTRY_DSN
     # - SENTRY_BROWSER_DSN   # optional: browser errors (.kamal/secrets.example)
-    - SIDEKIQ_WEB_PASSWORD
+    - SIDEKIQ_WEB_PASSWORD   # 24 characters or more, or /sidekiq is not mounted
     # add S3 creds here once storage.yml :production points at a bucket
     # - AWS_ACCESS_KEY_ID
     # - AWS_SECRET_ACCESS_KEY

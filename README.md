@@ -96,12 +96,19 @@ and commit the result.
 bundle exec rubocop                 # style (Omakase Rails style + house cops in lib/rubocop/cop/fitora)
 bundle exec brakeman --no-pager     # security static analysis
 bundle exec bundle-audit check --update   # gems with a published advisory
+gitleaks git --redact=100 --verbose .     # secrets anywhere in the Git history
 ```
 
 ## Continuous Integration
 
-Every push and pull request runs lint, security scan, and the full test suite —
-see [.github/workflows/ci.yml](.github/workflows/ci.yml).
+Every pull request, push to `master`, Monday morning and manual run goes
+through Rubocop, Brakeman, Bundler Audit, a Gitleaks secret scan, a check that
+the migrations still build `db/schema.rb`, and the full test suite with the
+API contract — [.github/workflows/ci.yml](.github/workflows/ci.yml).
+[doc/ci.md](doc/ci.md) says what fails each check, how to run it locally,
+what to do when one fails, and which GitHub settings make them required.
+Dependabot proposes minor and patch updates weekly
+([.github/dependabot.yml](.github/dependabot.yml)).
 
 ## Deployment
 

@@ -19,4 +19,22 @@ Sentry.init do |config|
   # Company/user context is attached per-request from
   # ApplicationController#tag_sentry_context! instead — not global here.
   config.breadcrumbs_logger = [ :active_support_logger ]
+
+  # sentry-sidekiq copies the failed job's whole payload, "args" included,
+  # into the event's sidekiq context, and ignores data_collection.queues
+  # when it does. A mail job's args hold the raw token of a reset or
+  # invitation link (see action_mailer.rb), so an SMTP outage would ship
+  # working links to Sentry. Jobs load their records by id, so the class,
+  # jid and retry count are what a report needs; the args are dropped.
+  # sentry-rails' own Active Job reporting (adapters other than Sidekiq)
+  # puts them under extra[:arguments].
+  config.before_send = lambda do |event, _hint|
+    sidekiq = event.contexts[:sidekiq]
+    if sidekiq.is_a?(Hash)
+      sidekiq.delete("args")
+      sidekiq.delete(:args)
+    end
+    event.extra&.delete(:arguments)
+    event
+  end
 end

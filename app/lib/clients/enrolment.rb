@@ -9,11 +9,21 @@ module Clients
   # Api::V1::ClientsController#create. Whether the caller may sell a plan at
   # all (the `contracts` capability) is the caller's check, made first.
   #
+  # An email Fitora already knows, for a person this gym does not train yet
+  # (Client#consent_needed_to_join?), adds no one: the person is asked
+  # (MembershipRequest) and the Result carries the request instead — no
+  # client, and no plan sold. The gym sells it once they have accepted.
+  #
   # Raises ApplicationRecord::Refused (plan / pack / activity not found, or a
-  # refusal from Contract.sell!) and ActiveRecord::RecordInvalid; nothing is
-  # kept when either is raised.
+  # refusal from Contract.sell! or MembershipRequest.ask!) and
+  # ActiveRecord::RecordInvalid; nothing is kept when either is raised.
   class Enrolment
-    Result = Struct.new(:client, :contract, :payment, keyword_init: true)
+    Result = Struct.new(:client, :contract, :payment, :request, keyword_init: true) do
+      # The person was asked rather than added.
+      def pending?
+        !request.nil?
+      end
+    end
 
     # `subscription`: contract_type_id, activity_id | pack_id, starts_on,
     # discount, collect_payment, payment_method, payment_notes — or empty.
@@ -27,6 +37,12 @@ module Clients
     end
 
     def call(person, membership, subscription)
+      known = Client.find_by_email(person.to_h.stringify_keys["email"])
+      if known&.consent_needed_to_join?(company)
+        request = MembershipRequest.ask!(company: company, client: known, by: user, person: person, membership: membership)
+        return Result.new(request: request)
+      end
+
       client = contract = nil
       ActiveRecord::Base.transaction do
         client = Client.enrol!(company, person: person, membership: membership)

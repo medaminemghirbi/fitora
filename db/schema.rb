@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_28_090400) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -59,6 +59,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_090400) do
     t.datetime "updated_at", null: false
     t.index ["activity_template_id"], name: "index_activities_on_activity_template_id"
     t.index ["company_id"], name: "index_activities_on_company_id"
+    t.index ["id", "company_id"], name: "index_activities_on_id_and_company_id", unique: true
     t.index ["name"], name: "index_activities_on_name_trgm", opclass: :gin_trgm_ops, using: :gin
   end
 
@@ -205,6 +206,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_090400) do
     t.string "photo_url"
     t.datetime "updated_at", null: false
     t.index ["company_id"], name: "index_coaches_on_company_id"
+    t.index ["id", "company_id"], name: "index_coaches_on_id_and_company_id", unique: true
   end
 
   create_table "companies", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -306,6 +308,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_090400) do
     t.datetime "updated_at", null: false
     t.integer "validity_days"
     t.index ["company_id"], name: "index_contract_types_on_company_id"
+    t.index ["id", "company_id"], name: "index_contract_types_on_id_and_company_id", unique: true
     t.index ["name"], name: "index_contract_types_on_name_trgm", opclass: :gin_trgm_ops, using: :gin
     t.check_constraint "validity_days IS NULL OR validity_days > 0", name: "contract_types_validity_days_positive"
   end
@@ -337,6 +340,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_090400) do
     t.index ["company_id"], name: "index_contracts_on_company_id"
     t.index ["contract_type_id"], name: "index_contracts_on_contract_type_id"
     t.index ["created_by_id"], name: "index_contracts_on_created_by_id"
+    t.index ["id", "company_id"], name: "index_contracts_on_id_and_company_id", unique: true
     t.index ["pack_id"], name: "index_contracts_on_pack_id"
     t.index ["renewed_from_id"], name: "index_contracts_on_renewed_from_id"
     t.index ["status", "expires_at"], name: "index_contracts_on_status_and_expires_at"
@@ -395,6 +399,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_090400) do
     t.index ["subscription_id", "paid_at"], name: "index_invoices_on_subscription_id_and_paid_at"
     t.index ["subscription_id", "period_start"], name: "index_invoices_on_subscription_id_and_period_start"
     t.index ["subscription_id"], name: "index_invoices_on_subscription_id"
+  end
+
+  create_table "membership_requests", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "client_id", null: false
+    t.uuid "company_id", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "membership", default: {}, null: false
+    t.jsonb "person", default: {}, null: false
+    t.uuid "requested_by_id"
+    t.datetime "sent_at", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_membership_requests_on_client_id"
+    t.index ["company_id", "client_id"], name: "index_membership_requests_on_company_id_and_client_id", unique: true
+    t.index ["company_id", "sent_at"], name: "index_membership_requests_on_company_id_and_sent_at"
+    t.index ["requested_by_id"], name: "index_membership_requests_on_requested_by_id"
+    t.index ["token_digest"], name: "index_membership_requests_on_token_digest", unique: true
   end
 
   create_table "memberships", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -458,6 +479,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_090400) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["company_id"], name: "index_packs_on_company_id"
+    t.index ["id", "company_id"], name: "index_packs_on_id_and_company_id", unique: true
   end
 
   create_table "payments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -516,6 +538,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_090400) do
     t.index ["activity_id"], name: "index_recurring_schedules_on_activity_id"
     t.index ["coach_id"], name: "index_recurring_schedules_on_coach_id"
     t.index ["company_id"], name: "index_recurring_schedules_on_company_id"
+    t.index ["id", "company_id"], name: "index_recurring_schedules_on_id_and_company_id", unique: true
     t.index ["space_id"], name: "index_recurring_schedules_on_space_id"
     t.index ["weekdays"], name: "index_recurring_schedules_on_weekdays", using: :gin
   end
@@ -532,6 +555,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_090400) do
     t.datetime "updated_at", null: false
     t.index ["company_id", "key"], name: "index_roles_on_company_id_and_key", unique: true
     t.index ["company_id"], name: "index_roles_on_company_id"
+    t.index ["id", "company_id"], name: "index_roles_on_id_and_company_id", unique: true
   end
 
   create_table "sessions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -567,6 +591,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_090400) do
     t.datetime "updated_at", null: false
     t.index ["company_id", "name"], name: "index_spaces_on_company_id_and_name", unique: true
     t.index ["company_id"], name: "index_spaces_on_company_id"
+    t.index ["id", "company_id"], name: "index_spaces_on_id_and_company_id", unique: true
     t.index ["name"], name: "index_spaces_on_name_trgm", opclass: :gin_trgm_ops, using: :gin
     t.check_constraint "capacity IS NULL OR capacity > 0", name: "spaces_capacity_positive"
   end
@@ -696,16 +721,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_090400) do
   add_foreign_key "contract_type_packs", "packs"
   add_foreign_key "contract_types", "companies"
   add_foreign_key "contracts", "activities"
+  add_foreign_key "contracts", "activities", column: ["activity_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_contracts_activity_id_same_company"
   add_foreign_key "contracts", "clients"
   add_foreign_key "contracts", "companies"
   add_foreign_key "contracts", "contract_types"
+  add_foreign_key "contracts", "contract_types", column: ["contract_type_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_contracts_contract_type_id_same_company"
   add_foreign_key "contracts", "contracts", column: "renewed_from_id"
+  add_foreign_key "contracts", "contracts", column: ["renewed_from_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_contracts_renewed_from_id_same_company"
   add_foreign_key "contracts", "packs"
+  add_foreign_key "contracts", "packs", column: ["pack_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_contracts_pack_id_same_company"
   add_foreign_key "contracts", "users", column: "created_by_id"
   add_foreign_key "data_imports", "companies"
   add_foreign_key "data_imports", "users"
   add_foreign_key "invoices", "subscriptions"
   add_foreign_key "invoices", "users", column: "issued_by_id"
+  add_foreign_key "membership_requests", "clients"
+  add_foreign_key "membership_requests", "companies"
+  add_foreign_key "membership_requests", "users", column: "requested_by_id", on_delete: :nullify
   add_foreign_key "memberships", "clients"
   add_foreign_key "memberships", "companies"
   add_foreign_key "notifications", "companies"
@@ -717,21 +749,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_090400) do
   add_foreign_key "payments", "companies"
   add_foreign_key "payments", "contract_periods"
   add_foreign_key "payments", "contracts"
+  add_foreign_key "payments", "contracts", column: ["contract_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_payments_contract_id_same_company"
   add_foreign_key "payments", "users", column: "created_by_id"
   add_foreign_key "recurring_schedules", "activities"
+  add_foreign_key "recurring_schedules", "activities", column: ["activity_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_recurring_schedules_activity_id_same_company"
   add_foreign_key "recurring_schedules", "coaches"
+  add_foreign_key "recurring_schedules", "coaches", column: ["coach_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_recurring_schedules_coach_id_same_company"
   add_foreign_key "recurring_schedules", "companies"
   add_foreign_key "recurring_schedules", "spaces"
+  add_foreign_key "recurring_schedules", "spaces", column: ["space_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_recurring_schedules_space_id_same_company"
   add_foreign_key "roles", "companies"
   add_foreign_key "sessions", "activities"
+  add_foreign_key "sessions", "activities", column: ["activity_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_sessions_activity_id_same_company"
   add_foreign_key "sessions", "coaches"
+  add_foreign_key "sessions", "coaches", column: ["coach_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_sessions_coach_id_same_company"
   add_foreign_key "sessions", "companies"
   add_foreign_key "sessions", "recurring_schedules"
+  add_foreign_key "sessions", "recurring_schedules", column: ["recurring_schedule_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_sessions_recurring_schedule_id_same_company"
   add_foreign_key "sessions", "spaces"
+  add_foreign_key "sessions", "spaces", column: ["space_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_sessions_space_id_same_company"
   add_foreign_key "spaces", "companies"
   add_foreign_key "staff_members", "coaches"
+  add_foreign_key "staff_members", "coaches", column: ["coach_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_staff_members_coach_id_same_company"
   add_foreign_key "staff_members", "companies"
   add_foreign_key "staff_members", "roles"
+  add_foreign_key "staff_members", "roles", column: ["role_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_staff_members_role_id_same_company"
   add_foreign_key "staff_members", "users"
   add_foreign_key "subscriptions", "users", column: "admin_id"
   add_foreign_key "support_tickets", "companies"
@@ -740,5 +782,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_090400) do
   add_foreign_key "visits", "clients"
   add_foreign_key "visits", "companies"
   add_foreign_key "visits", "contracts"
+  add_foreign_key "visits", "contracts", column: ["contract_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_visits_contract_id_same_company"
   add_foreign_key "visits", "users", column: "checked_in_by_id", on_delete: :nullify
 end

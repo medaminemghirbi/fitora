@@ -17,9 +17,15 @@ module RuboCop
       # single missed check on one future endpoint is exactly the failure
       # mode this cop exists to make impossible to merge.
       #
-      # Exempt: app/controllers/api/v1/superadmin/** and its web twin,
-      # app/controllers/web/superadmin/** — Fitora's own console is
+      # Runs on the controllers, and on app/lib, app/jobs and app/channels,
+      # where most queries live now (list queries, MemberApp, the jobs…).
+      # Not on the models: a model's own scopes are what the scoped calls
+      # end up in.
+      #
+      # Exempt: app/controllers/web/superadmin/** — Fitora's own console is
       # deliberately cross-tenant by design (it manages every company).
+      # Elsewhere, a query that is cross-tenant on purpose (a nightly sweep,
+      # the console's aggregates) says so with a rubocop:disable and why.
       class UnscopedTenantQuery < RuboCop::Cop::Base
         MSG = "%<receiver>s.%<method>s is unscoped — a cross-tenant data leak waiting to happen if nothing else " \
               "re-checks the company match. Scope it through current_company instead of calling " \
@@ -28,16 +34,20 @@ module RuboCop
         # Every model that belongs to a company, directly or through an
         # association chain (session -> location -> company, etc.) — kept in
         # sync by hand; a new tenant-scoped model should be added here.
+        # Subscription and Invoice belong to an admin's account, which is as
+        # much a tenant: one account must not read another's billing.
         # Deliberately NOT here: Company itself (the tenant root — finding a
         # bare Company is how you resolve a tenant in the first place, e.g.
         # PairingController) and User (login has to search by email across
         # everyone, unauthenticated, before any company is known).
         TENANT_MODELS = %w[
-          Client Booking Session Activity Coach Membership
+          Client Booking Session Activity Coach Membership MembershipRequest
           StaffMember Contract ContractType
           ContractTypeActivity Payment Space ActivitySpace
           AttendanceRecord RecurringSchedule SupportTicket Role
           AuditLog Notification DataImport
+          Visit CashClosing Pack PackActivity ContractTypePack
+          Subscription Invoice
         ].freeze
 
         RESTRICT_ON_SEND = %i[find find_by find_by! where].freeze
@@ -74,7 +84,7 @@ module RuboCop
 
         def superadmin_namespace?
           path = processed_source.path.to_s
-          path.include?("/controllers/api/v1/superadmin/") || path.include?("/controllers/web/superadmin/")
+          path.include?("/controllers/web/superadmin/")
         end
       end
     end

@@ -29,7 +29,7 @@ class SuperadminSupportTicketSerializer
         filename: file.filename.to_s,
         content_type: file.content_type,
         byte_size: file.byte_size,
-        url: Rails.application.routes.url_helpers.attachment_api_v1_superadmin_support_ticket_path(ticket, attachment_id: file.id)
+        url: Rails.application.routes.url_helpers.web_superadmin_support_attachment_path(ticket, attachment_id: file.id)
       }
     end
   end

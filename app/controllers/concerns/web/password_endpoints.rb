@@ -21,7 +21,7 @@ module Web
       end
 
       claims = session[Web::Authentication::SESSION_KEY]
-      session[Web::Authentication::SESSION_KEY] = claims.merge("tv" => account.reload.token_version, "exp" => JwtService::EXPIRATION.from_now.to_i)
+      session[Web::Authentication::SESSION_KEY] = claims.merge("tv" => account.reload.token_version, "exp" => session_lifetime(account).from_now.to_i)
       head :no_content
     end
 

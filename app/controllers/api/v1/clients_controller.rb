@@ -59,6 +59,10 @@ module Api
       # POST /api/v1/clients — adds someone to THIS gym, optionally selling
       # them a plan and taking the money in the same transaction
       # (Clients::Enrolment, shared with the web UI's new-member wizard).
+      #
+      # An email Fitora already knows, for someone this gym does not train,
+      # adds no one: 202 with the request the person was emailed
+      # (MembershipRequest), holding only what was sent here.
       def create
         return render_forbidden if subscription_params.present? && !capability?(:contracts)
 
@@ -66,6 +70,10 @@ module Api
           company: current_company, user: current_user,
           person: person_params, membership: membership_params, subscription: subscription_params
         )
+        if result.pending?
+          return render json: { membership_request: MembershipRequestSerializer.new(result.request).as_json }, status: :accepted
+        end
+
         render json: {
           client: ClientSerializer.new(result.client, company: current_company).as_json,
           contract: result.contract && ContractSerializer.new(result.contract).as_json,

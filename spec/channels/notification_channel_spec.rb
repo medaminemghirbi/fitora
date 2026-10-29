@@ -76,8 +76,13 @@ RSpec.describe ApplicationCable::Connection, type: :channel do
       expect(connection.current_client).to eq(member)
     end
 
-    it "refuses a session the pages would refuse: expired, signed out everywhere, an impersonation's superadmin gone" do
+    it "refuses a session the pages would refuse: expired, signed out, signed out everywhere, an impersonation's superadmin gone" do
       web_session(user, "exp" => 1.minute.ago.to_i)
+      expect { connect "/cable" }.to have_rejected_connection
+
+      sid = SecureRandom.uuid
+      RevokedSessions.revoke!(sid, 1.day.from_now)
+      web_session(user, "sid" => sid)
       expect { connect "/cable" }.to have_rejected_connection
 
       web_session(user, "tv" => user.token_version - 1)
@@ -104,5 +109,32 @@ RSpec.describe "POST /api/v1/cable_ticket", type: :request do
 
     get "/api/v1/auth/me", headers: { "Authorization" => "Bearer #{ticket}" }
     expect(response).to have_http_status(:unauthorized)
+  end
+end
+
+# A connection is checked as it opens (TokenVersioned): one already open when
+# the account's sessions end is closed, and its reconnection checked afresh.
+RSpec.describe "Closing live connections when an account's sessions end", type: :channel do
+  let(:user) { create(:user, :admin, password: "old-password-1") }
+
+  def close_for(account)
+    have_broadcasted_to("action_cable/#{account.to_gid_param}").with(type: "disconnect", reconnect: true)
+  end
+
+  it "closes them when the account signs out everywhere, changes its password or is deactivated" do
+    expect { user.revoke_all_tokens! }.to close_for(user)
+    expect { user.update!(password: "new-password-1") }.to close_for(user)
+    expect { user.update!(active: false) }.to close_for(user)
+  end
+
+  it "closes a member's, an erased member's too" do
+    member = create(:client, password: "member-pass-1")
+
+    expect { member.revoke_all_tokens! }.to close_for(member)
+    expect { member.anonymise! }.to close_for(member)
+  end
+
+  it "leaves them open on any other change" do
+    expect { user.update!(first_name: "Renamed") }.not_to have_broadcasted_to("action_cable/#{user.to_gid_param}")
   end
 end

@@ -1,7 +1,6 @@
 # What each plan (Starter, Pro) costs per month, plus the global annual
-# billing discount: what GET and PATCH /api/v1/superadmin/subscription_pricing
-# answer and what the web UI's superadmin pricing page shows, from one
-# definition (MIGRATION_AUDIT §3.2).
+# billing discount: what the superadmin console's pricing page shows and
+# saves (Web::Superadmin::PricingController).
 #
 # The prices are set in one currency (PlatformSetting#price_currency) and
 # every other is a conversion of them at the day's rate, rounded to whole
@@ -33,7 +32,7 @@ module SubscriptionPricing
       plans: SubscriptionPrice::PLANS.map do |plan|
         price = SubscriptionPrice.for(currency, plan: plan)
         # How many accounts are on this plan today, whatever they pay in.
-        { plan: plan, monthly_cents: price.monthly_cents, annual_cents: price.annual_cents(discount), accounts_count: Subscription.where(plan: plan).count }
+        { plan: plan, monthly_cents: price.monthly_cents, annual_cents: price.annual_cents(discount), accounts_count: Subscription.where(plan: plan).count } # rubocop:disable Fitora/UnscopedTenantQuery -- the console's count, across every account
       end,
       companies_count: companies.fetch(currency, 0),
       rates_fetched_at: ExchangeRate.fetched_at,

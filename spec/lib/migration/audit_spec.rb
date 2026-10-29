@@ -34,10 +34,14 @@ RSpec.describe Migration::Audit do
     expect(findings(result)["row counts"]).to be_ok
   end
 
-  # The check the whole audit exists for: a foreign key cannot tell that a
-  # row reaches into another company, and a migration that rewrote a
-  # reference is exactly where that would happen.
+  # The check the whole audit exists for: a row that reaches into another
+  # company, which a migration that rewrote a reference is exactly where it
+  # would happen. The same-company foreign keys refuse most of these now
+  # (AddSameCompanyForeignKeys); the audit still reads a database where one
+  # was left unvalidated, and the links no key covers. The key is dropped
+  # for this example only (DDL is transactional in PostgreSQL), to plant one.
   it "catches a session scheduled on another company's activity" do
+    ActiveRecord::Base.connection.remove_foreign_key :sessions, name: "fk_sessions_activity_id_same_company"
     session = create(:session)
     session.update_columns(activity_id: create(:activity, company: create(:company)).id)
 

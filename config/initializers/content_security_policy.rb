@@ -7,9 +7,12 @@
 # on S3). Scripts: this origin only — the views' inline <script>s are JSON
 # data blocks, which never run.
 #
-# Report-only until CSP_ENFORCE is set, so a page this list forgot is
-# reported, not broken. CSP_REPORT_URI sends the reports somewhere (Sentry's
-# security endpoint, for one); without it they only reach the browser console.
+# Enforced. Every page of the web UI was opened in a browser under it, as
+# each kind of account, menus and dialogs included, and nothing was blocked
+# (2026-10-29). CSP_REPORT_ONLY=1 turns it back to report-only without a
+# release, should a page it forgot turn up. CSP_REPORT_URI sends the reports
+# somewhere (Sentry's security endpoint, for one); without it they only
+# reach the browser console.
 #
 # See the Securing Rails Applications Guide for more information:
 # https://guides.rubyonrails.org/security.html#content-security-policy-header
@@ -27,7 +30,9 @@ Rails.application.configure do
     policy.font_src :self, :data, "https://fonts.gstatic.com"
     policy.img_src :self, :data, :blob, :https
     policy.media_src :self, :blob, :https
-    policy.connect_src :self, *sentry_origin
+    # The live connection (/cable) by name too: older Safari does not count
+    # wss: as 'self'.
+    policy.connect_src :self, *sentry_origin, *("wss://#{config.x.app_host}" if Rails.env.production?)
     policy.object_src :none
     policy.base_uri :self
     policy.form_action :self
@@ -35,5 +40,5 @@ Rails.application.configure do
     policy.report_uri ENV["CSP_REPORT_URI"] if ENV["CSP_REPORT_URI"].present?
   end
 
-  config.content_security_policy_report_only = ENV["CSP_ENFORCE"].blank?
+  config.content_security_policy_report_only = ENV["CSP_REPORT_ONLY"].present?
 end

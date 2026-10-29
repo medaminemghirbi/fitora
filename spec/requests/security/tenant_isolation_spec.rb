@@ -193,7 +193,7 @@ RSpec.describe "Security: tenant isolation", type: :request do
       /api/v1/clients /api/v1/activities /api/v1/sessions /api/v1/bookings
       /api/v1/contracts /api/v1/payments /api/v1/staff /api/v1/roles
       /api/v1/coaches /api/v1/spaces /api/v1/audit_logs /api/v1/notifications
-      /api/v1/me/profile /api/v1/me/bookings /api/v1/superadmin/companies
+      /api/v1/me/profile /api/v1/me/bookings
     ].each do |path|
       it "refuses #{path}" do
         get path

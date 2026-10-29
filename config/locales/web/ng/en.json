@@ -495,7 +495,8 @@
     "step_subscription": "Subscription",
     "step_payment": "Payment",
     "more_details": "More details",
-    "email_identifies_hint": "The email identifies the person. If they already train at another Fitora gym, their record follows them.",
+    "email_identifies_hint": "The email identifies the person. If they are already on Fitora, they get a request by email and show up in your members once they have accepted it.",
+    "join_request_sent": "{{email}} is already on Fitora: they have been emailed a request. They will show up in your members as soon as they accept it — you can sell them a subscription then.",
     "no_subscription_yet": "No subscription for now",
     "no_plan_for_activity": "No plan has a price for this activity. Set one in Subscriptions → Plans.",
     "total_due": "Total due",
@@ -553,7 +554,8 @@
     "waiver_signed": "Declaration signed on {{date}}",
     "waiver_missing": "Health declaration not signed",
     "errors": {
-      "still_subscribed": "This member still has a running subscription: cancel it first (their file → Subscription → ⋯ → Cancel subscription)."
+      "still_subscribed": "This member still has a running subscription: cancel it first (their file → Subscription → ⋯ → Cancel subscription).",
+      "too_many_join_requests": "Too many requests to join sent today. Try again tomorrow."
     },
     "photo_change": "Change the photo",
     "photo_title": "Member's photo",
@@ -1219,15 +1221,9 @@
       "code_subtitle": "Enter the 6-digit code your authenticator app shows.",
       "code_label": "6-digit code",
       "verify": "Verify and sign in",
-      "setup_title": "Turn on two-factor authentication",
-      "setup_subtitle": "First sign-in: link an authenticator app to your account. Its code will be asked for at every sign-in.",
-      "setup_step_1": "Install an authenticator app: Google Authenticator, Microsoft Authenticator, 1Password…",
-      "setup_step_2": "Scan this QR code with the app.",
-      "setup_manual": "Can't scan it? Enter this key:",
-      "setup_step_3": "Enter the 6-digit code it shows.",
-      "activate": "Turn on and sign in",
       "invalid_code": "Wrong or expired code. Enter the one the app shows now.",
       "expired": "The verification expired: sign in again.",
+      "not_set_up": "No authenticator app is set up for this account. It is set up from the server: bin/rails superadmin:setup_two_factor.",
       "signed_in_as": "Signing in {{email}}",
       "restart": "Use another account"
     },
@@ -2535,6 +2531,20 @@
       "future_day": "A day still to come cannot be closed.",
       "invalid_amount": "Type the amount counted in the drawer."
     }
+  },
+  "membership_request": {
+    "panel_title_1": "A gym is",
+    "panel_title_2": "inviting you.",
+    "panel_lead": "Nothing changes until you answer: the gym sees neither your name nor your phone number.",
+    "title": "{{gym}} would like to add you to its members",
+    "body": "If you accept, you become a member of {{gym}} on Fitora: the gym will see your name and phone number, and can offer you its subscriptions and sessions.",
+    "accept": "Accept",
+    "ignore_hint": "Don't want to join {{gym}}? Just close this page: the request will expire on its own.",
+    "accepted_title": "Done.",
+    "accepted_body": "You are now a member of {{gym}}. You can close this page.",
+    "invalid_title": "Link expired",
+    "invalid_body": "This link is no longer valid: the request was already answered, or it has expired. Ask the gym to send it again.",
+    "home": "Back to the home page"
   },
   "legal": {
     "documents": "Legal documents",

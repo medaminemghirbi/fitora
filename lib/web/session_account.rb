@@ -1,8 +1,9 @@
 module Web
   # Who a web session's claims name, if they still stand — checked the way
   # ApplicationController#authenticate_request! checks a token
-  # (MIGRATION_AUDIT §9.1): not expired, the account active and at its
-  # current token_version, and an impersonation's superadmin still one.
+  # (MIGRATION_AUDIT §9.1): not expired, not signed out (RevokedSessions),
+  # the account active and at its current token_version, and an
+  # impersonation's superadmin still one.
   # Read by the pages (Web::Authentication) and by the live connection
   # (ApplicationCable::Connection), so both accept the same sessions.
   module SessionAccount
@@ -14,6 +15,7 @@ module Web
 
     def self.resolve(claims)
       return NONE if claims.blank? || claims["exp"].to_i <= Time.current.to_i
+      return NONE if RevokedSessions.revoked?(claims["sid"])
 
       if claims["kind"] == "client"
         client = Client.active.find_by(id: claims["id"])

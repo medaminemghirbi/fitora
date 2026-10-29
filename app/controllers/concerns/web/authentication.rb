@@ -6,8 +6,12 @@ module Web
   # - the account must still exist and be active;
   # - its token_version must not have moved on — "sign out everywhere" and a
   #   password change end web sessions and JWTs alike;
-  # - the session expires 7 days after sign-in (1 hour when impersonating),
-  #   like JwtService::EXPIRATION, whatever the cookie itself says;
+  # - the session expires 7 days after sign-in (1 hour when impersonating,
+  #   12 hours in the superadmin's console), like JwtService::EXPIRATION,
+  #   whatever the cookie itself says;
+  # - signing out ends it for good, a copy of the cookie included: its id
+  #   ("sid") is kept as signed out until it would have expired
+  #   (RevokedSessions);
   # - an impersonation whose superadmin is gone, or no longer a superadmin,
   #   is over.
   module Authentication
@@ -15,6 +19,9 @@ module Web
 
     SESSION_KEY = :fitora
     STASH_KEY = :fitora_impersonator
+    # The console reaches every gym: a session there lasts a working day,
+    # not a week.
+    SUPERADMIN_LIFETIME = 12.hours
 
     included do
       helper_method :current_user, :current_client, :current_impersonator, :signed_in?, :impersonated_company_name
@@ -43,22 +50,30 @@ module Web
 
     def sign_in(account, impersonator: nil)
       reset_session # never carry a pre-sign-in session id across the door
-      lifetime = impersonator ? JwtService::IMPERSONATION_EXPIRATION : JwtService::EXPIRATION
       session[SESSION_KEY] = {
         "kind" => account.is_a?(Client) ? "client" : "user",
         "id" => account.id,
+        "sid" => SecureRandom.uuid,
         "tv" => account.token_version,
-        "exp" => lifetime.from_now.to_i
+        "exp" => session_lifetime(account, impersonator).from_now.to_i
       }
       session[SESSION_KEY]["imp"] = impersonator.id if impersonator
       @session_loaded = false
     end
 
     def sign_out
+      claims = session[SESSION_KEY]
+      RevokedSessions.revoke!(claims["sid"], claims["exp"]) if claims.is_a?(Hash)
       reset_session
       # The shell's banner choices belong to the session that made them.
       cookies.delete(:fitora_email_banner)
       @session_loaded = false
+    end
+
+    def session_lifetime(account, impersonator = nil)
+      return JwtService::IMPERSONATION_EXPIRATION if impersonator
+
+      account.try(:superadmin?) ? SUPERADMIN_LIFETIME : JwtService::EXPIRATION
     end
 
     # A superadmin working inside a gym's admin account (AuthService

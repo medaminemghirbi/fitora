@@ -115,7 +115,8 @@ module Clients
       all_access_plans = company.contract_types
                                 .joins(:contract_type_activities)
                                 .where(contract_type_activities: { activity_id: id })
-      packs_with_it = PackActivity.where(activity_id: id).select(:pack_id)
+      # Only ever narrows company_contracts below: a condition, not a read.
+      packs_with_it = PackActivity.where(activity_id: id).select(:pack_id) # rubocop:disable Fitora/UnscopedTenantQuery
 
       company_contracts.where(activity_id: id)
                        .or(company_contracts.where(activity_id: nil, pack_id: nil, contract_type_id: all_access_plans))

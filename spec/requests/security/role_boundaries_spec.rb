@@ -109,31 +109,8 @@ RSpec.describe "Security: role boundaries", type: :request do
   end
 
   describe "any staff login" do
-    it "cannot reach the platform superadmin console" do
-      get "/api/v1/superadmin/companies", headers: auth_headers(moderator.user)
-      expect(response).to have_http_status(:forbidden)
-
-      get "/api/v1/superadmin/companies", headers: auth_headers(coach_staff.user)
-      expect(response).to have_http_status(:forbidden)
-    end
-
     it "cannot reach the member's own app" do
       get "/api/v1/me/profile", headers: auth_headers(moderator.user)
-
-      expect(response).to have_http_status(:forbidden)
-    end
-
-    it "cannot set the platform's subscription pricing" do
-      patch "/api/v1/superadmin/subscription_pricing", params: { annual_discount_percent: 90 },
-                                                  headers: auth_headers(moderator.user)
-
-      expect(response).to have_http_status(:forbidden)
-    end
-  end
-
-  describe "an admin" do
-    it "cannot reach the platform superadmin console" do
-      get "/api/v1/superadmin/companies", headers: auth_headers(admin)
 
       expect(response).to have_http_status(:forbidden)
     end
@@ -167,11 +144,18 @@ RSpec.describe "Security: role boundaries", type: :request do
 
       expect(response).to have_http_status(:forbidden)
     end
+  end
 
-    it "cannot reach the platform superadmin console" do
-      get "/api/v1/superadmin/companies", headers: auth_headers(member)
+  # The console is the web UI's alone, behind its two-factor sign-in: the
+  # API has no superadmin door, even for a superadmin's own token.
+  # openapi: false — not part of the contract: there is no such path.
+  describe "the API's superadmin console, which is no more", openapi: false do
+    %w[/api/v1/superadmin/companies /api/v1/superadmin/metrics /api/v1/superadmin/subscription_pricing].each do |path|
+      it "answers #{path} as a page that does not exist, for a superadmin's token too" do
+        get path, headers: auth_headers(superadmin)
 
-      expect(response).to have_http_status(:forbidden)
+        expect(response).to have_http_status(:not_found)
+      end
     end
   end
 

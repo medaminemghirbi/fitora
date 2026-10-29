@@ -56,10 +56,15 @@ class CompanySerializer
 
   attr_reader :company
 
+  # The gym's handwritten signature, which goes on its contracts: a link
+  # that stops working, so one seen once cannot be fetched again for good
+  # (the logo's stays: it is on show to anyone, before signing in too).
+  SIGNATURE_LINK_EXPIRES_IN = 1.hour
+
   def signature_url
     return nil unless company.signature.attached?
 
-    Rails.application.routes.url_helpers.rails_blob_path(company.signature, only_path: true)
+    Rails.application.routes.url_helpers.rails_blob_path(company.signature, only_path: true, expires_in: SIGNATURE_LINK_EXPIRES_IN)
   end
 
   # The logo on show: none on Starter (Company#brand_logo).
