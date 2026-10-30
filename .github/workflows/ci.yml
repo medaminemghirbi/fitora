@@ -34,10 +34,15 @@ concurrency:
 # Third-party actions are pinned to a full commit SHA, the tag it was
 # reviewed at in the comment. Dependabot moves both together
 # (.github/dependabot.yml).
+#
+# The runner is pinned too, not ubuntu-latest: setup-ruby downloads a Ruby
+# built for that exact Ubuntu, and when ubuntu-latest moved to 26.04 there was
+# no 3.4.7 for it (its builds start at 3.4.9). Move to 26.04 together with a
+# Ruby that has a build for it (doc/ci.md).
 jobs:
   lint:
     name: Rubocop
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -57,7 +62,7 @@ jobs:
 
   security:
     name: Brakeman
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -89,7 +94,7 @@ jobs:
 
   dependency-audit:
     name: Bundler Audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -108,7 +113,7 @@ jobs:
 
   secret-scan:
     name: Secret scan (Gitleaks)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       # The whole history: a secret deleted from the code is still in the
@@ -152,7 +157,7 @@ jobs:
 
   migrations:
     name: Migrations
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
 
     env:
@@ -195,7 +200,7 @@ jobs:
 
   rspec:
     name: RSpec
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     env:

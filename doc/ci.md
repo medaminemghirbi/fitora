@@ -73,6 +73,7 @@ Each Dependabot pull request runs the full CI. **Nothing merges automatically.**
 Not covered by Dependabot:
 
 - **The Ruby version.** Change `.ruby-version` and the Dockerfile's `ruby:` image together, since the Gemfile requires that exact Ruby.
+- **The runner, `ubuntu-24.04`.** It is pinned rather than `ubuntu-latest` because `ruby/setup-ruby` downloads a Ruby built for that exact Ubuntu: when `ubuntu-latest` became 26.04, Ruby 3.4.7 had no build for it and every job failed at "Set up Ruby". Moving to 26.04 needs a Ruby with a 26.04 build (3.4.9 or later), so it goes with a Ruby upgrade.
 - **The Dockerfile's `node:20-slim` and CI's Node 20.** Node 20 reached end of life in April 2026; moving to Node 22 or 24 should be its own change, with a Docker build to confirm it.
 - **`config/deploy.yml`'s `postgres:16` and `redis:7`.**
 
