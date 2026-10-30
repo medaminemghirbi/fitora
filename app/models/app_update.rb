@@ -2,7 +2,7 @@
 # screenshots/screen-recordings. The latest row's `version` is what the
 # admin/superadmin shells show as the running app version. Publishing one fans
 # out a real-time "system_update" Notification to every other superadmin (see
-# Api::V1::Superadmin::AppUpdatesController#create).
+# ReleaseNotes.publish).
 class AppUpdate < ApplicationRecord
   # How many release notes a list shows, most recent first.
   LIST_LIMIT = 50

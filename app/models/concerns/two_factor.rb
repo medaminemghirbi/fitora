@@ -1,8 +1,8 @@
 # The superadmin's second factor: the six-digit codes of an authenticator
 # app (TOTP, RFC 6238 — Google Authenticator, Microsoft Authenticator,
 # 1Password…), asked for after the password at /superadmin/connexion
-# (Web::Superadmin::SessionsController). Set up there too, at the first
-# sign-in, from a QR code.
+# (Web::Superadmin::SessionsController). Set up on the server, from a QR
+# code in the terminal: `bin/rails superadmin:setup_two_factor EMAIL=…`.
 #
 # The app's secret is kept encrypted, with a key derived from
 # secret_key_base: a copy of the database alone does not make the codes.
@@ -10,8 +10,8 @@
 # from that step or an earlier one is refused, so one read over a shoulder
 # cannot be used again in its 30 seconds.
 #
-# Lost phone: `bin/rails superadmin:reset_two_factor EMAIL=…` turns it off,
-# and the next sign-in sets it up again.
+# Lost phone: the same task sets up the new one, and the old one's codes
+# are refused from then on.
 module TwoFactor
   extend ActiveSupport::Concern
 

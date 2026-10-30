@@ -7,6 +7,11 @@ class Coach < ApplicationRecord
 
   validates :first_name, :last_name, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+  # A picture somewhere on the web, which the API hands to every app that
+  # shows the coach: an https address, nothing a screen could run or that
+  # reads from the device (javascript:, data:, file:…). Checked when it
+  # changes, so a coach saved before keeps saving.
+  validate :photo_url_is_https, if: :photo_url_changed?
 
   scope :active, -> { where(active: true) }
 
@@ -32,6 +37,15 @@ class Coach < ApplicationRecord
   end
 
   private
+
+  def photo_url_is_https
+    return if photo_url.blank?
+
+    uri = URI.parse(photo_url)
+    errors.add(:photo_url, :invalid) unless uri.is_a?(URI::HTTPS) && uri.host.present?
+  rescue URI::InvalidURIError
+    errors.add(:photo_url, :invalid)
+  end
 
   def create_staff_login!(email, password)
     user = User.create!(

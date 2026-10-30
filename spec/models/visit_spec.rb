@@ -48,7 +48,7 @@ RSpec.describe Visit do
       expect(described_class.verdict_for(client, company).reason).to eq("inactive")
     end
 
-    it "is amber when the member is let in with something to say" do
+    it "is amber when the member is let in with something to say", :midday do
       subscribe(expires_at: 2.days.from_now)
       described_class.create!(company: company, client: client, checked_in_at: 3.hours.ago)
       verdict = described_class.verdict_for(client, company)
@@ -106,7 +106,7 @@ RSpec.describe Visit do
         expect(described_class.count).to eq(0)
       end
 
-      it "takes nothing when a class booked today already did" do
+      it "takes nothing when a class booked today already did", :midday do
         contract = subscribe(remaining_bookings: 3)
         session = create(:session, activity: contract.activity, company: company, starts_at: 1.hour.from_now)
         create(:booking, client: client, session: session, contract: contract, amount: 0)

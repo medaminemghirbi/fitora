@@ -1,60 +1,207 @@
 name: CI
 
+# What every change to Fitora has to pass before it merges: style, the Rails
+# security scan, known-vulnerable gems, leaked secrets, migrations that still
+# build db/schema.rb, and the test suite with the API contract. The jobs run
+# side by side; each one is a check a pull request shows on its own
+# (doc/ci.md says what each one checks and how to run it locally).
+#
+# Nothing here uses a secret or a deploy credential. A pull request from a
+# fork runs with a read-only token, as every pull_request event does.
+
 on:
   push:
     branches: [ main, master ]
+  # Every pull request, whatever branch it targets: no path filters, so a
+  # check marked required is never skipped and left waiting.
   pull_request:
+  workflow_dispatch:
+  # Every Monday too, so an advisory published against a gem already in the
+  # lock file, or a newly known secret pattern, fails without waiting for the
+  # next push.
+  schedule:
+    - cron: "0 6 * * 1"
 
 permissions:
   contents: read
 
+# A newer push to the same pull request replaces the run in progress. Pushes
+# to master each run to the end.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Third-party actions are pinned to a full commit SHA, the tag it was
+# reviewed at in the comment. Dependabot moves both together
+# (.github/dependabot.yml).
+#
+# The runner is pinned too, not ubuntu-latest: setup-ruby downloads a Ruby
+# built for that exact Ubuntu, and when ubuntu-latest moved to 26.04 there was
+# no 3.4.7 for it (its builds start at 3.4.9). Move to 26.04 together with a
+# Ruby that has a build for it (doc/ci.md).
 jobs:
   lint:
     name: Rubocop
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1.329.0
         with:
           bundler-cache: true
 
+      # Omakase style plus the house cops in lib/rubocop/cop/fitora, among
+      # them Fitora/UnscopedTenantQuery: a query on a tenant model that does
+      # not start from the gym. Offenses show as annotations on the diff.
       - name: Rubocop
         run: bundle exec rubocop --format github
 
-  brakeman:
+  security:
     name: Brakeman
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1.329.0
         with:
           bundler-cache: true
 
+      # Fails on any warning, at any confidence, that config/brakeman.ignore
+      # does not list, and on a file it could not parse. The summary is in the
+      # log; the full report, with code and links, is the brakeman artifact.
       - name: Brakeman
-        run: bundle exec brakeman --no-pager -q
+        run: |
+          mkdir -p tmp/brakeman
+          bundle exec brakeman --no-pager -q \
+            -o /dev/stdout -o tmp/brakeman/brakeman.html -o tmp/brakeman/brakeman.json
 
-  bundler-audit:
+      - name: Brakeman report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: brakeman
+          path: tmp/brakeman/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  dependency-audit:
     name: Bundler Audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1.329.0
         with:
           bundler-cache: true
 
-      # Gem versions with a published advisory (ruby-advisory-db).
+      # Gem versions in Gemfile.lock with a published advisory, against the
+      # ruby-advisory-db as it is today.
       - name: Bundler Audit
         run: bundle exec bundle-audit check --update
 
+  secret-scan:
+    name: Secret scan (Gitleaks)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # The whole history: a secret deleted from the code is still in the
+      # commit that added it, for anyone who clones the repository.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # The release binary, checked against the SHA-256 published with it,
+      # rather than a third-party action.
+      - name: Install Gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          cd "$RUNNER_TEMP"
+          curl -sSfL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum --check --strict
+          tar -xzf gitleaks.tar.gz gitleaks
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+      # Every commit of every branch fetched, this pull request's included.
+      # --redact=100: a finding's file, line, commit and rule are printed,
+      # never the value. Findings checked and found harmless are listed one
+      # by one in .gitleaksignore.
+      - name: Gitleaks
+        run: |
+          gitleaks git --redact=100 --verbose --no-banner \
+            --report-format json --report-path "$RUNNER_TEMP/gitleaks.json" .
+
+      - name: Gitleaks report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gitleaks
+          path: ${{ runner.temp }}/gitleaks.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  migrations:
+    name: Migrations
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/backend_migrations
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1.329.0
+        with:
+          bundler-cache: true
+
+      # The tests load db/schema.rb; production runs the migrations. Run on
+      # an empty database, they must write the same schema.rb that is
+      # committed — or one of them was edited, or the schema by hand.
+      - name: Migrations build db/schema.rb
+        env:
+          SCHEMA: tmp/schema.migrated.rb
+        run: |
+          bin/rails db:create db:migrate
+          diff -u db/schema.rb "$SCHEMA"
+
   rspec:
     name: RSpec
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
 
     env:
       RAILS_ENV: test
@@ -76,6 +223,8 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      # Sidekiq's queue, the cable, and the counters the specs exercise:
+      # two-factor tries, signed-out sessions, cable tickets.
       redis:
         image: redis:7
         ports:
@@ -87,10 +236,12 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1.329.0
         with:
           bundler-cache: true
 
@@ -100,7 +251,7 @@ jobs:
       # The web UI's request specs render its pages, which link the built
       # stylesheets and scripts (Propshaft refuses a missing asset).
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 20
           cache: npm
@@ -108,18 +259,23 @@ jobs:
       - name: Build web UI assets
         run: npm ci && npm run build && npm run build:css
 
-      # CI=true (set by GitHub) also turns on: Bullet raising on any N+1, and
-      # the coverage floor in spec/spec_helper.rb.
+      # Tenant isolation, role boundaries, impersonation, member identity and
+      # the other security regressions live in spec/requests/security and run
+      # with the rest. CI=true (set by GitHub) also turns on Bullet raising on
+      # any N+1, and the coverage floor in spec/spec_helper.rb.
       - name: RSpec
-        run: bundle exec rspec
+        run: bundle exec rspec --format documentation --format json --out tmp/rspec/results.json
 
-      - name: Coverage report
+      - name: Test results and coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: coverage
-          path: coverage/
+          name: rspec
+          path: |
+            tmp/rspec/
+            coverage/
           if-no-files-found: ignore
+          retention-days: 14
 
       # The API contract: doc/openapi.yaml, rewritten from the request specs.
       # Fixed order, because the generator merges examples as they arrive. A

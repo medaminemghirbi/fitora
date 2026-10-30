@@ -85,10 +85,10 @@ Rack::Attack.throttle("password_checks/ip", limit: 10, period: 5.minutes) do |re
 end
 
 # The web UI's twins of those endpoints: the token is in the form, not the path.
-WEB_EMAILED_TOKENS = %w[/auth/reset-password /auth/accept-invitation /verify-email].freeze
+WEB_EMAILED_TOKENS = %w[/auth/reset-password /auth/accept-invitation /verify-email /adhesion].freeze
 
 # The emailed-token endpoints: accepting an invitation, finishing a reset,
-# confirming an address. The tokens are 256 bits and not guessable, but
+# confirming an address, accepting a gym's request to add you. The tokens are 256 bits and not guessable, but
 # nothing unauthenticated should take unlimited attempts.
 Rack::Attack.throttle("emailed_tokens/ip", limit: 10, period: 1.minute) do |req|
   req.ip if req.patch? && (req.path.match?(%r{\A/api/v1/(invitations|password_resets|email_verifications)/[^/]+\z}) || WEB_EMAILED_TOKENS.include?(req.path))
@@ -121,6 +121,22 @@ Rack::Attack.throttled_responder = ->(request) { Web::RateLimit.respond(request)
 # guesses.
 Rack::Attack.throttle("app_config/ip", limit: 20, period: 1.minute) do |req|
   req.ip if req.get? && req.path.match?(%r{\A/api/v1/tenants/[^/]+/app_config\z})
+end
+
+# The Sidekiq dashboard's basic auth answers every guess, and /sidekiq is not
+# counted below. An address that sends it wrong credentials 10 times in 10
+# minutes is shut out of it for an hour. Until then a wrong password gets its
+# 401, so the browser asks again; the right one is never counted, so the
+# dashboard's own polling costs nothing.
+Rack::Attack.blocklist("sidekiq/basic_auth") do |req|
+  req.path.start_with?("/sidekiq") &&
+    Rack::Attack::Allow2Ban.filter("sidekiq/basic_auth:#{req.ip}", maxretry: 10, findtime: 10.minutes, bantime: 1.hour) do
+      auth = Rack::Auth::Basic::Request.new(req.env)
+      next false unless auth.provided? && auth.basic?
+
+      user, password = auth.credentials
+      !Web::SidekiqDashboard.valid_credentials?(user, password)
+    end
 end
 
 # ---- Every request ---------------------------------------------------------

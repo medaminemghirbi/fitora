@@ -39,9 +39,28 @@ RSpec.describe "Ending sessions", type: :request do
     expect(response).to have_http_status(:unauthorized)
   end
 
-  it "leaves other devices alone on a plain logout" do
+  it "ends this token on a plain logout, a copy of it included, and leaves other devices alone" do
+    token = JwtService.for_user(admin)
+    other_device = JwtService.for_user(admin)
+    post "/api/v1/auth/logout", headers: bearer(token)
+
+    get "/api/v1/auth/me", headers: bearer(token)
+    expect(response).to have_http_status(:unauthorized)
+    get "/api/v1/auth/me", headers: bearer(other_device)
+    expect(response).to have_http_status(:ok)
+  end
+
+  it "keeps the logout only until the token would have expired anyway" do
     token = JwtService.for_user(admin)
     post "/api/v1/auth/logout", headers: bearer(token)
+
+    ttl = Sidekiq.redis { |redis| redis.call("TTL", RevokedSessions.key(JwtService.decode(token)[:jti])) }
+    expect(ttl).to be_within(5).of(JwtService::EXPIRATION.to_i)
+  end
+
+  it "keeps accepting tokens while the list of signed-out ones cannot be read" do
+    token = JwtService.for_user(admin)
+    allow(Sidekiq).to receive(:redis).and_raise(RedisClient::CannotConnectError)
 
     get "/api/v1/auth/me", headers: bearer(token)
     expect(response).to have_http_status(:ok)

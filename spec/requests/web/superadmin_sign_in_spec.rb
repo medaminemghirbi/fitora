@@ -43,26 +43,23 @@ RSpec.describe "The superadmin's sign-in", type: :request, openapi: false do
     end
   end
 
-  describe "the first sign-in: setting the app up" do
-    it "shows a QR code and its key, and turns the app on with the code it makes" do
+  it "keeps the console open for a working day, not a week" do
+    web_sign_in(superadmin)
+    travel(Web::Authentication::SUPERADMIN_LIFETIME - 1.minute) { expect(signed_in?).to be(true) }
+    travel(Web::Authentication::SUPERADMIN_LIFETIME + 1.minute) { expect(signed_in?).to be(false) }
+  end
+
+  describe "without an app set up" do
+    it "refuses the password with the way to set one up, and never offers to set one up itself" do
       sign_in_password
-      expect(response).to redirect_to("/superadmin/connexion/code")
-      expect(signed_in?).to be(false)
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include(CGI.escapeHTML(Web::Translations.translate("superadmin.two_factor.not_set_up", locale: :fr)))
 
       get "/superadmin/connexion/code"
-      expect(response.headers["Cache-Control"]).to include("no-store")
-      expect(response.body).to include('class="sa-2fa-qr"', Web::Translations.translate("superadmin.two_factor.setup_title", locale: :fr))
-      secret = response.body[%r{<code[^>]*>([A-Z2-7 ]+)</code>}, 1].delete(" ")
-
-      enter_code("000000")
-      expect(response).to have_http_status(:unprocessable_content)
+      expect(response).to redirect_to("/superadmin/connexion")
+      enter_code("123456")
       expect(superadmin.reload.two_factor_enabled?).to be(false)
-
-      enter_code(ROTP::TOTP.new(secret).now)
-      expect(response).to redirect_to("/superadmin/overview")
-      expect(superadmin.reload.two_factor_enabled?).to be(true)
-      expect(superadmin.otp_secret_ciphertext).not_to include(secret)
-      expect(signed_in?).to be(true)
+      expect(signed_in?).to be(false)
     end
   end
 
@@ -132,6 +129,50 @@ RSpec.describe "The superadmin's sign-in", type: :request, openapi: false do
       expect(signed_in?).to be(false)
     end
 
+    # A code the app is not showing, whatever the time.
+    def wrong_code
+      ((ROTP::TOTP.new(secret).now.to_i + 1) % 1_000_000).to_s.rjust(6, "0")
+    end
+
+    it "counts the codes on the server: the cookie from before the first wrong one buys no more" do
+      sign_in_password
+      before_any_code = cookies["_fitora_session"]
+
+      max = Web::Superadmin::SessionsController::MAX_TRIES
+      answers = Array.new(max + 3) do
+        cookies["_fitora_session"] = before_any_code
+        enter_code(wrong_code)
+        response.status
+      end
+      expect(answers.first(max - 1)).to all(eq(422))
+      expect(answers.drop(max - 1)).to all(eq(302))
+
+      cookies["_fitora_session"] = before_any_code
+      enter_code(ROTP::TOTP.new(secret).now)
+      expect(response).to redirect_to("/superadmin/connexion")
+      expect(signed_in?).to be(false)
+    end
+
+    it "keeps the count through a new password step, and starts it again once the console opens" do
+      max = Web::Superadmin::SessionsController::MAX_TRIES
+      sign_in_password
+      (max - 1).times { enter_code(wrong_code) }
+      sign_in_password
+      enter_code(wrong_code)
+      expect(response).to redirect_to("/superadmin/connexion")
+
+      Sidekiq.redis { |redis| redis.call("DEL", "superadmin_2fa_tries:#{superadmin.id}") } # the window, run out
+      sign_in_password
+      (max - 1).times { enter_code(wrong_code) }
+      enter_code(ROTP::TOTP.new(secret).now)
+      expect(signed_in?).to be(true)
+      delete "/deconnexion"
+
+      sign_in_password
+      (max - 1).times { enter_code(wrong_code) }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
     it "lets the password stand for five minutes, and not past a new password" do
       sign_in_password
       travel 6.minutes do
@@ -147,15 +188,54 @@ RSpec.describe "The superadmin's sign-in", type: :request, openapi: false do
     end
   end
 
-  it "the reset task turns the app off and ends the sessions" do
-    enable_two_factor(superadmin)
-    Rails.application.load_tasks unless Rake::Task.task_defined?("superadmin:reset_two_factor")
+  describe "the setup task" do
+    let(:secret) { TwoFactor.new_secret }
 
-    ENV["EMAIL"] = superadmin.email
-    expect { Rake::Task["superadmin:reset_two_factor"].execute }.to output(/turned off/).to_stdout
-    expect(superadmin.reload.two_factor_enabled?).to be(false)
-    expect(superadmin.token_version).to eq(1)
-  ensure
-    ENV.delete("EMAIL")
+    def run_setup(input)
+      allow(TwoFactor).to receive(:new_secret).and_return(secret)
+      Rails.application.load_tasks unless Rake::Task.task_defined?("superadmin:setup_two_factor")
+      ENV["EMAIL"] = superadmin.email
+      $stdin = StringIO.new(input)
+      Rake::Task["superadmin:setup_two_factor"].execute
+    ensure
+      $stdin = STDIN
+      ENV.delete("EMAIL")
+    end
+
+    it "shows a QR code, and sets the app up with the code it makes" do
+      expect { run_setup("000000\n#{ROTP::TOTP.new(secret).now}\n") }.to output(/That is not the app's code.*set up for ops@fitora.tn/m).to_stdout
+      expect(superadmin.reload.two_factor_enabled?).to be(true)
+      expect(superadmin.otp_secret_ciphertext).not_to include(secret)
+
+      sign_in_password
+      travel(TwoFactor::INTERVAL.seconds) { enter_code(ROTP::TOTP.new(secret).now) }
+      expect(signed_in?).to be(true)
+    end
+
+    it "replaces a lost phone's app, and ends the sessions" do
+      old = enable_two_factor(superadmin)
+      expect { run_setup("#{ROTP::TOTP.new(secret).now}\n") }.to output(/set up/).to_stdout
+      expect(superadmin.reload.token_version).to eq(1)
+
+      sign_in_password
+      travel(TwoFactor::INTERVAL.seconds) { enter_code(ROTP::TOTP.new(old).now) }
+      expect(signed_in?).to be(false)
+    end
+
+    it "changes nothing until the app's code is given" do
+      old = enable_two_factor(superadmin)
+      expect { expect { run_setup("000000\n111111\n222222\n") }.to raise_error(SystemExit) }.to output.to_stdout.and output(/Nothing changed/).to_stderr
+      expect { expect { run_setup("") }.to raise_error(SystemExit) }.to output.to_stdout.and output(/No code given/).to_stderr
+
+      expect(superadmin.reload.token_version).to eq(0)
+      sign_in_password
+      enter_code(ROTP::TOTP.new(old).now)
+      expect(signed_in?).to be(true)
+    end
+
+    it "goes by its old name too" do
+      Rails.application.load_tasks unless Rake::Task.task_defined?("superadmin:reset_two_factor")
+      expect(Rake::Task["superadmin:reset_two_factor"].prerequisites).to eq([ "setup_two_factor" ])
+    end
   end
 end

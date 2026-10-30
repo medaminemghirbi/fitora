@@ -19,16 +19,12 @@ RSpec.describe "List ceilings", type: :request, openapi: false do
     expect(response.body).not_to include(oldest.subject)
   end
 
-  it "lists the most recent release notes, on the API and the page" do
+  it "lists the most recent release notes" do
     stub_const("AppUpdate::LIST_LIMIT", 2)
     _oldest, middle, newest = Array.new(3) { |i| create(:app_update, published_at: (3 - i).days.ago) }
 
     get "/api/v1/app_updates", headers: auth_headers(admin)
     expect(response.parsed_body["app_updates"].pluck("id")).to eq([ newest.id, middle.id ])
-
-    superadmin = create(:user, :superadmin)
-    get "/api/v1/superadmin/app_updates", headers: auth_headers(superadmin)
-    expect(response.parsed_body["app_updates"].size).to eq(2)
   end
 
   it "lists a member's most recent bookings, past and upcoming" do

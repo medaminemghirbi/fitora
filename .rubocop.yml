@@ -15,3 +15,6 @@ Fitora/UnscopedTenantQuery:
   Enabled: true
   Include:
     - "app/controllers/**/*.rb"
+    - "app/lib/**/*.rb"
+    - "app/jobs/**/*.rb"
+    - "app/channels/**/*.rb"

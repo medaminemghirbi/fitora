@@ -1,0 +1,9 @@
+Bonjour <%= @first_name %>,
+
+<%= @gym_name %> souhaite vous ajouter à ses membres sur Fitora. Si vous êtes d'accord, confirmez : la salle verra alors votre nom et votre numéro de téléphone, et pourra vous proposer ses abonnements et ses séances.
+
+Ce lien expire dans <%= @expires_in_days %> jours :
+
+<%= @accept_url %>
+
+Vous ne connaissez pas <%= @gym_name %>, ou vous ne voulez pas y être inscrit(e) ? Ignorez cet e-mail : la salle ne verra rien de vous.

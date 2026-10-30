@@ -3,7 +3,7 @@
 # settings (moved unchanged from Api::V1::CompaniesController).
 module CompanyProfile
   # currency + locale are tenant-wide settings a Fitora superadmin manages
-  # (Api::V1::Superadmin::CompaniesController#update_settings); the admin only
+  # (Web::Superadmin::CompaniesController#update_settings); the admin only
   # picks a currency once, at signup. A signature is taken off with
   # remove_signature, never by sending an empty file. Branding (logo, colour,
   # identifier) is a Pro tool: on Starter it is dropped rather than refused,

@@ -280,6 +280,24 @@ RSpec.describe "Web members page", type: :request, openapi: false do
       expect(response).to have_http_status(:unprocessable_content)
     end
 
+    it "someone Fitora already knows: asked by email, not added, back to the list with what happened" do
+      known = create(:client, company: create(:company), email: "rym@example.com", first_name: "Rym", last_name: "Elsewhere")
+      web_sign_in(admin)
+
+      expect {
+        post page_path, params: { client: person.merge(email: "Rym@Example.com"), subscription: {
+          contract_type_id: plan.id, activity_id: yoga.id, starts_on: Date.current.iso8601, collect_payment: "true", payment_method: "cash"
+        } }
+      }.to change(MembershipRequest, :count).by(1)
+      expect(Contract.count).to eq(0)
+
+      expect(response).to redirect_to(page_path)
+      expect(flash[:success]).to eq(Web::Translations.translate("clients.join_request_sent", { email: "rym@example.com" }, locale: :fr))
+      expect(known.reload.membership_for(company)).to be_nil
+      follow_redirect!
+      expect(response.body).not_to include("Elsewhere")
+    end
+
     it "opens by itself on ?action=new" do
       web_sign_in(admin)
       get page_path, params: { action: "new" }

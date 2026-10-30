@@ -38,6 +38,17 @@ class AccountMailer < ApplicationMailer
     mail(to: client.email, subject: "#{company.name} vous invite sur Fitora")
   end
 
+  # A gym asking to add someone Fitora already knows (MembershipRequest).
+  # Nothing joins until they accept from the link; ignoring it is a no.
+  def membership_request(request, raw_token)
+    @first_name = request.client.first_name
+    @gym_name = request.company.name
+    @accept_url = "#{FRONTEND_URL}/adhesion?token=#{raw_token}"
+    @expires_in_days = MembershipRequest::EXPIRY.to_i / 1.day
+
+    mail(to: request.client.email, subject: "#{request.company.name} souhaite vous compter parmi ses membres")
+  end
+
   # A Fitora superadmin closed the account's access (SuperadminActions
   # .update_subscription): every salle it covers, at once.
   def access_suspended(admin)

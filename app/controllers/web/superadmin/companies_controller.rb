@@ -1,10 +1,10 @@
 module Web
   module Superadmin
     # The gyms (SuperadminCompaniesComponent) and one gym's account
-    # (SuperadminCompanyDetailComponent): what GET /api/v1/superadmin/companies
-    # and …/:id answer, and the writes SuperadminActions makes — the plan, the
-    # access, the billing period, the currency and language, invoices, and
-    # stepping inside the account (the impersonation, in the session).
+    # (SuperadminCompanyDetailComponent), and the writes SuperadminActions
+    # makes — the plan, the access, the billing period, the currency and
+    # language, invoices, and stepping inside the account (the
+    # impersonation, in the session).
     class CompaniesController < BaseController
       before_action :set_company, except: :index
 

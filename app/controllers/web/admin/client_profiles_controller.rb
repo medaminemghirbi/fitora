@@ -102,7 +102,7 @@ module Web
       def sessions
         scope = current_company.sessions
         scope = scope.where(coach_id: current_staff_member.coach_id) if current_staff_member&.coach?
-        scope = scope.where(activity_id: params[:activity_id], status: :scheduled).for_date(Date.parse(params[:date]))
+        scope = scope.where(activity_id: params[:activity_id], status: :scheduled).for_date(Date.parse(params[:date].to_s))
                      .includes(:activity, :company, :coach, :space).order(:starts_at).limit(20).to_a
         counts = SessionSerializer.confirmed_counts(scope)
         sessions = scope.map { |s| SessionSerializer.new(s, confirmed_count: counts.fetch(s.id, 0)).as_json }

@@ -6,7 +6,7 @@
 # by design.
 #
 # When a Fitora superadmin impersonates an admin
-# (Api::V1::Superadmin::CompaniesController#impersonate), current_user IS the
+# (Web::Superadmin::CompaniesController#impersonate), current_user IS the
 # admin for the whole session — that is the point, so the superadmin sees exactly
 # what the admin sees. The consequence is that every audit log written during
 # that session would otherwise name the admin for something the superadmin did.

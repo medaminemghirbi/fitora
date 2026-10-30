@@ -18,8 +18,10 @@ class JwtService
     encode(client_id: client.id, token_version: client.token_version)
   end
 
-  # impersonator_id is only set for a superadmin-initiated impersonation session
-  # (see Api::V1::Superadmin::CompaniesController#impersonate) — it lets
+  # impersonator_id is only set for a superadmin-initiated impersonation
+  # session. Nothing issues one any more: impersonation starts from the
+  # console, in the web session (Web::Authentication), since the API's
+  # superadmin namespace was removed. A token carrying it still lets
   # authenticate_request! surface who is really behind the wheel without
   # changing what current_user resolves to (still the impersonated admin, so
   # every existing admin-only guard/capability check keeps working as-is).
@@ -31,8 +33,10 @@ class JwtService
   # tv is the account's token_version at issue. A token without one (issued
   # before versions were checked) reads as version 0, so it keeps working
   # until the account's version first moves.
+  #
+  # jti names this one token, so a logout can end it alone (RevokedSessions).
   def self.encode(user_id = nil, client_id: nil, impersonator_id: nil, token_version: 0, expires_in: EXPIRATION)
-    payload = { exp: expires_in.from_now.to_i, iat: Time.current.to_i, tv: token_version }
+    payload = { exp: expires_in.from_now.to_i, iat: Time.current.to_i, tv: token_version, jti: SecureRandom.uuid }
     payload[:user_id] = user_id if user_id
     payload[:client_id] = client_id if client_id
     payload[:impersonator_id] = impersonator_id if impersonator_id
@@ -74,7 +78,7 @@ class JwtService
     {
       user_id: payload["user_id"], client_id: payload["client_id"],
       impersonator_id: payload["impersonator_id"], token_version: payload["tv"].to_i,
-      expires_at: Time.zone.at(payload["exp"].to_i)
+      jti: payload["jti"], expires_at: Time.zone.at(payload["exp"].to_i)
     }
   rescue JWT::DecodeError, JWT::ExpiredSignature
     raise DecodeError

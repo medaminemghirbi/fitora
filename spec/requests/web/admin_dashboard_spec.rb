@@ -9,7 +9,7 @@ RSpec.describe "Web dashboard", type: :request, openapi: false do
 
   before { web_sign_in(admin) }
 
-  it "shows what GET /api/v1/admin/dashboard says: the figures, the day, what needs attention" do
+  it "shows what GET /api/v1/admin/dashboard says: the figures, the day, what needs attention", :midday do
     session = create(:session, company: company, activity: activity, starts_at: 1.hour.from_now)
     create(:booking, session: session, client: create(:client, company: company), status: :confirmed)
     get "/api/v1/admin/dashboard", headers: auth_headers(admin).merge("X-Company-Id" => company.id)

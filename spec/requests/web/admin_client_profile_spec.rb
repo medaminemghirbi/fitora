@@ -74,6 +74,8 @@ RSpec.describe "Web member file", type: :request, openapi: false do
     session = create(:session, company: company, activity: activity, starts_at: 2.days.from_now.change(hour: 9))
     get "#{base}/sessions", params: { activity_id: activity.id, date: session.starts_at.to_date.iso8601 }
     expect(response.body).to include(%(value="#{session.id}"))
+    get "#{base}/sessions", params: { activity_id: activity.id }
+    expect(response).to have_http_status(:bad_request)
 
     post "#{base}/bookings", params: { session_id: session.id, trial: true }, as: :json
     expect(response).to have_http_status(:created)

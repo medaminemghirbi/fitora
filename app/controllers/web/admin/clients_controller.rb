@@ -35,6 +35,13 @@ module Web
           company: current_company, user: current_user,
           person: person_params, membership: membership_params, subscription: subscription_params
         )
+        # Someone Fitora already knows was asked, not added: back to the
+        # list they will appear in once they accept.
+        if result.pending?
+          flash[:success] = helpers.ngt("clients.join_request_sent", email: person_params[:email].to_s.strip.downcase)
+          return redirect_to admin_page_path("clients"), status: :see_other
+        end
+
         flash[:success] = helpers.ngt("clients.created")
         redirect_to admin_page_path("clients/#{result.client.id}"), status: :see_other
       rescue ApplicationRecord::Refused => refusal

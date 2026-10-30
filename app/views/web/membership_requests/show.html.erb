@@ -1,0 +1,43 @@
+<%# ng: forgot-password %>
+<%# ng-host: forgot-password %>
+<%# A gym's request to add someone Fitora already knows (MembershipRequest),
+    answered from the emailed link: the question, then — same page — what
+    the answer did. On the account screens' own frame and words. %>
+<% gym_name = @gym_name || @membership_request&.company&.name %>
+<% content_for :auth_panel do %>
+  <div authPanel class="auth-panel">
+    <span class="auth-panel-icon" aria-hidden="true"><i class="bi bi-person-plus"></i></span>
+    <p class="auth-panel-title">
+      <%= ngt("membership_request.panel_title_1") %>
+      <em><%= ngt("membership_request.panel_title_2") %></em>
+    </p>
+    <p class="auth-panel-lead"><%= ngt("membership_request.panel_lead") %></p>
+  </div>
+<% end %>
+<app-auth-pro-shell>
+  <%= render layout: "web/shared/auth_pro_shell", locals: { tone: "soft" } do %>
+    <% if @accepted %>
+      <span class="auth-request-mark" aria-hidden="true"><i class="bi bi-check2-circle"></i></span>
+      <h1 class="auth-title"><%= ngt("membership_request.accepted_title") %></h1>
+      <p class="auth-subtitle" role="status"><%= ngt("membership_request.accepted_body", gym: gym_name) %></p>
+    <% elsif @membership_request %>
+      <h1 class="auth-title"><%= ngt("membership_request.title", gym: gym_name) %></h1>
+      <p class="auth-subtitle"><%= ngt("membership_request.body", gym: gym_name) %></p>
+
+      <form action="/adhesion" method="post" data-turbo="false">
+        <% if @error %>
+          <div class="alert alert-danger" role="alert"><%= @error %></div>
+        <% end %>
+        <input type="hidden" name="_method" value="patch">
+        <input type="hidden" name="token" value="<%= params[:token] %>">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <button type="submit" class="btn btn-primary w-100 mt-2"><%= ngt("membership_request.accept") %></button>
+      </form>
+      <p class="form-text mt-3"><%= ngt("membership_request.ignore_hint", gym: gym_name) %></p>
+    <% else %>
+      <h1 class="auth-title"><%= ngt("membership_request.invalid_title") %></h1>
+      <p class="auth-subtitle" role="alert"><%= @error || ngt("membership_request.invalid_body") %></p>
+      <a href="/" class="auth-btn-outline"><%= ngt("membership_request.home") %></a>
+    <% end %>
+  <% end %>
+</app-auth-pro-shell>

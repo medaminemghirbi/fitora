@@ -4,7 +4,8 @@ class DataImportJob < ApplicationJob
   queue_as :default
 
   def perform(import_id)
-    import = DataImport.find_by(id: import_id)
+    # The import names its own company: nothing is taken from the job's arguments but the id.
+    import = DataImport.find_by(id: import_id) # rubocop:disable Fitora/UnscopedTenantQuery
     return if import.nil? || import.finished?
 
     import.running!

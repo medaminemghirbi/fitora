@@ -39,7 +39,7 @@ module Dashboard
     end
 
     def base_sessions_scope
-      Session.where(company_id: company.id)
+      company.sessions
     end
 
     def todays_bookings
@@ -63,9 +63,11 @@ module Dashboard
       # Who actually came, for a session already over: its bookings are no
       # longer `confirmed` by then, so the booked count reads 0. One grouped
       # query for the whole day.
+      # rubocop:disable Fitora/UnscopedTenantQuery -- narrowed to this gym's sessions just above
       attended = AttendanceRecord.where(status: %i[present late]).joins(:booking)
                                  .where(bookings: { session_id: sessions.map(&:id) })
                                  .group("bookings.session_id").count
+      # rubocop:enable Fitora/UnscopedTenantQuery
       sessions.map do |session|
           {
             id: session.id,

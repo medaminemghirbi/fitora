@@ -12,7 +12,9 @@ class ApplicationController < ActionController::API
     token = request.headers["Authorization"]&.split(" ")&.last
     render_unauthorized and return if token.blank?
 
-    claims = JwtService.decode(token)
+    @token_claims = claims = JwtService.decode(token)
+    # Signed out (Api::V1::AuthController#logout): this token, wherever a copy went.
+    return render_unauthorized if RevokedSessions.revoked?(claims[:jti])
 
     if claims[:client_id]
       @current_client = Client.active.find_by(id: claims[:client_id])

@@ -9,9 +9,10 @@
 # device that has no account; these have one.
 #
 # The record is global rather than owned by one gym — the same person
-# training at two gyms is one Client with two Memberships — so that a gym
-# recording an existing email adopts the person instead of duplicating them.
-# Each gym still only ever sees its own membership, contracts and payments.
+# training at two gyms is one Client with two Memberships — so the person
+# is not duplicated. A gym recording an email Fitora already knows does not
+# get them, though: it asks them (MembershipRequest), and they join once they
+# accept. Each gym only ever sees its own membership, contracts and payments.
 class Client < ApplicationRecord
   include UnmaskedEmail
   include PasswordResettable
@@ -21,6 +22,8 @@ class Client < ApplicationRecord
 
   has_many :memberships, dependent: :destroy
   has_many :companies, through: :memberships
+  # Gyms asking to add them, not yet accepted.
+  has_many :membership_requests, dependent: :delete_all
 
   has_many :bookings, dependent: :destroy
   has_many :contracts, dependent: :destroy
@@ -77,11 +80,13 @@ class Client < ApplicationRecord
   # Adds someone to a gym and returns them.
   #
   # The email identifies the person across the platform, so an address that
-  # already has an account joins that person rather than creating a second
-  # one (#previously_new_record? tells the two apart afterwards). Their
-  # identity is theirs: only what it left blank is filled in. What the gym
-  # writes about them (date of birth, address, notes…) goes on this gym's
-  # membership, never on the shared person.
+  # already has an account is that person rather than a second one
+  # (#previously_new_record? tells the two apart afterwards). Someone another
+  # gym knows, or who signs in themselves, must have agreed first
+  # (#consent_needed_to_join?, MembershipRequest) — Clients::Enrolment asks
+  # them instead of calling this. Their identity is theirs: only what it
+  # left blank is filled in. What the gym writes about them (date of birth,
+  # address, notes…) goes on this gym's membership, never on the person.
   def self.enrol!(company, person:, membership: {})
     person = person.to_h.stringify_keys
     membership = membership.to_h.stringify_keys
@@ -120,8 +125,16 @@ class Client < ApplicationRecord
     memberships.find_by(company_id: company.is_a?(Company) ? company.id : company)
   end
 
-  # Joining is instant — there is nothing to approve. Called when a gym adds
-  # someone, and when a gym records an email another gym already has.
+  # Whether `company` must ask before adding this person: it does not train
+  # them yet, and they are someone else's member or have their own login.
+  # Joining them would show the gym the name and phone the person or another
+  # gym recorded.
+  def consent_needed_to_join?(company)
+    persisted? && !memberships.exists?(company_id: company.id) && (login_enabled? || memberships.exists?)
+  end
+
+  # The membership itself, once it may exist: a person new to Fitora, the
+  # gym's own member, or someone who accepted the gym's request.
   def join!(company)
     memberships.find_or_create_by!(company_id: company.id)
   end
@@ -165,6 +178,7 @@ class Client < ApplicationRecord
   # upcoming booking is cancelled and every session ends.
   def anonymise!
     transaction do
+      membership_requests.delete_all
       bookings.where(status: %i[confirmed waitlisted]).joins(:session).where(sessions: { starts_at: Time.current.. })
               .find_each(&:cancel!)
 
@@ -184,6 +198,7 @@ class Client < ApplicationRecord
         invitation_token_digest: nil, invitation_sent_at: nil,
         token_version: token_version + 1, updated_at: Time.current
       )
+      end_live_connections
     end
   end
 

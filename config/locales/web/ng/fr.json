@@ -495,7 +495,8 @@
     "step_subscription": "Abonnement",
     "step_payment": "Encaissement",
     "more_details": "Plus d'infos",
-    "email_identifies_hint": "L'e-mail identifie la personne. Si elle s'entraîne déjà dans une autre salle Fitora, son dossier la suit.",
+    "email_identifies_hint": "L'e-mail identifie la personne. Si elle est déjà sur Fitora, elle reçoit une demande par e-mail et apparaît dans vos adhérents une fois qu'elle l'a acceptée.",
+    "join_request_sent": "{{email}} est déjà sur Fitora : une demande lui a été envoyée par e-mail. Cette personne apparaîtra dans vos adhérents dès qu'elle l'aura acceptée — vous pourrez alors lui souscrire un abonnement.",
     "no_subscription_yet": "Sans abonnement pour l'instant",
     "no_plan_for_activity": "Aucune formule n'a de tarif pour cette activité. Fixez-en un dans Abonnements → Formules.",
     "total_due": "Total à régler",
@@ -553,7 +554,8 @@
     "waiver_signed": "Décharge signée le {{date}}",
     "waiver_missing": "Décharge santé non signée",
     "errors": {
-      "still_subscribed": "Cet adhérent a encore un abonnement en cours : résiliez-le d'abord (sa fiche → Abonnement → ⋯ → Résilier)."
+      "still_subscribed": "Cet adhérent a encore un abonnement en cours : résiliez-le d'abord (sa fiche → Abonnement → ⋯ → Résilier).",
+      "too_many_join_requests": "Trop de demandes d'adhésion envoyées aujourd'hui. Réessayez demain."
     },
     "photo_change": "Changer la photo",
     "photo_title": "Photo du membre",
@@ -1219,15 +1221,9 @@
       "code_subtitle": "Saisissez le code à 6 chiffres qu'affiche votre application d'authentification.",
       "code_label": "Code à 6 chiffres",
       "verify": "Vérifier et se connecter",
-      "setup_title": "Activer la double authentification",
-      "setup_subtitle": "Première connexion : reliez une application d'authentification à votre compte. Son code vous sera demandé à chaque connexion.",
-      "setup_step_1": "Installez une application d'authentification : Google Authenticator, Microsoft Authenticator, 1Password…",
-      "setup_step_2": "Scannez ce QR code avec l'application.",
-      "setup_manual": "Impossible de scanner ? Saisissez cette clé :",
-      "setup_step_3": "Saisissez le code à 6 chiffres qu'elle affiche.",
-      "activate": "Activer et se connecter",
       "invalid_code": "Code incorrect ou expiré. Saisissez celui qu'affiche l'application maintenant.",
       "expired": "La vérification a expiré : reconnectez-vous.",
+      "not_set_up": "Aucune application d'authentification n'est reliée à ce compte. Elle se configure depuis le serveur : bin/rails superadmin:setup_two_factor.",
       "signed_in_as": "Connexion de {{email}}",
       "restart": "Changer de compte"
     },
@@ -2535,6 +2531,20 @@
       "future_day": "On ne peut pas clôturer un jour à venir.",
       "invalid_amount": "Saisissez le montant compté dans le tiroir."
     }
+  },
+  "membership_request": {
+    "panel_title_1": "Une salle vous",
+    "panel_title_2": "invite.",
+    "panel_lead": "Rien ne change tant que vous n'avez pas répondu : la salle ne voit ni votre nom ni votre téléphone.",
+    "title": "{{gym}} souhaite vous ajouter à ses membres",
+    "body": "En acceptant, vous devenez membre de {{gym}} sur Fitora : la salle verra votre nom et votre numéro de téléphone, et pourra vous proposer ses abonnements et ses séances.",
+    "accept": "Accepter",
+    "ignore_hint": "Vous ne souhaitez pas rejoindre {{gym}} ? Fermez simplement cette page : la demande expirera d'elle-même.",
+    "accepted_title": "C'est fait.",
+    "accepted_body": "Vous êtes désormais membre de {{gym}}. Vous pouvez fermer cette page.",
+    "invalid_title": "Lien expiré",
+    "invalid_body": "Ce lien n'est plus valable : la demande a déjà reçu une réponse, ou elle a expiré. Demandez à la salle de vous l'envoyer à nouveau.",
+    "home": "Retour à l'accueil"
   },
   "legal": {
     "documents": "Documents légaux",

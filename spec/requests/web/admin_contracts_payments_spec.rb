@@ -252,13 +252,16 @@ RSpec.describe "Web contracts and payments", type: :request, openapi: false do
     end
 
     it "renews onto the same formule, or onto another one priced for the activity" do
+      # Looked up before `other`, a second Pilates term, exists: `contract`
+      # finds "the Pilates term not paused", and would then find either.
+      not_due = contract
       # Within Contract::RENEWAL_WINDOW of their end.
       same = company.contracts.find_by!(contract_type: yoga, client: company.clients.find_by!(first_name: "Lina"))
       other = create(:contract, client: same.client, contract_type: pilates, payment_status: :paid, expires_at: 3.days.from_now)
 
-      post "/admin/#{company.id}/contracts/#{contract.id}/renew", as: :json
+      post "/admin/#{company.id}/contracts/#{not_due.id}/renew", as: :json
       expect(response).to have_http_status(:unprocessable_content) # not due yet: the model's refusal, with the day it opens
-      opens = local(contract.expires_at - Contract::RENEWAL_WINDOW).to_date
+      opens = local(not_due.expires_at - Contract::RENEWAL_WINDOW).to_date
       expect(response.parsed_body["error"]).to eq(say("contracts.errors.renew_too_early",
                                                       date: Web::DateFormat.angular(opens.in_time_zone(company.time_zone), "d MMM y", locale: cookies["fitora_locale"].presence || "fr")))
 

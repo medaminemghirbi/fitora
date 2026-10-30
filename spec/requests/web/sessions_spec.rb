@@ -127,6 +127,28 @@ RSpec.describe "Web sign-in", type: :request, openapi: false do
       expect(response).to redirect_to("/connexion")
     end
 
+    it "stays signed out for a copy of the cookie kept from before signing out" do
+      web_sign_in(admin)
+      copy = cookies[:_fitora_session]
+      delete "/deconnexion"
+
+      cookies[:_fitora_session] = copy
+      get "/admin/#{company.id}/clients"
+      expect(response).to redirect_to("/connexion")
+    end
+
+    it "leaves the account's other sessions open when one signs out" do
+      web_sign_in(admin)
+      other_browser = cookies[:_fitora_session]
+      reset! # a second browser
+      web_sign_in(admin)
+      delete "/deconnexion"
+
+      cookies[:_fitora_session] = other_browser
+      get "/admin/#{company.id}/clients"
+      expect(response).to have_http_status(:ok)
+    end
+
     it "ends when the account signs out everywhere (token_version), like a JWT" do
       web_sign_in(admin)
       admin.revoke_all_tokens!

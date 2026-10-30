@@ -15,6 +15,21 @@ RSpec.describe Coach do
     expect(build(:coach, company: company, email: "")).to be_valid
   end
 
+  it "takes an https photo address, or none, and nothing a screen could run or read from the device" do
+    expect(build(:coach, company: company, photo_url: "https://cdn.example.com/sami.jpg")).to be_valid
+    expect(build(:coach, company: company, photo_url: "")).to be_valid
+    %w[javascript:alert(1) data:image/png;base64,AAAA file:///etc/passwd http://cdn.example.com/sami.jpg https:// not\ a\ url].each do |value|
+      expect(build(:coach, company: company, photo_url: value)).not_to be_valid, value
+    end
+  end
+
+  it "keeps saving a coach whose old photo address is not https" do
+    coach = create(:coach, company: company)
+    coach.update_columns(photo_url: "http://old.example.com/sami.jpg") # rubocop:disable Rails/SkipsModelValidations
+
+    expect(coach.update(bio: "Coach EMS")).to be(true)
+  end
+
   it "builds the full name from first and last name" do
     coach = build(:coach, first_name: "Sami", last_name: "Cherif")
     expect(coach.full_name).to eq("Sami Cherif")
