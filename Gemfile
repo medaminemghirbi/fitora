@@ -2,9 +2,9 @@ source "https://rubygems.org"
 
 ruby file: ".ruby-version"
 
-gem "rails", "~> 8.1.3"
+gem "rails", "~> 8.1.4"
 # Use postgresql as the database for Active Record
-gem "pg", "~> 1.1"
+gem "pg", "~> 1.7"
 
 # Removed from Ruby's default gems in 3.4 — used by config/application.rb and
 # the payroll xlsx/report exports.
@@ -27,7 +27,7 @@ gem "rails-i18n", "~> 8.0"
 # a direction and the filters into SQL, only over what each model allowlists
 # for the console (ransackable_*); Pagy pages the result.
 gem "ransack", "~> 5.0.2"
-gem "pagy", "~> 43.6.3"
+gem "pagy", "~> 43.8.1"
 
 # Password hashing for User#password
 gem "bcrypt", "~> 3.1.7"
