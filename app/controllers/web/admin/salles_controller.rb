@@ -1,6 +1,6 @@
 module Web
   module Admin
-    # "Mes salles" (SallesComponent) and moving the session onto another
+    # "Mes salles  de sport" (SallesComponent) and moving the session onto another
     # salle (the navbar's switcher and this page), as /api/v1/companies does
     # both.
     class SallesController < BaseController

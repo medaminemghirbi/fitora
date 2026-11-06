@@ -55,7 +55,7 @@ module Web
     end
 
     # NavbarComponent#switchableCompanies: an admin always sees the
-    # switcher (it is also their way to "Mes salles"); a moderator once
+    # switcher (it is also their way to "Mes salles de sport"); a moderator once
     # posted to more than one salle.
     def shell_switchable_companies
       user = bootstrap[:user]

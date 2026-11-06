@@ -1,4 +1,4 @@
-# "Mes salles": every salle an admin runs, with what it holds, and every
+# "Mes salles  de sport": every salle an admin runs, with what it holds, and every
 # back-office login with where it works — for /api/v1/companies/network and
 # the web UI's salles page (moved unchanged from Api::V1::CompaniesController).
 # `current`: the salle the request works in, marked active.

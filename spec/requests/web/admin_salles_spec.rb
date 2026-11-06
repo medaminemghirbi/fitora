@@ -1,6 +1,6 @@
 require "rails_helper"
 
-# Module 5: "Mes salles". openapi: false — the API calls are oracles.
+# Module 5: "Mes salles  de sport". openapi: false — the API calls are oracles.
 RSpec.describe "Web salles", type: :request, openapi: false do
   let(:company) { create(:company, setup_dismissed_at: Time.current, city: "La Marsa") }
   let(:admin) { company.admin }

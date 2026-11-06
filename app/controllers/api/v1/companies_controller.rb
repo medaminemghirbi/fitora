@@ -25,7 +25,7 @@ module Api
         }
       end
 
-      # GET /api/v1/companies/network — the admin's "Mes salles" page: every
+      # GET /api/v1/companies/network — the admin's "Mes salles  de sport" page: every
       # salle with what it holds, and every moderator with where they work.
       def network
         render json: network_json

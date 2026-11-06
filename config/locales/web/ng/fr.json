@@ -212,8 +212,8 @@
     "role_admin": "Administrateur",
     "role_coach": "Coach",
     "role_staff": "Équipe",
-    "my_salles": "Mes salles",
-    "manage_salles": "Gérer mes salles",
+    "my_salles": "Mes salles de sport",
+    "manage_salles": "Gérer mes salles  de sport",
     "updates": "Nouveautés"
   },
   "dashboard": {
@@ -656,7 +656,7 @@
     "role_reserved_title": "Réservé à l'administrateur, pour tous les rôles",
     "role_reserved_settings": "Paramètres de la salle",
     "role_reserved_accounts": "Comptes & rôles",
-    "role_reserved_salles": "Mes salles",
+    "role_reserved_salles": "Mes salles de sport",
     "role_reserved_refunds": "Remboursements",
     "role_reserved_member_removal": "Suppression d'un adhérent",
     "role_changes_one": "1 modification non enregistrée",
@@ -2044,7 +2044,7 @@
     "deleted": "Votre compte a été supprimé."
   },
   "salles": {
-    "title": "Mes salles",
+    "title": "Mes salles de sport",
     "subtitle": "Toutes vos salles, un seul compte : passez de l'une à l'autre et affectez vos modérateurs.",
     "new": "Nouvelle salle",
     "new_hint": "Ouvrez une autre salle sur le même compte.",
