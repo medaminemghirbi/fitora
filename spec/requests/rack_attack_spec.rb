@@ -7,7 +7,10 @@ RSpec.describe "Rack::Attack throttling on login", type: :request do
   around do |example|
     Rack::Attack.enabled = true
     Rack::Attack.cache.reset!
-    example.run
+    # A throttle counts in windows that follow the clock, so requests on both
+    # sides of a window's end would start counting again. The top of the hour
+    # starts every window these examples can fill, and the clock stays there.
+    travel_to(Time.current.beginning_of_hour) { example.run }
   ensure
     Rack::Attack.cache.reset!
     Rack::Attack.enabled = false
