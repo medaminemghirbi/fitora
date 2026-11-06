@@ -101,10 +101,14 @@ export default class extends Controller {
     this.signature = file
     this.removeSignature = false
     this.signaturePreview = null
-    if (!file) return this.renderSignature()
+    if (!file) {
+      this.announceSignature()
+      return this.renderSignature()
+    }
     const reader = new FileReader()
     reader.onload = () => {
       this.signaturePreview = reader.result
+      this.announceSignature()
       this.renderSignature()
     }
     reader.readAsDataURL(file)
@@ -115,7 +119,16 @@ export default class extends Controller {
     this.signature = null
     this.signaturePreview = null
     this.removeSignature = Boolean(this.signatureUrl)
+    this.announceSignature()
     this.renderSignature()
+  }
+
+  // The signature as it now stands, for the document drawn beside the form,
+  // and whether it differs from the one on file, for the bar under it. It lives
+  // here rather than in a field, so nothing else can read it.
+  announceSignature() {
+    this.dispatch("signature", { detail: { src: this.removeSignature ? null : this.signaturePreview ?? this.signatureUrl } })
+    this.formTarget.dispatchEvent(new CustomEvent("settings:touched", { bubbles: true, detail: { key: "signature", dirty: Boolean(this.signature) || this.removeSignature } }))
   }
 
   // The block under the tabs: the signature on file (kept while a new one
@@ -214,8 +227,12 @@ export default class extends Controller {
     this.signaturePreview = null
     this.removeSignature = false
     this.signatureUrl = company.signature_url
-    if (this.hasSignatureBlockTarget) this.refreshCurrent()
+    if (this.hasSignatureBlockTarget) {
+      this.refreshCurrent()
+      this.announceSignature()
+    }
     toast("success", this.labelsValue.saved)
+    this.formTarget.dispatchEvent(new CustomEvent("settings:saved", { bubbles: true }))
     applyBranding(company)
   }
 

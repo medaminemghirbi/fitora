@@ -36,10 +36,18 @@ RSpec.describe "Web sign-in", type: :request, openapi: false do
       expect(response).to redirect_to("/admin/#{company.id}/onboarding")
     end
 
-    it "an admin with no salle yet: naming one" do
+    it "a login with no salle: the page that says so, and no way into a shell" do
       lonely = create(:user, :admin)
       web_sign_in(lonely)
-      expect(response).to redirect_to("/admin/setup-company")
+      expect(response).to redirect_to("/sans-salle")
+      follow_redirect!
+      expect(response.body).to include(Web::Translations.translate("auth.no_salle_title", locale: :fr), "contact@fitora.io")
+    end
+
+    it "an admin whose first sign-in is unfinished: the form that finishes it" do
+      admin.update!(terms_accepted_at: nil)
+      web_sign_in(admin)
+      expect(response).to redirect_to("/premiere-connexion")
     end
 
     it "an admin whose address is not confirmed: the inbox screen" do
@@ -102,13 +110,51 @@ RSpec.describe "Web sign-in", type: :request, openapi: false do
       expect(response.body).to include(%(data-check-error="email"))
     end
 
-    it "a member whose gym has no member app: the same code the Angular page shows" do
+    it "a suspended account: the admin and the team are told, once the password has checked out" do
+      staff = create(:staff_member, company: company, role: :moderator).user
+      SuperadminActions.suspend_access(company, by: create(:user, :superadmin))
+      words = CGI.escapeHTML(Web::Translations.translate("auth.access_suspended", locale: :fr))
+
+      [ admin, staff ].each do |login|
+        web_sign_in(login)
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include(words)
+
+        web_sign_in(login, password: "wrong-password")
+        expect(response.body).not_to include(words)
+      end
+    end
+
+    it "a suspended account's members still sign in to their own app" do
       member = create(:client, company: company, email: "m@example.com")
       member.update!(password: "password123")
+      SuperadminActions.suspend_access(company, by: create(:user, :superadmin))
+
+      web_sign_in(member)
+
+      expect(response).to redirect_to("/member/home")
+    end
+
+    it "ends a session already open when the account is suspended" do
+      company.update!(setup_dismissed_at: Time.current)
+      web_sign_in(admin)
+      get "/admin/#{company.id}/dashboard"
+      expect(response).to have_http_status(:ok)
+
+      SuperadminActions.suspend_access(company, by: create(:user, :superadmin))
+
+      get "/admin/#{company.id}/dashboard"
+      expect(response).to redirect_to("/connexion")
+    end
+
+    it "a member who has left their last gym" do
+      member = create(:client, company: company, email: "m@example.com")
+      member.update!(password: "password123")
+      member.memberships.destroy_all
       web_sign_in(member)
 
       expect(response).to have_http_status(:unprocessable_content)
-      expect(response.body).to include("member_app_not_included")
+      expect(response.body).to include(CGI.escapeHTML(Web::Translations.translate("auth.no_gym", locale: :fr)))
     end
 
     it "an inactive account" do

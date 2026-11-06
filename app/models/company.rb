@@ -42,13 +42,9 @@ class Company < ApplicationRecord
   # People this gym asked to add, who have not accepted (yet).
   has_many :membership_requests, dependent: :delete_all
   has_many :contract_types, dependent: :destroy
-  # Before contracts: a visit points at the subscription it counted against.
-  has_many :visits, dependent: :delete_all
-  has_many :cash_closings, dependent: :delete_all
   has_many :contracts, dependent: :destroy
   # After contracts: a pack that was sold refuses to go while its contracts remain.
   has_many :packs, dependent: :destroy
-  has_many :data_imports, dependent: :destroy
   has_many :payments, dependent: :destroy
   has_many :staff_members, dependent: :destroy
   has_many :roles, dependent: :destroy
@@ -76,8 +72,8 @@ class Company < ApplicationRecord
                     format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/, message: "must contain only lowercase letters, numbers, and hyphens" }
 
   # The superadmin console's gyms table (Web::DataTable): searched by name,
-  # city and the admin's name and email; sorted by those; filtered on the
-  # account's access and plan.
+  # city and the admin's name and email; sorted by those; filtered on whether
+  # the admin has finished their first sign-in.
   console_searchable attributes: %i[name city created_at], associations: %i[admin]
 
   # Superadmin company search — name / city, plus the admin's name and email.
@@ -95,10 +91,9 @@ class Company < ApplicationRecord
 
   # A salle opening on Fitora: the company and its built-in roles (admin,
   # moderator, coach — a company can re-permission them or add its own from
-  # Settings). The admin's first salle also opens the account, with its free
-  # trial; a later salle joins the account it already has — same plan, same
-  # price, no second trial. Whether the admin may open another at all is
-  # User#may_open_salle?. The admin's session moves onto the new salle.
+  # Settings). The first is opened by a superadmin with the admin's login
+  # (SuperadminActions.create_company); the admin opens any others. The admin's
+  # session moves onto the new salle.
   #
   # What it teaches can come in the same go — templates from the catalogue
   # and activities it names itself — so a salle never opens half made.
@@ -109,7 +104,6 @@ class Company < ApplicationRecord
     transaction do
       company.save!
       Role.seed_defaults_for(company)
-      Subscription.start_trial!(admin, currency: company.currency) if admin.subscription.nil?
       admin.update!(active_company: company)
       company.adopt_activities!(template_ids: activity_template_ids, custom: custom_activities)
     end
@@ -214,20 +208,6 @@ class Company < ApplicationRecord
     OnboardingState.new(self)
   end
 
-  # Every company has every feature — the whole product is included. Kept
-  # as a method (rather than inlining ModuleCatalog::KEYS everywhere)
-  # because the bootstrap payload, serializers and User#permission_keys all
-  # read "which features does this company have" through here.
-  def enabled_module_keys
-    [ ModuleCatalog::BASE_KEY ] + ModuleCatalog::KEYS
-  end
-
-  # The admin's account subscription: one for every salle they run. Access,
-  # plan and invoices are the account's, so locking it locks every salle.
-  def subscription
-    admin&.subscription
-  end
-
   # ---- the mobile app's keys ----------------------------------------------
   # What turns the generic Fitora app into this salle's app: the member code
   # (members type or scan it) and the coach key (the staff app; it lists the
@@ -270,46 +250,14 @@ class Company < ApplicationRecord
     end
   end
 
-  # Whether this salle's members may sign in to their own app — a Pro
-  # account's (never during the free trial).
-  def member_app?
-    subscription&.member_app? || false
-  end
-
-  # Pro's tools are open to this salle: its account is on a paid Pro
-  # period. Locked during the free trial. See Subscription#pro_features?.
-  def pro_features?
-    subscription&.pro_features? || false
-  end
-
-  # The logo and colour actually shown — on screens and on contracts. The
-  # gym's own on a paid Pro account; Fitora's on Starter and on the free
-  # trial. Both are kept
-  # either way, so going (back) to Pro brings them back untouched.
+  # The logo and colour shown on screens and on contracts: the gym's own, when
+  # it has set them.
   def brand_logo
-    pro_features? && logo.attached? ? logo : nil
+    logo.attached? ? logo : nil
   end
 
   def brand_color
-    pro_features? ? primary_color : nil
-  end
-
-  # What the account's plan costs per month, in the currency it is billed
-  # in. The same for every salle under one admin: the plan is priced per
-  # account, however many salles it covers.
-  def monthly_subscription_cents
-    subscription&.monthly_cents || SubscriptionPrice.for(currency, plan: SubscriptionPrice::PLANS.first).monthly_cents
-  end
-
-  # Platform-wide discount applied to a full year paid up front (info only
-  # — billing happens outside the app).
-  def annual_discount_percent
-    PlatformSetting.current.annual_discount_percent
-  end
-
-  # 12 months minus the annual discount, rounded to the cent.
-  def annual_subscription_cents
-    (monthly_subscription_cents * 12 * (100 - annual_discount_percent) / 100.0).round
+    primary_color
   end
 
   # Opening hours, working days and the brand colour live in `settings` now,

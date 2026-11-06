@@ -1,0 +1,46 @@
+<%# What the console has sent (Web::DataTable): each mailing's subject, how many
+    accounts it went to and how that went, who sent it and when. A row opens it. %>
+<% url = "/superadmin/mailings" %>
+<% superadmin_crumbs [ ngt("superadmin.mailing.nav") ] %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.mailing.title"), desc: ngt("superadmin.mailing.desc") } do %>
+  <a href="/superadmin/mail_templates" class="btn btn-outline-secondary"><i class="bi bi-file-earmark-text"></i> <%= ngt("superadmin.mail_templates.nav") %></a>
+  <a href="/superadmin/mailings/new" class="btn btn-primary"><i class="bi bi-envelope-plus"></i> <%= ngt("superadmin.mailing.new") %></a>
+<% end %>
+
+<%= render layout: "web/superadmin/shared/table", locals: { table: @table, url: url, placeholder: ngt("superadmin.mailing.search") } do %>
+  <% if @mailings.empty? %>
+    <%= render "web/superadmin/shared/table_empty", table: @table, url: url, title: ngt("superadmin.mailing.empty_title"), body: ngt("superadmin.mailing.empty_body"), icon: "bi-envelope" %>
+  <% else %>
+    <div class="sa-scroll">
+      <table class="table sa-grid">
+        <thead>
+          <tr>
+            <%= superadmin_sort_th @table, :subject, ngt("superadmin.mailing.subject"), url %>
+            <th scope="col"><%= ngt("superadmin.mailing.recipients") %></th>
+            <th scope="col"><%= ngt("common.status") %></th>
+            <th scope="col"><%= ngt("superadmin.mailing.col_by") %></th>
+            <%= superadmin_sort_th @table, :created, ngt("superadmin.mailing.col_date"), url, css: "sa-nowrap" %>
+            <th class="sa-col-go" aria-hidden="true"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @mailings.each do |mailing| %>
+            <% href = "/superadmin/mailings/#{mailing.id}" %>
+            <tr class="sa-row" data-action="click->data-table#open" data-href="<%= href %>">
+              <td>
+                <a class="sa-lead-title" href="<%= href %>" data-turbo-frame="_top"><%= ng_highlight(mailing.subject, @table.term) %></a>
+                <div class="sa-sub sa-clip"><%= mailing.body.truncate(120) %></div>
+              </td>
+              <td class="sa-num"><%= mailing.recipients.size %></td>
+              <td><%= render "web/superadmin/mailings/counts", recipients: mailing.recipients %></td>
+              <td class="sa-sub"><%= mailing.sent_by&.full_name || "—" %></td>
+              <td class="sa-nowrap sa-sub"><%= ng_date(mailing.created_at, "dd/MM/yyyy HH:mm") %></td>
+              <td class="sa-col-go"><i class="bi bi-chevron-right sa-go"></i></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <%= render "web/superadmin/shared/table_foot", pagy: @pagy, table: @table, url: url %>
+  <% end %>
+<% end %>

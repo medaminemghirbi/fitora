@@ -1,21 +1,19 @@
 module Web
   module Admin
-    # "Mes salles" (SallesComponent) and moving the session onto another
+    # "Mes salles  de sport" (SallesComponent) and moving the session onto another
     # salle (the navbar's switcher and this page), as /api/v1/companies does
-    # both: the page, posting moderators and switching are Pro's; opening a
-    # salle is refused below paid Pro with the API's code.
+    # both.
     class SallesController < BaseController
-      self.lock_area = :companies
+      include Web::SettingsPage
+      settings_section "salles"
 
       before_action :require_admin, only: :network
       before_action :refuse_unless_admin, only: %i[create update_moderators]
-      before_action :refuse_without_pro, only: :update_moderators
 
-      # GET …/salles — the page; Starter and the trial see it locked
-      # (ProLockComponent), as the Angular page does, without the network.
-      # With ?fragment=1, the cards and the moderator lists only.
+      # GET …/salles — the page. With ?fragment=1, the cards and the moderator
+      # lists only.
       def network
-        @network = SalleNetwork.for(current_user, current_company) if pro_access?
+        @network = SalleNetwork.for(current_user, current_company)
         render partial: "web/admin/salles/network", locals: { network: @network } if params[:fragment].present?
       end
 
@@ -23,10 +21,6 @@ module Web
       # active one's currency; it becomes the active one and opens on its
       # getting-started guide.
       def create
-        unless current_user.may_open_salle?
-          return render json: { error: "multi_salle_not_included", message: "Several salles come with Fitora Pro." }, status: :forbidden
-        end
-
         company = Company.open!(admin: current_user, attributes: params.require(:company).permit(:name, :city, :phone, :timezone, :currency))
         render json: { next: "/admin/#{company.id}/onboarding" }, status: :created
       rescue ActiveRecord::RecordInvalid => e
@@ -48,8 +42,6 @@ module Web
       end
 
       def switch
-        return go_home unless pro_access?
-
         target = salle_for(current_user, params[:id])
         return go_home if target.nil?
 
@@ -71,10 +63,6 @@ module Web
 
       def refuse_unless_admin
         render json: { error: "You are not allowed to perform this action" }, status: :forbidden unless current_user.admin?
-      end
-
-      def refuse_without_pro
-        render json: { error: "pro_required", message: "This feature comes with Fitora Pro." }, status: :forbidden unless pro_access?
       end
     end
   end

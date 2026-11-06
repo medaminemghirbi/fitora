@@ -4,9 +4,6 @@
 <% t = @ticket %>
 <% superadmin_crumbs [ ngt("superadmin.support.title"), "/superadmin/support" ], [ t[:subject] ] %>
 <%= render layout: "web/superadmin/shared/page_head", locals: { title: t[:subject], desc: t.dig(:company, :name) } do %>
-  <% if t[:kind] == "upgrade" %>
-    <span class="sa-chip sa-chip--primary"><i class="bi bi-gem"></i> <%= ngt("superadmin.support.kind_upgrade") %></span>
-  <% end %>
   <% if t[:status] == "resolved" %>
     <span class="sa-chip sa-chip--success"><i class="bi bi-check2"></i> <%= ngt("modules_page.contact.status_resolved") %></span>
   <% else %>

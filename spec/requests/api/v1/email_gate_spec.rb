@@ -1,7 +1,7 @@
 require "rails_helper"
 
-# A gym opening its own account confirms the address before anything past
-# sign-up opens. See Api::V1::BaseController#require_confirmed_email!.
+# An account a superadmin opened confirms its address before anything opens.
+# See Api::V1::BaseController#require_confirmed_email!.
 RSpec.describe "The confirmed-email gate", type: :request do
   let(:admin) { create(:user, :admin, :unverified) }
 
@@ -12,9 +12,7 @@ RSpec.describe "The confirmed-email gate", type: :request do
     expect(response.parsed_body["error"]).to eq("email_unverified")
   end
 
-  # Naming the gym is where the 14 days start: they must not tick for an
-  # address nobody reads.
-  it "does not let the gym be named, so the trial cannot start" do
+  it "does not let another salle be opened" do
     expect {
       post "/api/v1/companies",
            params: { company: { name: "Iron Box", timezone: "Africa/Tunis", currency: "TND" } },

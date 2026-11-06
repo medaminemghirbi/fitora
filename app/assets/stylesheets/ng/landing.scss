@@ -302,6 +302,7 @@
   a {
     font-size: 0.9375rem;
     font-weight: 600;
+    white-space: nowrap;
     color: var(--color-text-secondary);
 
     &:hover { color: var(--color-text); }
@@ -784,7 +785,6 @@
   justify-content: space-between;
   align-items: flex-start;
 
-  .lp-pro { margin-inline-start: 0; }
 }
 
 .lp-feature-ic {
@@ -1146,17 +1146,6 @@
   }
 }
 
-.lp-pro {
-  margin-inline-start: auto;
-  padding: 0.1875rem 0.5625rem;
-  border-radius: var(--radius-pill);
-  background: var(--color-night);
-  color: var(--color-lime);
-  font-size: 0.6875rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
-
 .lp-kpis {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1259,37 +1248,6 @@
 }
 
 // ---------- Pricing -----------------------------------------------------------
-.lp-billing {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  width: min(100%, 360px);
-  margin: 0 auto 2.5rem;
-  padding: 4px;
-  border-radius: var(--radius-pill);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-
-  button {
-    height: 44px;
-    border: 0;
-    border-radius: var(--radius-pill);
-    background: transparent;
-    color: var(--color-text-secondary);
-    font-size: 0.875rem;
-    font-weight: 700;
-    cursor: pointer;
-
-    small { margin-inline-start: 0.25rem; color: var(--color-primary); font-weight: 800; }
-
-    &.is-on {
-      background: var(--color-night);
-      color: #fff;
-
-      small { color: var(--color-lime); }
-    }
-  }
-}
-
 .lp-plans {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1329,29 +1287,11 @@
   color: var(--color-text-secondary);
 }
 
-.lp-plan-price {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 1.75rem 0 1.5rem;
-
-  b {
-    font-size: 3.25rem;
-    font-weight: 800;
-    letter-spacing: -0.05em;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-  }
-
-  span { font-size: 1rem; font-weight: 600; color: var(--color-text-secondary); }
-}
-
 .lp-plan-items {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  margin-bottom: 2rem !important;
+  margin: 1.75rem 0 2rem !important;
 
   li {
     display: flex;
@@ -1363,6 +1303,32 @@
 }
 
 .lp-plan .lp-btn { margin-top: auto; }
+
+.lp-offer-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin: 1.75rem 0 2rem !important;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+
+  li { display: flex; gap: 0.875rem; font-size: 0.9375rem; color: var(--color-text-secondary); }
+  b { display: block; margin-bottom: 0.125rem; font-weight: 700; color: var(--color-text); }
+}
+
+.lp-offer-step-n {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--color-night);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 800;
+}
 
 .lp-included {
   display: flex;
@@ -1497,37 +1463,9 @@
   .lp-btn { margin-top: 0.375rem; }
 }
 
-.lp-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4375rem;
+.lp-closing .lp-start-title { margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: #1d1533; }
 
-  label { font-size: 0.8125rem; font-weight: 700; }
-
-  input {
-    height: 52px;
-    padding-inline: 1rem;
-    border: 1.5px solid #d0c7e2;
-    border-radius: 14px;
-    background: #fff;
-    color: #1d1533;
-    font: 500 0.9375rem var(--lp-sans);
-
-    &::placeholder { color: #857c9f; }
-
-    &:focus {
-      outline: none;
-      border-color: #4a2a8f;
-      box-shadow: 0 0 0 4px #efe9fa;
-    }
-  }
-}
-
-.lp-field-err {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #b0123f;
-}
+.lp-start-lead { margin: 0; font-size: 0.9375rem; line-height: 1.55; color: #5a5175 !important; }
 
 .lp-start-foot {
   text-align: center;
@@ -1609,9 +1547,12 @@
 }
 
 // ---------- Responsive ----------------------------------------------------------
-@media (max-width: 1099.98px) {
+@media (max-width: 1239.98px) {
   .lp-nav-links { display: none; }
   .lp-nav-right { margin-inline-start: auto; }
+}
+
+@media (max-width: 1099.98px) {
 
   .lp-hero,
   .lp-split,

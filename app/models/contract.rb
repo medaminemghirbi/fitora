@@ -26,7 +26,6 @@ class Contract < ApplicationRecord
 
   has_many :payments, dependent: :nullify
   has_many :bookings, dependent: :nullify
-  has_many :visits, dependent: :nullify
 
   enum :status, { pending: 0, active: 1, expired: 2, cancelled: 3 }
   enum :payment_status, { unpaid: 0, paid: 1 }
@@ -36,7 +35,7 @@ class Contract < ApplicationRecord
   validate :names_an_activity_or_a_pack
   # The controllers already look each of these up through current_company;
   # this is the same boundary held by the model, for every other way a
-  # contract gets written (imports, services, the console). Only on change,
+  # contract gets written (services, the console). Only on change,
   # so it never trips over a row it did not write.
   validate :sold_from_this_gym, if: -> {
     will_save_change_to_company_id? || will_save_change_to_contract_type_id? ||
@@ -97,7 +96,7 @@ class Contract < ApplicationRecord
     )
   }
   # Over. Nothing turns the stored status to `expired` when a term ends, so
-  # the end date decides; a row stored as expired (an import, the demo)
+  # the end date decides; a row stored as expired
   # counts too. A paused term is not over: its end moves when it resumes.
   scope :lapsed, -> {
     where("contracts.status = :expired OR (contracts.status = :active AND contracts.paused_at IS NULL AND contracts.expires_at < :now)",

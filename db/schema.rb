@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -149,21 +149,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
     t.index ["session_id", "status"], name: "index_bookings_on_session_id_and_status"
     t.index ["session_id", "waitlist_position"], name: "index_bookings_waitlist_order", where: "(status = 4)"
     t.check_constraint "(status = 4) = (waitlist_position IS NOT NULL)", name: "waitlist_position_iff_waitlisted"
-  end
-
-  create_table "cash_closings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.date "business_date", null: false
-    t.uuid "closed_by_id", null: false
-    t.uuid "company_id", null: false
-    t.decimal "counted_cash", precision: 10, scale: 2, null: false
-    t.datetime "created_at", null: false
-    t.string "currency", null: false
-    t.decimal "expected_cash", precision: 10, scale: 2, null: false
-    t.text "notes"
-    t.datetime "updated_at", null: false
-    t.index ["closed_by_id"], name: "index_cash_closings_on_closed_by_id"
-    t.index ["company_id", "business_date"], name: "index_cash_closings_on_company_id_and_business_date"
-    t.index ["company_id", "closed_by_id", "business_date"], name: "idx_on_company_id_closed_by_id_business_date_3b4d93e2cb", unique: true
   end
 
   create_table "clients", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -348,57 +333,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
     t.check_constraint "remaining_bookings IS NULL OR remaining_bookings >= 0", name: "contracts_remaining_bookings_not_negative"
   end
 
-  create_table "data_imports", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.uuid "company_id", null: false
+  create_table "mail_templates", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.text "body", null: false
     t.datetime "created_at", null: false
-    t.integer "created_count", default: 0, null: false
-    t.string "entity", null: false
-    t.string "message"
-    t.jsonb "row_errors", default: [], null: false
+    t.string "name", null: false
+    t.string "subject", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_mail_templates_on_name", unique: true
+  end
+
+  create_table "mailing_recipients", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.string "failure"
+    t.uuid "mailing_id", null: false
+    t.datetime "sent_at"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
-    t.uuid "user_id"
-    t.index ["company_id"], name: "index_data_imports_on_company_id"
-    t.index ["user_id"], name: "index_data_imports_on_user_id"
+    t.uuid "user_id", null: false
+    t.index ["mailing_id", "user_id"], name: "index_mailing_recipients_on_mailing_id_and_user_id", unique: true
+    t.index ["user_id"], name: "index_mailing_recipients_on_user_id"
   end
 
-  create_table "exchange_rates", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+  create_table "mailings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.text "body", null: false
     t.datetime "created_at", null: false
-    t.string "currency", null: false
-    t.datetime "fetched_at", null: false
-    t.decimal "per_eur", precision: 20, scale: 10, null: false
+    t.uuid "sent_by_id"
+    t.string "subject", null: false
     t.datetime "updated_at", null: false
-    t.index ["currency"], name: "index_exchange_rates_on_currency", unique: true
-  end
-
-  create_table "invoice_sequences", primary_key: "year", id: :integer, default: nil, force: :cascade do |t|
-    t.integer "last_value", null: false
-  end
-
-  create_table "invoices", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.integer "amount_cents", null: false
-    t.integer "billing_period", default: 0, null: false
-    t.datetime "created_at", null: false
-    t.string "currency", null: false
-    t.datetime "issued_at", null: false
-    t.uuid "issued_by_id"
-    t.jsonb "issuer"
-    t.string "notes"
-    t.string "number", null: false
-    t.datetime "paid_at"
-    t.date "period_end", null: false
-    t.date "period_start", null: false
-    t.string "plan"
-    t.integer "stamp_duty_millimes", default: 0, null: false
-    t.uuid "subscription_id", null: false
-    t.boolean "trial", default: false, null: false
-    t.datetime "updated_at", null: false
-    t.decimal "vat_percent", precision: 5, scale: 2
-    t.index ["issued_by_id"], name: "index_invoices_on_issued_by_id"
-    t.index ["number"], name: "index_invoices_on_number", unique: true
-    t.index ["subscription_id", "paid_at"], name: "index_invoices_on_subscription_id_and_paid_at"
-    t.index ["subscription_id", "period_start"], name: "index_invoices_on_subscription_id_and_period_start"
-    t.index ["subscription_id"], name: "index_invoices_on_subscription_id"
+    t.index ["sent_by_id"], name: "index_mailings_on_sent_by_id"
   end
 
   create_table "membership_requests", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -421,7 +384,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
   create_table "memberships", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "address"
-    t.string "card_code"
     t.uuid "client_id", null: false
     t.uuid "company_id", null: false
     t.datetime "created_at", null: false
@@ -436,7 +398,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
     t.date "waiver_signed_on"
     t.index ["client_id", "company_id"], name: "index_memberships_on_client_id_and_company_id", unique: true
     t.index ["client_id"], name: "index_memberships_on_client_id"
-    t.index ["company_id", "card_code"], name: "index_memberships_on_company_id_and_card_code", unique: true, where: "(card_code IS NOT NULL)"
     t.index ["company_id"], name: "index_memberships_on_company_id"
   end
 
@@ -508,17 +469,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
 
   create_table "platform_settings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "address"
-    t.integer "annual_discount_percent", default: 10, null: false
     t.string "city"
     t.datetime "created_at", null: false
     t.string "email"
     t.string "legal_name"
     t.string "phone"
-    t.string "price_currency", default: "TND", null: false
-    t.integer "stamp_duty_millimes", default: 1000, null: false
+    t.string "seeded_mail_templates", default: [], null: false, array: true
     t.string "tax_id"
     t.datetime "updated_at", null: false
-    t.decimal "vat_percent", precision: 5, scale: 2, default: "19.0", null: false
     t.string "website"
   end
 
@@ -612,31 +570,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
     t.index ["user_id"], name: "index_staff_members_on_user_id"
   end
 
-  create_table "subscription_prices", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "currency", null: false
-    t.integer "monthly_cents", default: 0, null: false
-    t.string "plan", null: false
-    t.datetime "updated_at", null: false
-    t.index ["currency", "plan"], name: "index_subscription_prices_on_currency_and_plan", unique: true
-  end
-
-  create_table "subscriptions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.boolean "active", default: true, null: false
-    t.uuid "admin_id", null: false
-    t.integer "billing_period"
-    t.datetime "created_at", null: false
-    t.string "plan"
-    t.datetime "updated_at", null: false
-    t.index ["admin_id"], name: "index_subscriptions_on_admin_id", unique: true
-  end
-
   create_table "support_tickets", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "company_id", null: false
-    t.string "contact_phone"
     t.datetime "created_at", null: false
     t.uuid "created_by_id", null: false
-    t.integer "kind", default: 0, null: false
     t.text "message", null: false
     t.integer "status", default: 0, null: false
     t.string "subject", null: false
@@ -647,9 +584,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
   end
 
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "access_suspended_at"
     t.boolean "active", default: true, null: false
     t.uuid "active_company_id"
     t.datetime "created_at", null: false
+    t.datetime "credentials_sent_at"
     t.string "email", null: false
     t.datetime "email_verification_sent_at"
     t.string "email_verification_token_digest"
@@ -657,6 +596,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
     t.string "first_name", null: false
     t.string "last_name", null: false
     t.string "locale", default: "fr", null: false
+    t.boolean "must_change_password", default: false, null: false
     t.datetime "otp_enabled_at"
     t.datetime "otp_last_used_at"
     t.text "otp_secret_ciphertext"
@@ -677,23 +617,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
     t.index ["reset_password_token_digest"], name: "index_users_on_reset_password_token_digest", unique: true
   end
 
-  create_table "visits", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.datetime "checked_in_at", null: false
-    t.uuid "checked_in_by_id"
-    t.uuid "client_id", null: false
-    t.uuid "company_id", null: false
-    t.boolean "consumed_session", default: false, null: false
-    t.uuid "contract_id"
-    t.datetime "created_at", null: false
-    t.boolean "forced", default: false, null: false
-    t.string "reason"
-    t.datetime "updated_at", null: false
-    t.index ["checked_in_by_id"], name: "index_visits_on_checked_in_by_id"
-    t.index ["client_id", "checked_in_at"], name: "index_visits_on_client_id_and_checked_in_at"
-    t.index ["company_id", "checked_in_at"], name: "index_visits_on_company_id_and_checked_in_at"
-    t.index ["contract_id"], name: "index_visits_on_contract_id"
-  end
-
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "activities", "activity_templates"
@@ -709,8 +632,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
   add_foreign_key "bookings", "contract_periods"
   add_foreign_key "bookings", "contracts"
   add_foreign_key "bookings", "sessions"
-  add_foreign_key "cash_closings", "companies"
-  add_foreign_key "cash_closings", "users", column: "closed_by_id"
   add_foreign_key "coaches", "companies"
   add_foreign_key "companies", "users", column: "admin_id"
   add_foreign_key "contract_invoice_sequences", "companies", on_delete: :cascade
@@ -731,10 +652,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
   add_foreign_key "contracts", "packs"
   add_foreign_key "contracts", "packs", column: ["pack_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_contracts_pack_id_same_company"
   add_foreign_key "contracts", "users", column: "created_by_id"
-  add_foreign_key "data_imports", "companies"
-  add_foreign_key "data_imports", "users"
-  add_foreign_key "invoices", "subscriptions"
-  add_foreign_key "invoices", "users", column: "issued_by_id"
+  add_foreign_key "mailing_recipients", "mailings", on_delete: :cascade
+  add_foreign_key "mailing_recipients", "users", on_delete: :cascade
+  add_foreign_key "mailings", "users", column: "sent_by_id", on_delete: :nullify
   add_foreign_key "membership_requests", "clients"
   add_foreign_key "membership_requests", "companies"
   add_foreign_key "membership_requests", "users", column: "requested_by_id", on_delete: :nullify
@@ -775,13 +695,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_100000) do
   add_foreign_key "staff_members", "roles"
   add_foreign_key "staff_members", "roles", column: ["role_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_staff_members_role_id_same_company"
   add_foreign_key "staff_members", "users"
-  add_foreign_key "subscriptions", "users", column: "admin_id"
   add_foreign_key "support_tickets", "companies"
   add_foreign_key "support_tickets", "users", column: "created_by_id"
   add_foreign_key "users", "companies", column: "active_company_id", on_delete: :nullify
-  add_foreign_key "visits", "clients"
-  add_foreign_key "visits", "companies"
-  add_foreign_key "visits", "contracts"
-  add_foreign_key "visits", "contracts", column: ["contract_id", "company_id"], primary_key: ["id", "company_id"], name: "fk_visits_contract_id_same_company"
-  add_foreign_key "visits", "users", column: "checked_in_by_id", on_delete: :nullify
 end

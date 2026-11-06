@@ -6,6 +6,9 @@ module Web
     # /api/v1/coaches and /api/v1/staff apply (Team::Actions), behind the
     # same capabilities, answered with the API's message (K-04).
     class TeamController < BaseController
+      include Web::SettingsPage
+      settings_section "team"
+
       before_action -> { require_capability(:coaches) }, only: :index
       before_action :refuse_without_coaches, only: %i[show_coach create_coach update_coach deactivate_coach set_login]
       before_action :refuse_unless_admin, only: %i[create_staff update_staff]

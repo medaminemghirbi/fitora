@@ -4,7 +4,7 @@ require "rails_helper"
 RSpec.describe "Web member file", type: :request, openapi: false do
   include ActiveJob::TestHelper
 
-  let(:company) { create(:company, :pro, setup_dismissed_at: Time.current) }
+  let(:company) { create(:company, setup_dismissed_at: Time.current) }
   let(:admin) { company.admin }
   let(:client) { create(:client, company: company, first_name: "Salma", last_name: "Ben Ali", email: "salma@example.tn") }
   let(:base) { "/admin/#{company.id}/clients/#{client.id}" }
@@ -50,13 +50,14 @@ RSpec.describe "Web member file", type: :request, openapi: false do
   it "shows the subscription card: its state, what is owed, renewing only once it is due" do
     far = Contracts::Actions.sell(client, company: company, by: admin, params: ActionController::Parameters.new(contract_type_id: plan.id, activity_id: activity.id))
     get base
-    card = response.body[%r{<section[^>]*class="abo-profile".*?</section>}m]
-    expect(card).to include("Yoga · Mensuel", %(data-state="active"), "subscriptions#collect", "subscriptions#cancel")
-    expect(card).not_to include("subscriptions#renew")
+    card = response.body[%r{<section[^>]*class="prof-card prof-subscription".*?</section>}m]
+    expect(card).to include("Yoga · Mensuel", %(data-state="active"), "subscriptions#cancel")
+    expect(card).not_to include("subscriptions#renew", "subscriptions#collect")
+    expect(response.body[%r{<section[^>]*class="prof-verdict".*?</section>}m]).to include("client-profile#openPayment")
 
     far.update!(expires_at: 3.days.from_now)
     get base
-    card = response.body[%r{<section[^>]*class="abo-profile".*?</section>}m]
+    card = response.body[%r{<section[^>]*class="prof-card prof-subscription".*?</section>}m]
     expect(card).to include(%(data-state="expiring"), "subscriptions#renew")
   end
 
@@ -88,6 +89,56 @@ RSpec.describe "Web member file", type: :request, openapi: false do
     membership = client.membership_for(company).reload
     expect([ membership.health_notes, membership.waiver_signed_on ]).to eq([ "Genou fragile", Date.new(2026, 10, 1) ])
     expect(AuditLog.where(action: "client.updated", auditable_id: client.id)).to exist
+  end
+
+  describe "editing their details" do
+    let(:words) { ->(key) { Web::Translations.translate(key, {}, locale: :fr) } }
+
+    it "saves the person and this gym's copy, audited, and shows them on the file" do
+      patch base, params: { client: { first_name: "Selma", phone: "22 000 111", date_of_birth: "1990-05-12", gender: "female", address: "12 rue de Marseille",
+                                      emergency_contact_name: "Mehdi", emergency_contact_phone: "98 000 222", notes: "Préfère le matin" } }, as: :json
+      expect(response).to have_http_status(:no_content)
+      expect(client.reload.slice(:first_name, :phone, :email).values).to eq([ "Selma", "22 000 111", "salma@example.tn" ])
+      expect(client.membership_for(company).address).to eq("12 rue de Marseille")
+      expect(AuditLog.where(action: "client.updated", auditable_id: client.id)).to exist
+
+      get base
+      expect(response.body).to include("Selma Ben Ali", "22 000 111", "12 mai 1990", words.call("clients.gender_female"), "12 rue de Marseille", "Mehdi", "98 000 222", "Préfère le matin")
+    end
+
+    it "offers the dialog without ever printing the whole address" do
+      get base
+      expect(response.body).to include("client-profile#openDetails", 'data-profile-form="details"', "sa****ma@example.tn", '"identity_locked":false')
+      expect(response.body).not_to include("salma@example.tn")
+    end
+
+    it "refuses an address someone else holds, or a masked one, in the page's language" do
+      create(:client, company: company, email: "pris@example.tn")
+
+      patch base, params: { client: { email: "pris@example.tn" } }, as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body["error"]).to eq(words.call("clients.email_taken"))
+
+      patch base, params: { client: { email: "sa****ma@example.tn" } }, as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body["error"]).to eq(words.call("auth.email_invalid"))
+      expect(client.reload.email).to eq("salma@example.tn")
+    end
+
+    it "locks the identity of someone known beyond this gym, not what the gym wrote" do
+      client.memberships.create!(company: create(:company), active: true)
+      get base
+      expect(response.body).to include('"identity_locked":true')
+
+      patch base, params: { client: { first_name: "Autre" } }, as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body).to include("error" => "identity_locked", "message" => words.call("clients.identity_locked_hint"))
+      expect(client.reload.first_name).to eq("Salma")
+
+      patch base, params: { client: { address: "7 rue B" } }, as: :json
+      expect(response).to have_http_status(:no_content)
+      expect(client.membership_for(company).reload.address).to eq("7 rue B")
+    end
   end
 
   it "invites them to the app, once a minute at most, as the API does" do

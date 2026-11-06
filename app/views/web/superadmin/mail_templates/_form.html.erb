@@ -1,0 +1,18 @@
+<%# A template's name, subject and text. %>
+<% persisted = template.persisted? %>
+<form action="/superadmin/mail_templates<%= "/#{template.id}" if persisted %>" method="post" novalidate class="app-card sa-form-card" data-controller="mail-editor" data-turbo="false">
+  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+  <% if persisted %><input type="hidden" name="_method" value="patch"><% end %>
+  <div class="app-card-body">
+    <div class="mb-3">
+      <label class="form-label" for="mail_template-name"><%= ngt("superadmin.mail_templates.name") %> *</label>
+      <input id="mail_template-name" name="mail_template[name]" class="form-control<%= " is-invalid" if errors[:name] %>" value="<%= template.name %>" maxlength="100" placeholder="<%= ngt("superadmin.mail_templates.name_placeholder") %>" />
+      <% if errors[:name] %><div class="invalid-feedback d-block"><%= errors[:name] %></div><% end %>
+    </div>
+    <%= render "web/superadmin/mailings/editor", scope: "mail_template", record: template, errors: errors %>
+  </div>
+  <div class="sa-form-foot">
+    <a href="/superadmin/mail_templates" class="btn btn-outline-secondary me-2"><%= ngt("common.cancel") %></a>
+    <button type="submit" class="btn btn-primary"><%= ngt("common.save") %></button>
+  </div>
+</form>

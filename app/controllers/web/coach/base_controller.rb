@@ -3,8 +3,7 @@ module Web
     # A coach's own shell (/coach/<salle>/…, CoachShellComponent): authGuard,
     # then staffRoleGuard("coach") in the salle the URL names
     # (Web::SalleShell) — whoever coaches there, whatever their role is
-    # called. A locked gym's pages answer the API's 402, which sends the
-    # Angular app to /account-locked; so does this.
+    # called.
     class BaseController < Web::BaseController
       include Web::SalleShell
 
@@ -19,9 +18,7 @@ module Web
       private
 
       def coach_area!
-        return go_home unless current_user.staff? && current_staff_member&.coach?
-
-        redirect_to("/account-locked") if locking_subscription.present?
+        go_home unless current_user.staff? && current_staff_member&.coach?
       end
 
       def coach_path(page, query = {})

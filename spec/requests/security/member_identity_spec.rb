@@ -51,8 +51,7 @@ RSpec.describe "A member shared between gyms", type: :request do
       expect(body.to_json).not_to include("Salma", "Ben Ali", "+216 20 111 111", member.id)
     end
 
-    it "adds no one: no membership, nothing in its list or export, no file to open" do
-      create(:subscription, :pro, company: gym_b)
+    it "adds no one: no membership, nothing in its list, no file to open" do
       ask!
 
       expect(member.memberships.pluck(:company_id)).to eq([ gym_a.id ])
@@ -60,9 +59,6 @@ RSpec.describe "A member shared between gyms", type: :request do
       expect(response.parsed_body["clients"]).to be_empty
       get "/api/v1/clients/#{member.id}", headers: auth_headers(gym_b.admin)
       expect(response).to have_http_status(:not_found)
-      get "/api/v1/data_exchange/clients/export", headers: auth_headers(gym_b.admin)
-      expect(response).to have_http_status(:ok)
-      expect(response.body).not_to include("Salma", "member@example.com")
     end
 
     it "sells nothing either, whatever the wizard sent" do
@@ -114,20 +110,6 @@ RSpec.describe "A member shared between gyms", type: :request do
 
       expect(response).to have_http_status(:accepted)
       expect(member.reload.memberships).to be_empty
-    end
-
-    it "harvests nothing through a CSV import: the row is refused, nobody is mailed" do
-      create(:subscription, :pro, company: gym_b)
-      csv = Rack::Test::UploadedFile.new(StringIO.new("first_name,last_name,email,phone\nX,Y,member@example.com,1\nNew,Person,new@example.com,2\n"),
-                                         "text/csv", original_filename: "members.csv")
-      perform_enqueued_jobs do
-        post "/api/v1/data_exchange/clients/import", params: { file: csv }, headers: auth_headers(gym_b.admin)
-      end
-
-      expect(gym_b.clients.map(&:email)).to eq([ "new@example.com" ])
-      expect(MembershipRequest.count).to eq(0)
-      expect(ActionMailer::Base.deliveries.map(&:to).flatten).not_to include("member@example.com")
-      expect(gym_b.data_imports.last.row_errors).to eq([ { "row" => 2, "message" => DataExchange::Clients::ALREADY_ON_FITORA } ])
     end
   end
 

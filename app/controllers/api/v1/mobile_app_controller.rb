@@ -1,11 +1,10 @@
 module Api
   module V1
     # Settings → Application mobile: the salle's two keys and their QR codes,
-    # and a way to replace either. A Pro tool (paid Pro only).
+    # and a way to replace either.
     class MobileAppController < BaseController
       before_action :require_company!
       before_action :require_admin!
-      before_action :require_pro!
 
       # GET /api/v1/mobile_app
       def show

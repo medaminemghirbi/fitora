@@ -1,0 +1,48 @@
+<%# The texts the mailing reuses (Web::DataTable): using one, changing it, taking
+    it away. A row opens it. %>
+<% url = "/superadmin/mail_templates" %>
+<% superadmin_crumbs [ ngt("superadmin.mailing.nav"), "/superadmin/mailings" ], [ ngt("superadmin.mail_templates.nav") ] %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.mail_templates.nav"), desc: ngt("superadmin.mail_templates.desc") } do %>
+  <a href="/superadmin/mail_templates/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> <%= ngt("superadmin.mail_templates.new") %></a>
+<% end %>
+
+<%= render layout: "web/superadmin/shared/table", locals: { table: @table, url: url, placeholder: ngt("superadmin.mail_templates.search") } do %>
+  <% if @templates.empty? %>
+    <%= render "web/superadmin/shared/table_empty", table: @table, url: url, title: ngt("superadmin.mail_templates.empty_title"), body: ngt("superadmin.mail_templates.empty_body"), icon: "bi-file-earmark-text" %>
+  <% else %>
+    <div class="sa-scroll">
+      <table class="table sa-grid">
+        <thead>
+          <tr>
+            <%= superadmin_sort_th @table, :name, ngt("superadmin.mail_templates.name"), url %>
+            <th scope="col"><%= ngt("superadmin.mailing.subject") %></th>
+            <%= superadmin_sort_th @table, :updated, ngt("superadmin.mail_templates.col_updated"), url, css: "sa-nowrap" %>
+            <th scope="col" aria-label="<%= ngt("common.actions") %>"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @templates.each do |template| %>
+            <% href = "/superadmin/mail_templates/#{template.id}/edit" %>
+            <tr class="sa-row" data-action="click->data-table#open" data-href="<%= href %>">
+              <td><a class="sa-lead-title" href="<%= href %>" data-turbo-frame="_top"><%= ng_highlight(template.name, @table.term) %></a></td>
+              <td class="sa-sub"><%= template.subject %></td>
+              <td class="sa-nowrap sa-sub"><%= ng_date(template.updated_at, "dd/MM/yyyy") %></td>
+              <td class="sa-nowrap sa-num">
+                <a href="/superadmin/mailings/new?template_id=<%= template.id %>" class="btn btn-sm btn-outline-primary" data-turbo-frame="_top"><i class="bi bi-send" aria-hidden="true"></i> <%= ngt("superadmin.mail_templates.use") %></a>
+                <button type="button" class="btn btn-sm btn-ghost" data-controller="superadmin-action" data-action="superadmin-action#run"
+                        data-superadmin-action-url-value="/superadmin/mail_templates/<%= template.id %>" data-superadmin-action-method-value="DELETE"
+                        data-superadmin-action-title-value="<%= ngt("superadmin.mail_templates.delete_title") %>"
+                        data-superadmin-action-body-value="<%= Web::Translations.translate("superadmin.mail_templates.delete_body", { name: template.name }, locale: I18n.locale) %>"
+                        data-superadmin-action-confirm-value="<%= ngt("common.delete") %>" data-superadmin-action-danger-value="true"
+                        data-superadmin-action-error-value="<%= ngt("common.error_generic") %>">
+                  <i class="bi bi-trash" aria-hidden="true"></i> <%= ngt("common.delete") %>
+                </button>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <%= render "web/superadmin/shared/table_foot", pagy: @pagy, table: @table, url: url %>
+  <% end %>
+<% end %>

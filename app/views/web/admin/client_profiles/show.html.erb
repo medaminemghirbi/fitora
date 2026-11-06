@@ -1,14 +1,13 @@
 <%# ng: client-profile %>
 <%# ng-host: client-profile %>
 <%# ClientProfileComponent: the file (_body) and the dialogs the desk opens
-    from it — a booking, a payment, the health file (client-profile) — and
+    from it — a booking, a payment, the health file, their details (client-profile) — and
     the subscription dialogs, the subscriptions page's own (subscriptions). %>
 <div data-controller="subscriptions" <%= subscription_controller_attributes(member: @member) %>>
 <div class="fx-page" data-controller="client-profile"
      data-client-profile-url-value="<%= admin_page_path("clients/#{@client.id}") %>"
      data-client-profile-payments-url-value="<%= admin_page_path("payments") %>"
      data-client-profile-attendance-url-value="<%= admin_page_path("attendance") %>"
-     data-client-profile-entries-url-value="<%= admin_page_path("entries", member: @client.id) %>"
      data-client-profile-clients-url-value="<%= admin_page_path("clients") %>"
      data-client-profile-drop-in-value="<%= bootstrap.dig(:features, :drop_in) != false %>"
      data-client-profile-today-value="<%= Date.current.iso8601 %>"
@@ -101,6 +100,73 @@
             <input id="hl-waiver" type="date" class="form-control" name="waiver_signed_on" />
             <button type="button" class="btn btn-outline-secondary prof-waiver-today" data-waiver-today><%= ngt("clients.waiver_today") %></button>
           </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>
+          <button type="submit" class="btn btn-primary" data-save><%= ngt("common.save") %></button>
+        </div>
+      </form>
+    <% end %>
+  </template>
+</app-modal>
+
+<app-modal data-controller="modal" data-modal-name-value="profile-details" data-action="profile-details:open@window->modal#open profile-details:close@window->modal#close">
+  <template data-modal-target="template">
+    <%= render layout: "web/shared/modal", locals: { title: ngt("clients.edit_title") } do %>
+      <form novalidate data-profile-form="details">
+        <p class="form-text mt-0 mb-3" data-locked-hint><%= ngt("clients.identity_locked_hint") %></p>
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label for="dt-first"><%= ngt("coaches.first_name") %> *</label>
+            <input id="dt-first" class="form-control" name="first_name" autocomplete="off" />
+          </div>
+          <div class="col-6 mb-3">
+            <label for="dt-last"><%= ngt("coaches.last_name") %> *</label>
+            <input id="dt-last" class="form-control" name="last_name" autocomplete="off" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12 col-sm-6 mb-3">
+            <label for="dt-phone"><%= ngt("auth.phone") %> *</label>
+            <input id="dt-phone" type="tel" class="form-control" name="phone" dir="ltr" autocomplete="off" />
+          </div>
+          <div class="col-12 col-sm-6 mb-3">
+            <label for="dt-email"><%= ngt("auth.email") %></label>
+            <input id="dt-email" type="email" class="form-control" name="email" dir="ltr" autocomplete="off" />
+            <div class="form-text" data-email-keep><%= ngt("clients.email_keep_hint") %></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label for="dt-birth"><%= ngt("clients.date_of_birth") %></label>
+            <input id="dt-birth" type="date" class="form-control" name="date_of_birth" />
+          </div>
+          <div class="col-6 mb-3">
+            <label for="dt-gender"><%= ngt("clients.gender") %></label>
+            <select id="dt-gender" class="form-select" name="gender">
+              <option value="">—</option>
+              <option value="male"><%= ngt("clients.gender_male") %></option>
+              <option value="female"><%= ngt("clients.gender_female") %></option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="dt-address"><%= ngt("settings.address_title") %></label>
+          <input id="dt-address" class="form-control" name="address" autocomplete="off" />
+        </div>
+        <div class="row">
+          <div class="col-12 col-sm-6 mb-3">
+            <label for="dt-ec-name"><%= ngt("clients.emergency_contact_name") %></label>
+            <input id="dt-ec-name" class="form-control" name="emergency_contact_name" autocomplete="off" />
+          </div>
+          <div class="col-12 col-sm-6 mb-3">
+            <label for="dt-ec-phone"><%= ngt("clients.emergency_contact_phone") %></label>
+            <input id="dt-ec-phone" type="tel" class="form-control" name="emergency_contact_phone" dir="ltr" autocomplete="off" />
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="dt-notes"><%= ngt("clients.notes") %></label>
+          <textarea id="dt-notes" class="form-control" rows="2" name="notes"></textarea>
         </div>
         <div class="d-flex justify-content-end gap-2 mt-4">
           <button type="button" class="btn btn-outline-secondary" data-action="modal#close"><%= ngt("common.cancel") %></button>

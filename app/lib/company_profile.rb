@@ -3,20 +3,16 @@
 # settings (moved unchanged from Api::V1::CompaniesController).
 module CompanyProfile
   # currency + locale are tenant-wide settings a Fitora superadmin manages
-  # (Web::Superadmin::CompaniesController#update_settings); the admin only
-  # picks a currency once, at signup. A signature is taken off with
-  # remove_signature, never by sending an empty file. Branding (logo, colour,
-  # identifier) is a Pro tool: on Starter it is dropped rather than refused,
-  # so the rest of the form still saves. Returns whether it saved; the
-  # errors are on the company.
+  # (Web::Superadmin::CompaniesController#update_settings). A signature is
+  # taken off with remove_signature, never by sending an empty file. Returns
+  # whether it saved; the errors are on the company.
   def self.update(company, params)
     company.signature.purge if ActiveModel::Type::Boolean.new.cast(params.dig(:company, :remove_signature))
-    company.update(attributes(params, branding: company.pro_features?).except(:currency))
+    company.update(attributes(params).except(:currency))
   end
 
-  # The permitted company attributes of a request. branding: false leaves out
-  # the logo, the colour and the identifier — Starter's update.
-  def self.attributes(params, branding: true)
+  # The permitted company attributes of a request.
+  def self.attributes(params)
     permitted = params.require(:company).permit(
       :name, :description, :phone, :email, :country, :city,
       :address, :latitude, :longitude, :timezone, :currency,
@@ -36,11 +32,6 @@ module CompanyProfile
         { branding: CompanySettings::BRANDING.keys }
       ]
     )
-
-    unless branding
-      permitted = permitted.except(:slug, :logo, :primary_color)
-      permitted[:settings] = permitted[:settings].except(:branding) if permitted[:settings]
-    end
 
     fold_legacy_settings_keys(permitted)
   end

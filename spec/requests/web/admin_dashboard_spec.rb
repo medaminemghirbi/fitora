@@ -38,14 +38,6 @@ RSpec.describe "Web dashboard", type: :request, openapi: false do
     expect(response.body).not_to include("dash-head")
   end
 
-  it "exports the report as /api/v1/admin/reports/export, under the page's file name, audited" do
-    get "#{base}/dashboard/report", params: { period_type: "month", period: "2026-10" }
-    expect(response.headers["Content-Disposition"]).to include("fitora-rapport-2026-10.xlsx")
-    expect(AuditLog.where(action: "report.exported")).to exist
-    get "#{base}/dashboard/report", params: { period_type: "month", period: "nope" }
-    expect(response).to have_http_status(:unprocessable_content)
-  end
-
   describe "the check-in panel, as /api/v1/attendance" do
     let(:session) { create(:session, company: company, activity: activity, starts_at: 10.minutes.ago) }
     let!(:booking) { create(:booking, session: session, client: create(:client, company: company, first_name: "Sarra"), status: :confirmed) }

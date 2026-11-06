@@ -1,6 +1,8 @@
 <%# ng: rail %>
 <%# RailComponent (layout/rail): the desktop navigation, one flat list. %>
 <% user = bootstrap[:user]; branding = bootstrap[:branding] %>
+<%# Down to its icons while settings are open: each link says what it is on hover. %>
+<% icons_only = content_for?(:settings_mode) %>
 <aside class="rail d-none d-lg-flex">
   <a href="<%= nav.path(nav.home_page) %>" class="rail-brand">
     <span class="rail-brand-mark">
@@ -25,7 +27,7 @@
 
   <nav class="rail-nav" aria-label="<%= ngt("nav.primary") %>">
     <% if (dash = nav.dashboard) %>
-      <a href="<%= nav.path(dash) %>" class="rail-item<%= " is-active" if shell_active?(dash) %>">
+      <a href="<%= nav.path(dash) %>" class="rail-item<%= " is-active" if shell_active?(dash) %>"<%= raw(%( title="#{h(ngt(dash.label_key))}")) if icons_only %>>
         <i class="bi <%= dash.icon %>"></i>
         <%= ngt(dash.label_key) %>
       </a>
@@ -33,7 +35,7 @@
 
     <% nav.groups.each do |group| %>
       <% group.items.each do |item| %>
-        <a href="<%= nav.path(item) %>" class="rail-item<%= " is-active" if shell_active?(item) %>">
+        <a href="<%= nav.path(item) %>" class="rail-item<%= " is-active" if shell_active?(item) %>"<%= raw(%( title="#{h(ngt(item.label_key))}")) if icons_only %>>
           <i class="bi <%= item.icon %>"></i>
           <%= ngt(item.label_key) %>
           <% if item.coming_soon %>
@@ -44,12 +46,9 @@
     <% end %>
 
     <% nav.secondary.each do |item| %>
-      <a href="<%= nav.path(item) %>" class="rail-item<%= " is-active" if shell_active?(item) %>">
+      <a href="<%= nav.path(item) %>" class="rail-item<%= " is-active" if shell_active?(item) %>"<%= raw(%( title="#{h(ngt(item.label_key))}")) if icons_only %>>
         <i class="bi <%= item.icon %>"></i>
         <%= ngt(item.label_key) %>
-        <% if item.pro && !nav.pro_features? %>
-          <span class="rail-pro"><i class="bi bi-lock-fill" aria-hidden="true"></i> Pro</span>
-        <% end %>
       </a>
     <% end %>
   </nav>

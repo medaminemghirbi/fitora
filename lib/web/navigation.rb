@@ -4,43 +4,42 @@ module Web
   # filters it — by permission, admin-only and tenant feature — with each
   # path in the current salle (MIGRATION_AUDIT §8).
   class Navigation
-    Item = Struct.new(:page, :icon, :label_key, :permission, :admin_only, :feature, :pro, :coming_soon, :query, keyword_init: true)
+    Item = Struct.new(:page, :icon, :label_key, :permission, :admin_only, :feature, :coming_soon, :query, keyword_init: true)
     Group = Struct.new(:id, :icon, :label_key, :admin_only, :items, keyword_init: true)
 
     DASHBOARD = Item.new(page: "dashboard", icon: "bi-sun", label_key: "nav.today", permission: "reports")
 
-    # Seven entries, in the order a gym's day runs. "Bookings" is deliberately
+    # In the order a gym's day runs. "Bookings" is deliberately
     # absent (see navigation.ts).
     GROUPS = [
       Group.new(id: "clients", icon: "bi-people", label_key: "nav.clients", items: [
         Item.new(page: "clients", icon: "bi-people", label_key: "nav.clients", permission: "clients")
       ]),
-      # The door: members coming in, whether they booked a class or not.
-      Group.new(id: "entries", icon: "bi-qr-code-scan", label_key: "nav.entries", items: [
-        Item.new(page: "entries", icon: "bi-qr-code-scan", label_key: "nav.entries", permission: "checkin")
-      ]),
       Group.new(id: "planning", icon: "bi-calendar3", label_key: "nav.planning", items: [
-        Item.new(page: "calendar", icon: "bi-calendar3", label_key: "nav.planning"),
-        Item.new(page: "spaces", icon: "bi-door-open", label_key: "nav.spaces", permission: "spaces", feature: "spaces")
+        Item.new(page: "calendar", icon: "bi-calendar3", label_key: "nav.planning")
       ]),
       Group.new(id: "subscriptions", icon: "bi-award", label_key: "nav.subscriptions", items: [
-        Item.new(page: "contracts", icon: "bi-file-earmark-text", label_key: "nav.subscriptions_active", permission: "contracts"),
-        Item.new(page: "catalogue", icon: "bi-award", label_key: "nav.catalogue", permission: "contract_types")
+        Item.new(page: "contracts", icon: "bi-file-earmark-text", label_key: "nav.subscriptions_active", permission: "contracts")
       ]),
       Group.new(id: "finances", icon: "bi-cash-coin", label_key: "nav.payments", items: [
-        Item.new(page: "payments", icon: "bi-cash-coin", label_key: "nav.payments", permission: "payments"),
-        Item.new(page: "cash", icon: "bi-safe", label_key: "nav.cash", permission: "payments")
-      ]),
-      Group.new(id: "team", icon: "bi-person-vcard", label_key: "nav.team", admin_only: true, items: [
-        Item.new(page: "team", icon: "bi-person-vcard", label_key: "nav.team", permission: "coaches")
+        Item.new(page: "payments", icon: "bi-cash-coin", label_key: "nav.payments", permission: "payments")
       ])
     ].freeze
 
+    SETTINGS = Item.new(page: "settings", icon: "bi-gear", label_key: "nav.settings").freeze
+
     SECONDARY = [
-      Item.new(page: "salles", icon: "bi-buildings", label_key: "nav.my_salles", admin_only: true, pro: true),
-      Item.new(page: "subscription", icon: "bi-stars", label_key: "nav.fitora_subscription", admin_only: true),
       Item.new(page: "updates", icon: "bi-megaphone", label_key: "nav.updates", admin_only: true),
-      Item.new(page: "settings", icon: "bi-gear", label_key: "nav.settings", admin_only: true)
+      SETTINGS
+    ].freeze
+
+    # What a gym sets up once and rarely reopens: in Settings' own menu, not this
+    # one (Web::SettingsSections), but still pages the search palette can reach.
+    SETTINGS_PAGES = [
+      Item.new(page: "spaces", icon: "bi-door-open", label_key: "nav.spaces", permission: "spaces", feature: "spaces"),
+      Item.new(page: "salles", icon: "bi-buildings", label_key: "nav.my_salles", admin_only: true),
+      Item.new(page: "catalogue", icon: "bi-award", label_key: "nav.catalogue", permission: "contract_types"),
+      Item.new(page: "team", icon: "bi-person-vcard", label_key: "nav.team", admin_only: true)
     ].freeze
 
     # MobileBarComponent's three.
@@ -70,9 +69,16 @@ module Web
             .reject { |g| g.items.empty? }
     end
 
-    # Only an admin's shell lists them (AdminShellComponent#showAdminOnlySections).
+    # An admin's shell lists them all. A role that manages some of Settings'
+    # pages (the plans, the plateau) gets the way in, or it would lose them.
     def secondary
-      admin? ? SECONDARY.select { |i| visible?(i) } : []
+      return SECONDARY.select { |i| visible?(i) } if admin?
+
+      settings_pages.any? ? [ SETTINGS ] : []
+    end
+
+    def settings_pages
+      SETTINGS_PAGES.select { |i| visible?(i) }
     end
 
     def mobile
@@ -82,7 +88,7 @@ module Web
     # Every entry the bars can show, for "which page is this" (the mobile
     # title, NavbarComponent#activePageLabel).
     def leaves
-      [ dashboard, *groups.flat_map(&:items), *secondary ].compact
+      [ dashboard, *groups.flat_map(&:items), *settings_pages, *secondary ].compact
     end
 
     # NavigationService#homePath — where the brand links to.
@@ -100,12 +106,6 @@ module Web
     # A group shown as a plain link: it has one entry left (NavbarComponent#soloItem).
     def solo(group)
       group.items.size == 1 ? group.items.first : nil
-    end
-
-    # Pro's tools open? True until known, as ConfigurationService#proFeatures.
-    def pro_features?
-      subscription = @bootstrap[:subscription]
-      subscription.nil? ? true : subscription[:pro_features]
     end
 
     private

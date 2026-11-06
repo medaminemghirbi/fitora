@@ -8,9 +8,7 @@
 
 <% filters = [
      { name: "status", label: ngt("superadmin.support.status_col"), default: "open",
-       options: [ [ "open", ngt("superadmin.support.filter_open") ], [ "resolved", ngt("modules_page.contact.status_resolved") ], [ "all", ngt("superadmin.support.filter_all") ] ] },
-     { name: "kind", label: ngt("superadmin.console.filter_kind"), default: "",
-       options: [ [ "", ngt("superadmin.console.any_kind") ], [ "general", ngt("superadmin.console.kind_general") ], [ "upgrade", ngt("superadmin.support.kind_upgrade") ] ] }
+       options: [ [ "open", ngt("superadmin.support.filter_open") ], [ "resolved", ngt("modules_page.contact.status_resolved") ], [ "all", ngt("superadmin.support.filter_all") ] ] }
    ] %>
 <%= render layout: "web/superadmin/shared/table", locals: { table: @table, url: url, placeholder: ngt("superadmin.console.support_search"), filters: filters } do %>
   <% if @tickets.empty? %>
@@ -35,14 +33,8 @@
               <td>
                 <div class="sa-lead-title"><%= ng_highlight(ticket.company.name, @table.term) %></div>
                 <div class="sa-sub"><%= ng_highlight(ticket.created_by.full_name, @table.term) %></div>
-                <% if ticket.contact_phone.present? %>
-                  <a class="sa-sub" href="<%= support_tel_href(ticket.contact_phone) %>" dir="ltr"><i class="bi bi-telephone"></i> <%= ticket.contact_phone %></a>
-                <% end %>
               </td>
               <td>
-                <% if ticket.upgrade? %>
-                  <span class="sa-chip sa-chip--primary"><i class="bi bi-gem"></i> <%= ngt("superadmin.support.kind_upgrade") %></span>
-                <% end %>
                 <div><a class="sa-lead-title" href="<%= href %>" data-turbo-frame="_top"><%= ng_highlight(ticket.subject, @table.term) %></a></div>
                 <div class="sa-sub sa-clip"><%= ticket.message %></div>
               </td>

@@ -1,20 +1,15 @@
 import { Controller } from "@hotwired/stimulus"
-import { Turbo } from "@hotwired/turbo-rails"
-import { NG_EMAIL } from "../lib/ng"
 import { currentTheme, setTheme } from "../lib/theme"
 
 // LandingComponent's signals: the mobile menu, the theme, step 2's booking
-// mock (a day, then a free slot on it), the billing period the prices are
-// shown for, the questions (one open at a time) and the closing form, which
-// hands what it has over to /inscription.
+// mock (a day, then a free slot on it) and the questions (one open at a time).
 export default class extends Controller {
-  static targets = ["burger", "menu", "day", "slot", "billing", "price", "period", "faq", "firstName", "email", "emailField"]
-  static values = { taken: Array, billingLabels: Object }
+  static targets = ["burger", "menu", "day", "slot", "faq"]
+  static values = { taken: Array }
 
   connect() {
     this.selectedDay = 0
     this.selectedSlot = "18:00"
-    this.emailTouched = false
   }
 
   toggleTheme(event) {
@@ -70,14 +65,6 @@ export default class extends Controller {
     })
   }
 
-  // ---- Pricing: per month, or the year's total after the discount ----
-  pickBilling(event) {
-    const billing = event.params.billing
-    this.billingTargets.forEach((button) => this.mark(button, "is-on", button.dataset.landingBillingParam === billing))
-    this.priceTargets.forEach((price) => (price.textContent = price.dataset[billing]))
-    this.periodTargets.forEach((period) => (period.textContent = `DT / ${this.billingLabelsValue[billing]}`))
-  }
-
   // ---- Questions: one open panel at a time ----
   toggleFaq(event) {
     const item = event.currentTarget.closest(".lp-faq-item")
@@ -91,47 +78,6 @@ export default class extends Controller {
       icon.classList.toggle("bi-dash-lg", on)
       faq.querySelector(".lp-faq-a").hidden = !on
     })
-  }
-
-  // ---- The closing form: Validators.email on the address, shown once touched ----
-  touchEmail() {
-    this.emailTouched = true
-    this.drawEmailError()
-  }
-
-  checkEmail() {
-    this.drawEmailError()
-  }
-
-  emailValid() {
-    const value = this.emailTarget.value
-    return value === "" || NG_EMAIL.test(value)
-  }
-
-  drawEmailError() {
-    const show = this.emailTouched && !this.emailValid()
-    const shown = this.emailFieldTarget.querySelector(".lp-field-err")
-    if (show && !shown) {
-      this.emailFieldTarget.append(document.getElementById("lp-email-error").content.cloneNode(true))
-    } else if (!show && shown) {
-      shown.remove()
-    }
-  }
-
-  start(event) {
-    event.preventDefault()
-    if (!this.emailValid()) {
-      this.emailTouched = true
-      this.drawEmailError()
-      return
-    }
-    const query = new URLSearchParams()
-    const firstName = this.firstNameTarget.value.trim()
-    const email = this.emailTarget.value.trim()
-    if (firstName) query.set("first_name", firstName)
-    if (email) query.set("email", email)
-    const search = query.toString()
-    Turbo.visit(search ? `/inscription?${search}` : "/inscription")
   }
 
   // [class.x]="on" with [attr.aria-pressed]="on", on a button with no other class.

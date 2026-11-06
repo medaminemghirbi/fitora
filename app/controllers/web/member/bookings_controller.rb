@@ -6,7 +6,7 @@ module Web
     # (MemberScheduleComponent#book) or giving one back, as
     # POST /api/v1/me/bookings and …/cancel do.
     class BookingsController < BaseController
-      before_action -> { render_refusal("member_app_not_included", status: :forbidden) if member_companies.empty? }, only: %i[create cancel]
+      before_action -> { render_refusal("no_gym", status: :forbidden) if member_companies.empty? }, only: %i[create cancel]
 
       def index
         @when = params[:when] == "past" ? "past" : "upcoming"

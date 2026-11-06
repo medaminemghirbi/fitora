@@ -13,7 +13,7 @@ module Web
     # Flagged in the matrix: prices, money totals and who coaches.
     SENSITIVE = %w[coaches contract_types revenue].freeze
     # What require_admin! keeps for the admin whatever a role holds.
-    ADMIN_RESERVED = %w[settings accounts salles subscription refunds member_removal exports].freeze
+    ADMIN_RESERVED = %w[settings accounts salles refunds member_removal].freeze
 
     # #groups, unsearched: each group's keys the catalogue has, then "other".
     def self.groups(catalog_keys)

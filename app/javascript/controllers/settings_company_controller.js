@@ -3,22 +3,29 @@ import { NG_EMAIL, csrfToken } from "../lib/ng"
 import { COUNTRIES, ensureTimezone, timezoneForCountry, toCountryCode } from "../lib/places"
 import { toast } from "../lib/toast"
 
-// SettingsCompanyComponent: the profile form. The country picker and the
-// timezone list are filled here; picking a country moves the timezone to
-// that country's main zone. Saved as PATCH /api/v1/company saves it.
+// What a section's form may hold. Each form sends the fields it has, so the
+// gym's profile and its legal details save apart, the other left as it is.
+const FIELDS = ["name", "description", "phone", "email", "address", "city", "tax_id", "country", "timezone"]
+
+// The gym's profile, and its legal details with the country picker and the
+// timezone list, filled here: picking a country moves the timezone to that
+// country's main zone. Saved as PATCH /api/v1/company saves it.
 export default class extends Controller {
   static targets = ["form", "country"]
   static values = { url: String, country: String, timezone: String, labels: Object }
 
   connect() {
-    this.country = toCountryCode(this.countryValue)
-    this.fillTimezones(this.timezoneValue || "Africa/Tunis")
+    if (this.formTarget.elements.timezone) this.fillTimezones(this.timezoneValue || "Africa/Tunis")
+    if (!this.hasCountryTarget) return
+
+    const country = toCountryCode(this.countryValue)
+    this.formTarget.elements.country.value = country
     queueMicrotask(() => {
-      this.countrySelect?.setOptions(COUNTRIES.map((c) => ({ value: c.code, label: c.name, prefix: c.flag })), this.country)
+      this.countrySelect?.setOptions(COUNTRIES.map((c) => ({ value: c.code, label: c.name, prefix: c.flag })), country)
     })
     this.countryTarget.addEventListener("searchable-select:change", (event) => {
-      this.country = event.detail.value
-      const tz = timezoneForCountry(this.country)
+      this.formTarget.elements.country.value = event.detail.value
+      const tz = timezoneForCountry(event.detail.value)
       if (tz) this.fillTimezones(tz)
     })
   }
@@ -42,20 +49,31 @@ export default class extends Controller {
   async submit(event) {
     event.preventDefault()
     const f = this.formTarget.elements
-    // Validators: the name, an address when one is given, the timezone.
-    if (!f.name.value || (f.email.value && !NG_EMAIL.test(f.email.value)) || !f.timezone.value) return
+    if (this.refuse(f.name, !f.name?.value) || this.refuse(f.email, f.email?.value && !NG_EMAIL.test(f.email.value)) || this.refuse(f.timezone, !f.timezone?.value)) return
+
     const save = this.formTarget.querySelector("[data-save]")
     save.disabled = true
     save.textContent = ` ${this.labelsValue.saving} `
-    const company = {
-      name: f.name.value, description: f.description.value, phone: f.phone.value, email: f.email.value,
-      country: this.country, city: f.city.value, address: f.address.value, tax_id: f.tax_id.value, timezone: f.timezone.value,
-    }
+    const company = {}
+    for (const key of FIELDS) if (f[key]) company[key] = f[key].value
     const result = await saveCompany(this.urlValue, { company })
     save.disabled = false
     save.textContent = ` ${this.labelsValue.save} `
-    if (result.ok) toast("success", this.labelsValue.saved)
-    else toast("error", result.error ?? this.labelsValue.error)
+    if (result.ok) {
+      toast("success", this.labelsValue.saved)
+      this.formTarget.dispatchEvent(new CustomEvent("settings:saved", { bubbles: true }))
+    } else {
+      toast("error", result.error ?? this.labelsValue.error)
+    }
+  }
+
+  // A field this form holds that cannot be sent as it stands: marked, and the
+  // focus goes there.
+  refuse(field, wrong) {
+    if (!field) return false
+    field.classList.toggle("is-invalid", Boolean(wrong))
+    if (wrong) field.focus()
+    return Boolean(wrong)
   }
 }
 

@@ -11,12 +11,12 @@ import { toast } from "../lib/toast"
 // from the answer. Opening a salle: the form, then its getting-started page.
 export default class extends Controller {
   static targets = ["network"]
-  static values = { url: String, switchUrl: String, timezone: String, currency: String, multi: Boolean, labels: Object }
+  static values = { url: String, switchUrl: String, timezone: String, currency: String, labels: Object }
 
   // ---- switching --------------------------------------------------------------
 
   async switchTo(event) {
-    if (this.switching || !this.multiValue) return
+    if (this.switching) return
     const card = event.currentTarget.closest(".sl-card")
     const button = event.currentTarget
     this.switching = card.dataset.salleId
@@ -125,7 +125,6 @@ export default class extends Controller {
   // ---- opening a salle ------------------------------------------------------------
 
   openCreate() {
-    if (!this.multiValue) return
     this.createError = null
     window.dispatchEvent(new CustomEvent("salles-create:open"))
   }
@@ -186,7 +185,7 @@ export default class extends Controller {
     this.savingSalle = false
     this.lockModal("salles-create", false)
     // The plan changed since the page loaded: said in the gym's words.
-    this.createError = payload?.error === "multi_salle_not_included" ? this.labelsValue.needs_pro_refused : (payload?.error ?? this.labelsValue.error)
+    this.createError = payload?.error ?? this.labelsValue.error
     this.renderCreate(form)
   }
 

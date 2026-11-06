@@ -7,6 +7,9 @@ module Web
     # apply (CatalogueEditor), behind the same capabilities, and answers with
     # the API's refusal message.
     class CatalogueController < BaseController
+      include Web::SettingsPage
+      settings_section "catalogue"
+
       include Web::CatalogueData
 
       TABS = %w[tarifs activites formules packs].freeze

@@ -34,8 +34,6 @@ module RuboCop
         # Every model that belongs to a company, directly or through an
         # association chain (session -> location -> company, etc.) — kept in
         # sync by hand; a new tenant-scoped model should be added here.
-        # Subscription and Invoice belong to an admin's account, which is as
-        # much a tenant: one account must not read another's billing.
         # Deliberately NOT here: Company itself (the tenant root — finding a
         # bare Company is how you resolve a tenant in the first place, e.g.
         # PairingController) and User (login has to search by email across
@@ -45,9 +43,8 @@ module RuboCop
           StaffMember Contract ContractType
           ContractTypeActivity Payment Space ActivitySpace
           AttendanceRecord RecurringSchedule SupportTicket Role
-          AuditLog Notification DataImport
-          Visit CashClosing Pack PackActivity ContractTypePack
-          Subscription Invoice
+          AuditLog Notification
+          Pack PackActivity ContractTypePack
         ].freeze
 
         RESTRICT_ON_SEND = %i[find find_by find_by! where].freeze

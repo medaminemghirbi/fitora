@@ -7,14 +7,18 @@ import { toast } from "../lib/toast"
 // ClientProfileComponent's actions. Each write goes to the server, then
 // load(): the file drawn again from what it now holds — also after the
 // subscriptions controller changed a subscription (subscriptions:changed).
-// The three dialogs are filled here when they open — a booking (the day's
-// sessions for an activity, how the seat is paid), a payment (what is owed,
-// one line each), the health file.
+// The dialogs are filled here when they open — a booking (the day's sessions
+// for an activity, how the seat is paid), a payment (what is owed, one line
+// each), the health file, their details.
 const SCOPE = "client-profile"
+const DETAILS = ["first_name", "last_name", "phone", "date_of_birth", "gender", "address", "emergency_contact_name", "emergency_contact_phone", "notes"]
+const REQUIRED = ["first_name", "last_name", "phone"]
 
 export default class extends Controller {
   static targets = ["data", "noActivity"]
-  static values = { url: String, paymentsUrl: String, attendanceUrl: String, entriesUrl: String, clientsUrl: String, dropIn: Boolean, today: String, labels: Object }
+  // How much of what happened shows at first (ClientProfileHelper::TIMELINE_SHOWN).
+  static SHOWN = 6
+  static values = { url: String, paymentsUrl: String, attendanceUrl: String, clientsUrl: String, dropIn: Boolean, today: String, labels: Object }
 
   connect() {
     this.read()
@@ -33,6 +37,9 @@ export default class extends Controller {
     fresh.innerHTML = await response.text()
     this.element.replaceChildren(fresh.content)
     this.read()
+    // The entries kept by a filter are the old page's.
+    this.allEntries = null
+    this.timeline = null
     if (this.filter !== "all") this.applyFilter()
   }
 
@@ -54,10 +61,25 @@ export default class extends Controller {
     if (shown.length === 0) {
       this.timeline?.remove()
       head.after(this.noActivityTarget.content.cloneNode(true))
+      this.drawShowAll(0)
       return
     }
     this.timeline.replaceChildren(...shown)
     if (!this.timeline.isConnected) head.after(this.timeline)
+    this.drawShowAll(shown.length)
+  }
+
+  // The rest of what happened, once asked for; the button goes with it, or
+  // when what is showing has no rest.
+  showAll() {
+    this.element.querySelector(".prof-timeline")?.classList.remove("is-collapsed")
+    this.drawShowAll(0)
+  }
+
+  drawShowAll(count) {
+    const button = this.element.querySelector("[data-show-all]")
+    const collapsed = this.element.querySelector(".prof-timeline")?.classList.contains("is-collapsed")
+    if (button) button.hidden = !collapsed || count <= this.constructor.SHOWN
   }
 
   // ---- the desk's actions ------------------------------------------------------------
@@ -65,8 +87,7 @@ export default class extends Controller {
   async checkIn() {
     const today = this.todayValue
     const booking = this.profile.bookings.find((b) => b.status === "confirmed" && b.starts_at.slice(0, 10) === today)
-    // No class today: they came to train, so the door records the visit.
-    if (!booking) return Turbo.visit(this.entriesUrlValue)
+    if (!booking) return
     const result = await this.request("POST", this.attendanceUrlValue, { booking_id: booking.id, status: "present" })
     if (!result.ok) return toast("error", result.error ?? this.labelsValue.error)
     toast("success", this.labelsValue.present)
@@ -118,12 +139,17 @@ export default class extends Controller {
     window.dispatchEvent(new CustomEvent("profile-health:open"))
   }
 
+  openDetails() {
+    window.dispatchEvent(new CustomEvent("profile-details:open"))
+  }
+
   fill(event) {
     const { name, panel } = event.detail
     this.saving = false
     if (name === "profile-booking") this.fillBooking(panel)
     else if (name === "profile-payment") this.fillPayment(panel)
     else if (name === "profile-health") this.fillHealth(panel)
+    else if (name === "profile-details") this.fillDetails(panel)
   }
 
   // ---- a booking ----------------------------------------------------------------------
@@ -244,6 +270,50 @@ export default class extends Controller {
     })
   }
 
+  // ---- their details ----------------------------------------------------------------------
+
+  // Once the person is known beyond this gym (identity_locked), what is filled
+  // in of their name, e-mail and phone is locked; a blank can still be filled.
+  // The e-mail reaches staff masked, so it is shown only as the placeholder:
+  // it can be typed over, never sent back.
+  fillDetails(panel) {
+    const form = panel.querySelector('[data-profile-form="details"]')
+    const f = form.elements
+    const client = this.profile.client
+    // A gender typed before the form offered a choice stays what it was.
+    if (client.gender && ![...f.gender.options].some((o) => o.value === client.gender)) {
+      f.gender.add(scoped(new Option(client.gender, client.gender), SCOPE))
+    }
+    for (const name of DETAILS) f[name].value = client[name] ?? ""
+    f.email.placeholder = client.email ?? ""
+    const locked = Boolean(client.identity_locked)
+    for (const name of [...REQUIRED, "email"]) f[name].disabled = locked && Boolean(client[name])
+    if (!locked) form.querySelector("[data-locked-hint]").remove()
+    if (locked || !client.email) form.querySelector("[data-email-keep]").remove()
+    form.addEventListener("submit", (e) => {
+      e.preventDefault()
+      if (!this.saving) this.submitDetails(panel, form)
+    })
+  }
+
+  submitDetails(panel, form) {
+    const f = form.elements
+    const missing = REQUIRED.map((name) => f[name]).filter((input) => !input.disabled && !input.value.trim())
+    const wrong = f.email.validity.typeMismatch ? [...missing, f.email] : missing
+    for (const name of [...REQUIRED, "email"]) f[name].classList.toggle("is-invalid", wrong.includes(f[name]))
+    if (wrong.length > 0) {
+      this.showError(panel, missing.length > 0 ? this.labelsValue.required : this.labelsValue.email_invalid)
+      return wrong[0].focus()
+    }
+    const client = {}
+    for (const name of DETAILS) {
+      if (!f[name].disabled) client[name] = f[name].value.trim() || null
+    }
+    // Left empty, the address stays as it is.
+    if (f.email.value.trim()) client.email = f.email.value.trim()
+    this.save(panel, form, "profile-details", "PATCH", this.urlValue, { client }, this.labelsValue.saved, this.labelsValue.save)
+  }
+
   // ---- shared -----------------------------------------------------------------------------
 
   // A dialog's save: busy, then closed with a toast and load(); or the API's
@@ -271,7 +341,7 @@ export default class extends Controller {
     body.querySelector(":scope > .alert-danger")?.remove()
     if (!message) return
     const alert = scoped(document.createElement("div"), SCOPE)
-    alert.className = "alert alert-danger"
+    alert.className = "alert alert-danger mb-3"
     alert.textContent = message
     body.prepend(alert)
   }
@@ -285,6 +355,7 @@ export default class extends Controller {
     if (!response) return { ok: false, error: null }
     if (response.ok) return { ok: true }
     const payload = await response.json().catch(() => ({}))
-    return { ok: false, error: payload.error ?? null }
+    // A refusal's `error` is its code; `message` is the words.
+    return { ok: false, error: payload.message ?? payload.error ?? null }
   }
 }

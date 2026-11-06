@@ -1,10 +1,9 @@
 module Web
-  # What the legal pages print about the company that publishes Fitora —
-  # read from Superadmin → Billing, so the pages and the invoices never
-  # disagree — and the day the current text applies from.
+  # What the legal pages print about the company that publishes Fitora — read
+  # from Superadmin → Identité — and the day the current text applies from.
   module LegalHelper
     # Change it with the text.
-    UPDATED_ON = Date.new(2026, 10, 28)
+    UPDATED_ON = Date.new(2026, 11, 6)
 
     def legal_publisher
       issuer.legal_name.presence || "Fitora"

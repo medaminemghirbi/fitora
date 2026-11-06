@@ -28,6 +28,25 @@ RSpec.describe "Api::V1::Auth", type: :request do
     end
   end
 
+  describe "POST /api/v1/auth/login on a suspended account" do
+    let(:company) { create(:company) }
+
+    before { SuperadminActions.suspend_access(company, by: create(:user, :superadmin)) }
+
+    it "refuses the right password, in its own words" do
+      post "/api/v1/auth/login", params: { email: company.admin.email, password: "password123" }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response.parsed_body["error"]).to eq("access_suspended")
+    end
+
+    it "says nothing to the wrong one" do
+      post "/api/v1/auth/login", params: { email: company.admin.email, password: "wrong-password" }
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
   describe "GET /api/v1/auth/me" do
     it "requires authentication" do
       get "/api/v1/auth/me"
@@ -42,50 +61,6 @@ RSpec.describe "Api::V1::Auth", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["user"]["id"]).to eq(user.id)
-    end
-  end
-
-  describe "POST /api/v1/auth/register" do
-    let(:payload) do
-      { user: { first_name: "Amine", last_name: "Mghirbi", email: "new@gym.test", password: "password123" } }
-    end
-
-    it "opens an admin login and nothing else — the gym is named on the next screen" do
-      expect { post "/api/v1/auth/register", params: payload }.to change(User, :count).by(1)
-
-      expect(response).to have_http_status(:created)
-      expect(response.parsed_body["account_type"]).to eq("user")
-      expect(response.parsed_body["token"]).to be_present
-
-      user = User.find_by(email: "new@gym.test")
-      expect(user.role).to eq("admin")
-      expect(user.active_company).to be_nil
-      expect(Company.count).to eq(0)
-    end
-
-    it "sends them a confirmation email" do
-      expect { post "/api/v1/auth/register", params: payload }
-        .to have_enqueued_mail(AccountMailer, :email_verification)
-    end
-
-    it "never lets the form choose its own role" do
-      post "/api/v1/auth/register", params: { user: payload[:user].merge(role: "superadmin") }
-
-      expect(User.find_by(email: "new@gym.test").role).to eq("admin")
-    end
-
-    it "refuses an address that already has an account" do
-      create(:user, email: "new@gym.test")
-
-      expect { post "/api/v1/auth/register", params: payload }.not_to change(User, :count)
-      expect(response).to have_http_status(:unprocessable_content)
-    end
-
-    it "refuses a password too short to be one" do
-      post "/api/v1/auth/register", params: { user: payload[:user].merge(password: "short") }
-
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(response.parsed_body["error"]).to be_present
     end
   end
 end

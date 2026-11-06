@@ -5,7 +5,6 @@
     calendar-page), the hover card, the session detail with its attendance
     and the "new session" dialog. %>
 <% manage = @manage %>
-<% pro = nav.pro_features? %>
 <% labels = {
      calendar: ngt("nav.calendar"), error: ngt("common.error_generic"), save: ngt("common.save"), saving: ngt("common.saving"), confirm: ngt("common.confirm"),
      slot_open: ngt("calendar.slot_open"), no_coach: ngt("calendar.no_coach"), no_coach_schedule: ngt("schedule.no_coach"), move_title: ngt("calendar.move_confirm_title"), move_body: ngt("calendar.move_confirm_body"),
@@ -46,18 +45,10 @@
       </div>
 
       <div class="fx-cal-actions">
-        <% if pro %>
-          <button type="button" class="btn btn-outline-primary btn-sm" data-action="calendar-page#printSchedule">
-            <i class="bi bi-printer"></i>
-            <%= ngt("schedule.print_week") %>
-          </button>
-        <% else %>
-          <a href="<%= admin_page_path("subscription") %>" class="btn btn-outline-primary btn-sm fx-cal-print-locked" title="<%= ngt("schedule.print_needs_pro") %>">
-            <i class="bi bi-printer"></i>
-            <%= ngt("schedule.print_week") %>
-            <span class="fx-pro-chip"><i class="bi bi-lock-fill" aria-hidden="true"></i> Pro</span>
-          </a>
-        <% end %>
+        <button type="button" class="btn btn-outline-primary btn-sm" data-action="calendar-page#printSchedule">
+          <i class="bi bi-printer"></i>
+          <%= ngt("schedule.print_week") %>
+        </button>
         <% if manage %>
           <button type="button" class="btn btn-primary btn-sm" data-action="calendar-page#openCreate">
             <i class="bi bi-plus-lg"></i> <%= ngt("schedule.new_session") %>

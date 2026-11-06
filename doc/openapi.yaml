@@ -72,20 +72,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -94,6 +80,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -347,8 +335,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -491,8 +479,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -571,10 +559,6 @@ paths:
                         type: 'null'
                       contract_terms:
                         type: 'null'
-                      included_modules:
-                        type: array
-                        items:
-                          type: string
                       settings:
                         type: object
                         properties:
@@ -665,12 +649,6 @@ paths:
                         - hours
                         - branding
                         - onboarding
-                      monthly_subscription_cents:
-                        type: integer
-                      annual_subscription_cents:
-                        type: integer
-                      annual_discount_percent:
-                        type: integer
                     required:
                     - id
                     - name
@@ -696,11 +674,7 @@ paths:
                     - logo_url
                     - signatory_name
                     - contract_terms
-                    - included_modules
                     - settings
-                    - monthly_subscription_cents
-                    - annual_subscription_cents
-                    - annual_discount_percent
                   stats:
                     type: object
                     properties:
@@ -799,20 +773,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -822,78 +782,7 @@ paths:
                 properties:
                   error:
                     type: string
-                required:
-                - error
-  "/api/v1/admin/reports/export":
-    get:
-      summary: export
-      tags:
-      - Api::V1::Admin::Report
-      parameters:
-      - name: period
-        in: query
-        required: false
-        schema:
-          oneOf:
-          - type: string
-          - type: integer
-      - name: period_type
-        in: query
-        required: false
-        schema:
-          type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
-              schema:
-                type: string
-                format: binary
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
                   message:
-                    type: string
-                required:
-                - error
-                - message
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-        '422':
-          description: Unprocessable Content
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
                     type: string
                 required:
                 - error
@@ -959,20 +848,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -981,6 +856,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -1046,20 +923,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -1068,6 +931,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -1123,8 +988,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -1314,20 +1179,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -1336,6 +1187,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -1697,116 +1550,6 @@ paths:
               required:
               - current_password
               - password
-  "/api/v1/auth/register":
-    post:
-      summary: register
-      tags:
-      - Api::V1::Auth
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                user:
-                  type: object
-                  properties:
-                    first_name:
-                      type: string
-                    last_name:
-                      type: string
-                    email:
-                      type: string
-                    password:
-                      type: string
-                    role:
-                      type: string
-                  required:
-                  - first_name
-                  - last_name
-                  - email
-                  - password
-              required:
-              - user
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                  account_type:
-                    type: string
-                  user:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                      first_name:
-                        type: string
-                      last_name:
-                        type: string
-                      full_name:
-                        type: string
-                      email:
-                        type: string
-                      phone:
-                        type: 'null'
-                      role:
-                        type: string
-                      locale:
-                        type: string
-                      email_verified:
-                        type: boolean
-                      email_verification_resend_in:
-                        type: integer
-                      company_id:
-                        type: 'null'
-                      staff_role:
-                        type: 'null'
-                      is_coach:
-                        type: boolean
-                      companies:
-                        type: array
-                        items: {}
-                    required:
-                    - id
-                    - first_name
-                    - last_name
-                    - full_name
-                    - email
-                    - phone
-                    - role
-                    - locale
-                    - email_verified
-                    - email_verification_resend_in
-                    - company_id
-                    - staff_role
-                    - is_coach
-                    - companies
-                required:
-                - token
-                - account_type
-                - user
-        '422':
-          description: Unprocessable Content
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  errors:
-                    type: array
-                    items:
-                      type: string
-                required:
-                - error
-                - errors
   "/api/v1/bookings":
     get:
       summary: index
@@ -1938,10 +1681,6 @@ paths:
                 - bookings
                 - meta
                 - counts
-            text/csv:
-              schema:
-                type: string
-                format: binary
         '401':
           description: Unauthorized
           content:
@@ -1953,8 +1692,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -1966,25 +1705,8 @@ paths:
                     type: string
                 required:
                 - error
-                - message
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
       parameters:
       - name: date
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: format
         in: query
         required: false
         schema:
@@ -2261,8 +1983,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -2558,10 +2280,6 @@ paths:
                         type: 'null'
                       contract_terms:
                         type: 'null'
-                      included_modules:
-                        type: array
-                        items:
-                          type: string
                       settings:
                         type: object
                         properties:
@@ -2652,12 +2370,6 @@ paths:
                         - hours
                         - branding
                         - onboarding
-                      monthly_subscription_cents:
-                        type: integer
-                      annual_subscription_cents:
-                        type: integer
-                      annual_discount_percent:
-                        type: integer
                     required:
                     - id
                     - name
@@ -2684,11 +2396,7 @@ paths:
                     - signature_url
                     - signatory_name
                     - contract_terms
-                    - included_modules
                     - settings
-                    - monthly_subscription_cents
-                    - annual_subscription_cents
-                    - annual_discount_percent
                   branding:
                     type:
                     - object
@@ -2724,10 +2432,6 @@ paths:
                     - key
                     - name
                   permissions:
-                    type: array
-                    items:
-                      type: string
-                  modules:
                     type: array
                     items:
                       type: string
@@ -2815,47 +2519,6 @@ paths:
                     - reports
                     - revenue
                     - checkin
-                  subscription:
-                    type:
-                    - object
-                    - 'null'
-                    properties:
-                      active:
-                        type: boolean
-                      locked:
-                        type: boolean
-                      lock_reason:
-                        type:
-                        - string
-                        - 'null'
-                      current_period_paid:
-                        type: boolean
-                      days_before_lock:
-                        type: 'null'
-                      trial:
-                        type: boolean
-                      trial_days_left:
-                        type: 'null'
-                      plan:
-                        type: string
-                      member_app:
-                        type: boolean
-                      multi_salle:
-                        type: boolean
-                      pro_features:
-                        type: boolean
-                    required:
-                    - active
-                    - locked
-                    - lock_reason
-                    - current_period_paid
-                    - days_before_lock
-                    - trial
-                    - trial_days_left
-                    - plan
-                    - member_app
-                    - multi_salle
-                    - pro_features
                   onboarding:
                     type:
                     - object
@@ -2911,11 +2574,9 @@ paths:
                 - branding
                 - role
                 - permissions
-                - modules
                 - features
                 - roles
                 - permission_catalog
-                - subscription
                 - onboarding
                 - notifications
         '401':
@@ -2979,8 +2640,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -3322,10 +2983,6 @@ paths:
                 - clients
                 - meta
                 - counts
-            text/csv:
-              schema:
-                type: string
-                format: binary
         '401':
           description: Unauthorized
           content:
@@ -3337,20 +2994,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -3359,6 +3002,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -3380,11 +3025,6 @@ paths:
         schema:
           type: string
       - name: contract_type_id
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: format
         in: query
         required: false
         schema:
@@ -4265,8 +3905,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -4502,20 +4142,6 @@ paths:
                     type: string
                 required:
                 - error
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '404':
           description: Not Found
           content:
@@ -4620,20 +4246,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -4642,6 +4254,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -4724,8 +4338,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -4932,8 +4546,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -5190,8 +4804,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -5308,10 +4922,6 @@ paths:
                         type: 'null'
                       contract_terms:
                         type: 'null'
-                      included_modules:
-                        type: array
-                        items:
-                          type: string
                       settings:
                         type: object
                         properties:
@@ -5402,12 +5012,6 @@ paths:
                         - hours
                         - branding
                         - onboarding
-                      monthly_subscription_cents:
-                        type: integer
-                      annual_subscription_cents:
-                        type: integer
-                      annual_discount_percent:
-                        type: integer
                     required:
                     - id
                     - name
@@ -5434,11 +5038,7 @@ paths:
                     - signature_url
                     - signatory_name
                     - contract_terms
-                    - included_modules
                     - settings
-                    - monthly_subscription_cents
-                    - annual_subscription_cents
-                    - annual_discount_percent
                 required:
                 - company
         '401':
@@ -5572,20 +5172,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -5754,208 +5340,7 @@ paths:
         required: true
         schema:
           type: string
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties: {}
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  company:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                      name:
-                        type: string
-                      description:
-                        type: 'null'
-                      phone:
-                        type: 'null'
-                      email:
-                        type: 'null'
-                      country:
-                        type: 'null'
-                      city:
-                        type: 'null'
-                      address:
-                        type: 'null'
-                      tax_id:
-                        type: 'null'
-                      latitude:
-                        type: 'null'
-                      longitude:
-                        type: 'null'
-                      timezone:
-                        type: string
-                      currency:
-                        type: string
-                      currency_symbol:
-                        type: string
-                      locale:
-                        type: string
-                      working_days:
-                        type: array
-                        items:
-                          type: integer
-                      business_hours_start:
-                        type: string
-                      business_hours_end:
-                        type: string
-                      active:
-                        type: boolean
-                      slug:
-                        type: 'null'
-                      primary_color:
-                        type: 'null'
-                      logo_url:
-                        type: 'null'
-                      signature_url:
-                        type: 'null'
-                      signatory_name:
-                        type: 'null'
-                      contract_terms:
-                        type: 'null'
-                      included_modules:
-                        type: array
-                        items:
-                          type: string
-                      settings:
-                        type: object
-                        properties:
-                          features:
-                            type: object
-                            properties:
-                              bookings:
-                                type: boolean
-                              spaces:
-                                type: boolean
-                              attendance:
-                                type: boolean
-                              revenue:
-                                type: boolean
-                              reports:
-                                type: boolean
-                              online_booking:
-                                type: boolean
-                              waitlist:
-                                type: boolean
-                              drop_in:
-                                type: boolean
-                              packs:
-                                type: boolean
-                            required:
-                            - bookings
-                            - spaces
-                            - attendance
-                            - revenue
-                            - reports
-                            - online_booking
-                            - waitlist
-                            - drop_in
-                            - packs
-                          booking:
-                            type: object
-                            properties:
-                              cancellation_hours:
-                                type: integer
-                              booking_opens_days:
-                                type: integer
-                              no_show_consumes_session:
-                                type: boolean
-                              reminder_hours:
-                                type: integer
-                            required:
-                            - cancellation_hours
-                            - booking_opens_days
-                            - no_show_consumes_session
-                            - reminder_hours
-                          hours:
-                            type: object
-                            properties:
-                              start:
-                                type: string
-                              end:
-                                type: string
-                              working_days:
-                                type: array
-                                items:
-                                  type: integer
-                            required:
-                            - start
-                            - end
-                            - working_days
-                          branding:
-                            type: object
-                            properties:
-                              primary_color:
-                                type: 'null'
-                            required:
-                            - primary_color
-                          onboarding:
-                            type: object
-                            properties:
-                              completed:
-                                type: array
-                                items: {}
-                              skipped:
-                                type: array
-                                items: {}
-                            required:
-                            - completed
-                            - skipped
-                        required:
-                        - features
-                        - booking
-                        - hours
-                        - branding
-                        - onboarding
-                      monthly_subscription_cents:
-                        type: integer
-                      annual_subscription_cents:
-                        type: integer
-                      annual_discount_percent:
-                        type: integer
-                    required:
-                    - id
-                    - name
-                    - description
-                    - phone
-                    - email
-                    - country
-                    - city
-                    - address
-                    - tax_id
-                    - latitude
-                    - longitude
-                    - timezone
-                    - currency
-                    - currency_symbol
-                    - locale
-                    - working_days
-                    - business_hours_start
-                    - business_hours_end
-                    - active
-                    - slug
-                    - primary_color
-                    - logo_url
-                    - signature_url
-                    - signatory_name
-                    - contract_terms
-                    - included_modules
-                    - settings
-                    - monthly_subscription_cents
-                    - annual_subscription_cents
-                    - annual_discount_percent
-                required:
-                - company
         '401':
           description: Unauthorized
           content:
@@ -5967,20 +5352,6 @@ paths:
                     type: string
                 required:
                 - error
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '404':
           description: Not Found
           content:
@@ -6060,10 +5431,6 @@ paths:
                         type: 'null'
                       contract_terms:
                         type: 'null'
-                      included_modules:
-                        type: array
-                        items:
-                          type: string
                       settings:
                         type: object
                         properties:
@@ -6154,12 +5521,6 @@ paths:
                         - hours
                         - branding
                         - onboarding
-                      monthly_subscription_cents:
-                        type: integer
-                      annual_subscription_cents:
-                        type: integer
-                      annual_discount_percent:
-                        type: integer
                     required:
                     - id
                     - name
@@ -6186,11 +5547,7 @@ paths:
                     - signature_url
                     - signatory_name
                     - contract_terms
-                    - included_modules
                     - settings
-                    - monthly_subscription_cents
-                    - annual_subscription_cents
-                    - annual_discount_percent
                 required:
                 - company
         '401':
@@ -6204,20 +5561,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -6244,18 +5587,16 @@ paths:
                 company:
                   type: object
                   properties:
-                    name:
-                      type: string
                     slug:
                       type: string
                     primary_color:
+                      type: string
+                    remove_signature:
                       type: string
                     working_days:
                       type: array
                       items:
                         type: string
-                    remove_signature:
-                      type: string
                     business_hours_start:
                       type: string
                     business_hours_end:
@@ -6356,10 +5697,6 @@ paths:
                         type:
                         - string
                         - 'null'
-                      included_modules:
-                        type: array
-                        items:
-                          type: string
                       settings:
                         type: object
                         properties:
@@ -6452,12 +5789,6 @@ paths:
                         - hours
                         - branding
                         - onboarding
-                      monthly_subscription_cents:
-                        type: integer
-                      annual_subscription_cents:
-                        type: integer
-                      annual_discount_percent:
-                        type: integer
                     required:
                     - id
                     - name
@@ -6484,11 +5815,7 @@ paths:
                     - signature_url
                     - signatory_name
                     - contract_terms
-                    - included_modules
                     - settings
-                    - monthly_subscription_cents
-                    - annual_subscription_cents
-                    - annual_discount_percent
                 required:
                 - company
         '401':
@@ -6647,8 +5974,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -6850,8 +6177,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -7383,20 +6710,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -7405,6 +6718,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -8065,8 +7380,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -8254,7 +7569,9 @@ paths:
                       state:
                         type: string
                       days_left:
-                        type: integer
+                        type:
+                        - integer
+                        - 'null'
                       all_access:
                         type: boolean
                       activity_label:
@@ -8381,8 +7698,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -8693,20 +8010,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -8715,6 +8018,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -9201,299 +8506,6 @@ paths:
                 required:
                 - error
                 - errors
-  "/api/v1/data_exchange/imports/{id}":
-    get:
-      summary: show_import
-      tags:
-      - Api::V1::DataExchange
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  entity:
-                    type: string
-                  status:
-                    type: string
-                  finished:
-                    type: boolean
-                  created:
-                    type: integer
-                  errors:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        row:
-                          type: integer
-                        message:
-                          type: string
-                      required:
-                      - row
-                      - message
-                  message:
-                    type:
-                    - string
-                    - 'null'
-                required:
-                - id
-                - entity
-                - status
-                - finished
-                - created
-                - errors
-                - message
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-  "/api/v1/data_exchange/{entity}/export":
-    get:
-      summary: export
-      tags:
-      - Api::V1::DataExchange
-      parameters:
-      - name: entity
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            text/csv:
-              schema:
-                type: string
-                format: binary
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
-  "/api/v1/data_exchange/{entity}/import":
-    post:
-      summary: import
-      tags:
-      - Api::V1::DataExchange
-      parameters:
-      - name: entity
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '202':
-          description: Accepted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  entity:
-                    type: string
-                  status:
-                    type: string
-                  finished:
-                    type: boolean
-                  created:
-                    type: integer
-                  errors:
-                    type: array
-                    items: {}
-                  message:
-                    type: 'null'
-                required:
-                - id
-                - entity
-                - status
-                - finished
-                - created
-                - errors
-                - message
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
-        '422':
-          description: Unprocessable Content
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  errors:
-                    type: array
-                    items:
-                      type: string
-                required:
-                - error
-                - errors
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-              required:
-              - file
-  "/api/v1/data_exchange/{entity}/template":
-    get:
-      summary: template
-      tags:
-      - Api::V1::DataExchange
-      parameters:
-      - name: entity
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            text/csv:
-              schema:
-                type: string
-                format: binary
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
   "/api/v1/email_verifications":
     post:
       summary: create
@@ -9610,147 +8622,6 @@ paths:
                     type: array
                     items:
                       type: string
-                required:
-                - error
-  "/api/v1/invoices":
-    get:
-      summary: index
-      tags:
-      - Api::V1::Invoice
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  invoices:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                        number:
-                          type: string
-                        period_start:
-                          type: string
-                        period_end:
-                          type: string
-                        amount:
-                          type: number
-                          format: float
-                        currency:
-                          type: string
-                        billing_period:
-                          type: string
-                        plan:
-                          type: string
-                        trial:
-                          type: boolean
-                        issued_at:
-                          type: string
-                        issued_by:
-                          type: 'null'
-                        paid_at:
-                          type: string
-                        notes:
-                          type: 'null'
-                      required:
-                      - id
-                      - number
-                      - period_start
-                      - period_end
-                      - amount
-                      - currency
-                      - billing_period
-                      - plan
-                      - trial
-                      - issued_at
-                      - issued_by
-                      - paid_at
-                      - notes
-                required:
-                - invoices
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
-  "/api/v1/invoices/{id}":
-    get:
-      summary: show
-      tags:
-      - Api::V1::Invoice
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
                 required:
                 - error
   "/api/v1/me/account":
@@ -10423,14 +9294,11 @@ paths:
                     required:
                     - rate
                     - recent
-                  card_code:
-                    type: string
                 required:
                 - client
                 - gyms
                 - subscription
                 - attendance
-                - card_code
         '401':
           description: Unauthorized
           content:
@@ -10675,20 +9543,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -10813,20 +9667,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -10835,6 +9675,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -10897,8 +9739,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -10934,8 +9776,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -11082,20 +9924,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -11104,6 +9932,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -11421,8 +10251,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -11971,10 +10801,6 @@ paths:
                 - meta
                 - counts
                 - method_counts
-            text/csv:
-              schema:
-                type: string
-                format: binary
         '401':
           description: Unauthorized
           content:
@@ -11986,8 +10812,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -11999,24 +10825,6 @@ paths:
                     type: string
                 required:
                 - error
-                - message
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-      parameters:
-      - name: format
-        in: query
-        required: false
-        schema:
-          type: string
     post:
       summary: create
       tags:
@@ -12162,8 +10970,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -12371,20 +11179,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -12393,6 +11187,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -12693,20 +11489,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -12715,6 +11497,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -12847,6 +11631,23 @@ paths:
         required: true
         schema:
           type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: object
+                  properties:
+                    permissions:
+                      type: array
+                      items:
+                        type: string
+                  required:
+                  - permissions
+              required:
+              - role
       responses:
         '200':
           description: OK
@@ -12895,20 +11696,6 @@ paths:
                     type: string
                 required:
                 - error
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '422':
           description: Unprocessable Content
           content:
@@ -12920,23 +11707,6 @@ paths:
                     type: string
                 required:
                 - error
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                role:
-                  type: object
-                  properties:
-                    permissions:
-                      type: array
-                      items:
-                        type: string
-                  required:
-                  - permissions
-              required:
-              - role
     put:
       summary: update
       tags:
@@ -13086,8 +11856,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -13254,6 +12024,12 @@ paths:
       summary: schedule_pdf
       tags:
       - Api::V1::Session
+      parameters:
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
       responses:
         '200':
           description: OK
@@ -13273,20 +12049,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -13300,12 +12062,6 @@ paths:
                     type: string
                 required:
                 - error
-      parameters:
-      - name: from
-        in: query
-        required: false
-        schema:
-          type: string
   "/api/v1/sessions/{id}":
     get:
       summary: show
@@ -13329,8 +12085,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -13505,20 +12261,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -13527,6 +12269,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -13735,8 +12479,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -13940,20 +12684,6 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '403':
           description: Forbidden
           content:
@@ -13962,6 +12692,8 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+                  message:
                     type: string
                 required:
                 - error
@@ -14137,8 +12869,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -14288,219 +13020,6 @@ paths:
                     type: string
                 required:
                 - error
-  "/api/v1/subscription":
-    get:
-      summary: show
-      tags:
-      - Api::V1::Subscription
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  subscription:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                      active:
-                        type: boolean
-                      billing_period:
-                        type: string
-                      plan:
-                        type: string
-                      member_app:
-                        type: boolean
-                      multi_salle:
-                        type: boolean
-                      pro_features:
-                        type: boolean
-                      lock_reason:
-                        type:
-                        - string
-                        - 'null'
-                      paid_through:
-                        type:
-                        - string
-                        - 'null'
-                      current_period_paid:
-                        type: boolean
-                      days_before_lock:
-                        type:
-                        - integer
-                        - 'null'
-                      trial:
-                        type: boolean
-                      trial_days_left:
-                        type:
-                        - integer
-                        - 'null'
-                      due_invoice:
-                        type: 'null'
-                    required:
-                    - id
-                    - active
-                    - billing_period
-                    - plan
-                    - member_app
-                    - multi_salle
-                    - pro_features
-                    - lock_reason
-                    - paid_through
-                    - current_period_paid
-                    - days_before_lock
-                    - trial
-                    - trial_days_left
-                    - due_invoice
-                  invoices:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                        number:
-                          type: string
-                        period_start:
-                          type: string
-                        period_end:
-                          type: string
-                        amount:
-                          type: number
-                          format: float
-                        currency:
-                          type: string
-                        billing_period:
-                          type: string
-                        plan:
-                          type: string
-                        trial:
-                          type: boolean
-                        issued_at:
-                          type: string
-                        issued_by:
-                          type: 'null'
-                        paid_at:
-                          type: string
-                        notes:
-                          type: 'null'
-                      required:
-                      - id
-                      - number
-                      - period_start
-                      - period_end
-                      - amount
-                      - currency
-                      - billing_period
-                      - plan
-                      - trial
-                      - issued_at
-                      - issued_by
-                      - paid_at
-                      - notes
-                  companies_count:
-                    type: integer
-                  clients_used:
-                    type: integer
-                  staff_used:
-                    type: integer
-                  currency:
-                    type: string
-                  currency_symbol:
-                    type: string
-                  monthly_subscription_cents:
-                    type: integer
-                  annual_subscription_cents:
-                    type: integer
-                  annual_discount_percent:
-                    type: integer
-                  arrears_cents:
-                    type: integer
-                  trial_days:
-                    type: integer
-                  included_modules:
-                    type: array
-                    items:
-                      type: string
-                  plans:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        key:
-                          type: string
-                        monthly_cents:
-                          type: integer
-                        annual_cents:
-                          type: integer
-                      required:
-                      - key
-                      - monthly_cents
-                      - annual_cents
-                required:
-                - subscription
-                - invoices
-                - companies_count
-                - clients_used
-                - staff_used
-                - currency
-                - currency_symbol
-                - monthly_subscription_cents
-                - annual_subscription_cents
-                - annual_discount_percent
-                - arrears_cents
-                - trial_days
-                - included_modules
-                - plans
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-        '402':
-          description: Payment Required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                - error
-  "/api/v1/subscription/request_upgrade":
-    post:
-      summary: POST /api/v1/subscription/request_upgrade
-      responses:
-        '404':
-          description: Not Found
-          content:
-            text/html:
-              schema:
-                type: string
   "/api/v1/support_tickets":
     get:
       summary: index
@@ -14527,10 +13046,6 @@ paths:
                           type: string
                         status:
                           type: string
-                        kind:
-                          type: string
-                        contact_phone:
-                          type: 'null'
                         created_at:
                           type: string
                         attachments:
@@ -14541,8 +13056,6 @@ paths:
                       - subject
                       - message
                       - status
-                      - kind
-                      - contact_phone
                       - created_at
                       - attachments
                 required:
@@ -14558,8 +13071,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -14595,12 +13108,6 @@ paths:
                         type: string
                       status:
                         type: string
-                      kind:
-                        type: string
-                      contact_phone:
-                        type:
-                        - string
-                        - 'null'
                       created_at:
                         type: string
                       attachments:
@@ -14629,8 +13136,6 @@ paths:
                     - subject
                     - message
                     - status
-                    - kind
-                    - contact_phone
                     - created_at
                     - attachments
                 required:
@@ -14692,22 +13197,6 @@ paths:
               - subject
               - message
               - attachments
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                subject:
-                  type: string
-                message:
-                  type: string
-                kind:
-                  type: string
-                contact_phone:
-                  type: string
-              required:
-              - subject
-              - message
-              - kind
   "/api/v1/support_tickets/{id}/attachments/{attachment_id}":
     get:
       summary: attachment
@@ -14736,8 +13225,8 @@ paths:
                     type: string
                 required:
                 - error
-        '402':
-          description: Payment Required
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -14840,20 +13329,6 @@ paths:
                 - slug
                 - tenant
                 - api_base_url
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                required:
-                - error
-                - message
         '404':
           description: Not Found
           content:

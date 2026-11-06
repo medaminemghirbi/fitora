@@ -117,10 +117,6 @@ export default class extends Controller {
     Turbo.visit(event.currentTarget.dataset.href)
   }
 
-  exportCsv() {
-    window.location.assign(this.url({ csv: true }))
-  }
-
   openWizard() {
     window.dispatchEvent(new CustomEvent("clients-wizard:open"))
   }
@@ -165,16 +161,16 @@ export default class extends Controller {
     card.append(template.content.firstElementChild.cloneNode(true))
   }
 
-  url({ stream = false, csv = false } = {}) {
+  url({ stream = false } = {}) {
     const params = new URLSearchParams()
     for (const key of this.constructor.FILTERS) {
       const value = this.filters[key]
       if (value !== undefined && value !== null && value !== "") params.set(key, value)
     }
-    if (!csv && this.page > 1) params.set("page", String(this.page))
+    if (this.page > 1) params.set("page", String(this.page))
     if (stream && this.advanced) params.set("advanced", "1")
     const query = params.toString()
-    return `${this.urlValue}${csv ? ".csv" : ""}${query ? `?${query}` : ""}`
+    return `${this.urlValue}${query ? `?${query}` : ""}`
   }
 
   // What the component's computed signals redraw as soon as a filter

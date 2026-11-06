@@ -65,8 +65,8 @@ export default class extends Controller {
   }
 
   // DeskShellComponent#switchSalle: the current salle only closes the menu;
-  // another is recorded, then the shell reloads on its home. A refusal
-  // (the switch is Pro's) closes the menu and changes nothing.
+  // another is recorded, then the shell reloads on its home. A refusal closes
+  // the menu and changes nothing.
   async switchSalle(event) {
     const url = event.params.url
     if (!url || this.switching) return this.closeAll()

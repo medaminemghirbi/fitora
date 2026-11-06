@@ -1,26 +1,29 @@
 <%# ng: client-profile %>
-<%# The member's file once loaded (`p`: what GET /clients/:id answers): the
-    way back, the banner, the desk's actions, the health file, what
-    happened, the subscriptions. Also the ?fragment=1 answer load() redraws
-    from. %>
+<%# The member's file once loaded (`p`: what GET /clients/:id answers), for the
+    desk's three questions, in this order: who is this, are they in order, and
+    what do I do. Then the detail: the subscription, what happened, their health
+    and their details. Also the ?fragment=1 answer load() redraws from. %>
 <% c = p[:client] %>
 <% contract = c[:current_contract] %>
 <% owed = c[:outstanding_balance].to_f %>
+<% current = subscription_current(p[:contracts]) %>
+<% focus = current.first %>
+<% verdict = profile_verdict(c, focus, owed) %>
 <a href="<%= admin_page_path("clients") %>" class="prof-back">
   <i class="bi bi-arrow-left" aria-hidden="true"></i> <%= ngt("clients.title") %>
 </a>
 
-<section class="prof-banner">
-  <%# The face the door checks: the photo (or the initials), and the button
+<header class="prof-head">
+  <%# Their face: the photo (or the initials), and the button
       that takes one (member-photo). %>
   <div class="prof-photo" data-controller="member-photo"
        data-member-photo-url-value="<%= admin_page_path("clients/#{c[:id]}/photo") %>"
        data-member-photo-has-photo-value="<%= @membership&.photo&.attached? ? true : false %>"
        data-member-photo-labels-value="<%= member_photo_labels.to_json %>">
     <% if (photo = member_photo_path(@membership)) %>
-      <img class="prof-banner-avatar prof-photo-img" src="<%= photo %>" alt="<%= c[:full_name] %>" />
+      <img class="prof-avatar prof-photo-img" src="<%= photo %>" alt="<%= c[:full_name] %>" />
     <% else %>
-      <span class="prof-banner-avatar" aria-hidden="true"><%= ng_initials(c[:full_name]) %></span>
+      <span class="prof-avatar" aria-hidden="true"><%= ng_initials(c[:full_name]) %></span>
     <% end %>
     <button type="button" class="prof-photo-edit" data-action="member-photo#open" aria-label="<%= ngt("clients.photo_change") %>" title="<%= ngt("clients.photo_change") %>">
       <i class="bi bi-camera-fill" aria-hidden="true"></i>
@@ -28,258 +31,298 @@
     <input type="file" accept="image/*" capture="user" hidden data-member-photo-target="file" data-action="change->member-photo#picked" />
   </div>
 
-  <div class="prof-banner-id">
-    <div class="prof-banner-name">
-      <h1><%= c[:full_name] %></h1>
-      <span class="prof-banner-badge<%= " is-off" unless c[:active] %>">
-        <%= ngt(c[:active] ? "common.active" : "common.inactive") %>
-      </span>
-    </div>
-    <p class="prof-banner-sub">
-      <% if contract %>
-        <%= contract.dig(:plan, :name) %> · <%= contract[:activity_label] %>
-        <% if contract[:expires_at] %>
-          · <%= ngt("clients.until", date: ng_date(contract[:expires_at], "d MMM y")) %>
-        <% end %>
-        <% if contract[:paused] %>
-          <app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: "paused" } do %><%= ngt("contract.status_paused") %><% end %></app-status-badge>
-        <% end %>
-        <% if (renewal = contract[:renewal]) %>
-          <span class="fx-renewal-queued">
-            <i class="bi bi-arrow-repeat"></i>
-            <%= ngt("contracts.renewed_until", date: ng_date(renewal[:expires_at], "d MMM y")) %>
-          </span>
-        <% end %>
-        ·
+  <div class="prof-id">
+    <h1><%= c[:full_name] %></h1>
+    <p class="prof-contact">
+      <% if c[:phone].present? %>
+        <a href="tel:<%= c[:phone].delete(" ") %>" dir="ltr"><i class="bi bi-telephone" aria-hidden="true"></i> <%= c[:phone] %></a>
       <% end %>
-      <%= ngt("clients.member_since") %> <%= ng_date(c[:joined_at], "MMM y") %>
-      <% if @membership&.card_code %>
-        · <span class="prof-card-no"><i class="bi bi-qr-code"></i> N° <%= @membership.card_code %></span>
+      <% if c[:email].present? %>
+        <span dir="ltr"><i class="bi bi-envelope" aria-hidden="true"></i> <%= c[:email] %></span>
       <% end %>
     </p>
   </div>
 
-  <% if contract %>
-    <div class="prof-banner-stat">
-      <% if !contract[:remaining_bookings].nil? %>
-        <span class="prof-banner-value"><%= contract[:remaining_bookings] %></span>
-        <span class="prof-banner-label"><%= ngt("clients.sessions_left_short") %></span>
-      <% else %>
-        <span class="prof-banner-value">∞</span>
-        <span class="prof-banner-label"><%= ngt("contract_types.unlimited_bookings") %></span>
-      <% end %>
-    </div>
-  <% end %>
-
-  <% unless c[:attendance_rate].nil? %>
-    <div class="prof-banner-stat">
-      <span class="prof-banner-value"><%= c[:attendance_rate] %><small>%</small></span>
-      <span class="prof-banner-label"><%= ngt("clients.attendance") %></span>
-    </div>
-  <% end %>
-
-  <% if owed > 0 %>
-    <div class="prof-banner-stat">
-      <span class="prof-banner-value is-owed"><%= profile_number(owed) %></span>
-      <span class="prof-banner-label"><%= ngt("clients.owed") %></span>
-    </div>
-  <% end %>
-</section>
-
-<div class="prof-actions-row">
-  <% if owed > 0 %>
-    <button type="button" class="btn btn-primary" data-action="client-profile#openPayment">
-      <%= ngt("clients.collect", amount: profile_number(owed)) %>
-    </button>
-  <% end %>
-  <button type="button" class="btn btn-outline-secondary" data-action="client-profile#checkIn">
-    <i class="bi bi-check2-circle"></i> <%= ngt("clients.check_in") %>
-  </button>
-  <button type="button" class="btn btn-outline-secondary" data-action="client-profile#openBooking">
-    <i class="bi bi-calendar-plus"></i> <%= ngt("clients.add_booking") %>
-  </button>
-  <% focus = subscription_current(p[:contracts]).first %>
-  <% wa_kind = whatsapp_kind(balance: owed, state: focus&.dig(:state)) %>
-  <% if (wa = member_whatsapp_link(name: c[:full_name], phone: c[:phone], kind: wa_kind, plan: focus&.dig(:plan, :name),
-                                   date: focus&.dig(:expires_at), amount: ng_money(owed, salle.currency))) %>
-    <a class="btn btn-outline-secondary prof-wa" href="<%= wa %>" target="_blank" rel="noopener">
-      <i class="bi bi-whatsapp"></i> <%= ngt("whatsapp.button_#{wa_kind}") %>
-    </a>
-  <% end %>
-
-  <div class="prof-actions-spacer"></div>
-
-  <%= render layout: "web/shared/action_menu" do %>
-    <% if owed <= 0 %>
-      <button type="button" class="fx-menu-item" data-action="client-profile#openPayment">
-        <i class="bi bi-cash-coin"></i> <%= ngt("clients.add_payment") %>
+  <div class="prof-actions">
+    <%# Marking someone present takes a class to be present at. %>
+    <% if profile_booked_today?(p) %>
+      <button type="button" class="btn btn-outline-secondary" data-action="client-profile#checkIn">
+        <i class="bi bi-check2-circle"></i> <%= ngt("clients.check_in") %>
       </button>
     <% end %>
-    <% unless c[:login_enabled] %>
-      <% if bootstrap.dig(:subscription, :member_app) != false %>
+    <button type="button" class="btn btn-outline-secondary" data-action="client-profile#openBooking">
+      <i class="bi bi-calendar-plus"></i> <%= ngt("clients.book") %>
+    </button>
+    <% wa_kind = whatsapp_kind(balance: owed, state: focus&.dig(:state)) %>
+    <% if (wa = member_whatsapp_link(name: c[:full_name], phone: c[:phone], kind: wa_kind, plan: focus&.dig(:plan, :name),
+                                     date: focus&.dig(:expires_at), amount: ng_money(owed, salle.currency))) %>
+      <a class="btn btn-outline-secondary prof-wa" href="<%= wa %>" target="_blank" rel="noopener">
+        <i class="bi bi-whatsapp"></i> <%= ngt("whatsapp.button_#{wa_kind}") %>
+      </a>
+    <% end %>
+
+    <%= render layout: "web/shared/action_menu" do %>
+      <% if owed <= 0 %>
+        <button type="button" class="fx-menu-item" data-action="client-profile#openPayment">
+          <i class="bi bi-cash-coin"></i> <%= ngt("clients.add_payment") %>
+        </button>
+      <% end %>
+      <% unless c[:login_enabled] %>
         <button type="button" class="fx-menu-item"<%= raw(" disabled") if c[:email].to_s == "" %> data-action="client-profile#invite">
           <i class="bi bi-phone"></i>
           <%= ngt(c[:invitation_pending] ? "clients.resend_invite" : "clients.invite_to_app") %>
         </button>
-      <% else %>
-        <button type="button" class="fx-menu-item" disabled title="<%= ngt("clients.invite_needs_pro_hint") %>">
-          <i class="bi bi-phone"></i> <%= ngt("clients.invite_needs_pro") %>
+      <% end %>
+      <% if current_user.admin? %>
+        <button type="button" class="fx-menu-item is-danger" data-action="client-profile#remove">
+          <i class="bi bi-person-x"></i> <%= ngt("clients.remove") %>
         </button>
       <% end %>
     <% end %>
-    <button type="button" class="fx-menu-item" data-action="client-profile#openHealth">
-      <i class="bi bi-heart-pulse"></i> <%= ngt("clients.health_edit") %>
-    </button>
-    <a class="fx-menu-item" href="<%= admin_page_path("clients/#{c[:id]}/card") %>" target="_blank" rel="noopener">
-      <i class="bi bi-person-badge"></i> <%= ngt("clients.member_card") %>
-    </a>
-    <a class="fx-menu-item" href="<%= admin_page_path("entries", member: c[:id]) %>">
-      <i class="bi bi-qr-code-scan"></i> <%= ngt("clients.open_at_door") %>
-    </a>
-    <% if current_user.admin? %>
-      <button type="button" class="fx-menu-item is-danger" data-action="client-profile#remove">
-        <i class="bi bi-person-x"></i> <%= ngt("clients.remove") %>
-      </button>
-    <% end %>
-  <% end %>
-</div>
+  </div>
+</header>
 
-<%# The subscription: what is current (or the last one that ended), each
-    with what to do about it — the subscriptions page's own actions. %>
-<% current = subscription_current(p[:contracts]) %>
-<section class="abo-profile" aria-labelledby="abo-profile-h">
-  <header class="abo-profile-head">
-    <h2 id="abo-profile-h" class="prof-label"><%= ngt("contracts.profile_title") %></h2>
-    <% if may_sell? && current.any? %>
-      <button type="button" class="btn btn-sm btn-outline-secondary" data-action="subscriptions#sell">
-        <i class="bi bi-plus-lg" aria-hidden="true"></i> <%= ngt("contracts.sell_another") %>
-      </button>
-    <% end %>
-  </header>
-  <% if current.empty? %>
-    <div class="abo-profile-empty">
-      <p><%= ngt("contracts.profile_none") %></p>
-      <% if may_sell? %>
-        <button type="button" class="btn btn-primary btn-sm" data-action="subscriptions#sell">
-          <i class="bi bi-plus-lg" aria-hidden="true"></i> <%= ngt("contracts.sell") %>
-        </button>
-      <% end %>
-    </div>
-  <% else %>
-    <% current.each do |m| %>
-      <article class="abo-term" data-state="<%= m[:state] %>">
-        <span class="abo-dot" style="background: <%= m.dig(:plan, :color) %>;" aria-hidden="true"></span>
-        <div class="abo-term-body">
-          <p class="abo-term-title"><%= subscription_label(m) %></p>
-          <p class="abo-sub">
-            <span class="fx-num" dir="ltr"><%= ng_date(m[:starts_at], "dd/MM/yy") %> → <%= ng_date(m[:expires_at], "dd/MM/yy") %></span>
-            <% [ subscription_period_note(m), subscription_sessions_note(m) ].compact.each do |note| %> · <%= note %><% end %>
-          </p>
+<%# Where they stand, in one sentence, with the one thing to do about it. %>
+<section class="prof-verdict" data-tone="<%= verdict[:tone] %>">
+  <i class="bi <%= verdict[:icon] %> prof-verdict-icon" aria-hidden="true"></i>
+  <div class="prof-verdict-text">
+    <p class="prof-verdict-title"><%= verdict[:title] %></p>
+    <% if verdict[:detail].present? %><p class="prof-verdict-detail"><%= verdict[:detail] %></p><% end %>
+  </div>
+  <% if verdict[:action] == :collect && may_collect? %>
+    <button type="button" class="btn btn-primary" data-action="client-profile#openPayment">
+      <i class="bi bi-cash-coin" aria-hidden="true"></i> <%= ngt("contracts.collect") %>
+    </button>
+  <% elsif verdict[:action] == :sell && may_sell? %>
+    <button type="button" class="btn btn-primary" data-action="subscriptions#sell">
+      <i class="bi bi-plus-lg" aria-hidden="true"></i> <%= ngt("contracts.sell") %>
+    </button>
+  <% end %>
+</section>
+
+<div class="prof-layout">
+  <div class="prof-main">
+  <%# The subscription: what is current (or the last one that ended), each
+      with what to do about it — the subscriptions page's own actions. %>
+  <% if current.any? %>
+    <section class="prof-card prof-subscription" aria-labelledby="abo-profile-h">
+      <header class="prof-card-head">
+        <h2 id="abo-profile-h" class="prof-title"><%= ngt("contracts.profile_title") %></h2>
+        <% if may_sell? %>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-action="subscriptions#sell">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i> <%= ngt("contracts.sell_another") %>
+          </button>
+        <% end %>
+      </header>
+      <% current.each do |m| %>
+        <article class="prof-term" data-state="<%= m[:state] %>">
+          <div class="prof-term-head">
+            <p class="prof-term-title"><%= subscription_label(m) %></p>
+            <span class="abo-state" data-state="<%= m[:state] %>"><%= subscription_state_label(m) %></span>
+            <% if may_sell? %>
+              <%= render "web/admin/contracts/row_actions", m: m, profile: true %>
+            <% end %>
+          </div>
+          <dl class="prof-facts">
+            <div>
+              <dt><%= ngt("clients.term_period") %></dt>
+              <dd>
+                <span class="fx-num" dir="ltr"><%= ng_date(m[:starts_at], "dd/MM/yy") %> → <%= ng_date(m[:expires_at], "dd/MM/yy") %></span>
+                <% if (note = subscription_period_note(m)) %><small><%= note %></small><% end %>
+              </dd>
+            </div>
+            <div>
+              <dt><%= ngt("clients.term_sessions") %></dt>
+              <dd><%= subscription_sessions_note(m) || ngt("contract_types.unlimited_bookings") %></dd>
+            </div>
+            <div>
+              <dt><%= ngt("clients.term_payment") %></dt>
+              <dd>
+                <% if m[:amount_due].to_f > 0 && m[:state] != "cancelled" %>
+                  <span class="abo-due"><%= ngt("contracts.due_amount", amount: ng_money(m[:amount_due], m.dig(:plan, :currency))) %></span>
+                <% else %>
+                  <span class="abo-paid"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> <%= ngt("contracts.paid") %></span>
+                <% end %>
+              </dd>
+            </div>
+          </dl>
           <% if (renewal = m[:renewal]) %>
             <p class="abo-sub abo-renewed"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> <%= ngt("contracts.renewed_until", date: ng_date(renewal[:expires_at], "dd/MM/yy")) %></p>
           <% end %>
-        </div>
-        <div class="abo-term-status">
-          <span class="abo-state" data-state="<%= m[:state] %>"><%= subscription_state_label(m) %></span>
-          <% if m[:amount_due].to_f > 0 && m[:state] != "cancelled" %>
-            <span class="abo-due"><%= ngt("contracts.due_amount", amount: ng_money(m[:amount_due], m.dig(:plan, :currency))) %></span>
-          <% else %>
-            <span class="abo-paid"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> <%= ngt("contracts.paid") %></span>
-          <% end %>
-        </div>
-        <% if may_sell? %>
-          <%= render "web/admin/contracts/row_actions", m: m, profile: true %>
-        <% end %>
-      </article>
-    <% end %>
+        </article>
+      <% end %>
+    </section>
   <% end %>
-</section>
 
-<section class="prof-health<%= " has-notes" if c[:health_notes].to_s != "" %>">
-  <i class="bi bi-heart-pulse prof-health-icon" aria-hidden="true"></i>
-  <div class="prof-health-body">
-    <h2 class="prof-label"><%= ngt("clients.health_title") %></h2>
-    <% if c[:health_notes].to_s != "" %>
-      <p class="prof-health-notes"><%= c[:health_notes] %></p>
-    <% else %>
-      <p class="fx-muted mb-0"><%= ngt("clients.health_none") %></p>
-    <% end %>
-    <p class="prof-health-waiver<%= " is-missing" if c[:waiver_signed_on].to_s == "" %>">
-      <% if c[:waiver_signed_on].to_s != "" %>
-        <i class="bi bi-check2-circle" aria-hidden="true"></i>
-        <%= ngt("clients.waiver_signed", date: ng_date(c[:waiver_signed_on], "d MMM y")) %>
-      <% else %>
-        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
-        <%= ngt("clients.waiver_missing") %>
-      <% end %>
-    </p>
-  </div>
-  <button type="button" class="btn btn-sm btn-outline-secondary" data-action="client-profile#openHealth"><%= ngt("common.edit") %></button>
-</section>
-
-<div>
-  <div class="prof-main-head">
-    <h2 class="prof-label"><%= ngt("clients.recent_activity") %></h2>
-    <div class="prof-filters">
-      <% %w[all sessions payments].each do |option| %>
-        <button type="button" class="prof-filter<%= " is-active" if option == "all" %>" data-filter="<%= option %>" data-action="client-profile#setFilter">
-          <%= ngt("clients.filter_#{option}") %>
-        </button>
-      <% end %>
-    </div>
-  </div>
-
-  <% timeline = profile_timeline(p) %>
-  <% if timeline.empty? %>
-    <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("clients.no_activity"), body: "", icon: "bi-clock-history" } do %><% end %></app-empty-state>
-  <% else %>
-    <ul class="prof-timeline">
-      <% timeline.each do |entry| %>
-        <li data-stream="<%= entry[:stream] %>">
-          <span class="prof-timeline-mark" data-kind="<%= entry[:kind] %>" aria-hidden="true">
-            <i class="bi <%= Web::ClientProfileHelper::TIMELINE_ICONS[entry[:kind]] %>"></i>
-          </span>
-          <span class="prof-timeline-text">
-            <span class="fx-strong"><%= ngt("clients.event_#{entry[:kind]}") %></span>
-            · <%= entry[:title] %>
-            <% if entry[:detail].to_s != "" %>
-              <span class="fx-muted"> · <%= entry[:detail] %></span>
-            <% end %>
-          </span>
-          <span class="fx-muted prof-timeline-when"><%= ng_date(entry[:at], "d MMM") %></span>
-        </li>
-      <% end %>
-    </ul>
-  <% end %>
-</div>
-
-<div class="prof-foot">
-  <% if p[:contracts].any? %>
-    <section>
-      <h2 class="prof-label"><%= ngt("contracts.history_title") %></h2>
-      <ul class="prof-history">
-        <% p[:contracts].each do |row| %>
+  <%# What is coming, apart from what happened. %>
+  <% upcoming = profile_upcoming(p) %>
+  <% if upcoming.any? %>
+    <section class="prof-card prof-upcoming">
+      <header class="prof-card-head">
+        <h2 class="prof-title"><%= ngt("clients.upcoming_sessions") %></h2>
+      </header>
+      <ul class="prof-rows">
+        <% upcoming.first(Web::ClientProfileHelper::UPCOMING_SHOWN).each do |booking| %>
           <li>
-            <span><%= subscription_label(row) %></span>
-            <span class="abo-state abo-state--small" data-state="<%= row[:state] %>"><%= subscription_state_label(row) %></span>
-            <span class="fx-contract-ref" dir="ltr"><%= row[:invoice_ref] %></span>
-            <span class="fx-muted"><%= ng_date(row[:starts_at], "MMM y") %></span>
-            <span class="prof-history-docs">
-              <button type="button" class="icon-btn" aria-label="<%= ngt("contracts.download_agreement") %>" title="<%= ngt("contracts.download_agreement") %>"
-                      data-url="<%= admin_page_path("contracts/#{row[:id]}/agreement") %>" data-filename="contrat-<%= row[:invoice_ref] %>.pdf" data-action="client-profile#download">
-                <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
-              </button>
-              <button type="button" class="icon-btn" aria-label="<%= ngt("contracts.download_invoice") %>" title="<%= ngt("contracts.download_invoice") %>"
-                      data-url="<%= admin_page_path("contracts/#{row[:id]}/receipt") %>" data-filename="facture-<%= row[:invoice_ref] %>.pdf" data-action="client-profile#download">
-                <i class="bi bi-receipt" aria-hidden="true"></i>
-              </button>
+            <span class="prof-timeline-when"><%= ng_date(booking.dig(:session, :starts_at), "d MMM") %> · <%= ng_date(booking.dig(:session, :starts_at), "HH:mm") %></span>
+            <span class="prof-timeline-text">
+              <span class="fx-strong"><%= [ booking.dig(:session, :activity_emoji).presence, booking.dig(:session, :activity_name) ].compact.join(" ") %></span>
+              <% if (covered = profile_covered_by(booking)).present? %><span class="fx-muted"><%= covered %></span><% end %>
             </span>
           </li>
         <% end %>
       </ul>
+      <% if upcoming.size > Web::ClientProfileHelper::UPCOMING_SHOWN %>
+        <p class="prof-upcoming-more"><%= ngt("clients.upcoming_more", count: upcoming.size - Web::ClientProfileHelper::UPCOMING_SHOWN) %></p>
+      <% end %>
     </section>
   <% end %>
+
+  <section class="prof-card prof-feed">
+    <div class="prof-main-head">
+      <h2 class="prof-title"><%= ngt("clients.recent_activity") %></h2>
+      <div class="prof-filters">
+        <% %w[all sessions payments].each do |option| %>
+          <button type="button" class="prof-filter<%= " is-active" if option == "all" %>" data-filter="<%= option %>" data-action="client-profile#setFilter">
+            <%= ngt("clients.filter_#{option}") %>
+          </button>
+        <% end %>
+      </div>
+    </div>
+
+    <% timeline = profile_timeline(p) %>
+    <% if timeline.empty? %>
+      <app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("clients.no_activity"), body: "", icon: "bi-clock-history" } do %><% end %></app-empty-state>
+    <% else %>
+      <ul class="prof-timeline prof-rows is-collapsed">
+        <% timeline.each do |entry| %>
+          <li data-stream="<%= entry[:stream] %>">
+            <span class="prof-timeline-when"><%= ng_date(entry[:at], "d MMM") %></span>
+            <span class="prof-timeline-text">
+              <span class="fx-strong"><%= entry[:title] %></span>
+              <% if entry[:detail].to_s != "" %>
+                <span class="fx-muted"><%= entry[:detail] %></span>
+              <% end %>
+            </span>
+            <span class="prof-timeline-kind" data-kind="<%= entry[:kind] %>"><%= ngt("clients.event_#{entry[:kind]}") %></span>
+          </li>
+        <% end %>
+      </ul>
+      <button type="button" class="btn btn-sm btn-link prof-show-all" data-show-all data-action="client-profile#showAll"<%= raw(" hidden") if timeline.size <= Web::ClientProfileHelper::TIMELINE_SHOWN %>><%= ngt("clients.show_all") %></button>
+    <% end %>
+
+    <% if p[:contracts].any? %>
+      <details class="prof-past">
+        <summary><%= ngt("contracts.history_title") %> (<%= p[:contracts].size %>)</summary>
+        <ul class="prof-history">
+          <% p[:contracts].each do |row| %>
+            <li>
+              <span><%= subscription_label(row) %></span>
+              <span class="abo-state abo-state--small" data-state="<%= row[:state] %>"><%= subscription_state_label(row) %></span>
+              <span class="fx-muted"><%= ng_date(row[:starts_at], "MMM y") %></span>
+              <span class="prof-history-docs">
+                <button type="button" class="icon-btn" aria-label="<%= ngt("contracts.download_agreement") %>" title="<%= ngt("contracts.download_agreement") %>"
+                        data-url="<%= admin_page_path("contracts/#{row[:id]}/agreement") %>" data-filename="contrat-<%= row[:invoice_ref] %>.pdf" data-action="client-profile#download">
+                  <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="icon-btn" aria-label="<%= ngt("contracts.download_invoice") %>" title="<%= ngt("contracts.download_invoice") %>"
+                        data-url="<%= admin_page_path("contracts/#{row[:id]}/receipt") %>" data-filename="facture-<%= row[:invoice_ref] %>.pdf" data-action="client-profile#download">
+                  <i class="bi bi-receipt" aria-hidden="true"></i>
+                </button>
+              </span>
+            </li>
+          <% end %>
+        </ul>
+      </details>
+    <% end %>
+  </section>
+  </div>
+
+  <aside class="prof-side">
+    <section class="prof-card prof-health<%= " has-notes" if c[:health_notes].to_s != "" %>">
+      <header class="prof-card-head">
+        <h2 class="prof-title"><i class="bi bi-heart-pulse" aria-hidden="true"></i> <%= ngt("clients.health_title") %></h2>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-action="client-profile#openHealth"><%= ngt("common.edit") %></button>
+      </header>
+      <% if c[:health_notes].to_s != "" %>
+        <p class="prof-health-notes"><%= c[:health_notes] %></p>
+      <% else %>
+        <p class="fx-muted mb-0"><%= ngt("clients.health_none") %></p>
+      <% end %>
+      <p class="prof-health-waiver<%= " is-missing" if c[:waiver_signed_on].to_s == "" %>">
+        <% if c[:waiver_signed_on].to_s != "" %>
+          <i class="bi bi-check2-circle" aria-hidden="true"></i>
+          <%= ngt("clients.waiver_signed", date: ng_date(c[:waiver_signed_on], "d MMM y")) %>
+        <% else %>
+          <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+          <%= ngt("clients.waiver_missing") %>
+        <% end %>
+      </p>
+    </section>
+
+    <section class="prof-card prof-details">
+      <header class="prof-card-head">
+        <h2 class="prof-title"><%= ngt("clients.info_title") %></h2>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-action="client-profile#openDetails"><%= ngt("common.edit") %></button>
+      </header>
+      <dl class="prof-info">
+        <% if (attended = profile_last_attended(p)) %>
+          <div>
+            <dt><%= ngt("clients.last_visit") %></dt>
+            <dd><%= ng_date(attended.dig(:session, :starts_at), "d MMM y") %></dd>
+          </div>
+        <% end %>
+        <% unless c[:attendance_rate].nil? %>
+          <div>
+            <dt><%= ngt("clients.attendance") %></dt>
+            <dd><%= c[:attendance_rate] %> %</dd>
+          </div>
+        <% end %>
+        <% if c[:joined_at].present? %>
+          <div>
+            <dt><%= ngt("clients.member_since") %></dt>
+            <dd><%= ng_date(c[:joined_at], "MMM y") %></dd>
+          </div>
+        <% end %>
+        <% if c[:date_of_birth].present? %>
+          <div>
+            <dt><%= ngt("clients.date_of_birth") %></dt>
+            <dd><%= ng_date(c[:date_of_birth], "d MMM y") %></dd>
+          </div>
+        <% end %>
+        <% if c[:gender].present? %>
+          <div>
+            <dt><%= ngt("clients.gender") %></dt>
+            <dd><%= profile_gender(c[:gender]) %></dd>
+          </div>
+        <% end %>
+        <% if c[:address].present? %>
+          <div>
+            <dt><%= ngt("settings.address_title") %></dt>
+            <dd><%= c[:address] %></dd>
+          </div>
+        <% end %>
+        <% if c[:emergency_contact_name].present? || c[:emergency_contact_phone].present? %>
+          <div>
+            <dt><%= ngt("clients.emergency_contact_name") %></dt>
+            <dd>
+              <%= c[:emergency_contact_name] %>
+              <% if c[:emergency_contact_phone].present? %>
+                <a href="tel:<%= c[:emergency_contact_phone].delete(" ") %>" dir="ltr"><%= c[:emergency_contact_phone] %></a>
+              <% end %>
+            </dd>
+          </div>
+        <% end %>
+        <% if c[:notes].present? %>
+          <div>
+            <dt><%= ngt("clients.notes") %></dt>
+            <dd class="prof-info-notes"><%= c[:notes] %></dd>
+          </div>
+        <% end %>
+      </dl>
+    </section>
+  </aside>
 </div>
 
 <template data-client-profile-target="noActivity"><app-empty-state><%= render layout: "web/shared/empty_state", locals: { title: ngt("clients.no_activity"), body: "", icon: "bi-clock-history" } do %><% end %></app-empty-state></template>
-<script type="application/json" data-client-profile-target="data"><%= raw json_escape({ client: c.slice(:id, :full_name, :email, :health_notes, :waiver_signed_on), current_contract: contract && contract.slice(:id, :paused, :status), contracts: p[:contracts].map { |m| { id: m[:id], amount_due: m[:amount_due], plan: m.dig(:plan, :name), client: m.dig(:client, :full_name) } }, bookings: p[:bookings].map { |b| { id: b[:id], status: b[:status], starts_at: b.dig(:session, :starts_at), payment_status: b[:payment_status], amount: b[:amount], activity: b.dig(:session, :activity_name) } } }.to_json) %></script>
+<script type="application/json" data-client-profile-target="data"><%= raw json_escape({ client: c.slice(:id, :full_name, :first_name, :last_name, :phone, :email, :date_of_birth, :gender, :address, :emergency_contact_name, :emergency_contact_phone, :notes, :identity_locked, :health_notes, :waiver_signed_on), current_contract: contract && contract.slice(:id, :paused, :status), contracts: p[:contracts].map { |m| { id: m[:id], amount_due: m[:amount_due], plan: m.dig(:plan, :name), client: m.dig(:client, :full_name) } }, bookings: p[:bookings].map { |b| { id: b[:id], status: b[:status], starts_at: b.dig(:session, :starts_at), payment_status: b[:payment_status], amount: b[:amount], activity: b.dig(:session, :activity_name) } } }.to_json) %></script>

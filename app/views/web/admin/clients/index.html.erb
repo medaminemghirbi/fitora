@@ -20,11 +20,6 @@
                placeholder="<%= ngt("clients.search_placeholder") %>" aria-label="<%= ngt("clients.search_placeholder") %>"
                data-clients-list-target="search" data-action="input->clients-list#searchChanged">
       </div>
-      <% if current_user.admin? %>
-        <button type="button" class="btn btn-outline-secondary" data-action="clients-list#exportCsv">
-          <i class="bi bi-download"></i> <%= ngt("common.export") %>
-        </button>
-      <% end %>
       <button type="button" class="btn btn-primary" data-action="clients-list#openWizard">
         <i class="bi bi-plus-lg"></i> <%= ngt("clients.new") %>
       </button>

@@ -1,0 +1,496 @@
+// A member's file (app/views/web/admin/client_profiles): who they are, where they
+// stand in one sentence, then the detail, in plain cards. Plain global classes
+// (`prof-`, `mph-`), not component-scoped styles.
+
+.prof-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+
+  &:hover { color: var(--color-text); text-decoration: none; }
+}
+
+[dir="rtl"] .prof-back i { transform: scaleX(-1); }
+
+// ---- who they are, and what to do --------------------------------------------------
+
+.prof-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.prof-avatar {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+.prof-photo {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.prof-photo-img { object-fit: cover; }
+
+.prof-photo-edit {
+  position: absolute;
+  inset-inline-end: -4px;
+  bottom: -4px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid var(--color-bg);
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  &:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+}
+
+.prof-id {
+  flex: 1 1 260px;
+  min-width: 0;
+
+  h1 {
+    margin: 0;
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+  }
+}
+
+.prof-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+
+  a { color: inherit; }
+  a:hover { color: var(--color-primary); }
+  i { margin-inline-end: 0.2rem; }
+}
+
+.prof-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+
+  .btn { min-height: 42px; }
+}
+
+// WhatsApp's own green, wherever the reminder button sits.
+.prof-wa {
+  border-color: #25d366;
+  color: #128c4b;
+
+  &:hover { background: #25d366; border-color: #25d366; color: #fff; }
+
+  [data-theme="dark"] & { color: #4be38a; }
+}
+
+// ---- where they stand --------------------------------------------------------------
+
+.prof-verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+
+  &[data-tone="ok"] { border-color: var(--color-success); background: var(--color-success-soft); }
+  &[data-tone="warn"] { border-color: var(--color-warning); background: var(--color-warning-soft); }
+  &[data-tone="bad"] { border-color: var(--color-danger); background: var(--color-danger-soft); }
+  &[data-tone="info"] { border-color: var(--color-primary-border); background: var(--color-primary-soft); }
+
+  &[data-tone="ok"] .prof-verdict-icon { color: var(--color-success); }
+  &[data-tone="warn"] .prof-verdict-icon { color: var(--color-warning); }
+  &[data-tone="bad"] .prof-verdict-icon { color: var(--color-danger); }
+  &[data-tone="info"] .prof-verdict-icon { color: var(--color-primary); }
+}
+
+.prof-verdict-icon {
+  flex-shrink: 0;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--color-text-secondary);
+}
+
+.prof-verdict-text {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.prof-verdict-title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.prof-verdict-detail {
+  margin: 2px 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+// ---- the detail ----------------------------------------------------------------------
+
+// Two columns, each its own stack. On a phone one, in reading order: the
+// subscription, their health, what is coming, what happened.
+.prof-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.prof-main { display: contents; }
+
+.prof-subscription { order: 1; }
+.prof-side { order: 2; }
+.prof-upcoming { order: 3; }
+.prof-feed { order: 4; }
+
+@media (min-width: 1100px) {
+  .prof-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+  }
+
+  .prof-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+}
+
+.prof-card {
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.prof-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.prof-title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: 700;
+
+  i { margin-inline-end: 0.25rem; color: var(--color-text-secondary); }
+}
+
+// ---- the subscription ----------------------------------------------------------------
+
+.prof-term + .prof-term {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.prof-term-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.prof-term-title {
+  flex: 1 1 200px;
+  min-width: 0;
+  margin: 0;
+  font-weight: 700;
+}
+
+.prof-term-head .abo-actions { flex-wrap: nowrap; }
+
+.prof-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+
+  dt {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+
+  dd {
+    margin: 2px 0 0;
+    font-weight: 600;
+  }
+
+  small {
+    display: block;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+  }
+}
+
+// ---- their health and their details -----------------------------------------------------
+
+.prof-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+// Something a coach has to know goes first, and does not read like the rest.
+.prof-health.has-notes {
+  order: -1;
+  border-color: var(--color-warning);
+  background: var(--color-warning-soft);
+}
+
+.prof-health-notes {
+  margin: 0;
+  white-space: pre-line;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.prof-health-waiver {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-success);
+
+  &.is-missing { color: var(--color-danger); }
+}
+
+.prof-info {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+
+  dt {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+
+  dd {
+    margin: 2px 0 0;
+    overflow-wrap: anywhere;
+
+    a { display: block; color: inherit; }
+    a:hover { color: var(--color-primary); }
+  }
+}
+
+.prof-info-notes { white-space: pre-line; }
+
+// ---- what happened -----------------------------------------------------------------------
+
+.prof-main-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.prof-filters {
+  display: flex;
+  gap: 0.15rem;
+  margin-inline-start: auto;
+  padding: 0.2rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+}
+
+.prof-filter {
+  padding: 0.3rem 0.7rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+
+  &.is-active {
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-weight: 600;
+  }
+}
+
+.prof-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  > li {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding-block: var(--space-2);
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+// Six at first (ClientProfileHelper::TIMELINE_SHOWN), the rest on request.
+.prof-timeline.is-collapsed > li:nth-child(n + 7) { display: none; }
+
+// What is coming has a time as well as a day, and no status to show.
+.prof-upcoming .prof-rows > li { grid-template-columns: 110px minmax(0, 1fr); }
+
+.prof-upcoming-more {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.prof-timeline-when {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.prof-timeline-text {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+  min-width: 0;
+  font-size: var(--font-size-sm);
+}
+
+.prof-timeline-kind {
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+
+  // Colour follows the meaning, and the word says it too.
+  &[data-kind="attended"],
+  &[data-kind="paid"] { background: var(--color-success-soft); color: var(--color-success); }
+  &[data-kind="missed"] { background: var(--color-danger-soft); color: var(--color-danger); }
+  &[data-kind="refunded"] { background: var(--color-warning-soft); color: var(--color-warning); }
+  &[data-kind="booked"] { background: var(--color-primary-soft); color: var(--color-primary); }
+}
+
+.prof-show-all {
+  margin-top: var(--space-1);
+  padding-inline: 0;
+
+  &[hidden] { display: none; }
+}
+
+.prof-past {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+
+  summary {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+}
+
+.prof-history {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+
+  > li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    padding-block: var(--space-2);
+    font-size: var(--font-size-sm);
+    border-top: 1px solid var(--color-border);
+
+    > span:first-child { flex: 1 1 180px; min-width: 0; }
+  }
+}
+
+.prof-history-docs { display: inline-flex; gap: 0.15rem; }
+
+.prof-waiver-today { white-space: nowrap; }
+
+// ---- the photo's dialog ---------------------------------------------------------------------
+
+.mph-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgba(15, 8, 30, 0.55);
+}
+
+.mph-panel {
+  display: grid;
+  gap: var(--space-4);
+  width: min(440px, 100%);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated);
+  box-shadow: var(--shadow-lg);
+}
+
+.mph-title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+.mph-video {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  background: #000;
+  object-fit: cover;
+
+  &[hidden] { display: none; }
+}
+
+.mph-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

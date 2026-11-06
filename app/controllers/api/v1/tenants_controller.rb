@@ -6,22 +6,12 @@ module Api
     # (the member app) or its coach key (the staff app, which also gets the
     # team to pick an account from).
     #
-    # The mobile app is a Pro feature: a salle not on a paid Pro period, or
-    # whose access is closed, answers 403 `member_app_not_included`. An unknown code is a plain 404,
-    # so a guess learns nothing. Throttled per IP (config/initializers/
-    # rack_attack.rb).
+    # An unknown code is a plain 404, so a guess learns nothing. Throttled per
+    # IP (config/initializers/rack_attack.rb).
     class TenantsController < ApplicationController
       def app_config
         company, audience = Company.find_by_app_key(params[:code])
         return render json: { error: "Gym not found" }, status: :not_found if company.nil?
-
-        # A closed account (suspended, or unpaid) pairs no new phone either.
-        unless company.member_app? && company.subscription&.active?
-          return render json: {
-            error: "member_app_not_included",
-            message: "This gym's plan does not include the mobile app."
-          }, status: :forbidden
-        end
 
         body = {
           audience: audience,

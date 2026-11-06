@@ -143,26 +143,6 @@
   font-weight: 700;
 }
 
-// A Pro tool on a Starter account.
-.rail-pro {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  margin-inline-start: auto;
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: var(--color-text);
-  color: var(--color-surface);
-  font-size: 0.625rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-
-  i {
-    font-size: 0.5rem;
-    line-height: 1;
-  }
-}
-
 .rail-version {
   flex-shrink: 0;
   padding: 0.875rem 1.25rem;

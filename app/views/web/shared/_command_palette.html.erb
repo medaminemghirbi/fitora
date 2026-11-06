@@ -2,10 +2,10 @@
 <%# CommandPaletteComponent (⌘K), in the admin shell (B-17). Closed, it is
     an empty host, as in Angular; the command-palette controller opens it
     from this template and draws its rows: the shell's pages (the rail's
-    entries, as NavigationService lists them), an admin's "new …" actions
+    entries and Settings' own pages), an admin's "new …" actions
     once something is typed, and the members, contracts and payments the
     term finds (Web::Admin::PaletteController). %>
-<% commands = [ nav.dashboard, *nav.groups.flat_map(&:items), *nav.secondary ].compact.map do |item|
+<% commands = nav.leaves.map do |item|
      path = nav.path(item)
      { id: "nav:#{path}", label: ngt(item.label_key), icon: item.icon, url: path }
    end

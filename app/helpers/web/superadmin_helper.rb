@@ -1,13 +1,6 @@
 module Web
   # The superadmin console's small decisions, as its Angular components make them.
   module SuperadminHelper
-    # SuperadminOverviewComponent#money: cents as a readable amount, in the
-    # browser's own language (toLocaleString(undefined, …), B-03), at most
-    # two decimals.
-    def superadmin_money(cents)
-      Web::NumberFormat.locale_string(cents.to_i / 100.0, locale: locale_code == "ar" ? "ar-TN" : locale_code, max_fraction: 2)
-    end
-
     # SuperadminOverviewComponent#signupTrend: this month's sign-ups against
     # last month's, in whole percent; nil with nothing to compare against.
     def superadmin_signup_trend(companies)
@@ -22,33 +15,10 @@ module Web
       total.zero? ? nil : (metrics.dig(:activity, :companies_with_activity) * 100.0 / total).round
     end
 
-    # SuperadminCompanyDetailComponent#attention: the one thing the page is
-    # for, when there is one — an open, paid-up gym gets no banner.
-    def superadmin_attention(company)
-      sub = company[:subscription] || {}
-      unless sub[:active]
-        return "suspended" if sub[:lock_reason] != "unpaid"
-
-        # Closed because the free days ran out, not because a payment lapsed.
-        return sub[:trial] ? "trial_over" : "unpaid"
-      end
-      return nil if sub[:current_period_paid]
-
-      # Nothing was ever invoiced, so there is no period to count down from.
-      sub[:paid_through].nil? ? "never" : "due"
-    end
-
-    # #since: the gym's first day, or its first invoice if an import
-    # predates it.
-    def superadmin_since(company, invoices)
-      starts = invoices.map { |i| Web::PaymentLedger.utc_date(i[:period_start]).to_time(:utc) }
-      starts << Time.zone.parse(company[:created_at]) if company[:created_at]
-      starts.min
-    end
-
-    # "Formule — tagline" in the plan select (PLAN_KEYS).
-    def superadmin_plan_keys
-      %w[starter pro]
+    # Where an account stands, as a badge's status and its words: suspended,
+    # the address to confirm, the first sign-in to make, or done.
+    def superadmin_activation(state)
+      [ { "active" => "active", "suspended" => "failed" }.fetch(state.to_s, "pending"), ngt("superadmin.activation.#{state}") ]
     end
 
     # ---- the console's frame and tables (Web::DataTable) -------------------
@@ -66,16 +36,18 @@ module Web
           item.call("overview", "bi-speedometer2", ngt("superadmin.overview.nav"))
         ] },
         { label: ngt("superadmin.console.section_accounts"), items: [
-          item.call("companies", "bi-buildings", ngt("superadmin.companies")),
-          item.call("invoices", "bi-receipt", ngt("superadmin.console.invoices"))
+          item.call("companies", "bi-buildings", ngt("superadmin.companies"))
         ] },
         { label: ngt("superadmin.console.section_service"), items: [
           item.call("support", "bi-headset", ngt("superadmin.support_nav"), SupportTicket.open.count),
           item.call("updates", "bi-megaphone", ngt("superadmin.updates_nav"))
         ] },
+        { label: ngt("superadmin.console.section_communication"), items: [
+          item.call("mailings", "bi-envelope", ngt("superadmin.mailing.nav")),
+          item.call("mail_templates", "bi-file-earmark-text", ngt("superadmin.mail_templates.nav"))
+        ] },
         { label: ngt("superadmin.console.section_settings"), items: [
-          item.call("pricing", "bi-tags", ngt("superadmin.pricing_nav")),
-          item.call("billing", "bi-receipt-cutoff", ngt("superadmin.billing.nav"))
+          item.call("identity", "bi-card-heading", ngt("superadmin.identity.nav"))
         ] }
       ]
     end

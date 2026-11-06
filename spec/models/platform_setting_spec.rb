@@ -1,21 +1,22 @@
 require "rails_helper"
 
 RSpec.describe PlatformSetting do
-  describe ".current" do
-    it "creates the singleton on first access and reuses it after" do
-      first = described_class.current
-      expect(described_class.current.id).to eq(first.id)
-      expect(described_class.count).to eq(1)
-    end
-
-    it "defaults the annual discount to 10%" do
-      expect(described_class.current.annual_discount_percent).to eq(10)
-    end
+  it "keeps one row, created on first access" do
+    expect { described_class.current }.to change(described_class, :count).by(1)
+    expect { described_class.current }.not_to change(described_class, :count)
   end
 
-  it "keeps the discount between 0 and 100" do
-    expect(described_class.new(annual_discount_percent: -1)).to be_invalid
-    expect(described_class.new(annual_discount_percent: 101)).to be_invalid
-    expect(described_class.new(annual_discount_percent: 0)).to be_valid
+  it "says whether the legal pages can name a publisher" do
+    setting = described_class.current
+    expect(setting).not_to be_identity_complete
+
+    setting.update!(legal_name: " Fitora SARL ", tax_id: "1234567/A/M/000", email: "")
+    expect(setting.reload.legal_name).to eq("Fitora SARL")
+    expect(setting.email).to be_nil
+    expect(setting).to be_identity_complete
+  end
+
+  it "refuses an address that is no address" do
+    expect(described_class.current.update(email: "nope")).to be(false)
   end
 end

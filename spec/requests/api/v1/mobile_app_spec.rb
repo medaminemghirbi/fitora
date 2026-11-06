@@ -4,7 +4,7 @@ require "rails_helper"
 # mobile app makes before anyone signs in (mobile/src/lib/tenant-config.ts).
 RSpec.describe "Mobile app pairing", type: :request do
   let(:admin) { create(:user, :admin) }
-  let!(:company) { create(:company, :pro, admin: admin, name: "Studio Lumen") }
+  let!(:company) { create(:company, admin: admin, name: "Studio Lumen") }
 
   describe "GET /api/v1/mobile_app" do
     it "makes both keys on first use, with their QR codes, and keeps them" do
@@ -18,15 +18,6 @@ RSpec.describe "Mobile app pairing", type: :request do
 
       get "/api/v1/mobile_app", headers: auth_headers(admin)
       expect(response.parsed_body["member_code"]).to eq(body["member_code"])
-    end
-
-    it "is a Pro tool: refused on Starter and during the trial" do
-      company.subscription.update!(plan: :starter)
-
-      get "/api/v1/mobile_app", headers: auth_headers(admin)
-
-      expect(response).to have_http_status(:forbidden)
-      expect(response.parsed_body["error"]).to eq("pro_required")
     end
 
     it "is the admin's" do
@@ -91,23 +82,6 @@ RSpec.describe "Mobile app pairing", type: :request do
       get "/api/v1/tenants/nope1234/app_config"
 
       expect(response).to have_http_status(:not_found)
-    end
-
-    it "pairs no new phone while the account's access is closed" do
-      company.subscription.update!(active: false)
-
-      get "/api/v1/tenants/#{company.app_code}/app_config"
-
-      expect(response).to have_http_status(:forbidden)
-    end
-
-    it "does not open the app for a salle without paid Pro" do
-      company.subscription.update!(plan: :starter)
-
-      get "/api/v1/tenants/#{company.app_code}/app_config"
-
-      expect(response).to have_http_status(:forbidden)
-      expect(response.parsed_body["error"]).to eq("member_app_not_included")
     end
   end
 end

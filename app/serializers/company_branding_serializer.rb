@@ -25,7 +25,6 @@ class CompanyBrandingSerializer
 
   attr_reader :company
 
-  # The logo on show: none on Starter (Company#brand_logo).
   def logo_url
     logo = company.brand_logo
     return nil if logo.nil?

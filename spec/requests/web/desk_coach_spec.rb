@@ -102,13 +102,6 @@ RSpec.describe "Web desk and coach shells", type: :request, openapi: false do
       expect(response).to redirect_to("/coach/#{company.id}/today")
     end
 
-    it "sends a locked gym's desk to /account-locked" do
-      create(:subscription, company: company).update!(active: false)
-      web_sign_in(desk.user)
-      get "#{base}/dashboard"
-      expect(response).to redirect_to("/account-locked")
-    end
-
     it "refuses another gym's salle in the URL, showing nothing of it (§8.2)" do
       other = create(:company)
       web_sign_in(desk.user)
@@ -116,17 +109,11 @@ RSpec.describe "Web desk and coach shells", type: :request, openapi: false do
       expect(response).to redirect_to("#{base}/dashboard")
     end
 
-    it "switches salle only on paid Pro, as POST /api/v1/companies/:id/switch" do
+    it "switches salle as POST /api/v1/companies/:id/switch does" do
       second = create(:company, admin: company.admin)
       second.staff_members.create!(user: desk.user, assigned_role: second.roles.find_by!(key: "moderator"))
       web_sign_in(desk.user)
 
-      post "#{base}/switch/#{second.id}", as: :json
-      expect(response).to have_http_status(:forbidden)
-
-      subscription = create(:subscription, company: company)
-      subscription.update!(plan: "pro")
-      subscription.issue_invoice!(issued_by: create(:user, :superadmin))
       post "#{base}/switch/#{second.id}", as: :json
       expect(response.parsed_body["next"]).to eq("/desk/#{second.id}/dashboard")
       expect(desk.user.reload.active_company_id).to eq(second.id)

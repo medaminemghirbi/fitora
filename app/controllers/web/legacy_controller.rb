@@ -12,10 +12,8 @@ module Web
         "getting-started" => "onboarding",
         "contracts/plans" => "catalogue",
         "contracts/activities" => "catalogue",
-        "data-exchange" => "settings/data-exchange",
         "coaches" => "team",
-        "staff" => "team",
-        "modules" => "subscription"
+        "staff" => "team"
       },
       "desk" => { "" => "dashboard" },
       "coach" => { "" => "today" }

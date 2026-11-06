@@ -6,26 +6,15 @@ import { toast } from "../lib/toast"
 
 // One gym's account (web/superadmin/companies/show):
 //
-// - the ledger's years switch in place, each waiting in a <template>;
-// - every write (access, plan, billing period, an invoice in or out, the
-//   gym's language and currency) waits on its button, then the page comes
-//   back as the server has it, with the server's toast; a refusal is a toast
-//   with the server's words and changes nothing;
+// - every write (the credentials sent again, the gym's language and currency)
+//   waits on its button, then the page comes back as the server has it, with
+//   the server's toast; a refusal is a toast with the server's words and
+//   changes nothing;
 // - stepping inside the gym's account: the admin's dashboard, in their
 //   session (Web::Authentication#start_impersonation).
 export default class extends Controller {
-  static targets = ["year", "ledger", "settings", "settingsFoot"]
-  static values = { url: String, labels: Object }
-
-  showYear({ currentTarget, params: { year } }) {
-    currentTarget.parentElement.querySelectorAll("button").forEach((button) => {
-      button.classList.toggle("is-active", button === currentTarget)
-      if (!button.classList.length) button.removeAttribute("class")
-    })
-    const [summary, ...cells] = this.yearTargets.find((t) => Number(t.dataset.year) === year).content.cloneNode(true).children
-    this.element.querySelector(".ac-ledger-head > div > p").replaceWith(summary)
-    this.ledgerTarget.replaceChildren(...cells)
-  }
+  static targets = ["settings", "settingsFoot"]
+  static values = { url: String, labels: Object, email: String }
 
   async impersonate(event) {
     const button = event.currentTarget
@@ -36,25 +25,13 @@ export default class extends Controller {
     toast("error", await this.errorOf(response))
   }
 
-  issueInvoice(event) {
-    this.write(event.currentTarget, "POST", `${this.urlValue}/invoices`)
-  }
-
-  async voidInvoice({ currentTarget, params: { id, number } }) {
-    const confirmed = await confirmAsk({ title: this.labelsValue.void_title, body: interpolate(this.labelsValue.void_body, { number }), danger: true })
-    if (confirmed) this.write(currentTarget, "DELETE", `${this.urlValue}/invoices/${id}`)
-  }
-
-  toggleAccess({ currentTarget, params: { active } }) {
-    this.write(currentTarget, "PATCH", `${this.urlValue}/subscription`, { active })
-  }
-
-  changePlan(event) {
-    this.write(event.currentTarget, "PATCH", `${this.urlValue}/subscription`, { plan: event.currentTarget.value })
-  }
-
-  changeBillingPeriod(event) {
-    this.write(event.currentTarget, "PATCH", `${this.urlValue}/subscription`, { billing_period: event.currentTarget.value })
+  async sendCredentials({ currentTarget }) {
+    const confirmed = await confirmAsk({
+      title: this.labelsValue.resend_title,
+      body: interpolate(this.labelsValue.resend_body, { email: this.emailValue }),
+      confirmLabel: this.labelsValue.resend_confirm,
+    })
+    if (confirmed) this.write(currentTarget, "POST", `${this.urlValue}/credentials`)
   }
 
   // #settingsDirty: the save button only once a choice differs from the gym's.
@@ -75,14 +52,12 @@ export default class extends Controller {
   // ---------------------------------------------------------------------
 
   async write(control, method, url, payload) {
-    const before = control.tagName === "SELECT" ? control.dataset.value ?? [...control.options].find((o) => o.defaultSelected)?.value : null
     control.disabled = true
     if (control.matches("[data-action*=saveSettings]")) control.textContent = ` ${this.labelsValue.saving} `
     const response = await this.send(method, url, payload)
     if (response?.ok) return Turbo.visit(window.location.href, { action: "replace" })
 
     control.disabled = false
-    if (before !== null) control.value = before
     toast("error", await this.errorOf(response))
   }
 

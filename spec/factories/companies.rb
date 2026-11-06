@@ -12,16 +12,6 @@ FactoryBot.define do
       after(:create) { |company| company.update!(listed_at: nil) }
     end
 
-    # On a Pro account: its members can use the member app. A company's
-    # admin otherwise has no subscription at all in specs.
-    trait :pro do
-      after(:create) do |company|
-        subscription = Subscription.find_by(admin_id: company.admin_id) || create(:subscription, company: company)
-        subscription.update!(plan: :pro)
-        company.admin.reload
-      end
-    end
-
     # Packs are opt-in (CompanySettings FEATURES[:packs]).
     trait :with_packs do
       after(:create) { |company| company.update!(settings: { features: { packs: true } }) }

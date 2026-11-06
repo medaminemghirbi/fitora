@@ -19,7 +19,7 @@ Rails.application.routes.draw do
   # sign-in page holds one — and the disk PUT then writes the body into
   # storage/, the disk Postgres lives on. Nothing in Fitora uploads straight
   # to storage: every file comes through a form the app checks first
-  # (HasPhoto, SupportTicket, DataImport…). Drawn ahead of the engine's own
+  # (HasPhoto, SupportTicket…). Drawn ahead of the engine's own
   # routes, so these answer 404; the routes that serve files stay.
   not_found = ->(_env) { [ 404, { "content-type" => "text/plain" }, [ "Not Found" ] ] }
   match "#{ActiveStorage.routes_prefix}/direct_uploads", to: not_found, via: :all
@@ -27,7 +27,6 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      post "auth/register", to: "auth#register"
       post "auth/login", to: "auth#login"
       post "auth/logout", to: "auth#logout"
       patch "auth/password", to: "auth#change_password"
@@ -63,7 +62,7 @@ Rails.application.routes.draw do
         collection { get :network }
       end
       get "branding", to: "branding#show"
-      # The mobile app's keys (Settings → Application mobile, Pro) and the
+      # The mobile app's keys (Settings → Application mobile) and the
       # public lookup the app makes with one of them before signing in.
       get "mobile_app", to: "mobile_app#show"
       post "mobile_app/regenerate", to: "mobile_app#regenerate"
@@ -79,8 +78,7 @@ Rails.application.routes.draw do
       resources :activities, except: %i[new edit] do
         collection { post :adopt }
       end
-      # The platform's catalogue a salle picks its activities from — readable
-      # before the salle exists, at signup.
+      # The platform's catalogue a salle picks its activities from.
       resources :activity_templates, only: [ :index ]
       resources :spaces, except: %i[new edit]
       resources :coaches, except: %i[new edit] do
@@ -104,15 +102,6 @@ Rails.application.routes.draw do
       resources :clients, only: [ :index, :show, :create, :update, :destroy ] do
         member { post :invite }
       end
-
-      get "data_exchange/:entity/template", to: "data_exchange#template"
-      get "data_exchange/:entity/export", to: "data_exchange#export"
-      post "data_exchange/:entity/import", to: "data_exchange#import"
-      get "data_exchange/imports/:id", to: "data_exchange#show_import"
-
-      get "subscription", to: "subscription#show"
-      # The gym's own invoices; :show is the PDF.
-      resources :invoices, only: [ :index, :show ]
 
       resources :contract_types, only: [ :index, :show, :create, :update ]
       resources :packs, only: [ :index, :create, :update, :destroy ]
@@ -176,7 +165,6 @@ Rails.application.routes.draw do
       namespace :admin do
         get "dashboard", to: "dashboard#show"
         get "revenue", to: "revenue#show"
-        get "reports/export", to: "reports#export"
       end
 
       # No superadmin namespace: the console is the web UI's alone
@@ -197,9 +185,11 @@ Rails.application.routes.draw do
     get "connexion", to: "sessions#new", as: :web_sign_in
     post "connexion", to: "sessions#create"
 
-    # The account pages (module 1).
-    get "inscription", to: "registrations#new"
-    post "inscription", to: "registrations#create"
+    # The account pages (module 1). Nobody signs up: a superadmin opens the
+    # account, and its first sign-in finishes it.
+    get "premiere-connexion", to: "first_sign_ins#show", as: :web_first_sign_in
+    patch "premiere-connexion", to: "first_sign_ins#update"
+    get "sans-salle", to: "no_salles#show", as: :web_no_salle
     get "mot-de-passe-oublie", to: "password_resets#new"
     post "mot-de-passe-oublie", to: "password_resets#create"
     get "auth/reset-password", to: "password_resets#edit"
@@ -214,11 +204,6 @@ Rails.application.routes.draw do
     get "confirmation-email", to: "confirmations#show"
     get "confirmation-email/status", to: "confirmations#status"
     post "confirmation-email/resend", to: "confirmations#resend"
-    get "account-locked", to: "account_locks#show"
-
-    # The first salle (module 4).
-    get "admin/setup-company", to: "company_setups#show", as: :web_company_setup
-    post "admin/setup-company", to: "company_setups#create"
     # The landing page (module 11).
     get "/", to: "landing#show", as: :web_landing, format: false
     # Fitora's terms and privacy policy, for anyone.
@@ -227,9 +212,9 @@ Rails.application.routes.draw do
     # Where the earlier layouts put these (app.routes.ts), with the query
     # kept as redirectTo keeps it.
     {
-      "trial-expired" => "/account-locked", "pro" => "/", "pro/connexion" => "/connexion",
+      "pro" => "/", "pro/connexion" => "/connexion",
       "pro/mot-de-passe-oublie" => "/mot-de-passe-oublie", "auth/login" => "/connexion",
-      "auth/register" => "/inscription", "auth/forgot-password" => "/mot-de-passe-oublie"
+      "auth/forgot-password" => "/mot-de-passe-oublie"
     }.each do |old_path, to|
       get old_path, format: false, to: redirect(status: 302) { |_, req| [ to, req.query_string.presence ].compact.join("?") }
     end
@@ -333,19 +318,8 @@ Rails.application.routes.draw do
         patch "roles/:id", action: :update_role
         delete "roles/:id", action: :destroy_role
         post "mobile-app/regenerate", action: :regenerate_key
-        get "data-exchange/imports/:id", action: :show_import
-        get "data-exchange/:entity/template", action: :data_template
-        get "data-exchange/:entity/export", action: :export_data
-        post "data-exchange/:entity/import", action: :import_data
         get ":section", action: :show, as: :settings_section
       end
-      get "subscription", to: "subscription#show", as: :subscription
-      get "invoices/:id", to: "invoices#show", as: :invoice
-      post "subscription/request", to: "subscription#request_plan"
-      # The marketplace is gone (admin.routes.ts).
-      get "modules", to: redirect(status: 302) { |p, _| "/admin/#{p[:salle_id]}/subscription" }
-      # Import/export moved under Settings (admin.routes.ts).
-      get "data-exchange", to: redirect(status: 302) { |p, _| "/admin/#{p[:salle_id]}/settings/data-exchange" }
       # Module 8.
       scope "clients/:id", controller: :client_profiles, constraints: { id: Web::Routing::SALLE } do
         get "/", action: :show, as: :client
@@ -354,27 +328,12 @@ Rails.application.routes.draw do
         post "invite", action: :invite
         post "bookings", action: :book
         get "sessions", action: :sessions
-        # The member's card (a PDF to print) and the face the desk checks.
-        get "card", action: :card
+        # The member's face on their file.
         post "photo", action: :photo
         delete "photo", action: :remove_photo
       end
-      # The door: a card scanned or a name typed, the verdict, the visit.
-      scope "entries", controller: :entries do
-        get "/", action: :index, as: :entries
-        get "lookup", action: :lookup
-        get "check/:client_id", action: :check, constraints: { client_id: Web::Routing::SALLE }
-        post "/", action: :create
-        delete ":id", action: :destroy, constraints: { id: Web::Routing::SALLE }
-      end
-      # The till: a day's takings, and each login closing its drawer.
-      scope "cash", controller: :cash do
-        get "/", action: :show, as: :cash
-        post "closings", action: :close
-      end
       # Module 7.
       get "dashboard", to: "dashboard#show", as: :dashboard
-      get "dashboard/report", to: "dashboard#report"
       get "attendance/:session_id", to: "attendance#show", as: :attendance
       post "attendance", to: "attendance#create"
       # Module 9.
@@ -446,8 +405,8 @@ Rails.application.routes.draw do
   end
 
   # ---- The superadmin's console (module 10): its Angular URLs (§8.1), and
-  # what it has grown since: its own sign-in, the invoices, a page per
-  # ticket and release ----
+  # what it has grown since: its own sign-in, opening a gym's account, a page
+  # per ticket and release ----
   scope "superadmin", module: "web/superadmin", as: :web_superadmin do
     # The console's own sign-in: the password, then the authenticator's code.
     get "connexion", to: "sessions#new", as: :sign_in
@@ -456,19 +415,21 @@ Rails.application.routes.draw do
     post "connexion/code", to: "sessions#verify"
     get "overview", to: "overview#show", as: :overview
     get "companies", to: "companies#index", as: :companies
+    post "companies", to: "companies#create"
+    get "companies/new", to: "companies#new", as: :new_company
     get "companies/:id", to: "companies#show", as: :company
-    patch "companies/:id/subscription", to: "companies#update_subscription"
     patch "companies/:id/settings", to: "companies#update_settings"
     post "companies/:id/impersonate", to: "companies#impersonate"
-    post "companies/:id/invoices", to: "companies#create_invoice"
-    delete "companies/:id/invoices/:invoice_id", to: "companies#destroy_invoice"
-    get "invoices", to: "invoices#index", as: :invoices
-    get "invoices/:id/pdf", to: "invoices#pdf", as: :invoice_pdf
-    get "pricing", to: "pricing#show", as: :pricing
-    patch "pricing", to: "pricing#update"
-    post "pricing/rates", to: "pricing#refresh_rates"
-    get "billing", to: "billing#show", as: :billing
-    patch "billing", to: "billing#update"
+    post "companies/:id/credentials", to: "companies#send_credentials"
+    post "companies/:id/suspend", to: "companies#suspend"
+    post "companies/:id/restore", to: "companies#restore"
+    get "mailings", to: "mailings#index", as: :mailings
+    post "mailings", to: "mailings#create"
+    get "mailings/new", to: "mailings#new", as: :new_mailing
+    get "mailings/:id", to: "mailings#show", as: :mailing
+    resources :mail_templates, except: :show
+    get "identity", to: "identity#show", as: :identity
+    patch "identity", to: "identity#update"
     get "support", to: "support#index", as: :support
     get "support/:id", to: "support#show", as: :support_ticket
     patch "support/:id/resolve", to: "support#resolve"
@@ -479,8 +440,6 @@ Rails.application.routes.draw do
     get "notifications", to: "notifications#index"
     post "notifications/read_all", to: "notifications#read_all"
     patch "notifications/:id/read", to: "notifications#read"
-    # The marketplace is gone (superadmin.routes): its prices are here.
-    get "modules", to: redirect("/superadmin/pricing", status: 302)
     get "/", to: redirect("/superadmin/overview", status: 302)
     # Anything else: Angular's `**` → "" (app.routes.ts).
     get "*page", to: redirect("/", status: 302), format: false

@@ -2,8 +2,8 @@
 #
 # The address is stored as it is (it is how people sign in and how mail
 # reaches them); what is masked is every response that shows it to someone
-# other than its owner. The owner's own session, an admin's edit form
-# (reveal: true on a single record) and the admin's CSV export keep it whole.
+# other than its owner. The owner's own session and an admin's edit form
+# (reveal: true on a single record) keep it whole.
 #
 # The domain stays readable: it is what tells "gmail" from a work address,
 # and it identifies nobody.

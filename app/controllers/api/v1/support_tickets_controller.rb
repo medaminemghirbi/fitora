@@ -1,8 +1,8 @@
 module Api
   module V1
-    # The "Contact" tab on the modules marketplace page — a problem report
-    # with optional file/video attachments, reviewed by a Fitora superadmin from
-    # a cross-company inbox (Web::Superadmin::SupportController).
+    # A problem report with optional file/video attachments, reviewed by a
+    # Fitora superadmin from a cross-company inbox
+    # (Web::Superadmin::SupportController).
     class SupportTicketsController < BaseController
       include ServesAttachments
       before_action :require_admin!
@@ -15,13 +15,10 @@ module Api
       end
 
       # POST /api/v1/support_tickets (multipart/form-data — attachments[] are uploads)
-      #
-      # kind=upgrade marks a plan request from the subscription page, which
-      # must carry a contact_phone (see SupportTicket).
       def create
         ticket = SupportRequest.open(
           company: current_company, user: current_user, subject: params[:subject], message: params[:message],
-          kind: params[:kind], contact_phone: params[:contact_phone], attachments: params[:attachments]
+          attachments: params[:attachments]
         )
 
         if ticket.persisted?

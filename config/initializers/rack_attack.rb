@@ -7,12 +7,8 @@
 # inbox-spam or mass account creation.
 #
 # Disabled in test by default — spec/requests/rack_attack_spec.rb flips it
-# on for the duration of its own examples only. Also disabled when running
-# a local k6 load test (load_test/): every VU there shares one real source
-# IP, which is nothing like the thousands of distinct IPs real concurrent
-# traffic arrives from, so the per-IP throttle would just measure itself
-# instead of the app. Never set DISABLE_RACK_ATTACK outside that.
-Rack::Attack.enabled = !Rails.env.test? && ENV["DISABLE_RACK_ATTACK"] != "1"
+# on for the duration of its own examples only.
+Rack::Attack.enabled = !Rails.env.test?
 
 # Shared across Puma workers (WEB_CONCURRENCY in config/deploy.yml) — an
 # in-memory store would count separately per worker, making the limits
@@ -96,13 +92,6 @@ end
 
 Rack::Attack.throttle("password_resets/ip", limit: 5, period: 1.minute) do |req|
   req.ip if req.post? && %w[/api/v1/password_resets /mot-de-passe-oublie].include?(req.path)
-end
-
-# Signing up is unauthenticated, creates a User and emails the address given,
-# with no ownership check. Unthrottled, a script could mass-create accounts or
-# use Fitora's own mailer to bomb a third party's inbox.
-Rack::Attack.throttle("register/ip", limit: 5, period: 10.minutes) do |req|
-  req.ip if req.post? && %w[/api/v1/auth/register /inscription].include?(req.path)
 end
 
 # Re-sending a verification email is unauthenticated and mails whatever

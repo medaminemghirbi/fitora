@@ -6,8 +6,7 @@ RSpec.describe "Api::V1::Contracts", type: :request do
 
   describe "company isolation" do
     it "never exposes another company's contracts to an admin" do
-      create(:subscription, company: company)
-
+      company
       other_org = create(:company)
       other_plan = create(:contract_type, company: other_org)
       create(:contract, contract_type: other_plan)

@@ -1,37 +1,25 @@
 import { Controller } from "@hotwired/stimulus"
 import { Turbo } from "@hotwired/turbo-rails"
 
-// SettingsShellComponent: the "Outils Pro" menu — open on its button, shut
-// by a click elsewhere or Escape — and the phone's section picker.
+const normalize = (text) => text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()
+
+// The settings' own menu: narrowed as you type, by a section's name or what it
+// holds ("logo", "signature"), Enter opening the first one left; and the phone's
+// section picker.
 export default class extends Controller {
-  static targets = ["pro", "menu"]
+  static targets = ["group", "item", "empty"]
 
-  connect() {
-    this.onDocument = (event) => this.menu && !this.proTarget.contains(event.target) && this.close()
-    this.onKey = (event) => event.key === "Escape" && this.close()
-    document.addEventListener("click", this.onDocument)
-    document.addEventListener("keydown", this.onKey)
+  filter(event) {
+    const query = normalize(event.target.value.trim())
+    for (const item of this.itemTargets) item.hidden = !normalize(item.dataset.search).includes(query)
+    for (const group of this.groupTargets) group.hidden = !group.querySelector(".set-nav-item:not([hidden])")
+    this.emptyTarget.hidden = this.itemTargets.some((item) => !item.hidden)
   }
 
-  disconnect() {
-    document.removeEventListener("click", this.onDocument)
-    document.removeEventListener("keydown", this.onKey)
-  }
-
-  toggleProMenu(event) {
-    event.stopPropagation()
-    if (this.menu) return this.close()
-    this.menu = this.menuTarget.content.firstElementChild.cloneNode(true)
-    this.menu.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => this.close()))
-    this.proTarget.append(this.menu)
-    event.currentTarget.setAttribute("aria-expanded", "true")
-  }
-
-  close() {
-    if (!this.menu) return
-    this.menu.remove()
-    this.menu = null
-    this.proTarget.querySelector(".settings-pro-btn").setAttribute("aria-expanded", "false")
+  openFirst(event) {
+    event.preventDefault()
+    const first = this.itemTargets.find((item) => !item.hidden)
+    if (first) Turbo.visit(first.href)
   }
 
   pick(event) {

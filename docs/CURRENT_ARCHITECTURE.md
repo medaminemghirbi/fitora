@@ -146,7 +146,7 @@ four audiences:
   `/contract_types`, `/payments`, `/staff`, `/roles`, `/attendance`,
   `/recurring_schedules`, `/audit_logs`, …) — staff-side
 - `/me/*` — member portal (profile, sessions, bookings, cancel)
-- `/admin/*` — dashboard, revenue, report export
+- `/admin/*` — dashboard, revenue
 - `/superadmin/*` — companies, impersonation, invoices, SaaS pricing, support,
   release notes
 
@@ -160,12 +160,12 @@ serializers — no `to_json` on models in controllers.
 
 Logic lives in `app/services/<domain>/` (bookings, contracts, subscriptions,
 sessions, recurring_schedules, check_ins, attendance, payments, invoices,
-receipts, payroll, reports, dashboard, notifications, permissions, sms,
-data_exchange, audit_logs). Controllers are thin. This is the right shape
+receipts, payroll, dashboard, notifications, permissions, sms,
+audit_logs). Controllers are thin. This is the right shape
 already.
 
 > **Since 2026-10-02** the service objects are gone: the rules are model
-> methods and what remained (PDFs, reports, CSV, JWT, SMS) is in `app/lib`.
+> methods and what remained (PDFs, JWT, SMS) is in `app/lib`.
 > See `TARGET_ARCHITECTURE.md` §4 and `PHASE_LOG.md`.
 
 ---

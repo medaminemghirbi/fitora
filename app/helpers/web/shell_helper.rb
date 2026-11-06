@@ -6,6 +6,9 @@ module Web
     # subset of the current ones ("/admin/…/clients" is active on a client's
     # file; "…/payments?action=new" only with that parameter).
     def shell_active?(item)
+      # Settings' pages keep their own addresses, and are still in Settings.
+      return true if item.page == "settings" && content_for?(:settings_mode)
+
       link = nav.path(item)
       link_path, link_query = link.split("?", 2)
       current = request.path.split("/").reject(&:empty?)
@@ -52,7 +55,7 @@ module Web
     end
 
     # NavbarComponent#switchableCompanies: an admin always sees the
-    # switcher (it is also their way to "Mes salles"); a moderator once
+    # switcher (it is also their way to "Mes salles de sport"); a moderator once
     # posted to more than one salle.
     def shell_switchable_companies
       user = bootstrap[:user]
@@ -64,14 +67,6 @@ module Web
 
     def shell_active_company
       shell_switchable_companies&.find { |c| c[:active] }
-    end
-
-    def shell_can_switch?
-      (shell_switchable_companies&.size || 0) > 1 && nav.pro_features?
-    end
-
-    def shell_switch_locked?
-      shell_switchable_companies.present? && !nav.pro_features?
     end
   end
 end

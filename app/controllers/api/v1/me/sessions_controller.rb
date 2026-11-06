@@ -9,7 +9,7 @@ module Api
       # is coming.
       class SessionsController < BaseController
         before_action :require_client!
-        before_action :require_member_app!
+        before_action :require_member_gym!
         before_action :require_member_company!
 
         # GET /api/v1/me/sessions?date=YYYY-MM-DD&company_id=

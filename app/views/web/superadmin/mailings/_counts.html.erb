@@ -1,0 +1,9 @@
+<%# How a mailing went, in as few words as it takes. %>
+<% counts = recipients.map(&:status).tally %>
+<div class="sa-badges">
+  <% { "sent" => "active", "pending" => "pending", "failed" => "failed" }.each do |state, tone| %>
+    <% if counts[state].to_i > 0 %>
+      <app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: tone } do %><%= ngt("superadmin.mailing.count_#{state}", count: counts[state]) %><% end %></app-status-badge>
+    <% end %>
+  <% end %>
+</div>

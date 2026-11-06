@@ -69,18 +69,6 @@ module Clients
              .maximum("sessions.starts_at")
     end
 
-    # The whole filtered list, for the admin's export.
-    def csv
-      joined = company.memberships.pluck(:client_id, :joined_at, :active).to_h { |id, at, on| [ id, [ at, on ] ] }
-      CsvSafe.generate do |csv|
-        csv << [ "First name", "Last name", "Email", "Phone", "Active", "Joined at" ]
-        scope.find_each do |c|
-          at, on = joined[c.id]
-          csv << [ c.first_name, c.last_name, c.email, c.phone, on, at ]
-        end
-      end
-    end
-
     private
 
     attr_reader :company

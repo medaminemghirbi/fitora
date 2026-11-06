@@ -9,8 +9,6 @@ class SuperadminSupportTicketSerializer
       subject: ticket.subject,
       message: ticket.message,
       status: ticket.status,
-      kind: ticket.kind,
-      contact_phone: ticket.contact_phone,
       created_at: ticket.created_at,
       company: { id: ticket.company.id, name: ticket.company.name },
       created_by: { id: ticket.created_by.id, full_name: ticket.created_by.full_name, email: EmailMask.call(ticket.created_by.email) },

@@ -9,7 +9,7 @@ two live surfaces would double the security review.
 | Namespace | Audience | Principal |
 |---|---|---|
 | `/api/v1/*` (root) | staff-side operations | `User` (admin or staff) |
-| `/api/v1/admin/*` | admin-privileged reads (revenue, exports) | `User#admin?` or `revenue` capability |
+| `/api/v1/admin/*` | admin-privileged reads (revenue) | `User#admin?` or `revenue` capability |
 | `/api/v1/coach/*` | a coach's own day **(new)** | staff on the coach role |
 | `/api/v1/me/*` | the member's own app | `Client` |
 | `/api/v1/superadmin/*` | the SaaS itself | `User#superadmin?`, no tenant |
@@ -88,7 +88,6 @@ resources /support_tickets            index, create; GET :id/attachments/:attach
 resources /invoices                   index, show (PDF)
 GET    /subscription
 POST   /onboarding/dismiss            → replaced, see §4
-data_exchange/:entity/{template,export,import}
 ```
 
 ### `/admin`
@@ -96,7 +95,6 @@ data_exchange/:entity/{template,export,import}
 ```
 GET /admin/dashboard
 GET /admin/revenue
-GET /admin/reports/export
 ```
 
 ### `/coach`

@@ -36,8 +36,8 @@ npm ci
 # Configure environment
 cp .env.example .env      # then fill in local values as needed
 
-# Create and migrate the database
-bin/rails db:create db:schema:load
+# Create the database and what Fitora needs to start
+bin/rails db:prepare
 ```
 
 ## Running the app
@@ -127,6 +127,19 @@ Production refuses to boot without `SMTP_*` and `APP_HOST`
 their address and nothing opens. Every secret the deploy needs is listed in
 `.kamal/secrets.example`.
 
+Every deploy migrates, then runs `db/seeds.rb` (`bin/docker-entrypoint`). The seed
+only adds what is missing: Fitora's settings, the activity catalogue, the default
+e-mail templates and, once, the superadmin. It never overwrites what was changed
+since, and never adds sample data.
+
+The first deploy needs `SUPERADMIN_EMAIL` and `SUPERADMIN_PASSWORD`, and stops if
+they are missing. Later deploys ignore them. Then set up the account's
+authenticator app, which the console requires:
+
+```bash
+bin/kamal app exec --interactive "bin/rails superadmin:setup_two_factor EMAIL=you@example.com"
+```
+
 ## Backups
 
 The `backup` accessory in `config/deploy.yml` dumps the database nightly,
@@ -147,7 +160,7 @@ constraints), and drops it again.
 - `app/controllers/web`, `app/views/web` — the server-rendered web UI, one namespace per shell; `app/javascript` its Stimulus controllers, `app/assets/stylesheets` its styles
 - `app/controllers/api/v1` — versioned JSON API, namespaced by role where relevant (`superadmin/`, `admin/`, `me/`)
 - `app/models` — the data and the business rules on it: booking, cancelling, selling a plan, taking a payment are model methods (`Session#book!`, `Booking#cancel!`, `Contract.sell!`, `Payment.collect!`, …). A rule a request breaks raises `ApplicationRecord::Refused`, which the API answers with a 422
-- `app/lib` — code that isn't a business rule: PDF receipts and schedules, spreadsheet reports, dashboard figures, CSV import/export, JWT
+- `app/lib` — code that isn't a business rule: PDF receipts and schedules, dashboard figures, JWT
 - `app/models/concerns` — shared model behavior (email verification, password reset, photo attachment)
 - `app/jobs` — Sidekiq background jobs, mostly scheduled scans (see `config/sidekiq_cron.yml`)
 - `app/policies` — authorization

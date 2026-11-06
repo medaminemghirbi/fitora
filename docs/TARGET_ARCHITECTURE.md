@@ -142,7 +142,7 @@ nullable). Promotion on cancellation happens in the same transaction
 | Layer | May contain | Must not contain |
 |---|---|---|
 | Model | validations, DB-backed invariants, associations, scopes, predicates, and the business rules as methods (`Session#book!`, `Booking#cancel!`, `Contract.sell!`, `Payment.collect!`) — locks and transactions included | HTTP concerns, policy decisions |
-| `app/lib` | what is not a business rule: PDFs, spreadsheets, dashboard figures, CSV import/export, JWT, the SMS client | request params, rendering |
+| `app/lib` | what is not a business rule: PDFs, dashboard figures, JWT, the SMS client | request params, rendering |
 | Controller | authn/authz gating, param permitting, calling one model method, rendering one serializer | business rules, conditionals over roles |
 | Serializer | shape of the response for one audience | queries (accept preloaded records) |
 

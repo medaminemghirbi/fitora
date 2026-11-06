@@ -2,12 +2,11 @@
 <%# ng-host: dashboard %>
 <%# DashboardComponent: the header, the setup card while the guide is
     unfinished, the body (_body: what needs the gym, the figures, the day,
-    revenue, the occasional tasks), and the check-in dialog (dashboard-page). %>
+    revenue, the recent activity), and the check-in dialog (dashboard-page). %>
 <% onboarding = bootstrap[:onboarding] %>
 <div class="fx-page dash" data-controller="dashboard-page"
      data-dashboard-page-url-value="<%= admin_page_path("dashboard") %>"
      data-dashboard-page-dismiss-url-value="<%= admin_page_path("onboarding/dismiss") %>"
-     data-dashboard-page-labels-value="<%= { error: ngt("common.error_generic") }.to_json %>"
      data-action="modal:opened@window->dashboard-page#fillCheckin modal:closed@window->dashboard-page#checkinClosed">
   <header class="dash-head">
     <div class="dash-head-title">

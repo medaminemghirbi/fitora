@@ -35,7 +35,11 @@ export default class extends Controller {
     })
     save.disabled = false
     save.textContent = ` ${this.labelsValue.save} `
-    if (result.ok) toast("success", this.labelsValue.saved)
-    else toast("error", result.error ?? this.labelsValue.error)
+    if (result.ok) {
+      toast("success", this.labelsValue.saved)
+      form.dispatchEvent(new CustomEvent("settings:saved", { bubbles: true }))
+    } else {
+      toast("error", result.error ?? this.labelsValue.error)
+    }
   }
 }

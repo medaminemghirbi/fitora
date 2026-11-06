@@ -1,18 +1,16 @@
 import { Controller } from "@hotwired/stimulus"
-import { csrfToken, downloadBlob, spinner } from "../lib/ng"
-import { toast } from "../lib/toast"
+import { csrfToken } from "../lib/ng"
 
 // DashboardComponent's moves: the check-in dialog on a session (its panel
 // fetches the roster) and, once it closes, the figures again (load(): the
-// counts changed); the two occasional tasks opened and closed under their
-// bar; the report downloaded under the page's own file name; the setup
-// card left behind.
+// counts changed); the recent activity opened and closed under its bar; the
+// setup card left behind.
 export default class extends Controller {
-  static targets = ["exportCard", "yearField", "activityCard"]
-  static values = { url: String, dismissUrl: String, labels: Object }
+  static targets = ["activityCard"]
+  static values = { url: String, dismissUrl: String }
 
   connect() {
-    this.open = { export: false, activity: false }
+    this.activityOpen = false
   }
 
   // ---- checking people in ----------------------------------------------------
@@ -35,7 +33,7 @@ export default class extends Controller {
     this.load()
   }
 
-  // load(): the body again, the tasks left open as they were.
+  // load(): the body again, the recent activity left open as it was.
   async load() {
     const response = await fetch(`${this.urlValue}?fragment=1`, { credentials: "same-origin", headers: { Accept: "text/html" } }).catch(() => null)
     if (!response?.ok) return
@@ -44,65 +42,32 @@ export default class extends Controller {
     const first = this.element.querySelector(":scope > .dash-attn")
     while (first.nextSibling) first.nextSibling.remove()
     first.replaceWith(fresh.content)
-    for (const name of ["export", "activity"]) if (this.open[name]) this.showCard(name)
+    if (this.activityOpen) this.showActivity()
   }
 
-  // ---- the occasional tasks ----------------------------------------------------
+  // ---- the recent activity -----------------------------------------------------
 
-  toggle(event) {
-    const name = event.currentTarget.dataset.toggle
-    this.open[name] = !this.open[name]
-    if (this.open[name]) this.showCard(name)
-    else this.element.querySelector(`[data-card="${name}"]`)?.remove()
-    this.drawToggle(name)
+  toggle() {
+    this.activityOpen = !this.activityOpen
+    if (this.activityOpen) this.showActivity()
+    else this.element.querySelector('[data-card="activity"]')?.remove()
+    this.drawToggle()
   }
 
-  drawToggle(name) {
-    const button = this.element.querySelector(`[data-toggle="${name}"]`)
+  drawToggle() {
+    const button = this.element.querySelector('[data-toggle="activity"]')
     if (!button) return
-    button.setAttribute("aria-expanded", String(this.open[name]))
+    button.setAttribute("aria-expanded", String(this.activityOpen))
     const caret = button.lastElementChild
-    caret.classList.toggle("bi-chevron-down", !this.open[name])
-    caret.classList.toggle("bi-chevron-up", this.open[name])
+    caret.classList.toggle("bi-chevron-down", !this.activityOpen)
+    caret.classList.toggle("bi-chevron-up", this.activityOpen)
   }
 
-  // The export card first, then the activity card, under the bar.
-  showCard(name) {
-    if (this.element.querySelector(`[data-card="${name}"]`)) return
-    const card = this[`${name}CardTarget`].content.firstElementChild.cloneNode(true)
-    const bar = this.element.querySelector(":scope > .dashboard-utility-bar")
-    const exportCard = this.element.querySelector('[data-card="export"]')
-    if (name === "activity" && exportCard) exportCard.after(card)
-    else bar.after(card)
-    this.drawToggle(name)
-  }
-
-  periodType(event) {
-    const card = event.target.closest('[data-card="export"]')
-    const current = card.querySelector("[data-period]")
-    if (event.target.value === current.dataset.period) return
-    if (event.target.value === "year") {
-      this.monthField = current
-      current.replaceWith(this.yearFieldTarget.content.firstElementChild.cloneNode(true))
-    } else {
-      current.replaceWith(this.monthField)
-    }
-  }
-
-  async exportReport(event) {
-    const button = event.currentTarget
-    const card = button.closest('[data-card="export"]')
-    const type = card.querySelector("#export-period-type").value
-    const period = type === "month" ? card.querySelector("#export-month")?.value : card.querySelector("#export-year")?.value
-    if (!period) return
-    const content = [...button.childNodes]
-    button.disabled = true
-    button.replaceChildren(spinner(14, "dashboard"))
-    const response = await fetch(`${this.urlValue}/report?${new URLSearchParams({ period_type: type, period })}`, { credentials: "same-origin" }).catch(() => null)
-    button.disabled = false
-    button.replaceChildren(...content)
-    if (!response?.ok) return toast("error", this.labelsValue.error)
-    downloadBlob(await response.blob(), `fitora-rapport-${period}.xlsx`)
+  showActivity() {
+    if (this.element.querySelector('[data-card="activity"]')) return
+    const card = this.activityCardTarget.content.firstElementChild.cloneNode(true)
+    this.element.querySelector(":scope > .dashboard-utility-bar").after(card)
+    this.drawToggle()
   }
 
   // ---- the setup card ----------------------------------------------------------

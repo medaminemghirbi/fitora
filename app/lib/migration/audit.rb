@@ -20,8 +20,7 @@ module Migration
       companies users staff_members roles clients memberships coaches
       activities spaces activity_spaces sessions recurring_schedules
       bookings attendance_records contract_types contract_type_activities
-      contracts contract_periods payments invoices subscriptions
-      subscription_prices platform_settings audit_logs notifications
+      contracts contract_periods payments platform_settings audit_logs notifications
       support_tickets app_updates
     ].freeze
 

@@ -513,8 +513,7 @@
   font-weight: 700;
   white-space: nowrap;
 
-  &[data-plan] { letter-spacing: 0.04em; text-transform: uppercase; }
-  &[data-plan="pro"], &--primary { background: var(--color-primary-soft); color: var(--color-primary); }
+  &--primary { background: var(--color-primary-soft); color: var(--color-primary); }
   &--success { background: var(--color-success-soft); color: var(--color-success); }
   &--warning { background: var(--color-warning-soft); color: var(--color-warning); }
   &--danger { background: var(--color-danger-soft); color: var(--color-danger); }
@@ -787,17 +786,6 @@ a.fx-kpi:hover { border-color: var(--color-primary-border); box-shadow: var(--sh
   &.is-due strong { color: var(--color-danger); }
 }
 
-// The card with the switch that shuts every salle on an account.
-.app-card.sa-danger {
-  border-color: color-mix(in srgb, var(--color-danger) 30%, var(--color-border));
-
-  .app-card-header h2 { display: flex; align-items: center; gap: 0.45rem; }
-  .app-card-header i { color: var(--color-danger); }
-  .sa-sub { margin: 0 0 var(--space-3); font-size: var(--font-size-sm); }
-}
-
-.btn.sa-void { color: var(--color-text-secondary); white-space: nowrap; }
-.btn.sa-void:hover { color: var(--color-danger); }
 
 // The pricing page: the prices beside what each currency makes of them.
 .sa-pricing {
@@ -818,9 +806,9 @@ a.fx-kpi:hover { border-color: var(--color-primary-border); box-shadow: var(--sh
 // A currency's code, its name and, for the one prices are set in, a chip.
 .sa-currency { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.45rem; }
 
-// A form page (Fitora's billing details): its fields two abreast, its notices
-// above it, its button at its foot.
-.sa-billing { max-width: 900px; }
+// A form page (a new account, Fitora's identity): its fields two abreast, its
+// notices above it, its button at its foot.
+.sa-form-card { max-width: 900px; }
 
 .sa-form-grid {
   display: grid;
@@ -851,6 +839,141 @@ a.fx-kpi:hover { border-color: var(--color-primary-border); box-shadow: var(--sh
   > i { margin-top: 0.1rem; }
   &--danger { background: var(--color-danger-soft); color: var(--color-danger); }
 }
+
+// The mailing: its variables, the accounts to tick, what the text will read.
+.sa-mail-input { min-height: 12rem; }
+
+.sa-mail-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.sa-mail-chip {
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { border-color: var(--color-primary); color: var(--color-primary); }
+}
+
+.sa-pick-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+
+  .fx-input-icon { flex: 1 1 220px; }
+  .form-select { flex: 0 1 220px; width: auto; }
+}
+
+.sa-pick-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+
+  .form-check-input { margin: 0; }
+}
+
+.sa-pick {
+  max-height: 24rem;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.sa-pick-row {
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child { border-bottom: 0; }
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0.6rem var(--space-5);
+    cursor: pointer;
+  }
+
+  label:hover { background: var(--color-surface-sunken); }
+  .form-check-input { flex: none; margin: 0; }
+  app-status-badge { flex: none; margin-inline-start: auto; }
+}
+
+.sa-pick-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  strong { font-weight: 600; }
+}
+
+.sa-pick-empty { margin: 0; padding: var(--space-4) var(--space-5); }
+
+@media (min-width: 1280px) {
+  .sa-mail-aside { position: sticky; top: var(--space-4); }
+}
+
+.sa-mail-subject {
+  margin: 0 0 var(--space-3);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.sa-mail-body {
+  min-height: 6rem;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+// An account's activation: what has happened, in order, and when.
+.sa-steps {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2) 0;
+}
+
+.sa-step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem var(--space-5);
+}
+
+.sa-step-mark {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+}
+
+.sa-step.is-done .sa-step-mark {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.sa-step-label { font-weight: 600; }
+.sa-step:not(.is-done) .sa-step-label { color: var(--color-text-secondary); font-weight: 500; }
+.sa-step-when { margin-inline-start: auto; white-space: nowrap; }
 
 // ---------------------------------------------------------------------------
 // The console's sign-in: the authenticator app's code

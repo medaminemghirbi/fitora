@@ -1,21 +1,8 @@
-# What the account screens do with an account — sign up, ask for a reset,
-# choose a new password, accept a gym's invitation, confirm an address —
-# shared by the API (Api::V1::{Auth,PasswordResets,Invitations,
-# EmailVerifications}Controller) and the web UI's account pages, so both
-# apply the same rules (MIGRATION_AUDIT §3.2).
+# What the account screens do with an account — ask for a reset, choose a new
+# password, accept a gym's invitation, confirm an address — shared by the API
+# (Api::V1::{PasswordResets,Invitations,EmailVerifications}Controller) and the
+# web UI's account pages, so both apply the same rules (MIGRATION_AUDIT §3.2).
 module AccountRecovery
-  # A gym opening its own account: the admin's login and nothing else. The
-  # gym is named afterwards (Company.open!), which is where the trial starts.
-  # Returns the user, saved or carrying its errors.
-  def self.register(attributes)
-    user = User.new(attributes.to_h.symbolize_keys.merge(role: :admin))
-    if user.save
-      raw = user.generate_email_verification_token!
-      AccountMailer.email_verification(user, raw).deliver_later
-    end
-    user
-  end
-
   # Mails a reset link if the address is a platform login or a member with
   # a password — and says nothing either way, so the form cannot be used to
   # find out who has an account.

@@ -34,7 +34,7 @@ class UserSerializer
   attr_reader :user
 
   # The salles this login can switch between. An admin always gets theirs
-  # (the switcher is also their way to "Mes salles"); a staff login only
+  # (the switcher is also their way to "Mes salles  de sport"); a staff login only
   # when it is posted to more than one. nil (not []) for anyone else, so
   # the frontend can tell "no switcher" apart from "switcher, empty".
   def workplaces

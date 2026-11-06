@@ -27,6 +27,33 @@ class AccountMailer < ApplicationMailer
     mail(to: record.email, subject: "Confirmez votre adresse e-mail Fitora")
   end
 
+  # The account a superadmin opened (SuperadminActions.create_company): where
+  # to sign in, the login, a generated password to replace on first sign-in,
+  # and, while the address is unconfirmed, the link that confirms it. Sent
+  # straight away, never queued, so the password does not wait in Redis.
+  def account_credentials(admin, company, password, raw_token)
+    @first_name = admin.first_name
+    @company_name = company.name
+    @email = admin.email
+    @password = password
+    @sign_in_url = "#{FRONTEND_URL}/connexion"
+    @verify_url = raw_token && "#{FRONTEND_URL}/verify-email?token=#{raw_token}"
+    @expires_in_days = EmailVerifiable::TOKEN_EXPIRY.to_i / 1.day
+
+    mail(to: admin.email, subject: "Votre compte Fitora pour #{company.name}")
+  end
+
+  # One admin's copy of a console mailing (AdminMailing): the variables theirs,
+  # replies going to Fitora rather than to a mailbox nobody reads.
+  def admin_message(recipient)
+    values = AdminMailing.values_for(recipient.user)
+    @body = AdminMailing.fill(recipient.mailing.body, values)
+    @html_body = linked_paragraphs(@body)
+
+    mail(to: recipient.email, reply_to: PlatformSetting.current.email.presence || "contact@fitora.io",
+         subject: AdminMailing.fill(recipient.mailing.subject, values).squish)
+  end
+
   # A gym switching on a member's own app. The member chooses their password
   # from the link; the gym never sees it.
   def member_invitation(client, company, raw_token)
@@ -49,21 +76,13 @@ class AccountMailer < ApplicationMailer
     mail(to: request.client.email, subject: "#{request.company.name} souhaite vous compter parmi ses membres")
   end
 
-  # A Fitora superadmin closed the account's access (SuperadminActions
-  # .update_subscription): every salle it covers, at once.
-  def access_suspended(admin)
-    @first_name = admin.first_name
-    @subscription_url = "#{FRONTEND_URL}/admin/subscription"
+  private
 
-    mail(to: admin.email, subject: "Votre accès Fitora est suspendu")
-  end
-
-  # ...and opened it again.
-  def access_restored(admin)
-    @first_name = admin.first_name
-    @plan = admin.subscription&.plan
-    @app_url = "#{FRONTEND_URL}/connexion"
-
-    mail(to: admin.email, subject: "Votre accès Fitora est rétabli")
+  # The text as typed, escaped, its paragraphs and web addresses made HTML.
+  def linked_paragraphs(text)
+    linked = ERB::Util.html_escape(text).to_str.gsub(%r{https?://(?:(?!&quot;|&#39;)[^\s<])*[^\s<.,;:!?)]}) do |url|
+      %(<a href="#{url}" style="color:#4a2a8f;">#{url}</a>)
+    end
+    view_context.simple_format(linked, { style: "margin:0 0 14px;" }, sanitize: false)
   end
 end

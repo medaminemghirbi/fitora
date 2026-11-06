@@ -4,6 +4,9 @@ module Web
     # (featureGuard), and only for whoever may manage them (capabilityGuard).
     # Saved and removed by RoomEditor, as /api/v1/spaces does it.
     class SpacesController < BaseController
+      include Web::SettingsPage
+      settings_section "spaces"
+
       before_action :require_spaces_feature
       before_action -> { require_capability(:spaces) }
       before_action :set_space, only: %i[update destroy]

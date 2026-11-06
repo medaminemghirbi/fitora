@@ -1,0 +1,36 @@
+<%# How far the account has come, in the order it happens: the credentials sent,
+    the address confirmed, a password chosen and the terms accepted. While the
+    admin still has the generated password, the credentials can go again: a new
+    password, since the old one is only in the mail that may have been lost. %>
+<% steps = [
+     [ "superadmin.activation.step_sent", admin[:credentials_sent_at] ],
+     [ "superadmin.activation.step_email", admin[:email_verified_at] ],
+     [ "superadmin.activation.step_sign_in", (admin[:terms_accepted_at] unless admin[:must_change_password]) ]
+   ] %>
+<section class="app-card">
+  <div class="app-card-header">
+    <div>
+      <h2><%= ngt("superadmin.activation.title") %></h2>
+      <p class="sa-sub mb-0"><%= admin[:email] %></p>
+    </div>
+    <% if admin[:must_change_password] && admin[:access_suspended_at].blank? %>
+      <button type="button" class="btn btn-sm btn-outline-primary" data-action="superadmin-company#sendCredentials">
+        <i class="bi bi-send"></i> <%= ngt("superadmin.credentials.resend") %>
+      </button>
+    <% end %>
+  </div>
+  <% if admin[:must_change_password] && admin[:credentials_sent_at].blank? %>
+    <div class="app-card-body pb-0">
+      <div class="sa-notice sa-notice--danger mb-0" role="alert"><i class="bi bi-exclamation-triangle"></i> <span><%= ngt("superadmin.activation.never_sent") %></span></div>
+    </div>
+  <% end %>
+  <ol class="sa-steps">
+    <% steps.each do |label, at| %>
+      <li class="sa-step<%= " is-done" if at %>">
+        <span class="sa-step-mark" aria-hidden="true"><i class="bi <%= at ? "bi-check-lg" : "bi-hourglass-split" %>"></i></span>
+        <span class="sa-step-label"><%= ngt(label) %></span>
+        <span class="sa-sub sa-step-when"><%= at ? ng_date(at, "dd/MM/yyyy HH:mm") : ngt("superadmin.activation.waiting") %></span>
+      </li>
+    <% end %>
+  </ol>
+</section>

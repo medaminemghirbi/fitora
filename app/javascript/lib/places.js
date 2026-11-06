@@ -126,24 +126,9 @@ const ZONES = [
   },
 ]
 
-const EXTRA_TZ_COUNTRY = {
-  "Europe/Madrid": "ES", "Europe/Prague": "CZ", "Europe/Budapest": "HU", "Europe/Sofia": "BG",
-  "Europe/Helsinki": "FI", "Europe/Belgrade": "RS", "Europe/Zagreb": "HR", "Europe/Bratislava": "SK",
-  "Europe/Ljubljana": "SI", "Europe/Vilnius": "LT", "Europe/Riga": "LV", "Europe/Tallinn": "EE",
-  "America/Phoenix": "US", "America/Anchorage": "US", "America/Detroit": "US", "America/Halifax": "CA",
-  "America/Edmonton": "CA", "America/Winnipeg": "CA", "America/Montreal": "CA", "America/Tijuana": "MX",
-  "America/Monterrey": "MX", "America/Caracas": "VE", "America/Montevideo": "UY", "America/Guayaquil": "EC",
-  "Australia/Melbourne": "AU", "Australia/Brisbane": "AU", "Australia/Perth": "AU", "Australia/Adelaide": "AU",
-  "Asia/Manila": "PH", "Asia/Ho_Chi_Minh": "VN", "Asia/Taipei": "TW", "Asia/Colombo": "LK",
-  "Africa/Accra": "GH", "Africa/Luanda": "AO", "Africa/Dar_es_Salaam": "TZ", "Africa/Kampala": "UG",
-  "Africa/Lusaka": "ZM", "Africa/Harare": "ZW", "Africa/Windhoek": "NA", "Africa/Gaborone": "BW",
-}
-
-const TZ_COUNTRY = { ...EXTRA_TZ_COUNTRY }
 const COUNTRY_TZ = {}
 for (const g of ZONES) {
   for (const [id, cc] of g.ids) {
-    TZ_COUNTRY[id] = cc
     if (!COUNTRY_TZ[cc]) COUNTRY_TZ[cc] = id
   }
 }
@@ -171,22 +156,7 @@ export const TIMEZONE_GROUPS = ZONES.map((g) => ({
 
 const ALL = new Set(TIMEZONE_GROUPS.flatMap((g) => g.zones.map((z) => z.value)))
 
-export function browserTimezone() {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || "Africa/Tunis"
-  } catch {
-    return "Africa/Tunis"
-  }
-}
-
-export const countryForTimezone = (tz) => (tz && TZ_COUNTRY[tz]) || ""
 export const timezoneForCountry = (code) => (code && COUNTRY_TZ[code.toUpperCase()]) || ""
-
-// From the browser timezone alone; Tunisia when the zone is unknown.
-export function guessLocation() {
-  const timezone = browserTimezone()
-  return { timezone, country: countryForTimezone(timezone) || "TN" }
-}
 
 // An off-list timezone first, so the user always sees their current value.
 export function ensureTimezone(tz) {
@@ -194,21 +164,3 @@ export function ensureTimezone(tz) {
   const off = gmtOffset(tz)
   return [{ region: "—", zones: [{ value: tz, label: off ? `${cityName(tz)} (${off})` : cityName(tz) }] }, ...TIMEZONE_GROUPS]
 }
-
-// ---- currencies ------------------------------------------------------------------
-
-export const CURRENCIES = [
-  { code: "TND", symbol: "DT", name: "Dinar tunisien" },
-  { code: "MAD", symbol: "DH", name: "Dirham marocain" },
-  { code: "DZD", symbol: "DA", name: "Dinar algérien" },
-  { code: "EGP", symbol: "E£", name: "Livre égyptienne" },
-  { code: "EUR", symbol: "€", name: "Euro" },
-  { code: "USD", symbol: "$", name: "Dollar américain" },
-  { code: "GBP", symbol: "£", name: "Livre sterling" },
-  { code: "CHF", symbol: "CHF", name: "Franc suisse" },
-  { code: "CAD", symbol: "CA$", name: "Dollar canadien" },
-  { code: "SAR", symbol: "SAR", name: "Riyal saoudien" },
-  { code: "AED", symbol: "AED", name: "Dirham des Émirats" },
-  { code: "QAR", symbol: "QAR", name: "Riyal qatari" },
-  { code: "XOF", symbol: "FCFA", name: "Franc CFA (UEMOA)" },
-]

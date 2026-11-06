@@ -11,7 +11,7 @@ module Web
 
       PER_PAGE = 20 # Api::V1::BaseController#page_params' default
 
-      # GET /admin/<salle>/clients[.csv]?search=&status=&…&page=
+      # GET /admin/<salle>/clients?search=&status=&…&page=
       #
       # As HTML, the whole page. As a Turbo Stream (what the page asks for
       # when a filter changes), only the regions that depend on the results,
@@ -22,7 +22,6 @@ module Web
         respond_to do |format|
           format.html { load_page }
           format.turbo_stream { load_page }
-          format.csv { export }
         end
       end
 
@@ -70,14 +69,6 @@ module Web
         @counts = @list.counts
         @filters = @list.params
         @catalogue = catalogue
-      end
-
-      # The whole member file leaving the building: admin only — and named as
-      # the Angular app names the download.
-      def export
-        return go_home unless current_user.admin?
-
-        send_data @list.csv, filename: "adherents-#{Date.current.iso8601}.csv", type: "text/csv"
       end
 
       # The wizard's and the filters' lists: the active activities and plans,

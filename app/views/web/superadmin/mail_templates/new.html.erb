@@ -1,0 +1,3 @@
+<% superadmin_crumbs [ ngt("superadmin.mail_templates.nav"), "/superadmin/mail_templates" ], [ ngt("superadmin.mail_templates.new") ] %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.mail_templates.new"), desc: ngt("superadmin.mail_templates.desc") } do %><% end %>
+<%= render "web/superadmin/mail_templates/form", template: @template, errors: @errors %>

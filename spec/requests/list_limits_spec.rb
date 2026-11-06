@@ -3,7 +3,7 @@ require "rails_helper"
 # Lists that used to load everything there was: the most recent ones now,
 # newest first. The ceilings are stubbed small here.
 RSpec.describe "List ceilings", type: :request, openapi: false do
-  let(:company) { create(:company, :pro, setup_dismissed_at: Time.current) }
+  let(:company) { create(:company, setup_dismissed_at: Time.current) }
   let(:admin) { company.admin }
 
   it "lists a gym's most recent support tickets, on the API and the page" do

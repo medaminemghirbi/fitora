@@ -18,10 +18,10 @@ RSpec.describe "The superadmin console's tables", type: :request, openapi: false
   describe "the frame" do
     it "lists the resources down the side, marks the page's own and counts the open tickets" do
       create(:support_ticket)
-      get "/superadmin/invoices"
-      expect(response.body).to include('href="/superadmin/invoices" class="sa-nav-item is-active" aria-current="page"')
+      get "/superadmin/identity"
+      expect(response.body).to include('href="/superadmin/identity" class="sa-nav-item is-active" aria-current="page"')
       expect(response.body).to include('<span class="sa-nav-badge">1</span>')
-      expect(response.body).to include('href="/superadmin/companies"', 'href="/superadmin/support"', 'href="/superadmin/updates"', 'href="/superadmin/pricing"')
+      expect(response.body).to include('href="/superadmin/companies"', 'href="/superadmin/support"', 'href="/superadmin/updates"', 'href="/superadmin/identity"')
     end
 
     it "answers a table's own request with the table alone" do
@@ -58,14 +58,12 @@ RSpec.describe "The superadmin console's tables", type: :request, openapi: false
       expect(listed_names.size).to eq(27)
     end
 
-    it "filters on the account's plan, and shows the way back while anything narrows" do
-      starter = create(:company, name: "Starter Gym")
-      create(:subscription, company: starter, plan: :starter)
-      pro = create(:company, name: "Pro Gym")
-      create(:subscription, company: pro, plan: :pro)
+    it "filters on the account's activation, and shows the way back while anything narrows" do
+      create(:company, name: "Active Gym")
+      create(:company, name: "Waiting Gym", admin: create(:user, :admin, :first_sign_in))
 
-      get "/superadmin/companies", params: { plan: "pro" }
-      expect(listed_names).to eq([ "Pro Gym" ])
+      get "/superadmin/companies", params: { activation: "pending" }
+      expect(listed_names).to eq([ "Waiting Gym" ])
       expect(response.body).to match(/class="sa-clear"[^>]*data-data-table-target="clear">/)
 
       get "/superadmin/companies"
@@ -74,12 +72,12 @@ RSpec.describe "The superadmin console's tables", type: :request, openapi: false
 
     it "takes an unknown column, direction, filter or page size for the default" do
       create(:company, name: "Alpha")
-      get "/superadmin/companies", params: { sort: "password_digest", dir: "sideways", access: "everything", limit: -5, page: "x" }
+      get "/superadmin/companies", params: { sort: "password_digest", dir: "sideways", activation: "everything", limit: -5, page: "x" }
       expect(response).to have_http_status(:ok)
       expect(listed_names).to eq([ "Alpha" ])
     end
 
-    it "shows where each gym is and how to reach its admin: the e-mail it is billed at, whole, and a phone" do
+    it "shows where each gym is and how to reach its admin: the e-mail, whole, and a phone" do
       admin = create(:user, :admin, email: "meriem@studiolumen.tn", phone: nil)
       create(:company, admin: admin, name: "Studio Lumen", city: "La Marsa", country: "TN",
                        address: "12 rue Habib Thameur", phone: "+216 71 774 200")
@@ -97,48 +95,169 @@ RSpec.describe "The superadmin console's tables", type: :request, openapi: false
     end
   end
 
-  describe "the invoices" do
-    let(:company) { create(:company, name: "Zen Club") }
-
-    it "lists every account's, once each even when the account runs several salles, and filters on what was paid" do
-      create(:company, admin: company.admin, name: "Zen Club II")
-      paid = create(:invoice, company: company, number: "FIT-2026-0101")
-      due = create(:invoice, :due, company: company, number: "FIT-2026-0102")
-
-      get "/superadmin/invoices", params: { search: "zen" }
-      expect(response.body.scan("/superadmin/invoices/#{paid.id}/pdf").size).to eq(1)
-      expect(response.body).to include(due.number, %(data-href="/superadmin/companies/#{company.id}"))
-
-      get "/superadmin/invoices", params: { status: "due" }
-      expect(response.body).to include(due.number)
-      expect(response.body).not_to include(paid.number)
+  describe "opening a gym's account" do
+    let(:fields) do
+      { company: { name: "Studio Lumen", city: "La Marsa", timezone: "Africa/Tunis", currency: "TND", locale: "fr" },
+        admin: { first_name: "Meriem", last_name: "Trabelsi", email: "meriem@lumen.tn", phone: "" } }
     end
 
-    it "sorts by amount" do
-      create(:invoice, company: company, number: "FIT-2026-0201", amount_cents: 500)
-      create(:invoice, company: company, number: "FIT-2026-0202", amount_cents: 90_000)
+    it "is offered from the gyms and the overview, and asks for the salle and its admin" do
+      %w[/superadmin/companies /superadmin/overview].each do |page|
+        get page
+        expect(response.body).to include('href="/superadmin/companies/new"'), page
+      end
 
-      get "/superadmin/invoices", params: { sort: "amount", dir: "desc" }
-      expect(response.body.index("FIT-2026-0202")).to be < response.body.index("FIT-2026-0201")
+      get "/superadmin/companies/new"
+      expect(response.body).to include('name="company[name]"', 'name="company[timezone]"', 'name="company[currency]"', 'name="company[locale]"',
+                                       'name="admin[first_name]"', 'name="admin[email]"')
+      expect(response.body).not_to include("password")
+    end
+
+    it "opens the account, says the credentials left, and lands on its page" do
+      expect { post "/superadmin/companies", params: fields }
+        .to change(Company, :count).by(1).and change(ActionMailer::Base.deliveries, :count).by(1)
+
+      company = Company.find_by!(name: "Studio Lumen")
+      expect(response).to redirect_to("/superadmin/companies/#{company.id}")
+      expect(flash[:success]).to include("meriem@lumen.tn")
+    end
+
+    it "keeps what was typed and says what is missing, all at once" do
+      post "/superadmin/companies", params: { company: fields[:company].merge(name: ""), admin: fields[:admin].merge(last_name: "", email: "nope") }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("company-name-error", "admin-last_name-error", "admin-email-error", 'value="La Marsa"', 'value="Meriem"')
+      expect(Company.count).to eq(0)
+    end
+
+    it "says when the address already has a login" do
+      create(:user, :admin, email: "meriem@lumen.tn")
+
+      expect { post "/superadmin/companies", params: fields }.not_to change(Company, :count)
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include(Web::Translations.translate("clients.email_taken", locale: :fr))
+    end
+
+    it "warns when the mail could not leave, and the page offers it again" do
+      allow(ActionMailer::Base).to receive(:perform_deliveries).and_return(false)
+
+      post "/superadmin/companies", params: fields
+      expect(flash[:warning]).to include("meriem@lumen.tn")
+
+      follow_redirect!
+      expect(response.body).to include("superadmin-company#sendCredentials", Web::Translations.translate("superadmin.activation.never_sent", locale: :fr))
+    end
+  end
+
+  describe "a gym's account" do
+    let(:admin) { create(:user, :admin, :first_sign_in, :unverified) }
+    let(:company) { create(:company, admin: admin) }
+
+    it "shows how far the activation has come, and offers the credentials again until the admin chooses a password" do
+      get "/superadmin/companies/#{company.id}"
+      expect(response.body).to include("sa-steps", "superadmin-company#sendCredentials", Web::Translations.translate("superadmin.activation.awaiting_email", locale: :fr))
+
+      post "/superadmin/companies/#{company.id}/credentials", as: :json
+      expect(response).to have_http_status(:no_content)
+      expect(flash[:success]).to include(admin.email)
+      expect(admin.reload.credentials_sent_at).to be_present
+
+      admin.update!(password: "my-own-password", email_verified_at: Time.current, terms_accepted_at: Time.current)
+      get "/superadmin/companies/#{company.id}"
+      expect(response.body).to include(Web::Translations.translate("superadmin.activation.active", locale: :fr))
+      expect(response.body).not_to include("superadmin-company#sendCredentials")
+    end
+
+    it "refuses to send credentials over a password the admin chose" do
+      admin.update!(password: "my-own-password")
+
+      post "/superadmin/companies/#{company.id}/credentials", as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(admin.reload.authenticate("my-own-password")).to eq(admin)
+    end
+
+    it "says when the mail could not leave" do
+      allow(ActionMailer::Base).to receive(:perform_deliveries).and_return(false)
+
+      post "/superadmin/companies/#{company.id}/credentials", as: :json
+
+      expect(response).to have_http_status(:bad_gateway)
+      expect(response.parsed_body["error"]).to eq(Web::Translations.translate("superadmin.credentials.not_sent", locale: :fr))
+    end
+
+    it "has nothing left of what the gym paid" do
+      get "/superadmin/companies/#{company.id}"
+      expect(response.body).not_to include("ac-ledger", "ac-summary", "/invoices", "/subscription", "sa-danger")
+    end
+  end
+
+  describe "suspending an account's access" do
+    let(:company) { create(:company, name: "Zen Club") }
+    let(:admin) { company.admin }
+
+    it "is offered on every row and on the gym's page, then says it is suspended and offers to restore it" do
+      company
+      get "/superadmin/companies"
+      expect(response.body).to include("/superadmin/companies/#{company.id}/suspend", "superadmin-action#run")
+      get "/superadmin/companies/#{company.id}"
+      expect(response.body).to include("/superadmin/companies/#{company.id}/suspend")
+
+      post "/superadmin/companies/#{company.id}/suspend", as: :json
+      expect(response).to have_http_status(:no_content)
+      expect(flash[:success]).to include("Zen Club")
+      expect(admin.reload.access_suspended_at).to be_present
+
+      words = Web::Translations.translate("superadmin.activation.suspended", locale: :fr)
+      get "/superadmin/companies"
+      expect(response.body).to include(words, "/superadmin/companies/#{company.id}/restore")
+      get "/superadmin/companies/#{company.id}"
+      expect(response.body).to include(words, "sa-notice--danger", "/superadmin/companies/#{company.id}/restore")
+      expect(response.body).not_to include("/superadmin/companies/#{company.id}/suspend")
+
+      post "/superadmin/companies/#{company.id}/restore", as: :json
+      expect(response).to have_http_status(:no_content)
+      expect(admin.reload.access_suspended_at).to be_nil
+    end
+
+    it "filters on it, and stops offering the credentials meanwhile" do
+      waiting = create(:company, name: "Waiting Gym", admin: create(:user, :admin, :first_sign_in))
+      create(:company, name: "Open Gym")
+      SuperadminActions.suspend_access(waiting, by: superadmin)
+
+      get "/superadmin/companies", params: { activation: "suspended" }
+      expect(listed_names).to eq([ "Waiting Gym" ])
+
+      get "/superadmin/companies", params: { activation: "pending" }
+      expect(listed_names).to be_empty
+
+      get "/superadmin/companies/#{waiting.id}"
+      expect(response.body).not_to include("superadmin-company#sendCredentials")
+    end
+
+    it "is the superadmin's only" do
+      company.update!(setup_dismissed_at: Time.current)
+      delete "/deconnexion"
+      web_sign_in(admin)
+
+      post "/superadmin/companies/#{company.id}/suspend", as: :json
+
+      expect(response).to have_http_status(:redirect).or have_http_status(:forbidden)
+      expect(admin.reload.access_suspended_at).to be_nil
     end
   end
 
   describe "the support tickets" do
-    it "lists the open ones unless asked for the rest, and filters on what they are about" do
+    it "lists the open ones unless asked for the rest" do
       open = create(:support_ticket, subject: "Encore ouvert")
       resolved = create(:support_ticket, subject: "Déjà réglé", status: :resolved)
-      upgrade = create(:support_ticket, subject: "Passer Pro", kind: :upgrade, contact_phone: "+216 22 123 456")
 
       get "/superadmin/support"
-      expect(response.body).to include(open.subject, upgrade.subject)
+      expect(response.body).to include(open.subject)
       expect(response.body).not_to include(resolved.subject)
 
       get "/superadmin/support", params: { status: "all" }
       expect(response.body).to include(open.subject, resolved.subject)
-
-      get "/superadmin/support", params: { kind: "upgrade" }
-      expect(response.body).to include(upgrade.subject)
-      expect(response.body).not_to include(open.subject)
     end
 
     it "searches the gym's name and the message" do
@@ -177,85 +296,24 @@ RSpec.describe "The superadmin console's tables", type: :request, openapi: false
     end
   end
 
-  describe "the prices" do
-    let(:every_rate) { ExchangeRate::SNAPSHOT.merge("TND" => 3.5) }
+  describe "Fitora's identity" do
+    it "says what the legal pages still lack, and saves it as typed" do
+      get "/superadmin/identity"
+      expect(response.body).to include("sa-notice", 'name="identity[tax_id]"')
 
-    it "shows every currency's price with its rate, and that the rates are the built-in ones until a refresh" do
-      PlatformSetting.current.update!(price_currency: "EUR")
-      SubscriptionPrice.base("starter").update!(monthly_cents: 6_000)
-      create(:company, currency: "TND")
-
-      get "/superadmin/pricing"
-      body = response.body
-      expect(body).to include("1 EUR = 3,3634 TND", "202 DT", "/superadmin/pricing/rates",
-                              ERB::Util.html_escape(Web::Translations.translate("superadmin.pricing_rates_snapshot", locale: :fr)))
-      expect(body).to match(/data-superadmin-pricing-switching-value="false"/)
-    end
-
-    it "shows another currency's prices converted, ready to become the one they are set in" do
-      SubscriptionPrice.base("starter").update!(monthly_cents: 17_000)
-
-      get "/superadmin/pricing", params: { currency: "EUR" }
-      expect(response.body).to include(%(value="51"), Web::Translations.translate("superadmin.pricing_switch_hint", { from: "TND", to: "EUR" }, locale: :fr))
-      expect(response.body).to match(/data-superadmin-pricing-switching-value="true"/)
-
-      patch "/superadmin/pricing", params: { currency: "EUR", plans: { starter: 5_100, pro: 7_400 } }, as: :json
-      expect(PlatformSetting.current.price_currency).to eq("EUR")
-      expect(SubscriptionPrice.for("TND", plan: "starter").monthly_cents).to eq(17_200)
-    end
-
-    it "refreshes the rates on demand, and says so when the source fails" do
-      answer = Net::HTTPOK.new("1.1", "200", "OK")
-      allow(answer).to receive(:body).and_return({ result: "success", rates: every_rate }.to_json)
-      allow(Net::HTTP).to receive(:start).and_return(answer)
-
-      post "/superadmin/pricing/rates"
-      expect(response).to redirect_to("/superadmin/pricing")
-      expect(flash[:success]).to be_present
-      expect(ExchangeRate.find_by!(currency: "TND").per_eur.to_f).to eq(3.5)
-
-      allow(Net::HTTP).to receive(:start).and_raise(Net::ReadTimeout)
-      post "/superadmin/pricing/rates"
-      expect(flash[:error]).to be_present
-      expect(ExchangeRate.find_by!(currency: "TND").per_eur.to_f).to eq(3.5)
-    end
-  end
-
-  describe "Fitora's billing details" do
-    it "says what the invoices still lack, and saves the identity and the taxes as people type them" do
-      get "/superadmin/billing"
-      expect(response.body).to include("sa-notice", 'name="billing[tax_id]"', 'value="19"', 'value="1,000"')
-
-      patch "/superadmin/billing", params: { billing: { legal_name: " Fitora SARL ", tax_id: "1234567/A/M/000", city: "1053 Tunis",
-                                                        email: "facturation@fitora.tn", vat_percent: "19,5", stamp_duty: "0,600" } }
-      expect(response).to redirect_to("/superadmin/billing")
-      setting = PlatformSetting.current.reload
-      expect(setting.slice(:legal_name, :tax_id, :vat_percent, :stamp_duty_millimes))
-        .to eq("legal_name" => "Fitora SARL", "tax_id" => "1234567/A/M/000", "vat_percent" => 19.5, "stamp_duty_millimes" => 600)
+      patch "/superadmin/identity", params: { identity: { legal_name: " Fitora SARL ", tax_id: "1234567/A/M/000", city: "1053 Tunis", email: "contact@fitora.tn" } }
+      expect(response).to redirect_to("/superadmin/identity")
+      expect(PlatformSetting.current.reload.slice(:legal_name, :tax_id)).to eq("legal_name" => "Fitora SARL", "tax_id" => "1234567/A/M/000")
 
       follow_redirect!
       expect(response.body).not_to include("sa-notice")
     end
 
-    it "refuses a rate that is no rate, and changes nothing" do
-      patch "/superadmin/billing", params: { billing: { legal_name: "Fitora", vat_percent: "cent", stamp_duty: "-1" } }
+    it "refuses an address that is no address, and changes nothing" do
+      patch "/superadmin/identity", params: { identity: { legal_name: "Fitora", email: "nope" } }
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("sa-notice--danger")
       expect(PlatformSetting.current.reload.legal_name).to be_nil
-    end
-
-    it "opens any invoice as the gym gets it" do
-      invoice = create(:invoice, number: "FIT-2026-0042")
-
-      get "/superadmin/invoices/#{invoice.id}/pdf"
-      expect(response.media_type).to eq("application/pdf")
-      expect(response.headers["Content-Disposition"]).to include("inline", "FIT-2026-0042.pdf")
-
-      get "/superadmin/invoices"
-      expect(response.body).to include("/superadmin/invoices/#{invoice.id}/pdf")
-
-      get "/superadmin/invoices/00000000-0000-4000-8000-000000000000/pdf"
-      expect(response).to have_http_status(:not_found)
     end
   end
 
@@ -268,7 +326,7 @@ RSpec.describe "The superadmin console's tables", type: :request, openapi: false
     it "is never a secret, even in the console" do
       expect { User.ransack!({ password_digest_start: "$2a" }, auth_object: :superadmin) }.to raise_error(Ransack::InvalidSearchError)
       expect { Company.ransack!({ admin_reset_password_token_digest_present: true }, auth_object: :superadmin) }.to raise_error(Ransack::InvalidSearchError)
-      expect(User.ransackable_attributes(:superadmin)).to contain_exactly("first_name", "last_name", "email")
+      expect(User.ransackable_attributes(:superadmin)).to contain_exactly("first_name", "last_name", "email", "must_change_password", "access_suspended_at")
     end
   end
 
@@ -276,7 +334,7 @@ RSpec.describe "The superadmin console's tables", type: :request, openapi: false
     company = create(:company, setup_dismissed_at: Time.current)
     delete "/deconnexion"
     web_sign_in(company.admin)
-    %w[/superadmin/invoices /superadmin/support /superadmin/updates].each do |path|
+    %w[/superadmin/companies/new /superadmin/identity /superadmin/support /superadmin/updates].each do |path|
       get path
       expect(response).to redirect_to("/admin/#{company.id}/dashboard")
     end

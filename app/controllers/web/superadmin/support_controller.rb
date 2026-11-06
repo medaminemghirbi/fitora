@@ -7,15 +7,13 @@ module Web
     # bearer token (B-14).
     class SupportController < BaseController
       include ServesAttachments
-      helper_method :support_tel_href
 
       TABLE = Web::DataTable::Definition.new(
         search: :subject_or_message_or_company_name_or_created_by_first_name_or_created_by_last_name_cont,
         sorts: { created: "created_at", company: "company_name", subject: "subject" },
         default: %w[created desc],
         filters: {
-          status: { "open" => { status_eq: SupportTicket.statuses[:open] }, "resolved" => { status_eq: SupportTicket.statuses[:resolved] }, "all" => {} },
-          kind: SupportTicket.kinds.to_h { |name, value| [ name, { kind_eq: value } ] }
+          status: { "open" => { status_eq: SupportTicket.statuses[:open] }, "resolved" => { status_eq: SupportTicket.statuses[:resolved] }, "all" => {} }
         },
         defaults: { status: "open" }
       )
@@ -50,12 +48,6 @@ module Web
 
       def ticket_json(ticket)
         JSON.parse(SuperadminSupportTicketSerializer.new(ticket).as_json.to_json).deep_symbolize_keys
-      end
-
-      # SuperadminSupportTicketsComponent#telHref: separators out, the
-      # leading + kept.
-      def support_tel_href(phone)
-        "tel:#{phone.to_s.gsub(/[^\d+]/, "")}"
       end
     end
   end

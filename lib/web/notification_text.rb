@@ -21,20 +21,6 @@ module Web
       "system_update" => ->(d) {
         { title: t("notifications.system_update.title", version: d["version"] || ""), body: d["title"] || "" }
       },
-      "invoice_issued" => ->(d) {
-        { title: t("notifications.invoice_issued.title", number: d["number"] || "—"),
-          body: t("notifications.invoice_issued.body", amount: d["amount"] || "—", currency: d["currency"] || "") }
-      },
-      "plan_changed" => ->(d) {
-        { title: t("notifications.plan_changed.title", plan: d["plan"] ? t("subscription.plan_#{d['plan']}") : "—"),
-          body: t("notifications.plan_changed.body", number: d["number"] || "—", amount: d["amount"] || "—", currency: d["currency"] || "") }
-      },
-      "access_suspended" => ->(_d) {
-        { title: t("notifications.access_suspended.title"), body: t("notifications.access_suspended.body") }
-      },
-      "access_restored" => ->(_d) {
-        { title: t("notifications.access_restored.title"), body: t("notifications.access_restored.body") }
-      },
       "session_cancelled" => ->(d) {
         { title: t("notifications.session_cancelled.title"),
           body: t("notifications.session_cancelled.body", activity: d["activity_name"] || "—", date: datetime(d["starts_at"]), gym: d["gym_name"] || "") }
@@ -55,17 +41,14 @@ module Web
 
     CTA_KEYS = {
       "contract_expiring" => "notifications.open_contract", "employee_birthday" => "notifications.open_employee",
-      "system_update" => "notifications.open_system_update", "invoice_issued" => "notifications.open_invoice",
-      "plan_changed" => "notifications.open_invoice", "access_suspended" => "notifications.open_invoice",
-      "access_restored" => "notifications.open_invoice",
+      "system_update" => "notifications.open_system_update",
       "session_cancelled" => "notifications.open_bookings", "waitlist_promoted" => "notifications.open_bookings",
       "subscription_expiring" => "notifications.open_profile", "session_reminder" => "notifications.open_bookings"
     }.freeze
 
     # The emoji badge of NotificationArtComponent.
     EMOJI = {
-      "contract_expiring" => "📋", "employee_birthday" => "🎂", "system_update" => "🚀", "invoice_issued" => "🧾",
-      "plan_changed" => "🧾", "access_suspended" => "🔒", "access_restored" => "🔓",
+      "contract_expiring" => "📋", "employee_birthday" => "🎂", "system_update" => "🚀",
       "session_cancelled" => "🚫", "waitlist_promoted" => "🎟️", "subscription_expiring" => "⏳", "session_reminder" => "⏰"
     }.freeze
 
