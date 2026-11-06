@@ -4,7 +4,7 @@ ruby file: ".ruby-version"
 
 gem "rails", "~> 8.1.3"
 # Use postgresql as the database for Active Record
-gem "pg", "~> 1.1"
+gem "pg", "~> 1.7"
 
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
@@ -24,7 +24,7 @@ gem "rails-i18n", "~> 8.0"
 # a direction and the filters into SQL, only over what each model allowlists
 # for the console (ransackable_*); Pagy pages the result.
 gem "ransack", "~> 5.0.2"
-gem "pagy", "~> 43.6.3"
+gem "pagy", "~> 43.8.1"
 
 # Password hashing for User#password
 gem "bcrypt", "~> 3.1.7"
@@ -68,7 +68,7 @@ gem "rqrcode"
 
 # The superadmin console's second factor: the six-digit codes of an
 # authenticator app (TOTP, RFC 6238), checked by SuperadminTwoFactor.
-gem "rotp", "~> 6.3"
+gem "rotp", "~> 6.4"
 
 # Background jobs (expiry scans, notification fan-out) + the ActionCable
 # Redis pub/sub backend for real-time notifications. Redis already runs
