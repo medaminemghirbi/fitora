@@ -6,7 +6,7 @@ require "rails_helper"
 # hold, and the health file a coach reads before a session.
 RSpec.describe "A private studio", type: :request do
   let(:admin) { create(:user, :admin) }
-  let!(:company) { create(:company, :pro, admin: admin) }
+  let!(:company) { create(:company, admin: admin) }
   let(:ems) { create(:activity, company: company, name: "EMS", session_format: :individual, capacity: 1, duration: 25) }
   let(:prospect) { create(:client, company: company) }
 

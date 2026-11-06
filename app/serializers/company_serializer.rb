@@ -36,19 +36,10 @@ class CompanySerializer
       signature_url: signature_url,
       signatory_name: company.signatory_name,
       contract_terms: company.contract_terms,
-      # Every feature is included — the key list the admin's subscription
-      # page renders as "what's included" (names/descriptions i18n'd
-      # client-side as modules.<key>.*).
-      included_modules: ModuleCatalog::KEYS,
       # How this company has configured the engine: which features it uses
       # and the rules it books by. The frontend reads this to decide what to
       # SHOW — never what to allow, which is `permissions`.
-      settings: company.settings.to_h,
-
-      monthly_subscription_cents: company.monthly_subscription_cents,
-      annual_subscription_cents: company.annual_subscription_cents,
-      annual_discount_percent: company.annual_discount_percent
-      # What the company currently owes Fitora — set by hand by a superadmin,
+      settings: company.settings.to_h
     }
   end
 
@@ -67,7 +58,6 @@ class CompanySerializer
     Rails.application.routes.url_helpers.rails_blob_path(company.signature, only_path: true, expires_in: SIGNATURE_LINK_EXPIRES_IN)
   end
 
-  # The logo on show: none on Starter (Company#brand_logo).
   def logo_url
     logo = company.brand_logo
     return nil if logo.nil?

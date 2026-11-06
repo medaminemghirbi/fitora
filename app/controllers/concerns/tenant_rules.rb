@@ -2,8 +2,8 @@
 # applies, whichever front end the request came from. Included by
 # Api::V1::BaseController (bearer JWT, answers in JSON) and by
 # Web::BaseController (session cookie, answers with pages and redirects), so
-# the API and the web UI cannot drift apart on a permission, a plan gate or
-# the lock (MIGRATION_AUDIT §3.2).
+# the API and the web UI cannot drift apart on a permission (MIGRATION_AUDIT
+# §3.2).
 #
 # Only the questions live here. How a refusal is said — a JSON error or a
 # redirect — is each base controller's own business.
@@ -11,23 +11,6 @@
 # Expects `current_user`, `current_client` and `current_impersonator`.
 module TenantRules
   extend ActiveSupport::Concern
-
-  # The only actions a locked company's admin can still reach — enough to see
-  # their status, and nothing that operates the gym. Staff get no exceptions
-  # at all: once the free trial expires, only the admin has any access, and
-  # only to this much, until a platform superadmin manually grants access
-  # again (SuperadminActions.update_subscription, from the console).
-  # Keyed by area, so each front end names the same three things.
-  ADMIN_ALLOWED_WHEN_LOCKED = {
-    # A locked admin still sees what they owe and can download the invoices
-    # they already have: the way out is settling, and both of these are how
-    # they work out what settling means.
-    subscription: %w[show],
-    invoices: %w[index show],
-    # Their salles are still theirs to see and move between while the
-    # account is locked.
-    companies: %w[show index switch]
-  }.freeze
 
   private
 
@@ -50,11 +33,9 @@ module TenantRules
     user.workplaces.find_by(id: id)
   end
 
-  # For a member's login: the gyms whose app they can use — the ones they
-  # belong to whose account includes the member app (a paid Pro period). A
-  # Starter or trial gym's members have no app to open.
+  # For a member's login: the gyms they belong to, whose app they can use.
   def member_companies
-    @member_companies ||= (current_client&.companies&.includes(admin: { subscription: :invoices }) || []).select(&:member_app?)
+    @member_companies ||= current_client&.companies&.to_a || []
   end
 
   def current_staff_member
@@ -88,14 +69,8 @@ module TenantRules
       (current_staff_member.can?(capability) || current_staff_member.can?(:sessions)) || false
   end
 
-  # Pro's tools (several salles, custom roles, branding, import / export):
-  # open on a paid Pro period, refused on Starter and the trial.
-  def pro_access?
-    current_company&.pro_features? || false
-  end
-
-  # An admin who signed up and has not clicked the link yet reaches nothing
-  # past sign-up. A superadmin impersonating them is let through: they are
+  # An admin who has not clicked the link in their credentials e-mail yet
+  # reaches nothing. A superadmin impersonating them is let through: they are
   # there to help, and the address is not theirs to confirm.
   def email_confirmation_required?
     return false if current_user.nil? || current_impersonator.present?
@@ -103,32 +78,11 @@ module TenantRules
     current_user.email_confirmation_pending?
   end
 
-  # The subscription that shuts this request out, or nil. A member's own
-  # login is never shut out (their gym's status is not theirs to see), nor is
-  # the platform superadmin; an admin is let into ADMIN_ALLOWED_WHEN_LOCKED.
-  def locking_subscription(area: nil, action: nil)
-    return nil if current_client || current_user.superadmin?
+  # The same for the first sign-in: the generated password replaced and the
+  # terms accepted, which are the admin's to do and nobody else's.
+  def first_sign_in_required?
+    return false if current_user.nil? || current_impersonator.present?
 
-    subscription = current_company&.subscription
-    return nil unless subscription&.locked?
-    return nil if current_user.admin? && area && ADMIN_ALLOWED_WHEN_LOCKED[area]&.include?(action.to_s)
-
-    subscription
-  end
-
-  # Why the door is shut, in words the person reading them can act on.
-  # Staff are told to talk to their admin whatever the reason: the money is
-  # not theirs to settle and the detail is not theirs to see.
-  def lock_message(subscription)
-    return "This gym's account is locked. Contact your gym's admin." unless current_user.admin?
-
-    reason = subscription.lock_reason
-    if reason == :unpaid && subscription.trial?
-      "Your free trial has ended. Choose Starter or Pro and settle with Fitora to reopen access."
-    elsif reason == :unpaid
-      "The period you paid for has run out. Access closed #{Subscription::GRACE_DAYS} days later; settle with Fitora to reopen it."
-    else
-      "Your access has been suspended by Fitora. Get in touch to find out why."
-    end
+    current_user.first_sign_in_pending?
   end
 end

@@ -3,40 +3,14 @@ module Api
     class AuthController < ApplicationController
       before_action :authenticate_request!, only: [ :me, :logout, :permissions, :change_password, :cable_ticket ]
 
-      # POST /api/v1/auth/register — a gym opening its own account.
-      #
-      # Creates the admin's login and nothing else. The token it returns
-      # opens exactly one screen — "check your inbox" — until the emailed
-      # link is clicked (BaseController#require_confirmed_email!). Only then
-      # is the gym named (Api::V1::CompaniesController#create), which is
-      # also where the 14 days start. Splitting it that way keeps this form
-      # to three fields for someone who has not seen the product yet.
-      #
-      # The 14 days are all this grants. Carrying on past them still means
-      # asking Fitora to activate the account (SubscriptionController
-      # #request_upgrade) — signing up moves that conversation after the
-      # trial, it does not remove it.
-      def register
-        user = AccountRecovery.register(register_params)
-
-        if user.persisted?
-          render json: {
-            token: JwtService.for_user(user),
-            account_type: "user",
-            user: UserSerializer.new(user).as_json
-          }, status: :created
-        else
-          render_errors(user)
-        end
-      end
-
       # POST /api/v1/auth/login — one door for both kinds of account.
       #
       # A platform account first (admin, staff, Fitora superadmin), then a member
       # whose gym enabled their access. account_type says which came back, so
       # the caller sends them to the right home without asking who they are
-      # first. A gym signs itself up (#register); a member never does — their
-      # access is switched on from their own file by the gym.
+      # first. Nobody signs up here: a superadmin opens a gym's account
+      # (SuperadminActions.create_company), and a member's access is switched on
+      # from their own file by the gym.
       def login
         result = SignIn.call(params[:email], params[:password])
 
@@ -44,11 +18,10 @@ module Api
           render json: { token: JwtService.for_user(result.user), account_type: "user", user: UserSerializer.new(result.user).as_json }
         elsif result.client
           render json: { token: JwtService.for_client(result.client), account_type: "client", client: ClientSerializer.new(result.client, reveal: true).as_json }
-        elsif result.error == :member_app_not_included
-          render json: {
-            error: "member_app_not_included",
-            message: "Your gym's plan does not include the member app."
-          }, status: :forbidden
+        elsif result.error == :access_suspended
+          render json: { error: "access_suspended", message: "This gym's access to Fitora is suspended. Contact Fitora." }, status: :forbidden
+        elsif result.error == :no_gym
+          render json: { error: "no_gym", message: "You do not belong to a gym on Fitora." }, status: :forbidden
         else
           render json: { error: "Invalid email or password" }, status: :unauthorized
         end
@@ -129,12 +102,6 @@ module Api
 
       def current_account
         current_client || current_user
-      end
-
-      # `role` is never taken from the form: everyone who signs up here is an
-      # admin, and a staff login is created by their gym.
-      def register_params
-        params.require(:user).permit(:first_name, :last_name, :email, :password, :phone, :locale)
       end
     end
   end

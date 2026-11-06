@@ -1,0 +1,693 @@
+# The whole schema, as it stands for the first production deploy. Everything before
+# this was squashed while nothing was deployed; git has the history.
+class CreateFitoraSchema < ActiveRecord::Migration[8.1]
+  def change
+    # These are extensions that must be enabled in order to support this database
+    enable_extension "btree_gist"
+    enable_extension "pg_catalog.plpgsql"
+    enable_extension "pg_trgm"
+    enable_extension "pgcrypto"
+
+    create_table "active_storage_attachments", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.uuid "blob_id", null: false
+      t.datetime "created_at", null: false
+      t.string "name", null: false
+      t.uuid "record_id", null: false
+      t.string "record_type", null: false
+      t.index [ "blob_id" ], name: "index_active_storage_attachments_on_blob_id"
+      t.index [ "record_type", "record_id", "name", "blob_id" ], name: "index_active_storage_attachments_uniqueness", unique: true
+    end
+
+    create_table "active_storage_blobs", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.bigint "byte_size", null: false
+      t.string "checksum"
+      t.string "content_type"
+      t.datetime "created_at", null: false
+      t.string "filename", null: false
+      t.string "key", null: false
+      t.text "metadata"
+      t.string "service_name", null: false
+      t.index [ "key" ], name: "index_active_storage_blobs_on_key", unique: true
+    end
+
+    create_table "active_storage_variant_records", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.uuid "blob_id", null: false
+      t.string "variation_digest", null: false
+      t.index [ "blob_id", "variation_digest" ], name: "index_active_storage_variant_records_uniqueness", unique: true
+    end
+
+    create_table "activities", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.boolean "active", default: true, null: false
+      t.uuid "activity_template_id"
+      t.integer "capacity", default: 1, null: false
+      t.uuid "company_id", null: false
+      t.datetime "created_at", null: false
+      t.text "description"
+      t.integer "duration", null: false
+      t.string "emoji"
+      t.string "name", null: false
+      t.integer "session_format", default: 1, null: false
+      t.datetime "updated_at", null: false
+      t.index [ "activity_template_id" ], name: "index_activities_on_activity_template_id"
+      t.index [ "company_id" ], name: "index_activities_on_company_id"
+      t.index [ "id", "company_id" ], name: "index_activities_on_id_and_company_id", unique: true
+      t.index [ "name" ], name: "index_activities_on_name_trgm", opclass: :gin_trgm_ops, using: :gin
+    end
+
+    create_table "activity_spaces", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.uuid "activity_id", null: false
+      t.datetime "created_at", null: false
+      t.uuid "space_id", null: false
+      t.datetime "updated_at", null: false
+      t.index [ "activity_id", "space_id" ], name: "index_activity_spaces_on_activity_id_and_space_id", unique: true
+      t.index [ "activity_id" ], name: "index_activity_spaces_on_activity_id"
+      t.index [ "space_id" ], name: "index_activity_spaces_on_space_id"
+    end
+
+    create_table "activity_templates", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.boolean "active", default: true, null: false
+      t.integer "capacity", default: 15, null: false
+      t.datetime "created_at", null: false
+      t.integer "duration", default: 60, null: false
+      t.string "emoji"
+      t.string "family", null: false
+      t.string "key", null: false
+      t.jsonb "names", default: {}, null: false
+      t.integer "position", default: 0, null: false
+      t.integer "session_format", default: 2, null: false
+      t.datetime "updated_at", null: false
+      t.index [ "family", "position" ], name: "index_activity_templates_on_family_and_position"
+      t.index [ "key" ], name: "index_activity_templates_on_key", unique: true
+    end
+
+    create_table "app_updates", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.datetime "created_at", null: false
+      t.uuid "created_by_id", null: false
+      t.text "description"
+      t.datetime "published_at", null: false
+      t.string "title", null: false
+      t.datetime "updated_at", null: false
+      t.string "version", null: false
+      t.index [ "created_by_id" ], name: "index_app_updates_on_created_by_id"
+      t.index [ "published_at" ], name: "index_app_updates_on_published_at"
+    end
+
+    create_table "attendance_records", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.uuid "booking_id", null: false
+      t.datetime "checked_in_at"
+      t.datetime "checked_out_at"
+      t.datetime "created_at", null: false
+      t.uuid "marked_by_id"
+      t.integer "status", default: 0, null: false
+      t.datetime "updated_at", null: false
+      t.index [ "booking_id" ], name: "index_attendance_records_on_booking_id", unique: true
+      t.index [ "marked_by_id" ], name: "index_attendance_records_on_marked_by_id"
+    end
+
+    create_table "audit_logs", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.string "action", null: false
+      t.uuid "auditable_id", null: false
+      t.string "auditable_type", null: false
+      t.uuid "company_id", null: false
+      t.datetime "created_at", null: false
+      t.jsonb "metadata", default: {}, null: false
+      t.uuid "user_id"
+      t.index [ "auditable_type", "auditable_id" ], name: "index_audit_logs_on_auditable_type_and_auditable_id"
+      t.index [ "company_id", "created_at" ], name: "index_audit_logs_on_company_id_and_created_at"
+      t.index [ "company_id" ], name: "index_audit_logs_on_company_id"
+      t.index [ "user_id" ], name: "index_audit_logs_on_user_id"
+    end
+
+    create_table "bookings", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.decimal "amount", precision: 10, scale: 2, default: "0.0", null: false
+      t.uuid "client_id", null: false
+      t.uuid "contract_id"
+      t.uuid "contract_period_id"
+      t.datetime "created_at", null: false
+      t.string "currency", default: "TND", null: false
+      t.integer "payment_status", default: 0, null: false
+      t.datetime "reminder_sent_at"
+      t.uuid "session_id", null: false
+      t.integer "status", default: 0, null: false
+      t.boolean "trial", default: false, null: false
+      t.datetime "updated_at", null: false
+      t.integer "waitlist_position"
+      t.index [ "client_id" ], name: "index_bookings_on_client_id"
+      t.index [ "client_id" ], name: "index_bookings_on_client_id_when_trial", where: "trial"
+      t.index [ "contract_id" ], name: "index_bookings_on_contract_id"
+      t.index [ "contract_period_id" ], name: "index_bookings_on_contract_period_id"
+      t.index [ "session_id", "client_id" ], name: "index_bookings_on_session_id_and_client_id_when_held", unique: true, where: "(status = 0)"
+      t.index [ "session_id", "status" ], name: "index_bookings_on_session_id_and_status"
+      t.index [ "session_id", "waitlist_position" ], name: "index_bookings_waitlist_order", where: "(status = 4)"
+      t.check_constraint "(status = 4) = (waitlist_position IS NOT NULL)", name: "waitlist_position_iff_waitlisted"
+    end
+
+    create_table "clients", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.boolean "active", default: true, null: false
+      t.datetime "created_at", null: false
+      t.string "email"
+      t.datetime "email_verification_sent_at"
+      t.string "email_verification_token_digest"
+      t.datetime "email_verified_at"
+      t.string "first_name", null: false
+      t.datetime "invitation_sent_at"
+      t.string "invitation_token_digest"
+      t.string "last_name", null: false
+      t.string "password_digest"
+      t.string "phone"
+      t.datetime "reset_password_sent_at"
+      t.string "reset_password_token_digest"
+      t.integer "token_version", default: 0, null: false
+      t.datetime "updated_at", null: false
+      t.index "lower((email)::text)", name: "index_clients_on_lower_email", unique: true, where: "(email IS NOT NULL)"
+      t.index [ "email" ], name: "index_clients_on_email_trgm", opclass: :gin_trgm_ops, using: :gin
+      t.index [ "email_verification_token_digest" ], name: "index_clients_on_email_verification_token_digest", unique: true
+      t.index [ "first_name" ], name: "index_clients_on_first_name_trgm", opclass: :gin_trgm_ops, using: :gin
+      t.index [ "invitation_token_digest" ], name: "index_clients_on_invitation_token_digest", unique: true
+      t.index [ "last_name" ], name: "index_clients_on_last_name_trgm", opclass: :gin_trgm_ops, using: :gin
+      t.index [ "phone" ], name: "index_clients_on_phone_trgm", opclass: :gin_trgm_ops, using: :gin
+      t.index [ "reset_password_token_digest" ], name: "index_clients_on_reset_password_token_digest", unique: true
+    end
+
+    create_table "coaches", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.boolean "active", default: true, null: false
+      t.text "bio"
+      t.date "birthdate"
+      t.uuid "company_id", null: false
+      t.datetime "created_at", null: false
+      t.string "email"
+      t.string "first_name", null: false
+      t.string "last_name", null: false
+      t.string "phone"
+      t.string "photo_url"
+      t.datetime "updated_at", null: false
+      t.index [ "company_id" ], name: "index_coaches_on_company_id"
+      t.index [ "id", "company_id" ], name: "index_coaches_on_id_and_company_id", unique: true
+    end
+
+    create_table "companies", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.boolean "active", default: true, null: false
+      t.string "address"
+      t.uuid "admin_id", null: false
+      t.string "app_code"
+      t.string "city"
+      t.string "coach_key"
+      t.text "contract_terms"
+      t.string "country"
+      t.datetime "created_at", null: false
+      t.string "currency", default: "TND", null: false
+      t.text "description"
+      t.string "email"
+      t.decimal "latitude", precision: 10, scale: 6
+      t.string "locale", default: "fr", null: false
+      t.decimal "longitude", precision: 10, scale: 6
+      t.string "name", null: false
+      t.string "phone"
+      t.jsonb "settings", default: {}, null: false
+      t.datetime "setup_dismissed_at"
+      t.string "signatory_name"
+      t.string "slug"
+      t.string "tax_id"
+      t.string "timezone", default: "Africa/Tunis", null: false
+      t.datetime "updated_at", null: false
+      t.index [ "admin_id" ], name: "index_companies_on_admin_id"
+      t.index [ "app_code" ], name: "index_companies_on_app_code", unique: true
+      t.index [ "city" ], name: "index_companies_on_city_trgm", opclass: :gin_trgm_ops, using: :gin
+      t.index [ "coach_key" ], name: "index_companies_on_coach_key", unique: true
+      t.index [ "name" ], name: "index_companies_on_name_trgm", opclass: :gin_trgm_ops, using: :gin
+      t.index [ "settings" ], name: "index_companies_on_settings", using: :gin
+      t.index [ "slug" ], name: "index_companies_on_slug", unique: true
+    end
+
+    create_table "contract_invoice_sequences", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.uuid "company_id", null: false
+      t.datetime "created_at", null: false
+      t.integer "last_value", default: 0, null: false
+      t.datetime "updated_at", null: false
+      t.integer "year", null: false
+      t.index [ "company_id", "year" ], name: "index_contract_invoice_sequences_on_company_id_and_year", unique: true
+    end
+
+    create_table "contract_periods", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.decimal "base_price", precision: 10, scale: 2, null: false
+      t.uuid "contract_id", null: false
+      t.datetime "created_at", null: false
+      t.decimal "discount", precision: 10, scale: 2, default: "0.0", null: false
+      t.datetime "expires_at"
+      t.decimal "final_price", precision: 10, scale: 2
+      t.datetime "paused_at"
+      t.integer "payment_status", default: 0, null: false
+      t.integer "remaining_bookings"
+      t.datetime "starts_at"
+      t.integer "status", default: 0, null: false
+      t.datetime "updated_at", null: false
+      t.index [ "contract_id", "status" ], name: "index_contract_periods_on_contract_id_and_status"
+      t.index [ "contract_id" ], name: "index_contract_periods_on_contract_id"
+      t.index [ "status", "expires_at" ], name: "index_contract_periods_on_status_and_expires_at"
+      t.check_constraint "remaining_bookings IS NULL OR remaining_bookings >= 0", name: "remaining_bookings_not_negative"
+    end
+
+    create_table "contract_type_activities", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.uuid "activity_id", null: false
+      t.uuid "contract_type_id", null: false
+      t.datetime "created_at", null: false
+      t.decimal "price", precision: 10, scale: 2, null: false
+      t.datetime "updated_at", null: false
+      t.index [ "activity_id" ], name: "index_contract_type_activities_on_activity_id"
+      t.index [ "contract_type_id", "activity_id" ], name: "index_plan_activities_unique", unique: true
+      t.index [ "contract_type_id" ], name: "index_contract_type_activities_on_contract_type_id"
+    end
+
+    create_table "contract_type_packs", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.uuid "contract_type_id", null: false
+      t.datetime "created_at", null: false
+      t.uuid "pack_id", null: false
+      t.decimal "price", precision: 10, scale: 2, null: false
+      t.datetime "updated_at", null: false
+      t.index [ "contract_type_id", "pack_id" ], name: "index_contract_type_packs_on_contract_type_id_and_pack_id", unique: true
+      t.index [ "contract_type_id" ], name: "index_contract_type_packs_on_contract_type_id"
+      t.index [ "pack_id" ], name: "index_contract_type_packs_on_pack_id"
+    end
+
+    create_table "contract_types", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.boolean "active", default: true, null: false
+      t.integer "billing_period", default: 0, null: false
+      t.integer "booking_limit"
+      t.string "color", default: "#4f46e5", null: false
+      t.uuid "company_id", null: false
+      t.datetime "created_at", null: false
+      t.text "description"
+      t.string "name", null: false
+      t.boolean "priority_booking", default: false, null: false
+      t.integer "session_count"
+      t.boolean "unlimited_bookings", default: false, null: false
+      t.datetime "updated_at", null: false
+      t.integer "validity_days"
+      t.index [ "company_id" ], name: "index_contract_types_on_company_id"
+      t.index [ "id", "company_id" ], name: "index_contract_types_on_id_and_company_id", unique: true
+      t.index [ "name" ], name: "index_contract_types_on_name_trgm", opclass: :gin_trgm_ops, using: :gin
+      t.check_constraint "validity_days IS NULL OR validity_days > 0", name: "contract_types_validity_days_positive"
+    end
+
+    create_table "contracts", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.uuid "activity_id"
+      t.boolean "auto_renew", default: false, null: false
+      t.decimal "base_price", precision: 10, scale: 2, default: "0.0", null: false
+      t.uuid "client_id", null: false
+      t.uuid "company_id", null: false
+      t.uuid "contract_type_id", null: false
+      t.datetime "created_at", null: false
+      t.uuid "created_by_id"
+      t.decimal "discount", precision: 10, scale: 2, default: "0.0", null: false
+      t.datetime "expires_at"
+      t.decimal "final_price", precision: 10, scale: 2
+      t.string "invoice_ref", null: false
+      t.uuid "pack_id"
+      t.datetime "paused_at"
+      t.integer "payment_status", default: 0, null: false
+      t.integer "remaining_bookings"
+      t.uuid "renewed_from_id"
+      t.datetime "starts_at"
+      t.integer "status", default: 0, null: false
+      t.datetime "updated_at", null: false
+      t.index [ "activity_id" ], name: "index_contracts_on_activity_id"
+      t.index [ "client_id" ], name: "index_contracts_on_client_id"
+      t.index [ "company_id", "invoice_ref" ], name: "index_contracts_on_company_id_and_invoice_ref", unique: true
+      t.index [ "company_id" ], name: "index_contracts_on_company_id"
+      t.index [ "contract_type_id" ], name: "index_contracts_on_contract_type_id"
+      t.index [ "created_by_id" ], name: "index_contracts_on_created_by_id"
+      t.index [ "id", "company_id" ], name: "index_contracts_on_id_and_company_id", unique: true
+      t.index [ "pack_id" ], name: "index_contracts_on_pack_id"
+      t.index [ "renewed_from_id" ], name: "index_contracts_on_renewed_from_id"
+      t.index [ "status", "expires_at" ], name: "index_contracts_on_status_and_expires_at"
+      t.check_constraint "activity_id IS NULL OR pack_id IS NULL", name: "contracts_activity_or_pack"
+      t.check_constraint "remaining_bookings IS NULL OR remaining_bookings >= 0", name: "contracts_remaining_bookings_not_negative"
+    end
+
+    create_table "mail_templates", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.text "body", null: false
+      t.datetime "created_at", null: false
+      t.string "name", null: false
+      t.string "subject", null: false
+      t.datetime "updated_at", null: false
+      t.index [ "name" ], name: "index_mail_templates_on_name", unique: true
+    end
+
+    create_table "mailing_recipients", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.datetime "created_at", null: false
+      t.string "email", null: false
+      t.string "failure"
+      t.uuid "mailing_id", null: false
+      t.datetime "sent_at"
+      t.integer "status", default: 0, null: false
+      t.datetime "updated_at", null: false
+      t.uuid "user_id", null: false
+      t.index [ "mailing_id", "user_id" ], name: "index_mailing_recipients_on_mailing_id_and_user_id", unique: true
+      t.index [ "user_id" ], name: "index_mailing_recipients_on_user_id"
+    end
+
+    create_table "mailings", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.text "body", null: false
+      t.datetime "created_at", null: false
+      t.uuid "sent_by_id"
+      t.string "subject", null: false
+      t.datetime "updated_at", null: false
+      t.index [ "sent_by_id" ], name: "index_mailings_on_sent_by_id"
+    end
+
+    create_table "membership_requests", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.uuid "client_id", null: false
+      t.uuid "company_id", null: false
+      t.datetime "created_at", null: false
+      t.jsonb "membership", default: {}, null: false
+      t.jsonb "person", default: {}, null: false
+      t.uuid "requested_by_id"
+      t.datetime "sent_at", null: false
+      t.string "token_digest", null: false
+      t.datetime "updated_at", null: false
+      t.index [ "client_id" ], name: "index_membership_requests_on_client_id"
+      t.index [ "company_id", "client_id" ], name: "index_membership_requests_on_company_id_and_client_id", unique: true
+      t.index [ "company_id", "sent_at" ], name: "index_membership_requests_on_company_id_and_sent_at"
+      t.index [ "requested_by_id" ], name: "index_membership_requests_on_requested_by_id"
+      t.index [ "token_digest" ], name: "index_membership_requests_on_token_digest", unique: true
+    end
+
+    create_table "memberships", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.boolean "active", default: true, null: false
+      t.string "address"
+      t.uuid "client_id", null: false
+      t.uuid "company_id", null: false
+      t.datetime "created_at", null: false
+      t.date "date_of_birth"
+      t.string "emergency_contact_name"
+      t.string "emergency_contact_phone"
+      t.string "gender"
+      t.text "health_notes"
+      t.datetime "joined_at", null: false
+      t.text "notes"
+      t.datetime "updated_at", null: false
+      t.date "waiver_signed_on"
+      t.index [ "client_id", "company_id" ], name: "index_memberships_on_client_id_and_company_id", unique: true
+      t.index [ "client_id" ], name: "index_memberships_on_client_id"
+      t.index [ "company_id" ], name: "index_memberships_on_company_id"
+    end
+
+    create_table "notifications", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.uuid "company_id"
+      t.datetime "created_at", null: false
+      t.jsonb "data", default: {}, null: false
+      t.string "dedup_key", null: false
+      t.string "kind", null: false
+      t.datetime "read_at"
+      t.uuid "recipient_id", null: false
+      t.string "recipient_type", null: false
+      t.uuid "subject_id"
+      t.string "subject_type"
+      t.string "url", null: false
+      t.index [ "company_id", "dedup_key" ], name: "index_notifications_on_company_id_and_dedup_key", unique: true
+      t.index [ "company_id" ], name: "index_notifications_on_company_id"
+      t.index [ "recipient_id", "created_at" ], name: "index_notifications_on_recipient_id_and_created_at"
+      t.index [ "recipient_id", "read_at" ], name: "index_notifications_on_recipient_id_and_read_at"
+      t.index [ "recipient_id" ], name: "index_notifications_on_recipient_id"
+      t.index [ "recipient_type", "recipient_id", "created_at" ], name: "index_notifications_on_recipient_and_created_at"
+      t.index [ "subject_type", "subject_id" ], name: "index_notifications_on_subject_type_and_subject_id"
+    end
+
+    create_table "pack_activities", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.uuid "activity_id", null: false
+      t.datetime "created_at", null: false
+      t.uuid "pack_id", null: false
+      t.datetime "updated_at", null: false
+      t.index [ "activity_id" ], name: "index_pack_activities_on_activity_id"
+      t.index [ "pack_id", "activity_id" ], name: "index_pack_activities_on_pack_id_and_activity_id", unique: true
+      t.index [ "pack_id" ], name: "index_pack_activities_on_pack_id"
+    end
+
+    create_table "packs", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.boolean "active", default: true, null: false
+      t.uuid "company_id", null: false
+      t.datetime "created_at", null: false
+      t.text "description"
+      t.string "name", null: false
+      t.datetime "updated_at", null: false
+      t.index [ "company_id" ], name: "index_packs_on_company_id"
+      t.index [ "id", "company_id" ], name: "index_packs_on_id_and_company_id", unique: true
+    end
+
+    create_table "payments", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.decimal "amount", precision: 10, scale: 2, null: false
+      t.uuid "booking_id"
+      t.uuid "client_id", null: false
+      t.uuid "company_id", null: false
+      t.uuid "contract_id"
+      t.uuid "contract_period_id"
+      t.datetime "created_at", null: false
+      t.uuid "created_by_id"
+      t.string "currency", default: "TND", null: false
+      t.text "notes"
+      t.datetime "paid_at"
+      t.integer "payment_method", default: 0, null: false
+      t.integer "status", default: 0, null: false
+      t.datetime "updated_at", null: false
+      t.index [ "booking_id" ], name: "index_payments_on_booking_id"
+      t.index [ "client_id" ], name: "index_payments_on_client_id"
+      t.index [ "company_id", "status", "created_at" ], name: "index_payments_on_company_id_and_status_and_created_at"
+      t.index [ "company_id" ], name: "index_payments_on_company_id"
+      t.index [ "contract_id" ], name: "index_payments_on_contract_id"
+      t.index [ "contract_period_id" ], name: "index_payments_on_contract_period_id"
+      t.index [ "created_by_id" ], name: "index_payments_on_created_by_id"
+    end
+
+    create_table "platform_settings", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.string "address"
+      t.string "city"
+      t.datetime "created_at", null: false
+      t.string "email"
+      t.string "legal_name"
+      t.string "phone"
+      t.string "seeded_mail_templates", default: [], null: false, array: true
+      t.string "tax_id"
+      t.datetime "updated_at", null: false
+      t.string "website"
+    end
+
+    create_table "recurring_schedules", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.boolean "active", default: true, null: false
+      t.uuid "activity_id", null: false
+      t.uuid "coach_id"
+      t.uuid "company_id", null: false
+      t.datetime "created_at", null: false
+      t.date "ends_on", null: false
+      t.integer "recurrence_type", default: 0, null: false
+      t.uuid "space_id"
+      t.time "start_time", null: false
+      t.date "starts_on", null: false
+      t.datetime "updated_at", null: false
+      t.integer "weekdays", default: [], null: false, array: true
+      t.index [ "activity_id" ], name: "index_recurring_schedules_on_activity_id"
+      t.index [ "coach_id" ], name: "index_recurring_schedules_on_coach_id"
+      t.index [ "company_id" ], name: "index_recurring_schedules_on_company_id"
+      t.index [ "id", "company_id" ], name: "index_recurring_schedules_on_id_and_company_id", unique: true
+      t.index [ "space_id" ], name: "index_recurring_schedules_on_space_id"
+      t.index [ "weekdays" ], name: "index_recurring_schedules_on_weekdays", using: :gin
+    end
+
+    create_table "roles", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.boolean "builtin", default: false, null: false
+      t.uuid "company_id", null: false
+      t.datetime "created_at", null: false
+      t.string "key", null: false
+      t.string "name", null: false
+      t.string "permissions", default: [], null: false, array: true
+      t.integer "position", default: 0, null: false
+      t.integer "staff_members_count", default: 0, null: false
+      t.datetime "updated_at", null: false
+      t.index [ "company_id", "key" ], name: "index_roles_on_company_id_and_key", unique: true
+      t.index [ "company_id" ], name: "index_roles_on_company_id"
+      t.index [ "id", "company_id" ], name: "index_roles_on_id_and_company_id", unique: true
+    end
+
+    create_table "sessions", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.uuid "activity_id", null: false
+      t.integer "capacity", null: false
+      t.uuid "coach_id"
+      t.uuid "company_id", null: false
+      t.datetime "created_at", null: false
+      t.datetime "ends_at", null: false
+      t.decimal "price", precision: 10, scale: 2, default: "0.0", null: false
+      t.uuid "recurring_schedule_id"
+      t.uuid "space_id"
+      t.datetime "starts_at", null: false
+      t.integer "status", default: 0, null: false
+      t.datetime "updated_at", null: false
+      t.index [ "activity_id" ], name: "index_sessions_on_activity_id"
+      t.index [ "coach_id", "starts_at" ], name: "index_sessions_on_coach_id_and_starts_at"
+      t.index [ "company_id" ], name: "index_sessions_on_company_id"
+      t.index [ "recurring_schedule_id" ], name: "index_sessions_on_recurring_schedule_id"
+      t.index [ "space_id" ], name: "index_sessions_on_space_id"
+      t.exclusion_constraint "coach_id WITH =, tsrange(starts_at, ends_at) WITH &&", where: "(status = 0) AND (coach_id IS NOT NULL)", using: :gist, name: "no_overlapping_coach_sessions"
+      t.exclusion_constraint "space_id WITH =, tsrange(starts_at, ends_at) WITH &&", where: "(status = 0) AND (space_id IS NOT NULL)", using: :gist, name: "no_overlapping_space_sessions"
+    end
+
+    create_table "spaces", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.boolean "active", default: true, null: false
+      t.integer "capacity"
+      t.uuid "company_id", null: false
+      t.datetime "created_at", null: false
+      t.string "kind"
+      t.string "name", null: false
+      t.jsonb "settings", default: {}, null: false
+      t.datetime "updated_at", null: false
+      t.index [ "company_id", "name" ], name: "index_spaces_on_company_id_and_name", unique: true
+      t.index [ "company_id" ], name: "index_spaces_on_company_id"
+      t.index [ "id", "company_id" ], name: "index_spaces_on_id_and_company_id", unique: true
+      t.index [ "name" ], name: "index_spaces_on_name_trgm", opclass: :gin_trgm_ops, using: :gin
+      t.check_constraint "capacity IS NULL OR capacity > 0", name: "spaces_capacity_positive"
+    end
+
+    create_table "staff_members", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.boolean "active", default: true, null: false
+      t.date "birthdate"
+      t.uuid "coach_id"
+      t.uuid "company_id", null: false
+      t.datetime "created_at", null: false
+      t.uuid "role_id", null: false
+      t.datetime "updated_at", null: false
+      t.uuid "user_id", null: false
+      t.index [ "coach_id" ], name: "index_staff_members_on_coach_id"
+      t.index [ "company_id" ], name: "index_staff_members_on_company_id"
+      t.index [ "role_id" ], name: "index_staff_members_on_role_id"
+      t.index [ "user_id", "company_id" ], name: "index_staff_members_on_user_id_and_company_id", unique: true
+      t.index [ "user_id" ], name: "index_staff_members_on_user_id"
+    end
+
+    create_table "support_tickets", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.uuid "company_id", null: false
+      t.datetime "created_at", null: false
+      t.uuid "created_by_id", null: false
+      t.text "message", null: false
+      t.integer "status", default: 0, null: false
+      t.string "subject", null: false
+      t.datetime "updated_at", null: false
+      t.index [ "company_id" ], name: "index_support_tickets_on_company_id"
+      t.index [ "created_by_id" ], name: "index_support_tickets_on_created_by_id"
+      t.index [ "status" ], name: "index_support_tickets_on_status"
+    end
+
+    create_table "users", id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.datetime "access_suspended_at"
+      t.boolean "active", default: true, null: false
+      t.uuid "active_company_id"
+      t.datetime "created_at", null: false
+      t.datetime "credentials_sent_at"
+      t.string "email", null: false
+      t.datetime "email_verification_sent_at"
+      t.string "email_verification_token_digest"
+      t.datetime "email_verified_at"
+      t.string "first_name", null: false
+      t.string "last_name", null: false
+      t.string "locale", default: "fr", null: false
+      t.boolean "must_change_password", default: false, null: false
+      t.datetime "otp_enabled_at"
+      t.datetime "otp_last_used_at"
+      t.text "otp_secret_ciphertext"
+      t.string "password_digest", null: false
+      t.string "phone"
+      t.datetime "reset_password_sent_at"
+      t.string "reset_password_token_digest"
+      t.integer "role", default: 1, null: false
+      t.datetime "terms_accepted_at"
+      t.integer "token_version", default: 0, null: false
+      t.datetime "updated_at", null: false
+      t.index [ "active_company_id" ], name: "index_users_on_active_company_id"
+      t.index [ "email" ], name: "index_users_on_email", unique: true
+      t.index [ "email" ], name: "index_users_on_email_trgm", opclass: :gin_trgm_ops, using: :gin
+      t.index [ "email_verification_token_digest" ], name: "index_users_on_email_verification_token_digest", unique: true
+      t.index [ "first_name" ], name: "index_users_on_first_name_trgm", opclass: :gin_trgm_ops, using: :gin
+      t.index [ "last_name" ], name: "index_users_on_last_name_trgm", opclass: :gin_trgm_ops, using: :gin
+      t.index [ "reset_password_token_digest" ], name: "index_users_on_reset_password_token_digest", unique: true
+    end
+
+    add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+    add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+    add_foreign_key "activities", "activity_templates"
+    add_foreign_key "activities", "companies"
+    add_foreign_key "activity_spaces", "activities"
+    add_foreign_key "activity_spaces", "spaces"
+    add_foreign_key "app_updates", "users", column: "created_by_id"
+    add_foreign_key "attendance_records", "bookings"
+    add_foreign_key "attendance_records", "users", column: "marked_by_id"
+    add_foreign_key "audit_logs", "companies"
+    add_foreign_key "audit_logs", "users"
+    add_foreign_key "bookings", "clients"
+    add_foreign_key "bookings", "contract_periods"
+    add_foreign_key "bookings", "contracts"
+    add_foreign_key "bookings", "sessions"
+    add_foreign_key "coaches", "companies"
+    add_foreign_key "companies", "users", column: "admin_id"
+    add_foreign_key "contract_invoice_sequences", "companies", on_delete: :cascade
+    add_foreign_key "contract_periods", "contracts"
+    add_foreign_key "contract_type_activities", "activities"
+    add_foreign_key "contract_type_activities", "contract_types"
+    add_foreign_key "contract_type_packs", "contract_types"
+    add_foreign_key "contract_type_packs", "packs"
+    add_foreign_key "contract_types", "companies"
+    add_foreign_key "contracts", "activities"
+    add_foreign_key "contracts", "activities", column: [ "activity_id", "company_id" ], primary_key: [ "id", "company_id" ], name: "fk_contracts_activity_id_same_company"
+    add_foreign_key "contracts", "clients"
+    add_foreign_key "contracts", "companies"
+    add_foreign_key "contracts", "contract_types"
+    add_foreign_key "contracts", "contract_types", column: [ "contract_type_id", "company_id" ], primary_key: [ "id", "company_id" ], name: "fk_contracts_contract_type_id_same_company"
+    add_foreign_key "contracts", "contracts", column: "renewed_from_id"
+    add_foreign_key "contracts", "contracts", column: [ "renewed_from_id", "company_id" ], primary_key: [ "id", "company_id" ], name: "fk_contracts_renewed_from_id_same_company"
+    add_foreign_key "contracts", "packs"
+    add_foreign_key "contracts", "packs", column: [ "pack_id", "company_id" ], primary_key: [ "id", "company_id" ], name: "fk_contracts_pack_id_same_company"
+    add_foreign_key "contracts", "users", column: "created_by_id"
+    add_foreign_key "mailing_recipients", "mailings", on_delete: :cascade
+    add_foreign_key "mailing_recipients", "users", on_delete: :cascade
+    add_foreign_key "mailings", "users", column: "sent_by_id", on_delete: :nullify
+    add_foreign_key "membership_requests", "clients"
+    add_foreign_key "membership_requests", "companies"
+    add_foreign_key "membership_requests", "users", column: "requested_by_id", on_delete: :nullify
+    add_foreign_key "memberships", "clients"
+    add_foreign_key "memberships", "companies"
+    add_foreign_key "notifications", "companies"
+    add_foreign_key "pack_activities", "activities"
+    add_foreign_key "pack_activities", "packs"
+    add_foreign_key "packs", "companies"
+    add_foreign_key "payments", "bookings"
+    add_foreign_key "payments", "clients"
+    add_foreign_key "payments", "companies"
+    add_foreign_key "payments", "contract_periods"
+    add_foreign_key "payments", "contracts"
+    add_foreign_key "payments", "contracts", column: [ "contract_id", "company_id" ], primary_key: [ "id", "company_id" ], name: "fk_payments_contract_id_same_company"
+    add_foreign_key "payments", "users", column: "created_by_id"
+    add_foreign_key "recurring_schedules", "activities"
+    add_foreign_key "recurring_schedules", "activities", column: [ "activity_id", "company_id" ], primary_key: [ "id", "company_id" ], name: "fk_recurring_schedules_activity_id_same_company"
+    add_foreign_key "recurring_schedules", "coaches"
+    add_foreign_key "recurring_schedules", "coaches", column: [ "coach_id", "company_id" ], primary_key: [ "id", "company_id" ], name: "fk_recurring_schedules_coach_id_same_company"
+    add_foreign_key "recurring_schedules", "companies"
+    add_foreign_key "recurring_schedules", "spaces"
+    add_foreign_key "recurring_schedules", "spaces", column: [ "space_id", "company_id" ], primary_key: [ "id", "company_id" ], name: "fk_recurring_schedules_space_id_same_company"
+    add_foreign_key "roles", "companies"
+    add_foreign_key "sessions", "activities"
+    add_foreign_key "sessions", "activities", column: [ "activity_id", "company_id" ], primary_key: [ "id", "company_id" ], name: "fk_sessions_activity_id_same_company"
+    add_foreign_key "sessions", "coaches"
+    add_foreign_key "sessions", "coaches", column: [ "coach_id", "company_id" ], primary_key: [ "id", "company_id" ], name: "fk_sessions_coach_id_same_company"
+    add_foreign_key "sessions", "companies"
+    add_foreign_key "sessions", "recurring_schedules"
+    add_foreign_key "sessions", "recurring_schedules", column: [ "recurring_schedule_id", "company_id" ], primary_key: [ "id", "company_id" ], name: "fk_sessions_recurring_schedule_id_same_company"
+    add_foreign_key "sessions", "spaces"
+    add_foreign_key "sessions", "spaces", column: [ "space_id", "company_id" ], primary_key: [ "id", "company_id" ], name: "fk_sessions_space_id_same_company"
+    add_foreign_key "spaces", "companies"
+    add_foreign_key "staff_members", "coaches"
+    add_foreign_key "staff_members", "coaches", column: [ "coach_id", "company_id" ], primary_key: [ "id", "company_id" ], name: "fk_staff_members_coach_id_same_company"
+    add_foreign_key "staff_members", "companies"
+    add_foreign_key "staff_members", "roles"
+    add_foreign_key "staff_members", "roles", column: [ "role_id", "company_id" ], primary_key: [ "id", "company_id" ], name: "fk_staff_members_role_id_same_company"
+    add_foreign_key "staff_members", "users"
+    add_foreign_key "support_tickets", "companies"
+    add_foreign_key "support_tickets", "users", column: "created_by_id"
+    add_foreign_key "users", "companies", column: "active_company_id", on_delete: :nullify
+  end
+end

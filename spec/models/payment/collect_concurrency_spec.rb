@@ -49,22 +49,3 @@ RSpec.describe "POST /api/v1/payments across gyms", type: :request do
     expect(Payment.where(contract: contract)).to be_empty
   end
 end
-
-RSpec.describe Invoice, ".next_number" do
-  it "hands out the first number of a year once, however many ask at once" do
-    numbers = travel_to(Time.zone.local(2031, 1, 1, 9)) do
-      4.times.map do
-        Thread.new { ActiveRecord::Base.connection_pool.with_connection { described_class.next_number } }
-      end.map(&:value)
-    end
-
-    expect(numbers.uniq.size).to eq(4)
-    expect(numbers).to include("FIT-2031-0001")
-  end
-
-  it "keeps counting past 9999" do
-    ActiveRecord::Base.connection.execute("INSERT INTO invoice_sequences (year, last_value) VALUES (2032, 9999)")
-
-    expect(described_class.next_number(now: Time.zone.local(2032, 6, 1))).to eq("FIT-2032-10000")
-  end
-end

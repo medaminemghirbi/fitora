@@ -9,7 +9,6 @@ not be collapsed:
 1. Authentication  — who is this?              (JWT → User XOR Client)
 2. Tenancy         — whose data may they see?  (derived server-side, never from params)
 3. Capability      — may they do this thing?   (Role permissions)
-4. Commercial      — is the account open?      (trial/subscription lock, 402)
 ```
 
 A feature flag in `company.settings` is **not** a gate. It changes what the
@@ -156,7 +155,8 @@ Client              → /superadmin/*                      403
 Staff               → /superadmin/*                      403
 Superadmin               → GET /clients                  403 (no tenant)
 Unauthenticated     → every endpoint                401
-Locked company staff→ every operational endpoint    402
+First sign-in unfinished → every operational endpoint  403
+Suspended account   → POST /auth/login              403
 Mass assignment     → company_id / role_id in body  ignored, never applied
 ```
 

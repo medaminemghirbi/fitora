@@ -167,46 +167,12 @@
 </div>
 
 <div class="dashboard-utility-bar">
-  <% if current_user.admin? %>
-    <button type="button" class="dashboard-utility-toggle" aria-expanded="false" data-toggle="export" data-action="dashboard-page#toggle">
-      <i class="bi bi-download"></i> <%= ngt("dashboard.export_title") %>
-      <i class="bi bi-chevron-down"></i>
-    </button>
-  <% end %>
   <button type="button" class="dashboard-utility-toggle" aria-expanded="false" data-toggle="activity" data-action="dashboard-page#toggle">
     <i class="bi bi-clock-history"></i> <%= ngt("dashboard.recent_activity") %>
     <i class="bi bi-chevron-down"></i>
   </button>
 </div>
 
-<template data-dashboard-page-target="exportCard">
-  <div class="app-card" data-card="export">
-    <div class="app-card-body">
-      <div class="d-flex gap-2 align-items-end flex-wrap">
-        <div>
-          <label for="export-period-type"><%= ngt("dashboard.export_period_type") %></label>
-          <select id="export-period-type" class="form-select form-select-sm" data-action="dashboard-page#periodType">
-            <option value="month"><%= ngt("dashboard.export_monthly") %></option>
-            <option value="year"><%= ngt("dashboard.export_yearly") %></option>
-          </select>
-        </div>
-        <div data-period="month">
-          <label for="export-month"><%= ngt("dashboard.export_month") %></label>
-          <input id="export-month" type="month" class="form-control form-control-sm" value="<%= now.strftime("%Y-%m") %>" />
-        </div>
-        <button type="button" class="btn btn-sm btn-primary" data-action="dashboard-page#exportReport">
-          <i class="bi bi-download"></i> <%= ngt("dashboard.export_button") %>
-        </button>
-      </div>
-    </div>
-  </div>
-</template>
-<template data-dashboard-page-target="yearField">
-  <div data-period="year">
-    <label for="export-year"><%= ngt("dashboard.export_year") %></label>
-    <input id="export-year" type="number" class="form-control form-control-sm" style="width: 110px" value="<%= now.year %>" />
-  </div>
-</template>
 <template data-dashboard-page-target="activityCard">
   <div class="app-card" data-card="activity">
     <div class="app-card-body">

@@ -1,9 +1,9 @@
 # Shared by User (admin/staff — never superadmin) and Client.
 #
-# For an admin it is a gate: a gym opening its own account confirms the
-# address before anything past sign-up opens (see
-# Api::V1::BaseController#require_confirmed_email!), so the trial never
-# starts on a mistyped address nobody reads. For staff and members — whose
+# For an admin it is a gate: an account a superadmin opened confirms its
+# address before anything opens (see
+# Api::V1::BaseController#require_confirmed_email!), so a mistyped address
+# nobody reads never ends up holding a gym. For staff and members — whose
 # addresses the gym typed in — it stays informational: it lets the frontend
 # show "confirm your email" and lets us trust the address for things like
 # the password-reset flow itself.

@@ -1,0 +1,60 @@
+<%# Opening a gym's account: the salle and who runs it. The admin gets the rest
+    by e-mail — the login, a generated password and the link that confirms the
+    address — and finishes on first sign-in. The time zone's full list comes
+    from the page's controller; without it, the field still holds its value. %>
+<% v = @company_values; a = @admin_values; e = @errors %>
+<% superadmin_crumbs [ ngt("superadmin.companies"), "/superadmin/companies" ], [ ngt("superadmin.create.cta") ] %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.create.title"), desc: ngt("superadmin.create.subtitle") } do %><% end %>
+
+<form action="/superadmin/companies" method="post" novalidate class="app-card sa-form-card" data-controller="superadmin-new-company" data-turbo="false">
+  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+
+  <div class="sa-card-section">
+    <h3><%= ngt("superadmin.create.company_section") %></h3>
+  </div>
+  <div class="app-card-body sa-form-grid">
+    <%= render "web/superadmin/companies/field", name: "company[name]", label: ngt("salles.name"), required: true, value: v[:name], error: e[:name] %>
+    <%= render "web/superadmin/companies/field", name: "company[city]", label: ngt("salles.city"), value: v[:city], error: e[:city] %>
+    <%= render "web/superadmin/companies/field", name: "company[address]", label: ngt("superadmin.console.address"), value: v[:address], error: e[:address] %>
+    <%= render "web/superadmin/companies/field", name: "company[phone]", label: ngt("salles.phone"), type: "tel", ltr: true, value: v[:phone], error: e[:phone] %>
+    <div>
+      <label class="form-label" for="company-timezone"><%= ngt("company_setup.timezone") %> *</label>
+      <select id="company-timezone" name="company[timezone]" class="form-select<%= " is-invalid" if e[:timezone] %>" data-superadmin-new-company-target="timezone">
+        <option value="<%= v[:timezone] %>" selected><%= v[:timezone] %></option>
+      </select>
+      <% if e[:timezone] %><div class="invalid-feedback d-block"><%= e[:timezone] %></div><% end %>
+    </div>
+    <div>
+      <label class="form-label" for="company-currency"><%= ngt("superadmin.currency") %> *</label>
+      <select id="company-currency" name="company[currency]" class="form-select">
+        <% CurrencyCatalog.options.each do |opt| %>
+          <option value="<%= opt[:code] %>"<%= raw(" selected") if opt[:code] == v[:currency] %>><%= ngt("currency.#{opt[:code]}") %> — <%= opt[:symbol] %> (<%= opt[:code] %>)</option>
+        <% end %>
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="company-locale"><%= ngt("superadmin.language") %> *</label>
+      <select id="company-locale" name="company[locale]" class="form-select">
+        <% Company::LOCALES.each do |code| %>
+          <option value="<%= code %>"<%= raw(" selected") if code == v[:locale] %>><%= ngt("language.#{code}") %></option>
+        <% end %>
+      </select>
+    </div>
+  </div>
+
+  <div class="sa-card-section">
+    <h3><%= ngt("superadmin.create.admin_section") %></h3>
+    <p class="sa-sub"><%= ngt("superadmin.create.admin_hint") %></p>
+  </div>
+  <div class="app-card-body sa-form-grid">
+    <%= render "web/superadmin/companies/field", name: "admin[first_name]", label: ngt("coaches.first_name"), required: true, value: a[:first_name], error: e[:first_name] %>
+    <%= render "web/superadmin/companies/field", name: "admin[last_name]", label: ngt("coaches.last_name"), required: true, value: a[:last_name], error: e[:last_name] %>
+    <%= render "web/superadmin/companies/field", name: "admin[email]", label: ngt("auth.email"), required: true, type: "email", ltr: true, value: a[:email], error: e[:email] %>
+    <%= render "web/superadmin/companies/field", name: "admin[phone]", label: ngt("superadmin.console.phone"), type: "tel", ltr: true, value: a[:phone] %>
+  </div>
+
+  <div class="sa-form-foot">
+    <a href="/superadmin/companies" class="btn btn-outline-secondary me-2"><%= ngt("common.cancel") %></a>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> <%= ngt("superadmin.create.submit") %></button>
+  </div>
+</form>

@@ -1,15 +1,16 @@
 <%# ng: landing %>
 <%# ng-host: landing %>
 <%# LandingComponent (features/landing/landing.component.html). What moves
-    without leaving the page — the menu, the theme, the booking mock, the
-    billing period, the questions and the closing form's check — is the
-    landing controller's; the language reloads the page in it (D6). %>
+    without leaving the page — the menu, the theme, the booking mock and the
+    questions — is the landing controller's; the language reloads the page in
+    it (D6). Nobody signs up here: accounts are opened by Fitora, so every call
+    to action asks for a demo or signs an existing client in. %>
 <% days = landing_booking_days
    taken = Web::LandingHelper::LANDING_TAKEN_BY_DAY.first
-   faqs = [ 1, 4, 9, 3, 8, 7 ]
+   faqs = [ 10, 11, 1, 4, 9, 3, 7 ]
+   demo = "mailto:contact@fitora.io"
    locales = [ [ "fr", "Français", "FR" ], [ "en", "English", "EN" ], [ "ar", "العربية", "ع" ] ] %>
-<div class="lp" data-controller="landing" data-landing-taken-value="<%= Web::LandingHelper::LANDING_TAKEN_BY_DAY.to_json %>"
-     data-landing-billing-labels-value="<%= { monthly: ngt("landing.per_month"), yearly: ngt("landing.per_year") }.to_json %>">
+<div class="lp" data-controller="landing" data-landing-taken-value="<%= Web::LandingHelper::LANDING_TAKEN_BY_DAY.to_json %>">
   <header class="lp-nav">
     <div class="lp-shell lp-nav-in">
       <a href="/" class="lp-brand">
@@ -22,7 +23,7 @@
       <nav class="lp-nav-links" aria-label="<%= ngt("landing.nav_menu") %>">
         <a href="/#features"><%= ngt("landing.nav_features") %></a>
         <a href="/#flow"><%= ngt("landing.nav_how") %></a>
-        <a href="/#pricing"><%= ngt("landing.pricing_kicker") %></a>
+        <a href="/#offer"><%= ngt("landing.nav_offer") %></a>
         <a href="/#faq"><%= ngt("landing.footer_faq") %></a>
       </nav>
 
@@ -38,7 +39,7 @@
         </button>
 
         <a href="/connexion" class="lp-btn lp-btn--ghost lp-hide-md"><%= ngt("auth.sign_in") %></a>
-        <a href="/inscription" class="lp-btn lp-btn--ink lp-hide-md"><%= ngt("landing.cta_start") %></a>
+        <a href="<%= demo %>" class="lp-btn lp-btn--ink lp-hide-md"><%= ngt("landing.hero_cta_demo") %></a>
 
         <button type="button" class="lp-icon-btn lp-nav-burger" data-action="landing#toggleMenu" data-landing-target="burger"
                 aria-label="<%= ngt("landing.nav_menu") %>" aria-expanded="false">
@@ -50,11 +51,11 @@
     <div class="lp-mobile-menu" data-landing-target="menu">
       <a href="/#features" data-action="landing#closeMenu"><%= ngt("landing.nav_features") %></a>
       <a href="/#flow" data-action="landing#closeMenu"><%= ngt("landing.nav_how") %></a>
-      <a href="/#pricing" data-action="landing#closeMenu"><%= ngt("landing.pricing_kicker") %></a>
+      <a href="/#offer" data-action="landing#closeMenu"><%= ngt("landing.nav_offer") %></a>
       <a href="/#faq" data-action="landing#closeMenu"><%= ngt("landing.footer_faq") %></a>
       <div class="lp-mobile-cta">
         <a href="/connexion" class="lp-btn lp-btn--ghost" data-action="landing#closeMenu"><%= ngt("auth.sign_in") %></a>
-        <a href="/inscription" class="lp-btn lp-btn--lime" data-action="landing#closeMenu"><%= ngt("landing.cta_start") %></a>
+        <a href="<%= demo %>" class="lp-btn lp-btn--lime" data-action="landing#closeMenu"><%= ngt("landing.hero_cta_demo") %></a>
       </div>
     </div>
   </header>
@@ -71,11 +72,11 @@
         </h1>
         <p class="lp-lead"><%= ngt("landing.hero_subtitle") %></p>
         <div class="lp-hero-cta">
-          <a href="/inscription" class="lp-btn lp-btn--lime lp-btn--lg">
-            <%= ngt("landing.hero_cta_primary") %>
+          <a href="<%= demo %>" class="lp-btn lp-btn--lime lp-btn--lg">
+            <%= ngt("landing.hero_cta_demo") %>
             <i class="bi bi-arrow-right lp-arrow" aria-hidden="true"></i>
           </a>
-          <a href="mailto:contact@fitora.io" class="lp-btn lp-btn--ghost lp-btn--lg"><%= ngt("landing.hero_cta_demo") %></a>
+          <a href="/connexion" class="lp-btn lp-btn--ghost lp-btn--lg"><%= ngt("auth.sign_in") %></a>
         </div>
         <ul class="lp-points">
           <% %w[landing.hero_point_1 landing.hero_point_2 landing.hero_point_3].each do |point| %>
@@ -85,7 +86,7 @@
         <dl class="lp-stats">
           <div><dt>0</dt><dd><%= ngt("landing.number_no_clash_short") %></dd></div>
           <div><dt>3</dt><dd><%= ngt("landing.number_languages_short") %></dd></div>
-          <div><dt><%= ngt("landing.number_trial_value") %></dt><dd><%= ngt("landing.number_trial_short") %></dd></div>
+          <div><dt><%= ngt("landing.number_all_value") %></dt><dd><%= ngt("landing.number_all_short") %></dd></div>
         </dl>
       </div>
 
@@ -185,7 +186,7 @@
           <div class="lp-with-foot">
             <span><%= ngt("landing.stats_benefit_1") %></span>
             <span><%= ngt("landing.stats_benefit_4") %></span>
-            <span><%= ngt("landing.pricing_item_6") %></span>
+            <span><%= ngt("landing.offer_item_updates") %></span>
           </div>
         </div>
       </div>
@@ -202,16 +203,12 @@
         <p class="lp-lead"><%= ngt("landing.features_lead") %></p>
       </div>
       <div class="lp-features">
-        <%# In the order a studio meets them with a new client; `pro` needs
-            the member app, which only a paid Pro plan opens. %>
-        <% [ [ "bi-calendar3", "planning" ], [ "bi-clock", "slots", true ], [ "bi-ticket-perforated", "memberships" ],
-             [ "bi-person-plus", "trial" ], [ "bi-bell", "reminders" ], [ "bi-heart-pulse", "member" ] ].each do |icon, key, pro| %>
+        <%# In the order a studio meets them with a new client. %>
+        <% [ [ "bi-calendar3", "planning" ], [ "bi-clock", "slots" ], [ "bi-ticket-perforated", "memberships" ],
+             [ "bi-person-plus", "trial" ], [ "bi-bell", "reminders" ], [ "bi-heart-pulse", "member" ] ].each do |icon, key| %>
           <article class="lp-feature">
             <div class="lp-feature-top">
               <span class="lp-feature-ic" aria-hidden="true"><i class="bi <%= icon %>"></i></span>
-              <% if pro %>
-                <span class="lp-pro">Pro</span>
-              <% end %>
             </div>
             <h3><%= ngt("landing.f_#{key}_t") %></h3>
             <p><%= ngt("landing.f_#{key}_d") %></p>
@@ -294,7 +291,7 @@
             </div>
           </li>
 
-          <%# 3. The till catches up %>
+          <%# 3. The payments catch up %>
           <li>
             <div class="lp-mock" aria-hidden="true">
               <div class="lp-receipt">
@@ -349,7 +346,7 @@
         </div>
 
         <div class="lp-tile lp-tile--tint">
-          <span class="lp-tile-label"><i aria-hidden="true"></i><%= ngt("landing.screens_coach") %><span class="lp-pro">Pro</span></span>
+          <span class="lp-tile-label"><i aria-hidden="true"></i><%= ngt("landing.screens_coach") %></span>
           <ul class="lp-coach" aria-hidden="true">
             <li><span>07:30</span><b>EMS</b><small>Cabine 1</small></li>
             <li><span>12:30</span><b>Coaching privé</b><small>Studio 2</small></li>
@@ -359,7 +356,7 @@
         </div>
 
         <div class="lp-tile">
-          <span class="lp-tile-label"><i aria-hidden="true"></i><%= ngt("landing.screens_member") %><span class="lp-pro">Pro</span></span>
+          <span class="lp-tile-label"><i aria-hidden="true"></i><%= ngt("landing.screens_member") %></span>
           <h3><%= ngt("landing.screens_member_t") %></h3>
           <p><%= ngt("landing.screens_member_d") %></p>
         </div>
@@ -382,58 +379,57 @@
       </div>
     </section>
 
-    <%# PRICING — the two plans; the trial opens both. Both periods' prices
-        are on the page; the billing switch shows one. %>
-    <section class="lp-section lp-section--alt" id="pricing">
+    <%# THE OFFER — one product, everything in it, and how an account opens: no
+        prices here, they are agreed with Fitora. %>
+    <section class="lp-section lp-section--alt" id="offer">
       <div class="lp-shell">
         <div class="lp-head">
-          <span class="lp-kicker"><%= ngt("landing.pricing_kicker") %></span>
+          <span class="lp-kicker"><%= ngt("landing.nav_offer") %></span>
           <h2 class="lp-h2">
-            <%= ngt("landing.pricing_title_1") %>
-            <em><%= ngt("landing.pricing_title_2") %></em>
+            <%= ngt("landing.offer_title_1") %>
+            <em><%= ngt("landing.offer_title_2") %></em>
           </h2>
-          <p class="lp-lead"><%= ngt("landing.pricing_lead_plans") %></p>
-        </div>
-
-        <div class="lp-billing" role="group" aria-label="<%= ngt("landing.billing_label") %>">
-          <button type="button" class="is-on" aria-pressed="true" data-action="landing#pickBilling" data-landing-billing-param="monthly" data-landing-target="billing">
-            <%= ngt("landing.billing_monthly") %>
-          </button>
-          <button type="button" aria-pressed="false" data-action="landing#pickBilling" data-landing-billing-param="yearly" data-landing-target="billing">
-            <%= ngt("landing.billing_yearly") %> <small>−<%= Web::LandingHelper::LANDING_ANNUAL_DISCOUNT %> %</small>
-          </button>
+          <p class="lp-lead"><%= ngt("landing.offer_lead") %></p>
         </div>
 
         <div class="lp-plans">
-          <% Web::LandingHelper::LANDING_PLANS.each do |plan| %>
-            <% pro = plan[:key] == "pro" %>
-            <article class="lp-plan<%= " is-featured" if pro %>">
-              <div class="lp-plan-head">
-                <h3><%= ngt("landing.plan_#{plan[:key]}") %></h3>
-                <% if pro %>
-                  <span class="lp-pill-lime"><%= ngt("landing.plan_pro_badge") %></span>
-                <% end %>
-              </div>
-              <p class="lp-plan-for"><%= ngt("landing.plan_#{plan[:key]}_for") %></p>
-              <div class="lp-plan-price">
-                <b data-landing-target="price" data-monthly="<%= landing_price(plan[:key], "monthly") %>" data-yearly="<%= landing_price(plan[:key], "yearly") %>"><%= landing_price(plan[:key], "monthly") %></b>
-                <span data-landing-target="period">DT / <%= ngt("landing.per_month") %></span>
-              </div>
-              <ul class="lp-plan-items">
-                <% plan[:items].each do |item| %>
-                  <li><span class="lp-tick" aria-hidden="true"><i class="bi bi-check-lg"></i></span><%= ngt(item) %></li>
-                <% end %>
-              </ul>
-              <a href="/inscription" class="lp-btn lp-btn--lg lp-btn--block <%= pro ? "lp-btn--lime" : "lp-btn--ink" %>">
-                <%= ngt("landing.hero_cta_primary") %>
-              </a>
-            </article>
-          <% end %>
+          <article class="lp-plan is-featured">
+            <div class="lp-plan-head">
+              <h3><%= ngt("landing.offer_name") %></h3>
+              <span class="lp-pill-lime"><%= ngt("landing.offer_badge") %></span>
+            </div>
+            <p class="lp-plan-for"><%= ngt("landing.offer_for") %></p>
+            <ul class="lp-plan-items">
+              <% %w[all multi_salle member_app custom_roles branding print updates].each do |item| %>
+                <li><span class="lp-tick" aria-hidden="true"><i class="bi bi-check-lg"></i></span><%= ngt("landing.offer_item_#{item}") %></li>
+              <% end %>
+            </ul>
+            <a href="<%= demo %>" class="lp-btn lp-btn--lg lp-btn--block lp-btn--lime">
+              <%= ngt("landing.hero_cta_demo") %>
+            </a>
+          </article>
+
+          <article class="lp-plan">
+            <div class="lp-plan-head">
+              <h3><%= ngt("landing.start_title") %></h3>
+            </div>
+            <p class="lp-plan-for"><%= ngt("landing.start_for") %></p>
+            <ol class="lp-offer-steps">
+              <% (1..3).each do |step| %>
+                <li>
+                  <span class="lp-offer-step-n" aria-hidden="true"><%= step %></span>
+                  <span><b><%= ngt("landing.step_#{step}_t") %></b><%= ngt("landing.step_#{step}_d") %></span>
+                </li>
+              <% end %>
+            </ol>
+            <a href="/connexion" class="lp-btn lp-btn--lg lp-btn--block lp-btn--ink">
+              <%= ngt("landing.start_sign_in") %>
+            </a>
+          </article>
         </div>
 
         <ul class="lp-included">
-          <%# Both plans. Importing members is a Pro tool, so it is not listed here. %>
-          <% %w[landing.pricing_item_1 landing.pricing_item_4 landing.pricing_item_5 landing.pricing_item_6 landing.pricing_item_7].each do |item| %>
+          <% %w[landing.pricing_item_1 landing.pricing_item_4 landing.pricing_item_5 landing.hero_point_3].each do |item| %>
             <li><i class="bi bi-check-lg" aria-hidden="true"></i><%= ngt(item) %></li>
           <% end %>
         </ul>
@@ -452,7 +448,7 @@
           <i class="bi bi-headset" aria-hidden="true"></i>
           <span>
             <b><%= ngt("landing.faq_more") %></b>
-            <span><%= ngt("landing.faq_more_d") %> — <a href="mailto:contact@fitora.io">contact@fitora.io</a></span>
+            <span><%= ngt("landing.faq_more_d") %> — <a href="<%= demo %>">contact@fitora.io</a></span>
           </span>
         </div>
       </div>
@@ -472,7 +468,7 @@
       </div>
     </section>
 
-    <%# CLOSING — the form hands its two fields over to /inscription %>
+    <%# CLOSING — a demo, or back to their account %>
     <section class="lp-shell lp-closing-wrap" id="start">
       <div class="lp-dark lp-closing">
         <div class="lp-closing-copy">
@@ -484,25 +480,19 @@
           <p><%= ngt("landing.final_lead") %></p>
           <ul class="lp-points">
             <li><span class="lp-tick" aria-hidden="true"><i class="bi bi-check-lg"></i></span><%= ngt("landing.hero_point_1") %></li>
-            <li><span class="lp-tick" aria-hidden="true"><i class="bi bi-check-lg"></i></span><%= ngt("landing.pricing_item_6") %></li>
+            <li><span class="lp-tick" aria-hidden="true"><i class="bi bi-check-lg"></i></span><%= ngt("landing.offer_item_updates") %></li>
           </ul>
         </div>
 
-        <form class="lp-start" action="/inscription" method="get" novalidate data-action="submit->landing#start">
-          <div class="lp-field">
-            <label for="lp-first"><%= ngt("coaches.first_name") %></label>
-            <input id="lp-first" name="first_name" type="text" autocomplete="given-name" data-landing-target="firstName">
-          </div>
-          <div class="lp-field" data-landing-target="emailField">
-            <label for="lp-email"><%= ngt("auth.email") %></label>
-            <input id="lp-email" name="email" type="email" autocomplete="email" dir="ltr" placeholder="vous@studio.tn" data-landing-target="email" data-action="blur->landing#touchEmail input->landing#checkEmail">
-          </div>
-          <button type="submit" class="lp-btn lp-btn--lime lp-btn--lg lp-btn--block">
-            <%= ngt("landing.hero_cta_primary") %>
+        <div class="lp-start">
+          <h3 class="lp-start-title"><%= ngt("landing.final_cta_title") %></h3>
+          <p class="lp-start-lead"><%= ngt("landing.final_cta_lead") %></p>
+          <a href="<%= demo %>" class="lp-btn lp-btn--lime lp-btn--lg lp-btn--block">
+            <%= ngt("landing.hero_cta_demo") %>
             <i class="bi bi-arrow-right lp-arrow" aria-hidden="true"></i>
-          </button>
-          <p class="lp-start-foot"><%= ngt("landing.start_foot") %> <a href="mailto:contact@fitora.io"><%= ngt("landing.hero_cta_demo") %></a></p>
-        </form>
+          </a>
+          <p class="lp-start-foot"><%= ngt("landing.final_client") %> <a href="/connexion"><%= ngt("auth.sign_in") %></a></p>
+        </div>
       </div>
     </section>
   </main>
@@ -523,17 +513,17 @@
           <h3><%= ngt("landing.footer_col_product") %></h3>
           <a href="/#features"><%= ngt("landing.nav_features") %></a>
           <a href="/#flow"><%= ngt("landing.nav_how") %></a>
-          <a href="/#pricing"><%= ngt("landing.pricing_kicker") %></a>
+          <a href="/#offer"><%= ngt("landing.nav_offer") %></a>
           <a href="/#faq"><%= ngt("landing.footer_faq") %></a>
         </nav>
         <nav aria-label="<%= ngt("landing.footer_col_account") %>">
           <h3><%= ngt("landing.footer_col_account") %></h3>
           <a href="/connexion"><%= ngt("auth.sign_in") %></a>
-          <a href="/inscription"><%= ngt("landing.cta_start") %></a>
+          <a href="<%= demo %>"><%= ngt("landing.hero_cta_demo") %></a>
         </nav>
         <nav aria-label="<%= ngt("landing.footer_contact") %>">
           <h3><%= ngt("landing.footer_contact") %></h3>
-          <a href="mailto:contact@fitora.io">contact@fitora.io</a>
+          <a href="<%= demo %>">contact@fitora.io</a>
           <a href="/#faq"><%= ngt("landing.stats_benefit_3") %></a>
         </nav>
       </div>
@@ -546,7 +536,3 @@
     </div>
   </footer>
 </div>
-<% content_for :templates do %>
-  <%# The address's error, as the form shows it once touched. %>
-  <template id="lp-email-error"><span class="lp-field-err"><%= ngt("landing.start_email_invalid") %></span></template>
-<% end %>

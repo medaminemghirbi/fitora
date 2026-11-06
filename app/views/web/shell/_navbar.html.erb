@@ -55,9 +55,6 @@
             <i class="bi bi-building"></i>
           <% end %>
           <span class="app-company-switcher-name"><%= active&.dig(:name) %></span>
-          <% if shell_switch_locked? %>
-            <i class="bi bi-lock-fill app-company-switcher-lock" aria-label="<%= ngt("nav.switch_needs_pro") %>"></i>
-          <% end %>
           <i class="bi bi-chevron-down"></i>
         </button>
         <template data-navbar-target="menu" data-menu="switcher">
@@ -66,7 +63,7 @@
               <strong><%= ngt("nav.switch_company") %></strong>
             </div>
             <% companies.each do |c| %>
-              <button type="button" class="dropdown-item-custom app-company-switcher-item<%= " is-active" if c[:active] %>"<%= raw(" disabled") if !c[:active] && !shell_can_switch? %> data-action="navbar#switch" data-navbar-url-param="<%= c[:active] ? "" : "/admin/#{salle.id}/switch/#{c[:id]}" %>">
+              <button type="button" class="dropdown-item-custom app-company-switcher-item<%= " is-active" if c[:active] %>" data-action="navbar#switch" data-navbar-url-param="<%= c[:active] ? "" : "/admin/#{salle.id}/switch/#{c[:id]}" %>">
                 <% if c[:logo_url].present? %>
                   <img src="<%= c[:logo_url] %>" alt="" class="app-company-switcher-logo" />
                 <% else %>
@@ -75,23 +72,10 @@
                 <span class="app-company-switcher-name"><%= c[:name] %></span>
                 <% if c[:active] %>
                   <i class="bi bi-check-lg ms-auto"></i>
-                <% elsif !shell_can_switch? %>
-                  <i class="bi bi-lock ms-auto" aria-hidden="true"></i>
                 <% end %>
               </button>
             <% end %>
-            <% if shell_switch_locked? %>
-              <% if nav.admin? %>
-                <a href="<%= nav.path("subscription") %>" class="app-company-switcher-locked">
-                  <i class="bi bi-lock-fill" aria-hidden="true"></i> <%= ngt("nav.switch_needs_pro") %>
-                </a>
-              <% else %>
-                <p class="app-company-switcher-locked">
-                  <i class="bi bi-lock" aria-hidden="true"></i> <%= ngt("nav.switch_needs_pro_staff") %>
-                </p>
-              <% end %>
-            <% end %>
-            <% if nav.admin? && nav.pro_features? %>
+            <% if nav.admin? %>
               <a href="<%= nav.path("salles") %>" class="dropdown-item-custom app-company-switcher-manage">
                 <i class="bi bi-buildings"></i> <%= ngt("nav.manage_salles") %>
               </a>
@@ -130,25 +114,12 @@
       <% if companies %>
         <div class="app-navbar-m-group d-md-none"><%= ngt("nav.switch_company") %></div>
         <% companies.each do |c| %>
-          <button type="button" class="app-navbar-m-item d-md-none<%= " is-active" if c[:active] %>"<%= raw(" disabled") if !c[:active] && !shell_can_switch? %> data-action="navbar#switch" data-navbar-url-param="<%= c[:active] ? "" : "/admin/#{salle.id}/switch/#{c[:id]}" %>">
+          <button type="button" class="app-navbar-m-item d-md-none<%= " is-active" if c[:active] %>" data-action="navbar#switch" data-navbar-url-param="<%= c[:active] ? "" : "/admin/#{salle.id}/switch/#{c[:id]}" %>">
             <i class="bi bi-building"></i> <%= c[:name] %>
             <% if c[:active] %>
               <i class="bi bi-check-lg ms-auto"></i>
-            <% elsif !shell_can_switch? %>
-              <i class="bi bi-lock ms-auto" aria-hidden="true"></i>
             <% end %>
           </button>
-        <% end %>
-        <% if shell_switch_locked? %>
-          <% if nav.admin? %>
-            <a href="<%= nav.path("subscription") %>" class="app-navbar-m-item app-company-switcher-locked d-md-none">
-              <i class="bi bi-lock-fill" aria-hidden="true"></i> <%= ngt("nav.switch_needs_pro") %>
-            </a>
-          <% else %>
-            <p class="app-company-switcher-locked d-md-none">
-              <i class="bi bi-lock" aria-hidden="true"></i> <%= ngt("nav.switch_needs_pro_staff") %>
-            </p>
-          <% end %>
         <% end %>
       <% end %>
       <% if (dash = nav.dashboard) %>

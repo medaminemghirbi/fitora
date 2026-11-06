@@ -3,7 +3,7 @@ require "rails_helper"
 # Module 10: a member's own app, and the superadmin's console (their Angular
 # URLs, MIGRATION_AUDIT §8.1). openapi: false — the API calls are oracles.
 RSpec.describe "Web member and superadmin shells", type: :request, openapi: false do
-  let(:company) { create(:company, :pro, setup_dismissed_at: Time.current) }
+  let(:company) { create(:company, setup_dismissed_at: Time.current) }
   let(:activity) { create(:activity, company: company, name: "Yoga") }
 
   def member_of(*companies, email: "salma@example.com")
@@ -13,14 +13,7 @@ RSpec.describe "Web member and superadmin shells", type: :request, openapi: fals
     client
   end
 
-  def pay_pro(company)
-    subscription = Subscription.find_by!(admin_id: company.admin_id)
-    subscription.issue_invoice!(issued_by: create(:user, :superadmin)) unless subscription.pro_features?
-  end
-
   describe "a member's app" do
-    before { pay_pro(company) }
-
     let!(:member) { member_of(company) }
 
     it "is where a member lands, and its schedule is their gym's upcoming sessions" do
@@ -33,8 +26,7 @@ RSpec.describe "Web member and superadmin shells", type: :request, openapi: fals
     end
 
     it "shows the gym picked when the person trains at several, remembered in a cookie" do
-      other = create(:company, :pro, name: "Annexe")
-      pay_pro(other)
+      other = create(:company, name: "Annexe")
       member.memberships.create!(company: other, joined_at: Date.current, active: true)
       create(:session, activity: create(:activity, company: other, name: "Boxe"), company: other, starts_at: 1.day.from_now)
       web_sign_in(member)
@@ -103,65 +95,19 @@ RSpec.describe "Web member and superadmin shells", type: :request, openapi: fals
       expect(response.body).to include("sa-shell", "sa-nav-item is-active", "fx-kpi")
     end
 
-    it "lists the gyms, searched and narrowed to the closed ones" do
+    it "lists the gyms, searched" do
       company
-      closed = create(:company, name: "Zen Club")
-      create(:subscription, company: closed).update!(active: false)
+      create(:company, name: "Zen Club")
 
       get "/superadmin/companies", params: { search: "zen" }
       expect(response.body).to include("<mark class=\"fx-hl\">Zen</mark>")
       expect(response.body).not_to include(company.name)
-      get "/superadmin/companies", params: { access: "closed" }
-      expect(response.body).to include("Zen Club")
-      expect(response.body).not_to include(company.name)
     end
 
-    it "opens a gym's account on one page: its figures, the money beside the gym, its access apart" do
+    it "opens a gym's account on one page: its activation and use, the gym beside them" do
       get "/superadmin/companies/#{company.id}"
-      expect(response.body).to include("ac-summary", "sa-record-main", "ac-ledger", "sa-record-aside", "sa-ministats", %(id="ac-currency"), "sa-danger")
+      expect(response.body).to include("sa-record-main", "sa-steps", "sa-record-aside", "sa-ministats", %(id="ac-currency"), %(id="ac-locale"))
       expect(response.body).not_to include("nav-tabs")
-    end
-
-    it "moves the plan and the access as the API does, with its audit trail and a toast" do
-      patch "/superadmin/companies/#{company.id}/subscription", params: { plan: "starter" }, as: :json
-      expect(response).to have_http_status(:no_content)
-      expect(flash[:success]).to be_present
-      expect(AuditLog.where(action: "subscription.plan_changed")).to exist
-
-      patch "/superadmin/companies/#{company.id}/subscription", params: { active: false }, as: :json
-      expect(company.admin.subscription.reload.active).to be(false)
-      expect(AuditLog.where(action: "subscription.access_suspended")).to exist
-    end
-
-    it "a new plan's bill: in the invoices, tagged to pay, the ledger untouched; the payment settles it" do
-      subscription = company.admin.subscription
-      subscription.update!(plan: :starter)
-      ledger = ->(html) { html[/<div[^>]*class="ac-ledger"[^>]*>.*?<\/div>\s*<p/m] }
-      get "/superadmin/companies/#{company.id}"
-      before = ledger.call(response.body)
-      expect(before).to include("ac-ledger")
-
-      patch "/superadmin/companies/#{company.id}/subscription", params: { plan: "pro" }, as: :json
-      bill = subscription.reload.due_invoice
-      get "/superadmin/companies/#{company.id}"
-      expect(response.body).to include(bill.number, Web::Translations.translate("subscription.invoice_due", locale: :fr))
-      expect(ledger.call(response.body)).to eq(before)
-
-      post "/superadmin/companies/#{company.id}/invoices", as: :json
-      expect(bill.reload).to be_paid
-      expect(subscription.reload.due_invoice).to be_nil
-    end
-
-    it "records a payment, and refuses one without a plan in the API's words" do
-      post "/superadmin/companies/#{company.id}/invoices", as: :json
-      expect(response).to have_http_status(:created)
-      invoice = company.admin.subscription.invoices.where(trial: false).last
-      delete "/superadmin/companies/#{company.id}/invoices/#{invoice.id}", as: :json
-      expect(response).to have_http_status(:no_content)
-
-      company.admin.subscription.update!(plan: nil)
-      post "/superadmin/companies/#{company.id}/invoices", as: :json
-      expect(response.parsed_body["error"]).to eq("Choose a plan before recording a payment.")
     end
 
     it "steps inside the gym's admin account, and its sign-out comes back to the console" do
@@ -176,12 +122,6 @@ RSpec.describe "Web member and superadmin shells", type: :request, openapi: fals
       expect(response).to redirect_to("/superadmin/overview")
       get "/superadmin/overview"
       expect(response).to have_http_status(:ok)
-    end
-
-    it "saves the plans' prices" do
-      patch "/superadmin/pricing", params: { currency: "TND", plans: { starter: 5000 }, annual_discount_percent: 10 }, as: :json
-      expect(response).to have_http_status(:no_content)
-      expect(SubscriptionPrice.for("TND", plan: "starter").monthly_cents).to eq(5000)
     end
 
     it "resolves a ticket, and opens its attachments through the session (B-14)" do

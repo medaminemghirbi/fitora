@@ -27,13 +27,8 @@ module Web
     def continue_url
       return "/connexion" unless signed_in?
 
-      user = current_user
-      user&.reload
-      if user&.admin? && user.current_company.nil? && user.email_verified?
-        "/admin/setup-company"
-      else
-        home_path
-      end
+      current_user&.reload
+      home_path
     end
 
     def rate_limited

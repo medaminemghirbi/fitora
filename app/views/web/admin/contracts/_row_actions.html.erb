@@ -2,8 +2,9 @@
     (collect what it owes, renew it) as buttons, everything else in the ⋯
     menu. The subscriptions controller reads the term off
     data-subscription. `profile`: on the member's own file, which needs no
-    link to it. %>
-<% collect = m[:amount_due].to_f > 0 && m[:state] != "cancelled" && may_collect? %>
+    link to it, and which says what is owed, and offers to collect it, once
+    at its head. %>
+<% collect = m[:amount_due].to_f > 0 && m[:state] != "cancelled" && may_collect? && !profile %>
 <% urgent = %w[expiring expired].include?(m[:state]) %>
 <div class="abo-actions" data-subscription="<%= subscription_payload(m).to_json %>">
   <% if collect %>

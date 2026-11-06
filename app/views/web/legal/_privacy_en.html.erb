@@ -10,7 +10,7 @@
   <ul>
     <li><strong>Gym and team accounts</strong>: name, email, phone, password (hashed, never readable), role.</li>
     <li><strong>The gym</strong>: name, address, contact details, tax ID, logo, the signature on its contracts.</li>
-    <li><strong>Members</strong>: identity and contact details, date of birth, address, emergency contact, photo (if the gym takes one), health information (if the gym enters any), subscriptions, payments, bookings, attendance and entries.</li>
+    <li><strong>Members</strong>: identity and contact details, date of birth, address, emergency contact, photo (if the gym takes one), health information (if the gym enters any), subscriptions, payments, bookings and attendance.</li>
     <li><strong>Technical data</strong>: sign-in and error logs, IP address, cookies the session needs.</li>
   </ul>
 </section>
@@ -18,10 +18,10 @@
 <section>
   <h2>3. Why?</h2>
   <ul>
-    <li>To provide the Service: manage members, subscriptions, the schedule, entries and payments (performance of the contract).</li>
-    <li>To invoice the Fitora subscription and keep the accounts (legal obligation).</li>
+    <li>To provide the Service: manage members, subscriptions, the schedule and payments (performance of the contract).</li>
     <li>To keep the Service secure, prevent abuse and fix errors (legitimate interest).</li>
-    <li>To send the account's emails: confirmation, forgotten password, invitation to the member app.</li>
+    <li>To send the account's emails: credentials, confirmation, forgotten password, invitation to the member app.</li>
+    <li>To write to gym administrators about the Service and their contract (performance of the contract).</li>
   </ul>
   <p>Fitora does not use members' data for its own purposes, shows no targeted advertising and sells no data.</p>
 </section>
@@ -37,7 +37,7 @@
     <li>Members' data: as long as the gym keeps it. A member removed by every gym, with no account of their own, is anonymised.</li>
     <li>Notifications: <%= PruneOldRecordsJob::READ_NOTIFICATIONS_KEPT.in_days.to_i %> days once read, a year at most.</li>
     <li>Activity log (who did what): <%= PruneOldRecordsJob::AUDIT_LOGS_KEPT.in_years.to_i %> years.</li>
-    <li>Invoices and accounting records: as long as the law requires (ten years).</li>
+    <li>Emails Fitora sends to administrators: as long as the account exists.</li>
     <li>Encrypted backups: fourteen days.</li>
   </ul>
 </section>

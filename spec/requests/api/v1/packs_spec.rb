@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Api::V1::Packs", type: :request do
   let(:admin) { create(:user, :admin) }
-  let!(:company) { create(:company, :pro, :with_packs, admin: admin) }
+  let!(:company) { create(:company, :with_packs, admin: admin) }
   let(:boxe) { create(:activity, company: company, name: "Boxe") }
   let(:muscu) { create(:activity, company: company, name: "Musculation") }
   let(:yoga) { create(:activity, company: company, name: "Yoga") }

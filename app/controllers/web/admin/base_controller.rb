@@ -10,49 +10,25 @@ module Web
       layout "web/admin"
 
       before_action :require_staff_session!
-      before_action :require_confirmed_email!
+      before_action :require_account_ready!
       before_action :admin_area!
       before_action :enter_salle!
-      before_action :refuse_when_locked!
 
       helper_method :admin_page_path, :nav, :may_sell?, :may_collect?
 
-      # Which TenantRules::ADMIN_ALLOWED_WHEN_LOCKED area a controller is,
-      # if any: a locked admin may still use those actions.
-      class_attribute :lock_area, default: nil
-
       private
 
-      def require_confirmed_email!
-        go_home if email_confirmation_required?
+      # The address to confirm and the first sign-in to finish come first.
+      def require_account_ready!
+        go_home if email_confirmation_required? || first_sign_in_required?
       end
 
       # adminAreaGuard, in its order: the superadmin has a console of their
-      # own; a locked gym sees one page; anyone who coaches uses the coach
-      # shell. (The lock is asked again below for the salle the URL names.)
+      # own; anyone who coaches uses the coach shell.
       def admin_area!
         return go_home if current_user.superadmin?
-        return refuse_locked if locked_out?
 
         go_home if current_user.staff? && current_user.staff_member&.coach?
-      end
-
-      # adminAreaGuard's lock check: a locked gym sees one page.
-      def refuse_when_locked!
-        refuse_locked if locked_out?
-      end
-
-      def locked_out?
-        locking_subscription(area: lock_area, action: action_name).present?
-      end
-
-      # A page goes to /account-locked; a page's own request (JSON) gets the
-      # API's 402, which sends the page there (the jwt.interceptor's rule).
-      def refuse_locked
-        subscription = locking_subscription(area: lock_area, action: action_name)
-        return redirect_to("/account-locked") unless request.format.json?
-
-        render json: { error: subscription.lock_reason.to_s, message: lock_message(subscription) }, status: :payment_required
       end
 
       # capabilityGuard(permission): a page this login may not open sends it

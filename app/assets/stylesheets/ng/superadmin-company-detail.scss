@@ -1,41 +1,4 @@
 // From frontend/src/app/features/superadmin/company-detail/company-detail.component.scss in the retired Angular app. This copy is the source now: edit it here.
-/* Summary strip */
-.ac-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-}
-.ac-stat {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-xs);
-  padding: var(--space-4) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-
-  strong { font-size: 1.25rem; font-weight: 700; color: var(--color-text); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
-}
-.ac-stat-label {
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
-.ac-stat-unit { font-size: var(--font-size-sm); font-weight: 500; color: var(--color-text-secondary); }
-.ac-stat--ok { color: var(--color-success); }
-.ac-stat--due { color: var(--color-danger); }
-.ac-stat--trial {
-  background: var(--color-primary-soft);
-  border-color: var(--color-primary);
-
-  strong { color: var(--color-primary); }
-}
-
-/* The free period in the invoice list: covered, but nothing was paid. */
 .ac-tag {
   display: inline-block;
   margin-inline-start: 0.4rem;
@@ -48,33 +11,12 @@
   vertical-align: middle;
 }
 
-/* What "payment received" will issue, beside the button that issues it. */
-.ac-next {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface-sunken);
-
-  @media (max-width: 560px) { flex-direction: column; align-items: stretch; }
-}
-.ac-next-main {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 0;
-
-  strong { font-size: 1.0625rem; font-variant-numeric: tabular-nums; }
-}
-
 .ac-form {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
 }
+
 .ac-form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -82,7 +24,6 @@
 
   @media (max-width: 560px) { grid-template-columns: 1fr; }
 }
-.ac-hint { font-size: var(--font-size-xs); margin: 0.35rem 0 0; }
 
 .ac-card-foot {
   display: flex;
@@ -92,178 +33,19 @@
 }
 
 label {
-  display: block;
   font-size: var(--font-size-xs);
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  margin-bottom: 0.4rem;
-}
-
-// ---------- the one thing this page is for, when there is one ----------
-// Colour carries the urgency: waiting on us is amber, locked out is red,
-// running out is the quiet one.
-.ac-attention {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-  padding: var(--space-4);
-  margin-bottom: var(--space-5);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-warning);
-  background: var(--color-warning-soft);
-
-  &[data-kind="never"],
-  &[data-kind="unpaid"],
-  &[data-kind="trial_over"] {
-    border-color: var(--color-danger);
-    background: var(--color-danger-soft);
-  }
-
-  &[data-kind="suspended"] {
-    border-color: var(--color-border);
-    background: var(--color-surface-sunken);
-  }
-}
-
-.ac-attention-main {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  min-width: 0;
-
-  > .bi { font-size: 1.15rem; margin-top: 0.1rem; }
-
-  strong { display: block; }
-  span { font-size: 0.85rem; opacity: 0.85; }
-}
-
-// The second price, under the one the gym is on.
-.ac-stat-sub {
-  display: block;
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
-}
-
-// ---------- the ledger: a year of months, each one an invoice ----------
-// Colour carries the state, and the shape is the same on both sides of the
-// relationship so a gym and Fitora are looking at the same picture.
-.ac-ledger {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.ac-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  min-height: 64px;
-  padding: 8px 4px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: var(--color-surface);
-  font: inherit;
-  text-align: center;
-
-  &[data-state="paid"] {
-    background: var(--color-success-soft);
-    border-color: var(--color-success);
-    color: var(--color-success);
-    cursor: pointer;
-  }
-
-  &[data-state="missed"] {
-    background: var(--color-danger-soft);
-    border-color: var(--color-danger);
-    color: var(--color-danger);
-  }
-
-  &[data-state="trial"] {
-    background: var(--color-primary-soft);
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-  }
-
-  // The gym did not exist yet: nothing was owed, so nothing is marked.
-  &[data-state="before"] {
-    color: var(--color-text-secondary);
-    opacity: 0.35;
-  }
-
-  &[data-state="current"] {
-    background: var(--color-warning-soft);
-    border-color: var(--color-warning);
-    color: var(--color-warning);
-  }
-
-  &[data-state="future"] {
-    border-style: dashed;
-    border-color: var(--color-border);
-    color: var(--color-text-secondary);
-    opacity: 0.6;
-  }
-
-  &:disabled { cursor: default; }
-}
-
-.ac-cell-month {
-  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  opacity: 0.75;
+  color: var(--color-muted);
 }
 
-.ac-cell-mark { font-size: 1.05rem; font-weight: 700; line-height: 1; }
-
-.ac-cell-foot {
-  font-size: 0.62rem;
-  font-variant-numeric: tabular-nums;
-  opacity: 0.8;
-  min-height: 0.75rem;
-}
-
-.ac-ledger-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
-
-// Twelve cells across need room: in a narrow card, two rows of six; on a
-// phone, three rows of four.
-.ac-ledger-box { container-type: inline-size; }
-
-@container (max-width: 560px) {
-  .ac-ledger { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-}
-
-@container (max-width: 340px) {
-  .ac-ledger { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-
-/* Whether the plan opens the member app — the one thing Pro adds. */
-.ac-member-app {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--color-text-secondary);
-
-  &.is-on { color: var(--color-success); }
-}
-
-/* Every salle one sale opens. */
 .ac-account-list {
   list-style: none;
   margin: 0;
   padding: var(--space-2) 0;
 }
+
 .ac-account-item {
   display: flex;
   align-items: center;

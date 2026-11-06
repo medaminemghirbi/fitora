@@ -6,9 +6,6 @@ gem "rails", "~> 8.1.3"
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.1"
 
-# Removed from Ruby's default gems in 3.4 — used by config/application.rb and
-# the payroll xlsx/report exports.
-gem "csv"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 
@@ -58,9 +55,6 @@ gem "bootsnap", require: false
 # S3-compatible object storage for Active Storage in production
 # (config/storage.yml :production).
 gem "aws-sdk-s3", require: false
-
-# Styled .xlsx generation (colored cells) for the admin's Premium report export
-gem "caxlsx"
 
 # PDF invoice/receipt generation for the Premium membership receipt download
 gem "prawn"

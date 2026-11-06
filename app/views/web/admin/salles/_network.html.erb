@@ -2,7 +2,6 @@
 <%# The salles as cards, then — kept aside — each salle's moderator picker
     as the assign modal shows it for that salle. The page's first paint and
     the redraw after posting moderators (?fragment=1, PUT …/moderators). %>
-<% multi = bootstrap.dig(:subscription, :multi_salle) != false %>
 <% moderators_by_id = network[:moderators].index_by { |m| m[:id] } %>
 <% salle_names = network[:companies].to_h { |c| [ c[:id], c[:name] ] } %>
 <div class="sl-grid">
@@ -50,34 +49,20 @@
           <i class="bi bi-person-gear"></i> <%= ngt("salles.assign") %>
         </button>
         <% unless salle[:active] %>
-          <% if multi %>
-            <button type="button" class="btn btn-sm btn-primary" data-salles-switch data-action="salles-page#switchTo">
-              <i class="bi bi-arrow-left-right"></i>
-              <%= ngt("salles.switch") %>
-            </button>
-          <% else %>
-            <a href="<%= admin_page_path("subscription") %>" class="btn btn-sm btn-outline-primary">
-              <i class="bi bi-lock"></i> <%= ngt("salles.switch_needs_pro") %>
-            </a>
-          <% end %>
+          <button type="button" class="btn btn-sm btn-primary" data-salles-switch data-action="salles-page#switchTo">
+            <i class="bi bi-arrow-left-right"></i>
+            <%= ngt("salles.switch") %>
+          </button>
         <% end %>
       </footer>
     </article>
   <% end %>
 
-  <% if multi %>
-    <button type="button" class="sl-card sl-card--add" data-action="salles-page#openCreate">
-      <i class="bi bi-plus-circle" aria-hidden="true"></i>
-      <strong><%= ngt("salles.new") %></strong>
-      <span><%= ngt("salles.new_hint") %></span>
-    </button>
-  <% else %>
-    <a href="<%= admin_page_path("subscription") %>" class="sl-card sl-card--add is-locked">
-      <i class="bi bi-lock" aria-hidden="true"></i>
-      <strong><%= ngt("salles.needs_pro") %></strong>
-      <span><%= ngt("salles.needs_pro_hint") %></span>
-    </a>
-  <% end %>
+  <button type="button" class="sl-card sl-card--add" data-action="salles-page#openCreate">
+    <i class="bi bi-plus-circle" aria-hidden="true"></i>
+    <strong><%= ngt("salles.new") %></strong>
+    <span><%= ngt("salles.new_hint") %></span>
+  </button>
 </div>
 
 <% network[:companies].each do |salle| %>

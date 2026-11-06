@@ -21,29 +21,8 @@ RSpec.describe "Api::V1::Companies", type: :request do
     end
   end
 
-  describe "POST /api/v1/companies — signup" do
+  describe "POST /api/v1/companies" do
     let(:fresh_admin) { create(:user, :admin) }
-
-    it "gives the new company every feature" do
-      post "/api/v1/companies",
-           params: { company: { name: "Iron Box", timezone: "Africa/Tunis", currency: "TND" } },
-           headers: auth_headers(fresh_admin)
-
-      expect(response).to have_http_status(:created)
-      created = Company.find_by(admin: fresh_admin)
-      expect(created.enabled_module_keys).to match_array(%w[base] + ModuleCatalog::KEYS)
-    end
-
-    it "opens on the free trial, not on a tier" do
-      post "/api/v1/companies", params: { company: { name: "Iron Box", timezone: "Africa/Tunis", currency: "TND" } },
-                                 headers: auth_headers(fresh_admin)
-
-      subscription = Company.find_by(admin: fresh_admin).subscription
-      expect(subscription).to be_active
-      expect(subscription).to be_trial
-      expect(subscription.trial_days_left).to eq(Subscription::TRIAL_DAYS)
-      expect(subscription.latest_invoice.amount_cents).to eq(0)
-    end
 
     it "opens with the activities picked from the catalogue and the ones it named itself" do
       template = create(:activity_template, names: { "fr" => "Pilates Reformer" })
@@ -70,16 +49,7 @@ RSpec.describe "Api::V1::Companies", type: :request do
       expect(Company.where(admin: fresh_admin)).to be_empty
     end
 
-    it "becomes the admin's active company immediately" do
-      post "/api/v1/companies", params: { company: { name: "Iron Box", timezone: "Africa/Tunis", currency: "TND" } },
-                                 headers: auth_headers(fresh_admin)
-
-      created = Company.find_by(admin: fresh_admin)
-      expect(fresh_admin.reload.active_company).to eq(created)
-    end
-
-    it "lets a Pro account open as many salles as it likes" do
-      create(:subscription, :pro, company: company)
+    it "lets an admin open as many salles as they like" do
       create(:company, admin: admin)
 
       post "/api/v1/companies", params: { company: { name: "Third Gym", timezone: "Africa/Tunis", currency: "TND" } },
@@ -89,56 +59,12 @@ RSpec.describe "Api::V1::Companies", type: :request do
       expect(admin.companies.count).to eq(3)
     end
 
-    it "refuses a second salle on Starter, and says it comes with Pro" do
-      create(:subscription, company: company)
-
-      post "/api/v1/companies", params: { company: { name: "Second Gym", timezone: "Africa/Tunis", currency: "TND" } },
-                                 headers: auth_headers(admin)
-
-      expect(response).to have_http_status(:forbidden)
-      expect(response.parsed_body["error"]).to eq("multi_salle_not_included")
-      expect(admin.companies.count).to eq(1)
-      expect(admin.reload.active_company).to eq(company)
-    end
-
-    it "keeps the free trial on one salle: several salles are Pro's" do
-      post "/api/v1/companies", params: { company: { name: "First", timezone: "Africa/Tunis", currency: "TND" } },
-                                 headers: auth_headers(fresh_admin)
-      expect(fresh_admin.reload.subscription).to be_trial
-
-      post "/api/v1/companies", params: { company: { name: "Second", timezone: "Africa/Tunis", currency: "TND" } },
+    it "becomes the admin's active company immediately" do
+      post "/api/v1/companies", params: { company: { name: "Iron Box", timezone: "Africa/Tunis", currency: "TND" } },
                                  headers: auth_headers(fresh_admin)
 
-      expect(response).to have_http_status(:forbidden)
-      expect(response.parsed_body["error"]).to eq("multi_salle_not_included")
-      expect(fresh_admin.companies.count).to eq(1)
-    end
-
-    it "keeps a Starter account on its one salle: moving between salles is Pro's" do
-      create(:subscription, company: company)
-      second = create(:company, admin: admin)
-
-      post "/api/v1/companies/#{second.id}/switch", headers: auth_headers(admin)
-
-      expect(response).to have_http_status(:forbidden)
-      expect(response.parsed_body["error"]).to eq("pro_required")
-    end
-
-    it "does not give a later salle a trial of its own: it joins the account's plan" do
-      post "/api/v1/companies", params: { company: { name: "First", timezone: "Africa/Tunis", currency: "TND" } },
-                                 headers: auth_headers(fresh_admin)
-      subscription = fresh_admin.reload.subscription
-      subscription.update!(plan: :pro)
-      subscription.issue_invoice!(issued_by: nil) # Pro opens once it is paid
-
-      post "/api/v1/companies", params: { company: { name: "Second", timezone: "Africa/Tunis", currency: "TND" } },
-                                 headers: auth_headers(fresh_admin)
-
-      expect(response).to have_http_status(:created)
-      second = fresh_admin.companies.find_by(name: "Second")
-      expect(second.subscription).to eq(subscription)
-      expect(subscription.invoices.where(trial: true).count).to eq(1)
-      expect(second.subscription).to be_pro
+      created = Company.find_by(admin: fresh_admin)
+      expect(fresh_admin.reload.active_company).to eq(created)
     end
   end
 
@@ -166,9 +92,6 @@ RSpec.describe "Api::V1::Companies", type: :request do
   end
 
   describe "POST /api/v1/companies/:id/switch" do
-    # Several salles are a Pro tool (Subscription#pro_features?).
-    before { create(:subscription, :pro, company: company) }
-
     it "moves the admin's active company and current_company follows on the next request" do
       second = create(:company, admin: admin)
 
@@ -186,15 +109,6 @@ RSpec.describe "Api::V1::Companies", type: :request do
       post "/api/v1/companies/#{other.id}/switch", headers: auth_headers(admin)
 
       expect(response).to have_http_status(:not_found)
-    end
-
-    it "still switches while the account is locked" do
-      second = create(:company, admin: admin)
-      company.subscription.update!(active: false)
-
-      post "/api/v1/companies/#{second.id}/switch", headers: auth_headers(admin)
-
-      expect(response).to have_http_status(:ok)
     end
 
     it "moves a moderator between the salles they are posted to" do
@@ -223,18 +137,6 @@ RSpec.describe "Api::V1::Companies", type: :request do
   end
 
   describe "GET /api/v1/companies/network" do
-    # Several salles are a Pro tool (Subscription#pro_features?).
-    before { create(:subscription, :pro, company: company) }
-
-    it "is refused on Starter" do
-      company.subscription.update!(plan: :starter)
-
-      get "/api/v1/companies/network", headers: auth_headers(admin)
-
-      expect(response).to have_http_status(:forbidden)
-      expect(response.parsed_body["error"]).to eq("pro_required")
-    end
-
     it "lists every salle with its moderators, and every moderator with their salles" do
       second = create(:company, admin: admin, city: "Sousse")
       record = create(:staff_member, company: company, role: :moderator)
@@ -262,9 +164,6 @@ RSpec.describe "Api::V1::Companies", type: :request do
   end
 
   describe "PUT /api/v1/companies/:id/moderators" do
-    # Several salles are a Pro tool (Subscription#pro_features?).
-    before { create(:subscription, :pro, company: company) }
-
     let!(:second) { create(:company, admin: admin) }
     let!(:record) { create(:staff_member, company: company, role: :moderator) }
 
@@ -334,58 +233,7 @@ RSpec.describe "Api::V1::Companies", type: :request do
     end
   end
 
-  describe "GET /api/v1/company — subscription info" do
-    it "lists every feature as included and the monthly / annual price in the company's currency" do
-      SubscriptionPrice.for("TND", plan: "starter").update!(monthly_cents: 20_000)
-      get "/api/v1/company", headers: auth_headers(admin)
-      body = response.parsed_body["company"]
-
-      expect(body["included_modules"]).to match_array(ModuleCatalog::KEYS)
-      expect(body["monthly_subscription_cents"]).to eq(20_000)
-      # 12 months minus the 10% default annual discount
-      expect(body["annual_subscription_cents"]).to eq((20_000 * 12 * 0.9).round)
-      expect(body["annual_discount_percent"]).to eq(10)
-    end
-
-    it "prices in the company's own currency, converted from the one prices are set in" do
-      SubscriptionPrice.for("TND", plan: "starter").update!(monthly_cents: 18_000)
-      company.update!(currency: "EUR")
-
-      get "/api/v1/company", headers: auth_headers(admin)
-
-      # 180 DT ÷ 3.363395 = 53.52 €, a whole 54 €
-      expect(response.parsed_body["company"]["monthly_subscription_cents"]).to eq(5_400)
-      expect(SubscriptionPrice.where(currency: "EUR")).to be_none
-    end
-
-    it "prices the account's own plan" do
-      SubscriptionPrice.for("TND", plan: "pro").update!(monthly_cents: 30_000)
-      create(:subscription, :pro, company: company)
-
-      get "/api/v1/company", headers: auth_headers(admin)
-
-      expect(response.parsed_body["company"]["monthly_subscription_cents"]).to eq(30_000)
-    end
-  end
-
   describe "PATCH /api/v1/company — branding" do
-    # Branding is a Pro tool (Subscription#pro_features?).
-    before { create(:subscription, :pro, company: company) }
-
-    it "drops the branding on Starter but still saves the rest of the form" do
-      company.subscription.update!(plan: :starter)
-
-      patch "/api/v1/company", params: { company: { name: "Renamed", slug: "renamed", primary_color: "#ff5500", working_days: [ 1, 2, 3 ] } },
-                               headers: auth_headers(admin)
-
-      expect(response).to have_http_status(:ok)
-      company.reload
-      expect(company.name).to eq("Renamed")
-      expect(company.working_days).to eq([ 1, 2, 3 ])
-      expect(company.slug).to be_nil
-      expect(company.primary_color).to be_nil
-    end
-
     it "sets a slug and a primary color" do
       patch "/api/v1/company", params: { company: { slug: "power-gym", primary_color: "#ff5500" } }, headers: auth_headers(admin)
 

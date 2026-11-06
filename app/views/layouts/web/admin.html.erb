@@ -9,7 +9,7 @@
   <app-root>
     <router-outlet></router-outlet>
     <%= render layout: "web/shell/admin_shell" do %>
-      <%= yield %>
+      <%= content_for?(:settings_page) ? yield(:settings_page) : yield %>
     <% end %>
     <%= render "web/shared/app_root_tail", palette: true %>
   </app-root>

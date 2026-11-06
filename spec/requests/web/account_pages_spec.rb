@@ -1,50 +1,11 @@
 require "rails_helper"
 
-# The account pages (module 1): sign up, forgotten and new password, a
-# member's invitation, confirming the address, the locked page.
+# The account pages (module 1): forgotten and new password, a member's
+# invitation, confirming the address.
 # openapi: false — the contract is the API's (spec/rails_helper.rb).
 RSpec.describe "Web account pages", type: :request, openapi: false do
   let(:company) { create(:company, setup_dismissed_at: Time.current) }
   let(:admin) { company.admin }
-
-  describe "/inscription" do
-    it "renders RegisterComponent's markup, and takes over the landing page's first name and e-mail" do
-      get "/inscription", params: { first_name: "Sana", email: "sana@example.com" }
-      expect(response.body).to include('<app-register _nghost-register="">', 'value="Sana"', 'value="sana@example.com"')
-    end
-
-    it "opens the account, signs in, and waits for the address" do
-      expect do
-        post "/inscription", params: { first_name: "Sana", last_name: "Ali", email: "sana@example.com", password: "password123", accept_terms: "1" }
-      end.to change(User.admin, :count).by(1).and have_enqueued_mail(AccountMailer, :email_verification)
-
-      expect(response).to redirect_to("/confirmation-email")
-      follow_redirect!
-      expect(response.body).to include("sana@example.com")
-    end
-
-    it "keeps the page's language for the account" do
-      cookies[:fitora_locale] = "ar"
-      post "/inscription", params: { first_name: "Sana", last_name: "Ali", email: "sana@example.com", password: "password123", accept_terms: "1" }
-      expect(User.find_by!(email: "sana@example.com").locale).to eq("ar")
-    end
-
-    it "an address already taken: the API's message, as the Angular page shows it" do
-      post "/inscription", params: { first_name: "A", last_name: "B", email: admin.email, password: "password123", accept_terms: "1" }
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(response.body).to include("Email has already been taken")
-    end
-
-    it "the form's own checks: a malformed address says so; a short password does not" do
-      post "/inscription", params: { first_name: "A", last_name: "B", email: "nope", password: "password123", accept_terms: "1" }
-      expect(response.body).to include(%(data-check-error="reg-email"))
-
-      post "/inscription", params: { first_name: "A", last_name: "B", email: "ok@example.com", password: "short", accept_terms: "1" }
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(response.body).not_to include("data-check-error")
-      expect(User.find_by(email: "ok@example.com")).to be_nil
-    end
-  end
 
   describe "/mot-de-passe-oublie" do
     it "mails a link to an account and says the same either way" do
@@ -129,7 +90,7 @@ RSpec.describe "Web account pages", type: :request, openapi: false do
       web_sign_in(pending)
       patch "/verify-email", params: { token: token }, as: :json
 
-      expect(response.parsed_body).to eq("status" => "success", "continue_url" => "/admin/setup-company")
+      expect(response.parsed_body).to eq("status" => "success", "continue_url" => "/sans-salle")
       expect(pending.reload.email_verified?).to be(true)
     end
 
@@ -176,40 +137,6 @@ RSpec.describe "Web account pages", type: :request, openapi: false do
       pending.verify_email!
       get "/confirmation-email/status"
       expect(response.parsed_body).to include("email_verified" => true)
-    end
-
-    it "start over: signs out and goes to sign-up" do
-      web_sign_in(pending)
-      delete "/deconnexion", params: { to: "/inscription" }
-      expect(response).to redirect_to("/inscription")
-    end
-  end
-
-  describe "/account-locked" do
-    it "tells a locked admin the trial is over and points at the plans" do
-      admin.update!(created_at: 30.days.ago)
-      Subscription.start_trial!(admin, currency: "TND") unless admin.subscription
-      admin.subscription.invoices.update_all(period_start: 30.days.ago.to_date, period_end: 17.days.ago.to_date) # rubocop:disable Rails/SkipsModelValidations
-      admin.subscription.update!(active: false)
-      web_sign_in(admin)
-      get "/account-locked"
-
-      expect(response.body).to include("<app-account-locked", Web::Translations.translate("locked.title_trial_over", locale: :fr), 'href="/admin/subscription"')
-    end
-
-    it "tells staff to see their admin" do
-      role = create(:role, company: company, permissions: %w[clients])
-      web_sign_in(create(:staff_member, company: company, assigned_role: role).user)
-      get "/account-locked"
-      expect(response.body).to include(ERB::Util.html_escape(Web::Translations.translate("locked.staff_title", locale: :fr)))
-    end
-
-    it "the subscription page stays reachable from it while locked" do
-      Subscription.start_trial!(admin, currency: "TND") unless admin.subscription
-      admin.subscription.update!(active: false)
-      web_sign_in(admin)
-      get "/admin/#{company.id}/subscription"
-      expect(response).to have_http_status(:ok)
     end
   end
 end

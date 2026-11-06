@@ -40,14 +40,3 @@
   &:hover { text-decoration: underline; }
 }
 
-.ticket-phone {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  text-decoration: none;
-
-  &:hover { text-decoration: underline; }
-}

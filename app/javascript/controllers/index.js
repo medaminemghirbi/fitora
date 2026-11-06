@@ -28,10 +28,11 @@ import CatalogueController from "./catalogue_controller"
 import OnboardingController from "./onboarding_controller"
 import ActivityPickerController from "./activity_picker_controller"
 import SearchableSelectController from "./searchable_select_controller"
-import CompanySetupController from "./company_setup_controller"
 import TeamPageController from "./team_page_controller"
 import SallesPageController from "./salles_page_controller"
 import SettingsShellController from "./settings_shell_controller"
+import SettingsPreviewController from "./settings_preview_controller"
+import SettingsDirtyController from "./settings_dirty_controller"
 import SettingsCompanyController from "./settings_company_controller"
 import SettingsPlanningController from "./settings_planning_controller"
 import SettingsBookingController from "./settings_booking_controller"
@@ -41,8 +42,6 @@ import SettingsRolesController from "./settings_roles_controller"
 import SettingsMobileAppController from "./settings_mobile_app_controller"
 import ThemeSwitchController from "./theme_switch_controller"
 import ChangePasswordController from "./change_password_controller"
-import DataExchangeController from "./data_exchange_controller"
-import SubscriptionPageController from "./subscription_page_controller"
 import SubscriptionsController from "./subscriptions_controller"
 import CheckinPanelController from "./checkin_panel_controller"
 import DashboardPageController from "./dashboard_page_controller"
@@ -59,14 +58,15 @@ import MemberBookingsController from "./member_bookings_controller"
 import MemberProfileController from "./member_profile_controller"
 import DataTableController from "./data_table_controller"
 import CopyController from "./copy_controller"
+import MailEditorController from "./mail_editor_controller"
+import SuperadminActionController from "./superadmin_action_controller"
 import SuperadminCompanyController from "./superadmin_company_controller"
-import SuperadminPricingController from "./superadmin_pricing_controller"
+import SuperadminMailingController from "./superadmin_mailing_controller"
+import SuperadminNewCompanyController from "./superadmin_new_company_controller"
 import SuperadminUpdatesController from "./superadmin_updates_controller"
 import LandingController from "./landing_controller"
 import CommandPaletteController from "./command_palette_controller"
-import EntriesController from "./entries_controller"
 import MemberPhotoController from "./member_photo_controller"
-import CashClosingController from "./cash_closing_controller"
 
 const application = Application.start()
 application.register("form-checks", FormChecksController)
@@ -97,10 +97,11 @@ application.register("catalogue", CatalogueController)
 application.register("onboarding", OnboardingController)
 application.register("activity-picker", ActivityPickerController)
 application.register("searchable-select", SearchableSelectController)
-application.register("company-setup", CompanySetupController)
 application.register("team-page", TeamPageController)
 application.register("salles-page", SallesPageController)
 application.register("settings-shell", SettingsShellController)
+application.register("settings-preview", SettingsPreviewController)
+application.register("settings-dirty", SettingsDirtyController)
 application.register("settings-company", SettingsCompanyController)
 application.register("settings-planning", SettingsPlanningController)
 application.register("settings-booking", SettingsBookingController)
@@ -110,8 +111,6 @@ application.register("settings-roles", SettingsRolesController)
 application.register("settings-mobile-app", SettingsMobileAppController)
 application.register("theme-switch", ThemeSwitchController)
 application.register("change-password", ChangePasswordController)
-application.register("data-exchange", DataExchangeController)
-application.register("subscription-page", SubscriptionPageController)
 application.register("subscriptions", SubscriptionsController)
 application.register("checkin-panel", CheckinPanelController)
 application.register("dashboard-page", DashboardPageController)
@@ -128,11 +127,12 @@ application.register("member-bookings", MemberBookingsController)
 application.register("member-profile", MemberProfileController)
 application.register("data-table", DataTableController)
 application.register("copy", CopyController)
+application.register("mail-editor", MailEditorController)
+application.register("superadmin-action", SuperadminActionController)
 application.register("superadmin-company", SuperadminCompanyController)
-application.register("superadmin-pricing", SuperadminPricingController)
+application.register("superadmin-mailing", SuperadminMailingController)
+application.register("superadmin-new-company", SuperadminNewCompanyController)
 application.register("superadmin-updates", SuperadminUpdatesController)
 application.register("landing", LandingController)
 application.register("command-palette", CommandPaletteController)
-application.register("entries", EntriesController)
 application.register("member-photo", MemberPhotoController)
-application.register("cash-closing", CashClosingController)

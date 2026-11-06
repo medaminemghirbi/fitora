@@ -2,15 +2,15 @@ require "rails_helper"
 
 # An all-access contract has no `activity` of its own — it covers everything
 # its plan covers. Making `contracts.activity_id` nullable created that shape
-# without auditing the code that read `contract.activity.name`, and four
+# without auditing the code that read `contract.activity.name`, and three
 # places would have raised on the first one sold: the contract serializer,
-# the CSV export, the receipt PDF and the member's own app.
+# the receipt PDF and the member's own app.
 #
 # These are the paths a real all-access contract travels. Each one is a
 # regression test for a NoMethodError on nil.
 RSpec.describe "An all-access contract", type: :request do
   let(:admin) { create(:user, :admin) }
-  let!(:company) { create(:company, :pro, admin: admin) }
+  let!(:company) { create(:company, admin: admin) }
   let(:pilates) { create(:activity, company: company, name: "Pilates") }
   let(:boxing) { create(:activity, company: company, name: "Boxe") }
   let(:plan) { create(:contract_type, company: company, name: "Tout accès", activity: pilates) }
@@ -36,13 +36,6 @@ RSpec.describe "An all-access contract", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response.parsed_body["contracts"].map { |c| c["id"] }).to include(contract.id)
-  end
-
-  it "exports to CSV with the activities it covers, not a blank" do
-    get "/api/v1/data_exchange/contracts/export", headers: auth_headers(admin)
-
-    expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Pilates")
   end
 
   it "prints a receipt" do

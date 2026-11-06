@@ -10,7 +10,7 @@
   <ul>
     <li><strong>Comptes de la salle et de l'équipe</strong> : nom, prénom, e-mail, téléphone, mot de passe (chiffré, jamais lisible), rôle.</li>
     <li><strong>La salle</strong> : nom, adresse, coordonnées, matricule fiscal, logo, signature des contrats.</li>
-    <li><strong>Les membres</strong> : identité et coordonnées, date de naissance, adresse, contact d'urgence, photo (si la salle en prend une), informations de santé (si la salle en saisit), abonnements, paiements, réservations, présences et entrées.</li>
+    <li><strong>Les membres</strong> : identité et coordonnées, date de naissance, adresse, contact d'urgence, photo (si la salle en prend une), informations de santé (si la salle en saisit), abonnements, paiements, réservations et présences.</li>
     <li><strong>Données techniques</strong> : journaux de connexion et d'erreurs, adresse IP, cookies nécessaires à la session.</li>
   </ul>
 </section>
@@ -18,10 +18,10 @@
 <section>
   <h2>3. Pourquoi ?</h2>
   <ul>
-    <li>Fournir le Service : gérer les membres, les abonnements, le planning, les entrées et les paiements (exécution du contrat).</li>
-    <li>Facturer l'abonnement Fitora et tenir la comptabilité (obligation légale).</li>
+    <li>Fournir le Service : gérer les membres, les abonnements, le planning et les paiements (exécution du contrat).</li>
     <li>Assurer la sécurité du Service, prévenir les abus et corriger les erreurs (intérêt légitime).</li>
-    <li>Envoyer les e-mails du compte : confirmation, mot de passe oublié, invitation à l'application membre.</li>
+    <li>Envoyer les e-mails du compte : identifiants, confirmation, mot de passe oublié, invitation à l'application membre.</li>
+    <li>Écrire aux administrateurs des salles au sujet du Service et de leur contrat (exécution du contrat).</li>
   </ul>
   <p>Fitora n'utilise pas les données des membres à ses propres fins, ne fait pas de publicité ciblée et ne vend aucune donnée.</p>
 </section>
@@ -37,7 +37,7 @@
     <li>Données des membres : tant que la salle les conserve. Un membre retiré par toutes ses salles, sans compte personnel, est anonymisé.</li>
     <li>Notifications : <%= PruneOldRecordsJob::READ_NOTIFICATIONS_KEPT.in_days.to_i %> jours une fois lues, un an au plus.</li>
     <li>Journal d'activité (qui a fait quoi) : <%= PruneOldRecordsJob::AUDIT_LOGS_KEPT.in_years.to_i %> ans.</li>
-    <li>Factures et données comptables : la durée imposée par la loi (dix ans).</li>
+    <li>E-mails envoyés par Fitora aux administrateurs : tant que le compte existe.</li>
     <li>Sauvegardes chiffrées : quatorze jours.</li>
   </ul>
 </section>

@@ -1,8 +1,8 @@
 module Web
-  # Between signing up and clicking the emailed link (ConfirmEmailComponent):
-  # waits for the click — from this tab, another one, or a phone — and moves
-  # on by itself. Open only to a signed-in admin whose address is still
-  # unconfirmed (emailPendingGuard); anyone else goes home.
+  # Between a first sign-in and clicking the emailed link
+  # (ConfirmEmailComponent): waits for the click — from this tab, another one,
+  # or a phone — and moves on by itself. Open only to a signed-in admin whose
+  # address is still unconfirmed (emailPendingGuard); anyone else goes home.
   class ConfirmationsController < BaseController
     layout "web/auth"
 
@@ -15,7 +15,7 @@ module Web
 
     # GET /confirmation-email/status — has the link been clicked yet?
     def status
-      render json: { email_verified: current_user.reload.email_verified?, continue_url: continue_url }
+      render json: { email_verified: current_user.reload.email_verified?, continue_url: home_path }
     end
 
     # POST /confirmation-email/resend — the API's answers, for the countdown.
@@ -36,12 +36,6 @@ module Web
       return if action_name != "show" || email_confirmation_required?
 
       go_home
-    end
-
-    # ConfirmEmailComponent#continue: naming the gym, or home for an admin
-    # who already has one.
-    def continue_url
-      current_user.current_company.nil? ? "/admin/setup-company" : home_path
     end
 
     def rate_limited

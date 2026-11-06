@@ -1,0 +1,103 @@
+<%# The documents a gym's members get, laid out as the PDFs print them
+    (Receipts::ContractPdf, Receipts::ContractAgreementPdf), in French as they
+    are, redrawn as the form is typed in (settings-preview, on an ancestor).
+    What each sale fills in stays blank: nothing here is made up. %>
+<% logo = company[:logo_url]; signature = company[:signature_url]; terms = settings_doc_terms(company) %>
+<aside class="set-preview" aria-label="<%= ngt("settings.preview_title") %>">
+  <div class="set-preview-head">
+    <h3><%= ngt("settings.preview_title") %></h3>
+    <% if docs.many? %>
+      <div class="fx-segmented" role="group" aria-label="<%= ngt("settings.preview_title") %>">
+        <% docs.each_with_index do |doc, index| %>
+          <button type="button"<%= raw(' class="is-active"') if index.zero? %> data-doc="<%= doc %>" data-settings-preview-target="tab" data-action="settings-preview#show"><%= ngt("settings.preview_#{doc}") %></button>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <% if docs.include?("receipt") %>
+    <article class="set-doc" dir="ltr" lang="fr" data-doc="receipt" data-settings-preview-target="doc"<%= raw(" hidden") unless docs.first == "receipt" %>>
+      <div class="set-doc-head">
+        <div>
+          <% if logo.present? %><img class="set-doc-logo" src="<%= logo %>" alt="" /><% end %>
+          <div class="set-doc-name"><%= settings_doc_line(company, :name) %></div>
+        </div>
+        <div class="set-doc-lines is-end">
+          <%= settings_doc_line(company, :address, :city, join: " - ") %>
+          <%= settings_doc_line(company, :email, prefix: "E-mail: ") %>
+          <%= settings_doc_line(company, :phone, prefix: "Téléphone: ") %>
+          <%= settings_doc_line(company, :tax_id, prefix: "Matricule fiscal: ") %>
+        </div>
+      </div>
+      <hr />
+      <div>
+        <span class="set-doc-label">Destinataire:</span>
+        <span class="set-doc-bar is-short"></span>
+      </div>
+      <div>
+        <span class="set-doc-label">Description</span>
+        <span class="set-doc-bar"></span>
+      </div>
+      <hr />
+      <div class="set-doc-head">
+        <span class="set-doc-strong">Total</span>
+        <span class="set-doc-bar is-short" style="max-width: 72px"></span>
+      </div>
+    </article>
+  <% end %>
+
+  <% if docs.include?("contract") %>
+    <article class="set-doc" dir="ltr" lang="fr" data-doc="contract" data-settings-preview-target="doc"<%= raw(" hidden") unless docs.first == "contract" %>>
+      <div class="set-doc-head">
+        <div>
+          <% if logo.present? %><img class="set-doc-logo" src="<%= logo %>" alt="" /><% end %>
+          <div class="set-doc-name"><%= settings_doc_line(company, :name) %></div>
+        </div>
+        <span class="set-doc-title">CONTRAT D'ABONNEMENT</span>
+      </div>
+      <hr />
+      <span class="set-doc-strong">Entre les soussignés</span>
+      <div class="set-doc-parties">
+        <div class="set-doc-party">
+          <span class="set-doc-strong">LE CLUB</span>
+          <div class="set-doc-lines">
+            <%= settings_doc_line(company, :name) %>
+            <%= settings_doc_line(company, :address, :city, join: ", ") %>
+            <%= settings_doc_line(company, :phone, prefix: "Tél. : ") %>
+            <%= settings_doc_line(company, :email, prefix: "E-mail : ") %>
+            <%= settings_doc_line(company, :tax_id, prefix: "Matricule fiscal : ") %>
+            <%= settings_doc_line(company, :signatory_name, prefix: "Représenté par : ") %>
+          </div>
+        </div>
+        <div class="set-doc-party">
+          <span class="set-doc-strong">LE MEMBRE</span>
+          <span class="set-doc-bar"></span>
+          <span class="set-doc-bar is-short"></span>
+          <span class="set-doc-bar"></span>
+        </div>
+      </div>
+      <div>
+        <span class="set-doc-strong">Conditions</span>
+        <ol class="set-doc-terms" data-settings-preview-target="terms"<%= raw(" hidden") if terms.empty? %>>
+          <% terms.first(3).each do |clause| %><li><%= clause %></li><% end %>
+        </ol>
+        <p class="set-doc-terms-default" data-settings-preview-target="termsDefault"<%= raw(" hidden") if terms.any? %>>Conditions par défaut de Fitora.</p>
+      </div>
+      <div class="set-doc-parties">
+        <div>
+          <div class="set-doc-signature">
+            <img src="<%= signature %>" alt="" data-settings-preview-target="signature"<%= raw(" hidden") if signature.blank? %> />
+            <span class="set-doc-signature-empty" data-settings-preview-target="signatureEmpty"<%= raw(" hidden") if signature.present? %>><%= ngt("settings.signature_missing") %></span>
+          </div>
+          <div class="set-doc-lines"><%= settings_doc_line(company, :signatory_name, fallback: :name) %></div>
+        </div>
+        <div>
+          <div class="set-doc-signature"></div>
+          <span class="set-doc-bar is-short"></span>
+        </div>
+      </div>
+    </article>
+  <% end %>
+
+  <p class="set-preview-hint"><%= ngt("settings.preview_hint") %></p>
+</aside>

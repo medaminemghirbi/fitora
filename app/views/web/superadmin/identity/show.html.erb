@@ -1,0 +1,39 @@
+<%# Who publishes Fitora, as its legal pages name it: one form, saved at once. %>
+<% s = @setting %>
+<% superadmin_crumbs [ ngt("superadmin.identity.nav") ] %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.identity.title"), desc: ngt("superadmin.identity.subtitle") } do %>
+  <a href="/cgu" class="btn btn-outline-secondary" target="_blank" rel="noopener" data-turbo="false">
+    <i class="bi bi-file-earmark-text"></i> <%= ngt("legal.terms_title") %>
+  </a>
+<% end %>
+
+<% unless s.identity_complete? %>
+  <div class="sa-notice"><i class="bi bi-exclamation-triangle"></i> <%= ngt("superadmin.identity.incomplete") %></div>
+<% end %>
+<% if s.errors.any? %>
+  <div class="sa-notice sa-notice--danger" role="alert">
+    <i class="bi bi-x-octagon"></i>
+    <span><%= s.errors.full_messages.to_sentence %></span>
+  </div>
+<% end %>
+
+<form action="/superadmin/identity" method="post" class="app-card sa-form-card">
+  <input type="hidden" name="_method" value="patch">
+  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+  <div class="app-card-body sa-form-grid">
+    <% [ [ :legal_name, "superadmin.identity.legal_name", "Fitora SARL" ], [ :tax_id, "superadmin.identity.tax_id", "1234567/A/M/000" ],
+         [ :address, "superadmin.identity.address", "" ], [ :city, "superadmin.identity.city", "1053 Tunis, Tunisie" ],
+         [ :phone, "superadmin.identity.phone", "+216 …" ], [ :email, "superadmin.identity.email", "contact@…" ],
+         [ :website, "superadmin.identity.website", "www.…" ] ].each do |field, label, placeholder| %>
+      <div>
+        <label class="form-label" for="identity-<%= field %>"><%= ngt(label) %><%= " *" if %i[legal_name tax_id].include?(field) %></label>
+        <input id="identity-<%= field %>" name="identity[<%= field %>]" class="form-control<%= " is-invalid" if s.errors[field].any? %>" value="<%= s[field] %>" placeholder="<%= placeholder %>"
+               <%= raw(%(dir="ltr")) if %i[tax_id phone email website].include?(field) %> maxlength="200" />
+      </div>
+    <% end %>
+  </div>
+
+  <div class="sa-form-foot">
+    <button type="submit" class="btn btn-primary"><%= ngt("common.save") %></button>
+  </div>
+</form>

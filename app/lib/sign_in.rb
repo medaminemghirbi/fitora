@@ -16,16 +16,19 @@ class SignIn
     email = email.to_s.downcase.strip
 
     user = User.active.where.not(role: :superadmin).find_by(email: email)
-    return Result.new(user: user) if user&.authenticate(password)
+    if user&.authenticate(password)
+      # Said only after the password checked out, like a member's below.
+      return Result.new(error: :access_suspended) if user.access_suspended?
+
+      return Result.new(user: user)
+    end
 
     client = Client.active.where.not(password_digest: nil).find_by(email: email)
     spend_a_password_check(password) if user.nil? && client.nil?
     if client&.authenticate(password)
-      # The member app is a Pro feature. Said only after the password checked
-      # out, so it tells nobody but the member which gyms exist.
-      unless client.companies.includes(admin: { subscription: :invoices }).any?(&:member_app?)
-        return Result.new(error: :member_app_not_included)
-      end
+      # Said only after the password checked out, so it tells nobody but the
+      # member that they have left their last gym.
+      return Result.new(error: :no_gym) unless client.companies.exists?
 
       return Result.new(client: client)
     end

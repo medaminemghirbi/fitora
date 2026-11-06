@@ -26,11 +26,10 @@ RSpec.describe "Web members page", type: :request, openapi: false do
       expect(response.body).to include("<app-clients-list>", 'class="lst-head"')
     end
 
-    it "staff with `clients`, without the admin's export" do
+    it "staff with `clients`" do
       web_sign_in(staff_with(%w[clients]))
       get page_path
       expect(response).to have_http_status(:ok)
-      expect(response.body).not_to include("clients-list#exportCsv")
     end
 
     it "staff without `clients`: their home, as capabilityGuard sends them" do
@@ -57,15 +56,6 @@ RSpec.describe "Web members page", type: :request, openapi: false do
       get page_path
 
       expect(response).not_to have_http_status(:ok)
-    end
-
-    it "a locked gym: the locked page" do
-      subscription = create(:subscription, company: company)
-      subscription.update!(active: false)
-      web_sign_in(admin)
-      get page_path
-
-      expect(response).to redirect_to("/account-locked")
     end
 
     it "a coach: the coach shell" do
@@ -186,26 +176,6 @@ RSpec.describe "Web members page", type: :request, openapi: false do
     end
   end
 
-  describe "the CSV export" do
-    before { create(:client, company: company, first_name: "Export", last_name: "Me") }
-
-    it "the admin gets the API's file, named as the Angular app names it" do
-      web_sign_in(admin)
-      get "#{page_path}.csv"
-      web_csv = response.body
-      expect(response.headers["Content-Disposition"]).to include("adherents-#{Date.current.iso8601}.csv")
-
-      get "/api/v1/clients", params: { format: "csv" }, headers: auth_headers(admin).merge("X-Company-Id" => company.id)
-      expect(web_csv).to eq(response.body)
-    end
-
-    it "nobody else" do
-      web_sign_in(staff_with(%w[clients]))
-      get "#{page_path}.csv"
-      expect(response).to be_redirect
-    end
-  end
-
   describe "the wizard (POST)" do
     let(:yoga) { create(:activity, company: company, name: "Yoga") }
     let(:plan) { create(:contract_type, company: company, name: "Yoga illimité", activity: yoga, price: 160) }
@@ -222,6 +192,18 @@ RSpec.describe "Web members page", type: :request, openapi: false do
       expect(response).to redirect_to("/admin/#{company.id}/clients/#{client.id}")
       expect(flash[:success]).to eq(Web::Translations.translate("clients.created", locale: :fr))
       expect(AuditLog.where(action: "client.created", auditable_id: client.id)).to exist
+    end
+
+    it "offers the gender as the list filters it, and the member is found by it" do
+      web_sign_in(admin)
+      get page_path
+      expect(response.body).to match(%r{<select[^>]*id="cl-gender".*?value="male".*?value="female".*?</select>}m)
+
+      post page_path, params: { client: person.merge(gender: "female") }
+      get page_path, params: { gender: "female" }
+      expect(response.body).to include("Rym Haddad")
+      get page_path, params: { gender: "male" }
+      expect(response.body).not_to include("Rym Haddad")
     end
 
     it "with a plan and the money: the contract and the payment, in one go" do
@@ -314,8 +296,8 @@ RSpec.describe "Web members page", type: :request, openapi: false do
     end
 
     it "keep the Angular router's own redirects" do
-      { "/admin" => "dashboard", "/admin/coaches" => "team", "/admin/staff" => "team", "/admin/modules" => "subscription",
-        "/admin/contracts/plans" => "catalogue", "/admin/data-exchange" => "settings/data-exchange",
+      { "/admin" => "dashboard", "/admin/coaches" => "team", "/admin/staff" => "team",
+        "/admin/contracts/plans" => "catalogue",
         "/admin/getting-started" => "onboarding" }.each do |legacy, page|
         get legacy
         expect(response).to redirect_to("/admin/#{company.id}/#{page}"), legacy

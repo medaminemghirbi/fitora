@@ -1,0 +1,24 @@
+<%# A subject and a text with variables, for a template or a mailing: `scope` is
+    the params' name, `record` what they hold now, `errors` the refused fields.
+    The caller's form carries the mail-editor controller. %>
+<div class="mb-3">
+  <label class="form-label" for="<%= scope %>-subject"><%= ngt("superadmin.mailing.subject") %> *</label>
+  <input id="<%= scope %>-subject" name="<%= scope %>[subject]" class="form-control<%= " is-invalid" if errors[:subject] %>" value="<%= record.subject %>" maxlength="<%= MailContent::MAX_SUBJECT %>"
+         data-mail-editor-target="subject" data-action="focusin->mail-editor#remember" />
+  <% if errors[:subject] %><div class="invalid-feedback d-block"><%= errors[:subject] %></div><% end %>
+</div>
+<div class="mb-3">
+  <label class="form-label" for="<%= scope %>-body"><%= ngt("superadmin.mailing.body") %> *</label>
+  <textarea id="<%= scope %>-body" name="<%= scope %>[body]" class="form-control sa-mail-input<%= " is-invalid" if errors[:body] %>" rows="9" maxlength="<%= MailContent::MAX_BODY %>"
+            data-mail-editor-target="body" data-action="focusin->mail-editor#remember"><%= record.body %></textarea>
+  <% if errors[:body] %><div class="invalid-feedback d-block"><%= errors[:body] %></div><% end %>
+</div>
+<div>
+  <span class="form-label d-block"><%= ngt("superadmin.mailing.variables") %></span>
+  <div class="sa-mail-chips">
+    <% AdminMailing::VARIABLES.each do |variable| %>
+      <button type="button" class="sa-mail-chip" data-action="mail-editor#insert" data-mail-editor-token-param="{{<%= variable %>}}"><%= ngt("superadmin.mailing.var_#{variable}") %></button>
+    <% end %>
+  </div>
+  <p class="sa-sub mt-2 mb-0"><%= ngt("superadmin.mailing.variables_hint") %></p>
+</div>

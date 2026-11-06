@@ -11,13 +11,12 @@ import "./lib/live_notifications"
 Turbo.config.drive.progressBarDelay = 0
 
 // jwt.interceptor, for the requests pages make themselves: a 401 means the
-// session is over (sign in again), a 402 that the account is locked.
+// session is over (sign in again).
 const nativeFetch = window.fetch.bind(window)
 window.fetch = async (...args) => {
   const response = await nativeFetch(...args)
   if (new URL(response.url || String(args[0]), window.location.href).origin === window.location.origin) {
-    if (response.status === 402) window.location.assign("/account-locked")
-    else if (response.status === 401) window.location.assign("/connexion")
+    if (response.status === 401) window.location.assign("/connexion")
   }
   return response
 }

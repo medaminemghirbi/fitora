@@ -3,30 +3,6 @@ require "rails_helper"
 RSpec.describe SupportTicket, type: :model do
   let(:sample_path) { Rails.root.join("spec/fixtures/files/sample.png") }
 
-  describe "the number to call back on a plan request" do
-    it "is required on a plan request" do
-      ticket = build(:support_ticket, kind: :upgrade, contact_phone: "  ")
-      expect(ticket).not_to be_valid
-      expect(ticket.errors[:contact_phone]).to be_present
-    end
-
-    it "is optional on any other ticket" do
-      expect(build(:support_ticket, contact_phone: nil)).to be_valid
-    end
-
-    it "takes the usual ways of writing a number" do
-      [ "+216 22 123 456", "22123456", "(+33) 6.12.34.56.78", "06-12-34-56-78" ].each do |phone|
-        expect(build(:support_ticket, kind: :upgrade, contact_phone: phone)).to be_valid, phone
-      end
-    end
-
-    it "refuses what is not a number, or too short to be one" do
-      [ "appelez-moi", "1234", "+216 22 abc 456" ].each do |phone|
-        expect(build(:support_ticket, kind: :upgrade, contact_phone: phone)).not_to be_valid, phone
-      end
-    end
-  end
-
   it "rejects a disallowed attachment content type" do
     ticket = build(:support_ticket)
     ticket.attachments.attach(

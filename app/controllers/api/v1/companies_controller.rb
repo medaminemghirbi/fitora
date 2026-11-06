@@ -6,9 +6,6 @@ module Api
       before_action :require_admin!, except: [ :index, :switch ]
       before_action :set_workplace, only: [ :switch ]
       before_action :set_owned_company, only: [ :update_moderators ]
-      # Several salles — the "Mes salles" page, its moderators, and moving
-      # between salles — are Pro's. Starter and the free trial run one.
-      before_action :require_pro!, only: [ :network, :update_moderators, :switch ]
 
       # GET /api/v1/company — the admin's currently ACTIVE company (see
       # #switch). Everything else in the API (current_company) follows
@@ -19,7 +16,7 @@ module Api
 
       # GET /api/v1/companies — every salle this login can switch between
       # (User#workplaces), for the navbar switcher. Order is oldest-first
-      # (predictable, matches signup order) rather than alphabetical, which
+      # (predictable, matches opening order) rather than alphabetical, which
       # would reorder itself as they rename one.
       def index
         companies = current_user.workplaces.order(:created_at)
@@ -34,18 +31,9 @@ module Api
         render json: network_json
       end
 
-      # POST /api/v1/companies — the admin's first salle, or another under
-      # the same login: on a paid Pro account as many as they like, at one
-      # price however many salles it covers; Starter runs one. Becomes the
-      # active company immediately.
+      # POST /api/v1/companies — another salle under the same login, as many as
+      # the admin likes. Becomes the active company immediately.
       def create
-        unless current_user.may_open_salle?
-          return render json: {
-            error: "multi_salle_not_included",
-            message: "Several salles come with Fitora Pro."
-          }, status: :forbidden
-        end
-
         company = Company.open!(admin: current_user, attributes: company_params,
                                 activity_template_ids: params[:activity_template_ids],
                                 custom_activities: custom_activities_param)
@@ -95,13 +83,13 @@ module Api
         SalleNetwork.for(current_user, current_company)
       end
 
-      # Activities the salle names itself at signup — [{ name:, emoji: }].
+      # Activities the salle names itself as it opens — [{ name:, emoji: }].
       def custom_activities_param
         params.fetch(:custom_activities, []).map { |entry| entry.permit(:name, :emoji) }
       end
 
-      def company_params(branding: true)
-        CompanyProfile.attributes(params, branding: branding)
+      def company_params
+        CompanyProfile.attributes(params)
       end
     end
   end

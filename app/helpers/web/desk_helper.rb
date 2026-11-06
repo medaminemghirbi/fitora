@@ -1,13 +1,12 @@
 module Web
   # The desk shell's small decisions, as DeskShellComponent makes them.
   module DeskHelper
-    # DeskShellComponent#navItems: the desk's pages and the door, then the
+    # DeskShellComponent#navItems: the desk's pages, then the
     # admin shell's pages a desk works from — crossing to them is a full
     # page load.
     def desk_nav
       [
         [ desk_path("dashboard"), "bi-house", "desk.nav.today" ],
-        [ "/admin/#{salle.id}/entries", "bi-qr-code-scan", "desk.nav.entries" ],
         [ desk_path("checkin"), "bi-check2-square", "desk.nav.checkin" ],
         [ "/admin/#{salle.id}/clients", "bi-people", "desk.nav.members" ],
         [ "/admin/#{salle.id}/calendar", "bi-calendar3", "desk.nav.schedule" ],

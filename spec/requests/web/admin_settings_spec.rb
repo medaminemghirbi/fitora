@@ -2,12 +2,41 @@ require "rails_helper"
 
 # Module 6: settings. openapi: false — the API calls are oracles.
 RSpec.describe "Web settings", type: :request, openapi: false do
-  let(:company) { create(:company, :pro, setup_dismissed_at: Time.current) }
+  let(:company) { create(:company, setup_dismissed_at: Time.current) }
   let(:admin) { company.admin }
   let(:base) { "/admin/#{company.id}/settings" }
   let(:api) { auth_headers(admin).merge("X-Company-Id" => company.id) }
 
   before { web_sign_in(admin) }
+
+  describe "the documents beside the forms" do
+    before { company.update!(tax_id: "1789456/K/A/M/000", phone: "+216 71 774 200", signatory_name: "Meriem Ben Ammar") }
+
+    it "prints the gym's details as each PDF prints them" do
+      get "#{base}/legal"
+      expect(response.body).to include("Matricule fiscal: 1789456/K/A/M/000", "Matricule fiscal : 1789456/K/A/M/000")
+      expect(response.body).to include("Téléphone: +216 71 774 200", "Tél. : +216 71 774 200", "Représenté par : Meriem Ben Ammar")
+    end
+
+    it "shows only the contract next to the contract's own settings" do
+      get "#{base}/contracts"
+      expect(response.body).to include('data-doc="contract"')
+      expect(response.body).not_to include('data-doc="receipt"')
+    end
+  end
+
+  describe "saving one section" do
+    it "leaves what the other sections hold as it is" do
+      name = company.name
+      company.update!(phone: "+216 71 774 200")
+      patch "#{base}/company", params: { company: { tax_id: "42/A", timezone: "Africa/Tunis", country: "TN" } }, as: :json
+      expect(response).to have_http_status(:ok)
+      expect(company.reload).to have_attributes(tax_id: "42/A", name: name, phone: "+216 71 774 200")
+
+      patch "#{base}/company", params: { company: { phone: "+216 20 000 000" } }, as: :json
+      expect(company.reload).to have_attributes(tax_id: "42/A", name: name, phone: "+216 20 000 000")
+    end
+  end
 
   describe "the shell" do
     it "opens on the first section, and on it for an unknown one" do
@@ -15,24 +44,86 @@ RSpec.describe "Web settings", type: :request, openapi: false do
       expect(response).to redirect_to("#{base}/company")
       get "#{base}/nowhere"
       expect(response).to redirect_to("#{base}/company")
-      get "/admin/#{company.id}/data-exchange"
-      expect(response).to redirect_to("#{base}/data-exchange")
     end
 
     it "renders every section" do
-      %w[company branding contracts planning booking roles data-exchange mobile-app appearance account].each do |section|
+      %w[company legal branding contracts planning booking roles mobile-app appearance account].each do |section|
         get "#{base}/#{section}"
         expect(response).to have_http_status(:ok), section
-        expect(response.body).to include("<app-settings-shell", "settings-tab")
+        expect(response.body).to include("set-nav", "set-main-head", "is-settings-mode")
       end
     end
 
-    it "locks the Pro tools below paid Pro" do
-      admin.subscription.update!(plan: :starter)
-      %w[branding roles data-exchange mobile-app].each do |section|
-        get "#{base}/#{section}"
-        expect(response.body).to include("pro-lock"), section
+    it "lists the sections by what they are about, the login's own apart" do
+      get "#{base}/company"
+      expect(response.body.scan('data-settings-shell-target="group"').size).to eq(4)
+      page = "/admin/#{company.id}"
+      order = [ "#{base}/company", "#{base}/legal", "#{base}/branding", "#{page}/salles", "#{base}/planning", "#{base}/booking", "#{page}/catalogue",
+                "#{base}/contracts", "#{page}/team", "#{base}/roles", "#{base}/mobile-app", "#{base}/account", "#{base}/appearance" ]
+      menu = response.body[/<nav class="set-nav".*?<\/nav>/m]
+      positions = order.map { |href| menu.index(%(href="#{href}")) }
+      expect(positions).to all(be_present)
+      expect(positions).to eq(positions.sort)
+    end
+
+    it "keeps what is set up once out of the main menu, and in its own" do
+      page = "/admin/#{company.id}"
+      %w[catalogue team salles].each do |path|
+        get "#{page}/#{path}"
+        expect(response).to have_http_status(:ok), path
+        expect(response.body).to include("set-nav", "is-settings-mode")
+        expect(response.body[/<nav class="set-nav".*?<\/nav>/m]).to include(%(href="#{page}/#{path}" class="set-nav-item is-active"))
+        rail = response.body[/<app-rail.*?<\/app-rail>/m]
+        expect(rail).not_to include(%(href="#{page}/#{path}"))
+        expect(rail).to match(/href="#{Regexp.escape(page)}\/settings" class="rail-item is-active"/)
       end
+
+      get "#{base}/catalogue"
+      expect(response).to redirect_to("#{page}/catalogue")
+    end
+
+    it "lists the plateau only for a gym that uses it" do
+      get "#{base}/company"
+      expect(response.body).not_to include(%(href="/admin/#{company.id}/spaces"))
+
+      company.update!(settings: { features: { spaces: true } })
+      get "/admin/#{company.id}/spaces"
+      expect(response.body).to include("set-nav", %(href="/admin/#{company.id}/spaces" class="set-nav-item is-active"))
+      expect(response.body[/<app-rail.*?<\/app-rail>/m]).not_to include(%(href="/admin/#{company.id}/spaces"))
+    end
+
+    it "gives a role that manages one of these pages the way in, and only to that" do
+      staff = create(:staff_member, company: company, role: :moderator)
+      staff.assigned_role.update!(permissions: %w[contract_types])
+      delete "/deconnexion"
+      web_sign_in(staff.user)
+
+      get "/admin/#{company.id}/catalogue"
+      expect(response).to have_http_status(:ok)
+      expect(response.body[/<app-rail.*?<\/app-rail>/m]).to include(%(href="/admin/#{company.id}/settings"))
+      menu = response.body[/<nav class="set-nav".*?<\/nav>/m]
+      expect(menu).to include("/catalogue", "#{base}/account", "#{base}/appearance")
+      expect(menu).not_to include("#{base}/company", "/team", "/salles", "#{base}/roles")
+
+      staff.assigned_role.update!(permissions: %w[clients])
+      get "/admin/#{company.id}/clients"
+      expect(response.body[/<app-rail.*?<\/app-rail>/m]).not_to include(%(href="/admin/#{company.id}/settings"))
+    end
+
+    it "shrinks the main menu for settings only" do
+      get "#{base}/company"
+      expect(response.body).to match(/<a [^>]*rail-item[^>]* title="/)
+      get "/admin/#{company.id}/dashboard"
+      expect(response.body).not_to include("is-settings-mode")
+    end
+
+    it "flags the contracts until the gym has a signature" do
+      get "#{base}/company"
+      expect(response.body).to include("set-dot")
+
+      company.signature.attach(io: StringIO.new(Base64.decode64("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")), filename: "s.png", content_type: "image/png")
+      get "#{base}/company"
+      expect(response.body).not_to include("set-dot")
     end
 
     it "lets a login that manages the catalogue in, to its own two sections only" do
@@ -41,7 +132,7 @@ RSpec.describe "Web settings", type: :request, openapi: false do
       delete "/deconnexion"
       web_sign_in(staff.user)
       get "#{base}/company"
-      expect(response).to redirect_to("#{base}/appearance")
+      expect(response).to redirect_to("/admin/#{company.id}/catalogue")
 
       staff.assigned_role.update!(permissions: %w[clients])
       get "#{base}/appearance"
@@ -58,13 +149,6 @@ RSpec.describe "Web settings", type: :request, openapi: false do
       expect([ company.name, company.city, company.business_hours_start, company.working_days, company.settings.booking[:cancellation_hours], company.feature?(:waitlist) ])
         .to eq([ "Lumen Marsa", "La Marsa", "07:00", [ 1, 2, 3 ], 6, true ])
       expect(response.parsed_body.dig("company", "settings", "booking", "cancellation_hours")).to eq(6)
-    end
-
-    it "drops the branding below Pro, as the API does" do
-      admin.subscription.update!(plan: :starter)
-      patch "#{base}/company", params: { company: { primary_color: "#ff0000", signatory_name: "Meriem" } }, as: :json
-      expect(company.reload.brand_color).to be_nil
-      expect(company.signatory_name).to eq("Meriem")
     end
 
     it "takes a signature file and removes it on request" do
@@ -128,16 +212,10 @@ RSpec.describe "Web settings", type: :request, openapi: false do
       expect(response.parsed_body["error"]).to eq("A built-in role cannot be deleted.")
     end
 
-    it "is Pro's" do
-      admin.subscription.update!(plan: :starter)
-      post "#{base}/roles", params: { role: { name: "X" } }, as: :json
-      expect(response.parsed_body["error"]).to eq("pro_required")
-    end
-
     it "answers the matrix alone for load()" do
       get "#{base}/roles", params: { fragment: 1 }
       expect(response.body).to include("rm-table")
-      expect(response.body).not_to include("settings-tab")
+      expect(response.body).not_to include("set-nav")
     end
   end
 
@@ -183,31 +261,6 @@ RSpec.describe "Web settings", type: :request, openapi: false do
       post "#{base}/mobile-app/regenerate", params: { audience: "member" }, as: :json
       expect(response.parsed_body["member_code"]).not_to eq(before)
       expect(AuditLog.where(action: "mobile_app.key_regenerated")).to exist
-    end
-  end
-
-  describe "import / export, as /api/v1/data_exchange" do
-    it "names the files as the page does and follows an import to its end" do
-      get "#{base}/data-exchange/clients/template"
-      expect(response.headers["Content-Disposition"]).to include("fitora-clients-modele.csv")
-      get "#{base}/data-exchange/clients/export"
-      expect(response.headers["Content-Disposition"]).to include("fitora-clients-export.csv")
-
-      csv = Rack::Test::UploadedFile.new(StringIO.new("name,emoji\nZumba,💃\n"), "text/csv", original_filename: "a.csv")
-      post "#{base}/data-exchange/activities/import", params: { file: csv }
-      expect(response).to have_http_status(:accepted)
-      id = response.parsed_body["id"]
-      get "#{base}/data-exchange/imports/#{id}", as: :json
-      expect(response.parsed_body).to include("id" => id, "entity" => "activities")
-    end
-
-    it "keeps the export for the admin" do
-      staff = create(:staff_member, company: company, role: :moderator)
-      staff.assigned_role.update!(permissions: %w[clients])
-      delete "/deconnexion"
-      web_sign_in(staff.user)
-      get "#{base}/data-exchange/clients/export"
-      expect(response).to have_http_status(:forbidden)
     end
   end
 end

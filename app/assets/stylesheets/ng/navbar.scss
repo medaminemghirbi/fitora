@@ -271,25 +271,6 @@ button.app-navbar-m-item {
   &:disabled { cursor: not-allowed; color: var(--color-text-secondary); &:hover { background: none; } }
 }
 
-// Why the other salles are locked, and the way to Pro for the admin.
-.app-company-switcher-locked {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.25rem 0 0;
-  padding: 0.5rem 0.6rem;
-  border-radius: var(--radius-sm);
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1.35;
-  text-decoration: none;
-
-  i { color: inherit; }
-}
-a.app-company-switcher-locked:hover { text-decoration: underline; }
-
 .app-company-switcher-trigger {
   display: inline-flex;
   align-items: center;
@@ -328,8 +309,3 @@ a.app-company-switcher-locked:hover { text-decoration: underline; }
   flex-shrink: 0;
 }
 
-// Several salles are Pro's: a lock on the switcher itself on Starter / trial.
-.app-company-switcher-lock {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
-}

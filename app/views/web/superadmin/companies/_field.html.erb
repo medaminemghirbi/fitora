@@ -1,0 +1,11 @@
+<%# One field of the new-account form: its label, its input and what is wrong
+    with it. `name` is the param, `error` the attribute's message. %>
+<% id = name.tr("[]", "-").squeeze("-").chomp("-") %>
+<div>
+  <label class="form-label" for="<%= id %>"><%= label %><%= " *" if local_assigns[:required] %></label>
+  <input id="<%= id %>" name="<%= name %>" type="<%= local_assigns.fetch(:type, "text") %>" class="form-control<%= " is-invalid" if local_assigns[:error] %>" value="<%= local_assigns[:value] %>"
+         <%= raw(%(dir="ltr")) if local_assigns[:ltr] %> maxlength="200"<%= raw(%( aria-describedby="#{id}-error" aria-invalid="true")) if local_assigns[:error] %> />
+  <% if local_assigns[:error] %>
+    <div id="<%= id %>-error" class="invalid-feedback d-block"><%= error %></div>
+  <% end %>
+</div>

@@ -76,6 +76,8 @@ env:
     DB_NAME: backend_production
     SMTP_ADDRESS: <SMTP_HOST>
     SMTP_PORT: 587
+    # The console's account, created once by the seed on the first deploy.
+    SUPERADMIN_EMAIL: <SUPERADMIN_EMAIL>
   # SMTP and APP_HOST are checked at boot (config/initializers/required_env.rb):
   # missing, they stop the deploy instead of failing quietly later.
   secret:
@@ -86,6 +88,7 @@ env:
     - SENTRY_DSN
     # - SENTRY_BROWSER_DSN   # optional: browser errors (.kamal/secrets.example)
     - SIDEKIQ_WEB_PASSWORD   # 24 characters or more, or /sidekiq is not mounted
+    - SUPERADMIN_PASSWORD    # read once, on the first deploy; never reset afterwards
     # add S3 creds here once storage.yml :production points at a bucket
     # - AWS_ACCESS_KEY_ID
     # - AWS_SECRET_ACCESS_KEY

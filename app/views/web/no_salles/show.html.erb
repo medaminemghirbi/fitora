@@ -1,0 +1,19 @@
+<%# ng: reset-password %>
+<%# ng-host: reset-password %>
+<%# A login with no salle: who can sort it out, and the way out. %>
+<% content_for :auth_panel do %>
+  <div authPanel class="auth-panel">
+    <span class="auth-panel-icon" aria-hidden="true"><i class="bi bi-building"></i></span>
+    <p class="auth-panel-title">
+      <%= ngt("auth.no_salle_panel_1") %>
+      <em><%= ngt("auth.no_salle_panel_2") %></em>
+    </p>
+  </div>
+<% end %>
+<app-auth-pro-shell>
+  <%= render layout: "web/shared/auth_pro_shell", locals: { tone: "soft" } do %>
+    <h1 class="auth-title"><%= ngt("auth.no_salle_title") %></h1>
+    <p class="auth-subtitle"><%= ngt("auth.no_salle_body") %> <a href="mailto:contact@fitora.io">contact@fitora.io</a></p>
+    <%= button_to ngt("auth.logout"), web_sign_out_path, method: :delete, class: "btn btn-primary w-100", form: { data: { turbo: false } } %>
+  <% end %>
+</app-auth-pro-shell>

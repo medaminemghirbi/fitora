@@ -5,7 +5,7 @@ require "rails_helper"
 # whole, and a masked value sent back is refused rather than saved.
 RSpec.describe "E-mail masking", type: :request do
   let(:admin) { create(:user, :admin) }
-  let!(:company) { create(:company, :pro, admin: admin) }
+  let!(:company) { create(:company, admin: admin) }
 
   it "masks members' addresses in the member list and profile" do
     client = create(:client, company: company, email: "example@gmail.com")

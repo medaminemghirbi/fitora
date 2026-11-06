@@ -73,11 +73,8 @@ RSpec.describe "A moderator's reach", type: :request do
       expect(full_access.user.reload.email).not_to eq("mine@example.com")
     end
 
-    it "cannot change the company, its settings or its Fitora billing" do
+    it "cannot change the company or its settings" do
       patch "/api/v1/company", params: { company: { name: "Mine" } }, headers: headers
-      expect(response).to have_http_status(:forbidden)
-
-      get "/api/v1/subscription", headers: headers
       expect(response).to have_http_status(:forbidden)
     end
   end

@@ -1,5 +1,5 @@
-# The fixed set of currencies a company can be billed/displayed in. There is
-# no superadmin UI to edit this list — it's a code catalog like ModuleCatalog.
+# The fixed set of currencies a company can display. There is no superadmin UI
+# to edit this list — it's a code catalog.
 # `symbol` is what the app shows next to amounts (see the frontend MoneyPipe
 # and CURRENCIES const, which mirror this list); `name` is the English label
 # used in backend-only contexts (audit metadata) and as the i18n fallback —

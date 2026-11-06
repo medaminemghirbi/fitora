@@ -1,0 +1,14 @@
+<%# Suspending or restoring an account's access (superadmin-action): `id` and
+    `name` are the gym's, `suspended` whether the account is closed now. %>
+<% key = suspended ? "restore" : "suspend" %>
+<% words = ->(part) { Web::Translations.translate("superadmin.access.#{key}_#{part}", { name: name }, locale: I18n.locale) } %>
+<button type="button" class="btn btn-sm <%= suspended ? "btn-outline-primary" : "btn-ghost" %>"
+        data-controller="superadmin-action" data-action="superadmin-action#run"
+        data-superadmin-action-url-value="/superadmin/companies/<%= id %>/<%= key %>"
+        data-superadmin-action-title-value="<%= words.call("title") %>"
+        data-superadmin-action-body-value="<%= words.call("body") %>"
+        data-superadmin-action-confirm-value="<%= ngt("superadmin.access.#{key}") %>"
+        data-superadmin-action-danger-value="<%= !suspended %>"
+        data-superadmin-action-error-value="<%= ngt("common.error_generic") %>">
+  <i class="bi <%= suspended ? "bi-unlock" : "bi-slash-circle" %>" aria-hidden="true"></i> <%= ngt("superadmin.access.#{key}") %>
+</button>

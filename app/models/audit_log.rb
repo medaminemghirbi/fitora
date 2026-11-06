@@ -32,7 +32,9 @@ class AuditLog < ApplicationRecord
   end
   private_class_method :impersonation_metadata
 
+  # nil once the product no longer has what the entry was about: the entry
+  # stays, as history.
   def auditable
-    auditable_type.constantize.find_by(id: auditable_id)
+    auditable_type.safe_constantize&.find_by(id: auditable_id)
   end
 end

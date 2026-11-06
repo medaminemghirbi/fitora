@@ -7,9 +7,10 @@ module Web
   # this implements (MIGRATION_AUDIT §10, B-01):
   #
   #   member → their app · superadmin → the console · address unconfirmed →
-  #   the "check your inbox" screen · coach → their day · front desk → the
-  #   desk · admin with setup unfinished → onboarding · `reports` → the
-  #   dashboard · anyone else → the schedule
+  #   the "check your inbox" screen · first sign-in unfinished → that form ·
+  #   coach → their day · front desk → the desk · no salle → a page saying so ·
+  #   admin with setup unfinished → onboarding · `reports` → the dashboard ·
+  #   anyone else → the schedule
   #
   # Paths are the Angular routes; a path in a shell whose pages belong to one
   # salle (admin, desk, coach) carries it (MIGRATION_AUDIT §8). Whether a
@@ -21,16 +22,17 @@ module Web
       return "/connexion" if user.nil?
       return "/superadmin/overview" if user.superadmin?
       return "/confirmation-email" if user.email_confirmation_pending? && !impersonating
+      return "/premiere-connexion" if user.first_sign_in_pending? && !impersonating
 
       company = user.current_company
+      # A login with no salle: nothing here can open one for it any more.
+      return "/sans-salle" if company.nil?
+
       coach = user.staff? && user.staff_member&.coach?
       return shell(company, "coach", "today") if coach
 
       permissions = user.permission_keys
       return shell(company, "desk", "dashboard") if user.staff? && (permissions & %w[checkin bookings]).size == 2
-
-      # The admin area's companyGuard: no salle yet, so name one first.
-      return "/admin/setup-company" if company.nil?
 
       if user.admin?
         onboarding = company.onboarding_state.as_json

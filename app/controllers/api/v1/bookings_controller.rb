@@ -13,17 +13,11 @@ module Api
         list = Bookings::ListQuery.new(current_company, params, staff_member: current_staff_member)
         scope = list.scope
 
-        if params[:format] == "csv"
-          return render_forbidden unless current_user.admin?
-
-          send_data bookings_csv(scope), filename: "bookings-#{Date.current}.csv"
-        else
-          render json: {
-            bookings: paginate(scope).map { |b| BookingSerializer.new(b).as_json },
-            meta: pagination_meta(scope),
-            counts: list.counts
-          }
-        end
+        render json: {
+          bookings: paginate(scope).map { |b| BookingSerializer.new(b).as_json },
+          meta: pagination_meta(scope),
+          counts: list.counts
+        }
       end
 
       # GET /api/v1/bookings/:id
@@ -68,15 +62,6 @@ module Api
       # not a 404 — only a booking truly outside the company should 404.
       def company_scope
         Booking.joins(:session).where(sessions: { company_id: current_company.id })
-      end
-
-      def bookings_csv(scope)
-        CsvSafe.generate do |csv|
-          csv << [ "Client", "Activity", "Session start", "Status", "Amount", "Payment status" ]
-          scope.includes(:client, session: :activity).find_each do |b|
-            csv << [ b.client.full_name, b.session.activity.name, b.session.starts_at, b.status, b.amount, b.payment_status ]
-          end
-        end
       end
 
       def set_booking

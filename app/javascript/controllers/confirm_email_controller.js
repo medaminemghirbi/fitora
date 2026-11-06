@@ -95,7 +95,7 @@ export default class extends Controller {
     email.classList.add("is-done")
     email.removeAttribute("aria-current")
     email.querySelector("span").replaceChildren(this.template("check"))
-    document.querySelector('[data-ce-step="gym"]').setAttribute("aria-current", "step")
+    document.querySelector('[data-ce-step="password"]').setAttribute("aria-current", "step")
 
     const waiting = [...document.querySelectorAll("[data-ce-waiting]")]
     const done = [...this.template("done").childNodes]

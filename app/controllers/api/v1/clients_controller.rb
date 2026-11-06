@@ -28,27 +28,20 @@ module Api
       def index
         list = Clients::ListQuery.new(current_company, params)
 
-        if params[:format] == "csv"
-          # The whole member file leaving the building: admin only.
-          return render_forbidden unless current_user.admin?
+        page = paginate(list.scope).to_a
+        visits = list.last_visits_for(page)
+        context = ClientSerializer.page_context(page, current_company)
 
-          send_data list.csv, filename: "clients-#{Date.current}.csv"
-        else
-          page = paginate(list.scope).to_a
-          visits = list.last_visits_for(page)
-          context = ClientSerializer.page_context(page, current_company)
-
-          render json: {
-            clients: page.map { |c|
-              ClientSerializer.new(
-                c, company: current_company, last_visit_at: visits[c.id],
-                membership: context[:memberships][c.id], current_contract: context[:current_contracts][c.id]
-              ).as_json
-            },
-            meta: pagination_meta(list.scope),
-            counts: list.counts
-          }
-        end
+        render json: {
+          clients: page.map { |c|
+            ClientSerializer.new(
+              c, company: current_company, last_visit_at: visits[c.id],
+              membership: context[:memberships][c.id], current_contract: context[:current_contracts][c.id]
+            ).as_json
+          },
+          meta: pagination_meta(list.scope),
+          counts: list.counts
+        }
       end
 
       # GET /api/v1/clients/:id
@@ -101,13 +94,6 @@ module Api
       # sees or resets it; a member who forgets it uses "forgot password"
       # like anyone else.
       def invite
-        unless current_company.member_app?
-          return render json: {
-            error: "member_app_not_included",
-            message: "The member app comes with Fitora Pro."
-          }, status: :forbidden
-        end
-
         Clients::Profile.invite(@client, company: current_company, by: current_user)
         render json: { client: ClientSerializer.new(@client, company: current_company).as_json }, status: :accepted
       rescue Clients::Profile::Refusal => e

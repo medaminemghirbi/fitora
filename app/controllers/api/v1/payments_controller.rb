@@ -14,21 +14,15 @@ module Api
         list = Payments::ListQuery.new(current_company, params)
         scope = list.scope
 
-        if params[:format] == "csv"
-          return render_forbidden unless current_user.admin?
-
-          send_data payments_csv(scope), filename: "payments-#{Date.current}.csv"
-        else
-          render json: {
-            payments: paginate(scope).map { |p| PaymentSerializer.new(p).as_json },
-            meta: pagination_meta(scope),
-            counts: list.counts,
-            method_counts: list.method_counts,
-            # Taking money at the desk is `payments`; reading what the gym
-            # has taken in is `revenue`. Without it the strip is simply absent.
-            **(capability?(:revenue) ? { totals: list.totals } : {})
-          }
-        end
+        render json: {
+          payments: paginate(scope).map { |p| PaymentSerializer.new(p).as_json },
+          meta: pagination_meta(scope),
+          counts: list.counts,
+          method_counts: list.method_counts,
+          # Taking money at the desk is `payments`; reading what the gym
+          # has taken in is `revenue`. Without it the strip is simply absent.
+          **(capability?(:revenue) ? { totals: list.totals } : {})
+        }
       end
 
       # GET /api/v1/payments/:id
@@ -57,15 +51,6 @@ module Api
       def set_payment
         @payment = current_company.payments.find_by(id: params[:id])
         render_not_found if @payment.nil?
-      end
-
-      def payments_csv(scope)
-        CsvSafe.generate do |csv|
-          csv << [ "Client", "Amount", "Currency", "Method", "Status", "Paid at" ]
-          scope.includes(:client).find_each do |p|
-            csv << [ p.client.full_name, p.amount, p.currency, p.payment_method, p.status, p.paid_at ]
-          end
-        end
       end
     end
   end

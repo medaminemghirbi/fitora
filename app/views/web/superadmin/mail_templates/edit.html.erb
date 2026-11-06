@@ -1,0 +1,5 @@
+<% superadmin_crumbs [ ngt("superadmin.mail_templates.nav"), "/superadmin/mail_templates" ], [ @template.name_was ] %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.mail_templates.edit"), desc: ngt("superadmin.mail_templates.edit_desc") } do %>
+  <a href="/superadmin/mailings/new?template_id=<%= @template.id %>" class="btn btn-outline-primary"><i class="bi bi-send" aria-hidden="true"></i> <%= ngt("superadmin.mail_templates.use") %></a>
+<% end %>
+<%= render "web/superadmin/mail_templates/form", template: @template, errors: @errors %>

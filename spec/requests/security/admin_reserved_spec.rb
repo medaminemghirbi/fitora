@@ -1,10 +1,10 @@
 require "rails_helper"
 
 # What stays the admin's even when a role holds the domain's permission:
-# reading what the gym earns, refunds, taking a member off the books, and
-# bulk exports. A moderator holds `payments`, `contracts` and `clients` by
-# default, so every example here is a moderator being refused (or shown
-# less) where the admin is not.
+# reading what the gym earns, refunds and taking a member off the books. A
+# moderator holds `payments`, `contracts` and `clients` by default, so every
+# example here is a moderator being refused (or shown less) where the admin
+# is not.
 RSpec.describe "Security: admin-reserved actions", type: :request do
   let(:admin) { create(:user, :admin) }
   let!(:company) { create(:company, admin: admin) }
@@ -79,36 +79,6 @@ RSpec.describe "Security: admin-reserved actions", type: :request do
       delete "/api/v1/clients/#{client.id}", headers: auth_headers(admin)
 
       expect(response).to have_http_status(:no_content)
-    end
-  end
-
-  describe "CSV exports" do
-    # CSV import / export is a Pro tool.
-    before { create(:subscription, :pro, company: company) }
-
-    before { create(:payment, company: company, client: client) }
-
-    {
-      "members list" => "/api/v1/clients?format=csv",
-      "payments list" => "/api/v1/payments?format=csv",
-      "bookings list" => "/api/v1/bookings?format=csv",
-      "members export" => "/api/v1/data_exchange/clients/export",
-      "payments export" => "/api/v1/data_exchange/payments/export",
-      "contracts export" => "/api/v1/data_exchange/contracts/export"
-    }.each do |name, path|
-      it "refuses the #{name} to a moderator and serves it to the admin" do
-        get path, headers: auth_headers(moderator)
-        expect(response).to have_http_status(:forbidden)
-
-        get path, headers: auth_headers(admin)
-        expect(response).to have_http_status(:ok)
-      end
-    end
-
-    it "still lets a moderator download an import template" do
-      get "/api/v1/data_exchange/clients/template", headers: auth_headers(moderator)
-
-      expect(response).to have_http_status(:ok)
     end
   end
 end

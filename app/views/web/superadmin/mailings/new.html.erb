@@ -1,0 +1,101 @@
+<%# Writing a mailing: the text, a template or free; the admin accounts it goes
+    to, searched, narrowed and ticked; beside them what the first ticked account
+    will read, and sending, which is asked first (superadmin-mailing). %>
+<% labels = { selected: Web::Translations.translate("superadmin.mailing.selected", {}, locale: I18n.locale),
+              send: Web::Translations.translate("superadmin.mailing.send", {}, locale: I18n.locale), send_empty: ngt("superadmin.mailing.send_empty"),
+              preview_for: Web::Translations.translate("superadmin.mailing.preview_for", {}, locale: I18n.locale), preview_none: ngt("superadmin.mailing.preview_none"),
+              confirm_title: ngt("superadmin.mailing.confirm_title"), confirm_body: Web::Translations.translate("superadmin.mailing.confirm_body", {}, locale: I18n.locale) } %>
+<% superadmin_crumbs [ ngt("superadmin.mailing.nav"), "/superadmin/mailings" ], [ ngt("superadmin.mailing.new") ] %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.mailing.new"), desc: ngt("superadmin.mailing.new_desc") } do %><% end %>
+
+<form action="/superadmin/mailings" method="post" novalidate data-turbo="false"
+      data-controller="mail-editor superadmin-mailing"
+      data-action="input->superadmin-mailing#refresh submit->superadmin-mailing#submit"
+      data-superadmin-mailing-templates-value="<%= @templates.map { |t| t.slice(:id, :subject, :body) }.to_json %>"
+      data-superadmin-mailing-labels-value="<%= labels.to_json %>">
+  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+
+  <div class="sa-record">
+    <div class="sa-record-main">
+      <section class="app-card">
+        <div class="app-card-header"><h2><%= ngt("superadmin.mailing.message") %></h2></div>
+        <div class="app-card-body">
+          <div class="mb-3">
+            <label class="form-label" for="mailing-template"><%= ngt("superadmin.mailing.template_label") %></label>
+            <select id="mailing-template" name="template_id" class="form-select" data-superadmin-mailing-target="template" data-action="change->superadmin-mailing#applyTemplate">
+              <option value=""><%= ngt("superadmin.mailing.template_none") %></option>
+              <% @templates.each do |template| %>
+                <option value="<%= template.id %>"<%= raw(" selected") if template.id == @chosen_template_id %>><%= template.name %></option>
+              <% end %>
+            </select>
+          </div>
+          <%= render "web/superadmin/mailings/editor", scope: "mailing", record: @mailing, errors: @errors %>
+        </div>
+      </section>
+
+      <section class="app-card">
+        <div class="app-card-header">
+          <h2><%= ngt("superadmin.mailing.recipients") %></h2>
+          <strong class="sa-sub" data-superadmin-mailing-target="count"></strong>
+        </div>
+        <% if @errors[:recipients] %>
+          <div class="app-card-body pb-0">
+            <div class="sa-notice sa-notice--danger mb-0" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span><%= @errors[:recipients] %></span></div>
+          </div>
+        <% end %>
+        <div class="sa-pick-tools">
+          <div class="fx-input-icon">
+            <i class="bi bi-search"></i>
+            <input type="search" class="form-control form-control-sm" placeholder="<%= ngt("superadmin.mailing.recipients_search") %>" aria-label="<%= ngt("superadmin.mailing.recipients_search") %>"
+                   data-superadmin-mailing-target="search" data-action="input->superadmin-mailing#filter" />
+          </div>
+          <select class="form-select form-select-sm" aria-label="<%= ngt("superadmin.console.filter_activation") %>" data-superadmin-mailing-target="state" data-action="change->superadmin-mailing#filter">
+            <option value=""><%= ngt("superadmin.mailing.filter_all") %></option>
+            <% %w[active awaiting_email awaiting_first_sign_in suspended].each do |state| %>
+              <option value="<%= state %>"><%= ngt("superadmin.activation.#{state}") %></option>
+            <% end %>
+          </select>
+          <label class="sa-pick-all">
+            <input type="checkbox" class="form-check-input" data-superadmin-mailing-target="all" data-action="change->superadmin-mailing#toggleAll" />
+            <%= ngt("superadmin.mailing.check_all") %>
+          </label>
+        </div>
+        <ul class="sa-pick">
+          <% @admins.each do |admin| %>
+            <% state = admin.activation_state; status, words = superadmin_activation(state); salles = admin.companies.sort_by(&:created_at).map(&:name) %>
+            <li class="sa-pick-row" data-superadmin-mailing-target="row" data-state="<%= state %>" data-name="<%= admin.full_name %>"
+                data-search="<%= [ admin.full_name, admin.email, *salles ].join(" ").downcase %>" data-values="<%= AdminMailing.values_for(admin).to_json %>">
+              <label>
+                <input type="checkbox" class="form-check-input" name="recipient_ids[]" value="<%= admin.id %>"<%= raw(" checked") if @selected_ids.include?(admin.id) %> />
+                <span class="sa-pick-who">
+                  <strong><%= admin.full_name %></strong>
+                  <span class="sa-sub"><span dir="ltr"><%= admin.email %></span><% if salles.any? %> · <%= salles.join(", ") %><% end %></span>
+                </span>
+                <app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: status } do %><%= words %><% end %></app-status-badge>
+              </label>
+            </li>
+          <% end %>
+        </ul>
+        <p class="sa-sub sa-pick-empty" hidden data-superadmin-mailing-target="empty"><%= ngt("superadmin.console.no_match") %></p>
+      </section>
+    </div>
+
+    <aside class="sa-record-aside sa-mail-aside">
+      <section class="app-card">
+        <div class="app-card-header">
+          <div>
+            <h2><%= ngt("superadmin.mailing.preview") %></h2>
+            <p class="sa-sub mb-0" data-superadmin-mailing-target="previewFor"></p>
+          </div>
+        </div>
+        <div class="app-card-body">
+          <p class="sa-mail-subject" data-superadmin-mailing-target="previewSubject"></p>
+          <div class="sa-mail-body" data-superadmin-mailing-target="previewBody"></div>
+        </div>
+        <div class="sa-form-foot">
+          <button type="submit" class="btn btn-primary" data-superadmin-mailing-target="submit"><%= ngt("superadmin.mailing.send_empty") %></button>
+        </div>
+      </section>
+    </aside>
+  </div>
+</form>

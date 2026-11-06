@@ -8,8 +8,7 @@ module Web
     # capability, answered with the API's message (K-04).
     class ClientProfilesController < BaseController
       before_action -> { require_capability(:clients) }, only: :show
-      before_action -> { refuse_without(:clients) }, except: %i[show book sessions card]
-      before_action -> { refuse unless capability?(:clients) || capability?(:checkin) }, only: :card
+      before_action -> { refuse_without(:clients) }, except: %i[show book sessions]
       before_action -> { refuse_without(:bookings) }, only: :book
       before_action -> { refuse unless current_user.admin? }, only: :destroy
       before_action :set_client
@@ -29,35 +28,32 @@ module Web
         render partial: "web/admin/client_profiles/body", locals: { p: @profile } if params[:fragment].present?
       end
 
-      # PATCH (JSON) — the health file, as PATCH /api/v1/clients/:id.
+      # PATCH (JSON) — the health file and their details, as PATCH
+      # /api/v1/clients/:id. What the desk can run into (an identity locked
+      # since the page opened, an address already taken) is in the page's language.
       def update
         attributes = params.require(:client).permit(*Client::IDENTITY_FIELDS, :notes, :active, *Membership::PROFILE_FIELDS)
         membership = attributes.slice(:notes, :active, *Membership::PROFILE_FIELDS).to_h.symbolize_keys
         Clients::Profile.update(@client, company: current_company, by: current_user, person: attributes.slice(*Client::IDENTITY_FIELDS).to_h, membership: membership)
         head :no_content
       rescue Clients::Profile::Refusal => e
-        render json: { error: e.code, message: e.message, errors: e.errors }, status: :unprocessable_content
+        render json: { error: e.code, message: page_words("clients.identity_locked_hint"), errors: e.errors }, status: :unprocessable_content
+      rescue ActiveRecord::RecordInvalid => invalid
+        errors = invalid.record.errors
+        raise unless errors.include?(:email)
+
+        render json: { error: page_words(errors.of_kind?(:email, :taken) ? "clients.email_taken" : "auth.email_invalid") }, status: :unprocessable_content
       end
 
       # POST …/invite — as POST /api/v1/clients/:id/invite.
       def invite
-        return render(json: { error: "member_app_not_included", message: "The member app comes with Fitora Pro." }, status: :forbidden) unless current_company.member_app?
-
         Clients::Profile.invite(@client, company: current_company, by: current_user)
         head :accepted
       rescue Clients::Profile::Refusal => e
         render json: { error: e.code, message: e.message, errors: e.errors }, status: :unprocessable_content
       end
 
-      # GET …/card — the member's card, to print: their face, their name and
-      # the QR code the door scans.
-      def card
-        membership = @client.membership_for(current_company)
-        send_data Receipts::MemberCardPdf.call(membership: membership), type: "application/pdf", disposition: "inline",
-                  filename: "carte-#{membership.card_code}.pdf"
-      end
-
-      # POST …/photo (multipart) — the face the desk checks at the door,
+      # POST …/photo (multipart) — the member's face on their file,
       # taken with the camera or picked from a file. This gym's alone.
       def photo
         file = params.require(:photo)

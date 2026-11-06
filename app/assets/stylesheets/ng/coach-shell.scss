@@ -31,9 +31,8 @@
   .admin-shell .app-content { padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px)); }
 }
 
-// ---------- Banners (impersonation / trial) ----------
-.impersonation-banner,
-.trial-shell-banner {
+// ---------- Banners (impersonation) ----------
+.impersonation-banner {
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -64,16 +63,6 @@
 
   &:hover { background: var(--color-warning); color: #fff; border-color: var(--color-warning); }
 }
-
-.trial-shell-banner {
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-
-  span:first-of-type { flex: 1; color: var(--color-text); font-weight: 500; }
-  &:hover { text-decoration: none; .trial-shell-banner-link { text-decoration: underline; } }
-}
-
-.trial-shell-banner-link { color: var(--color-primary); font-weight: 700; white-space: nowrap; }
 
 .verify-email-banner {
   display: flex;
@@ -111,11 +100,4 @@
   line-height: 1;
 
   &:hover { color: var(--color-text); }
-}
-
-// The month is unpaid and the clock is running. Warmer than the trial
-// banner it sits in place of, because this one closes the door.
-.trial-shell-banner.is-due {
-  background: var(--color-danger-soft);
-  color: var(--color-danger);
 }

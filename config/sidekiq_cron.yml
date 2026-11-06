@@ -12,14 +12,6 @@ scan_employee_birthdays:
   class: "Notifications::ScanEmployeeBirthdaysJob"
   queue: default
 
-# Access is a boolean, and this is what turns it off: a gym whose last
-# invoice ran out more than three days ago. Idempotent, so a missed night is
-# caught up by the next one with no difference in outcome.
-close_unpaid_subscriptions:
-  cron: "20 2 * * *"
-  class: "Subscriptions::CloseUnpaidJob"
-  queue: default
-
 # A weekly class keeps its next 90 days on the calendar.
 generate_recurring_sessions:
   cron: "30 1 * * *"
@@ -38,12 +30,4 @@ send_session_reminders:
 prune_old_records:
   cron: "40 3 * * *"
   class: "PruneOldRecordsJob"
-  queue: default
-
-# The day's exchange rates, which convert the plans' prices into each gym's
-# currency (RefreshExchangeRatesJob). The source publishes just after
-# midnight UTC; a failed night keeps the previous rates.
-refresh_exchange_rates:
-  cron: "15 1 * * *"
-  class: "RefreshExchangeRatesJob"
   queue: default

@@ -7,7 +7,7 @@ RSpec.describe "Web landing page", type: :request, openapi: false do
     get "/"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include('<app-landing _nghost-landing="">', '<div _ngcontent-landing="" class="lp"')
-    expect(response.body).to include(%(href="/#pricing"), %(href="/inscription"), %(href="/connexion"))
+    expect(response.body).to include(%(href="/#offer"), %(href="mailto:contact@fitora.io"), %(href="/connexion"))
   end
 
   it "says what today is in the page's language, in the platform's time zone (M-06)" do
@@ -18,34 +18,36 @@ RSpec.describe "Web landing page", type: :request, openapi: false do
     end
   end
 
-  it "prints both periods' prices, the year's after the discount, grouped as Chromium groups French" do
+  it "sells one product, everything in it: no price, no plan, no sign-up, no trial" do
     get "/"
-    expect(response.body).to include(%(data-monthly="165" data-yearly="1 782"), %(data-monthly="249" data-yearly="2 689,20"))
+    expect(response.body).to include('id="offer"', Web::Translations.translate("landing.offer_item_updates", locale: :fr))
+    expect(response.body).not_to include("/inscription", "lp-plan-price", "lp-billing", "Starter", "14 j")
+    expect(response.body).not_to match(/\bPro\b/)
   end
 
   it "comes in the language the visitor chose, right to left in Arabic" do
     cookies[:fitora_locale] = "ar"
     get "/"
     expect(response.body).to include('<html lang="ar"', 'dir="rtl"')
-    expect(response.body).to include(Web::Translations.translate("landing.hero_cta_primary", locale: :ar))
+    expect(response.body).to include(Web::Translations.translate("landing.hero_cta_demo", locale: :ar))
   end
 
   describe "the Angular app's other redirects (app.routes.ts)" do
     it "the earlier layouts' addresses, the query kept" do
       {
-        "/trial-expired" => "/account-locked", "/pro" => "/", "/pro/connexion" => "/connexion",
+        "/pro" => "/", "/pro/connexion" => "/connexion",
         "/pro/mot-de-passe-oublie" => "/mot-de-passe-oublie", "/auth/login" => "/connexion",
-        "/auth/register" => "/inscription", "/auth/forgot-password" => "/mot-de-passe-oublie", "/gyms" => "/"
+        "/auth/forgot-password" => "/mot-de-passe-oublie", "/gyms" => "/"
       }.each do |from, to|
         get from
         expect(response).to redirect_to(to), from
       end
-      get "/auth/register", params: { email: "a@b.tn" }
-      expect(response).to redirect_to("/inscription?email=a%40b.tn")
+      get "/auth/login", params: { email: "a@b.tn" }
+      expect(response).to redirect_to("/connexion?email=a%40b.tn")
     end
 
     it "`**` → \"\": any other page, a member's and the console's too" do
-      %w[/nowhere /member/nowhere /superadmin/nowhere/at/all].each do |path|
+      %w[/nowhere /inscription /account-locked /member/nowhere /superadmin/nowhere/at/all].each do |path|
         get path
         expect(response).to redirect_to("/"), path
       end

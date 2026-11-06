@@ -3,8 +3,6 @@ require "rails_helper"
 RSpec.describe "Api::V1 GET /api/v1/bootstrap", type: :request do
   let(:admin) { create(:user, :admin) }
   let!(:company) { create(:company, admin: admin) }
-  let!(:subscription) { create(:subscription, company: company) }
-  let!(:invoice) { create(:invoice, :current, company: company) }
 
   it "hydrates the admin shell in one call" do
     get "/api/v1/bootstrap", headers: auth_headers(admin)
@@ -16,12 +14,9 @@ RSpec.describe "Api::V1 GET /api/v1/bootstrap", type: :request do
     expect(body["branding"]["name"]).to eq(company.name)
     expect(body["role"]["key"]).to eq("admin")
     expect(body["permissions"]).to match_array(Permission::ALL)
-    expect(body["modules"]).to match_array(company.enabled_module_keys)
-    expect(body["modules"]).to include("base", "clients", "classes", "hr")
     expect(body["roles"].map { |r| r["key"] }).to match_array(Role::SYSTEM_KEYS)
     expect(body["roles"].first).to include("id", "permissions", "builtin")
     expect(body["permission_catalog"]).to include("contract_types")
-    expect(body["subscription"]).to include("active", "locked", "days_before_lock")
     expect(body["onboarding"]).to include(
       "step" => "company", "complete" => false, "dismissed" => false
     )
@@ -53,18 +48,8 @@ RSpec.describe "Api::V1 GET /api/v1/bootstrap", type: :request do
     get "/api/v1/bootstrap", headers: auth_headers(admin)
 
     body = response.parsed_body
-    expect(body["modules"]).to match_array(%w[base] + ModuleCatalog::KEYS)
     expect(body["permissions"]).to include(
       "clients", "payments", "sessions", "contracts", "bookings", "coaches"
     )
-  end
-
-  it "still bootstraps a locked company (for the trial-expired screen)" do
-    subscription.update!(active: false)
-
-    get "/api/v1/bootstrap", headers: auth_headers(admin)
-
-    expect(response).to have_http_status(:ok)
-    expect(response.parsed_body["subscription"]["locked"]).to be(true)
   end
 end

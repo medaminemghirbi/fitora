@@ -1,9 +1,6 @@
 {
   "//": "Angular components whose styles the Rails pages reuse, keyed by the id the build scopes them with (_ngcontent-<id> / _nghost-<id>). `source` is relative to ../frontend/src/app (a list when the component has several styleUrls). `inline` means the styles live in the component's TypeScript (styles: [`…`]). Each was copied into ng/<id>.scss, which is the source now; bin/build-css compiles and scopes them the way Angular's emulated encapsulation does.",
   "components": {
-    "account-locked": {
-      "source": "features/account-locked/account-locked.component.scss"
-    },
     "activities": {
       "source": "features/admin/activities/activities.component.scss"
     },
@@ -51,12 +48,6 @@
     "command-palette": {
       "source": "shared/components/command-palette.component.scss"
     },
-    "company-setup": {
-      "source": [
-        "features/auth/auth.component.scss",
-        "features/admin/onboarding/company-setup.component.scss"
-      ]
-    },
     "confirm-dialog": {
       "source": "shared/components/confirm-dialog.component.ts",
       "inline": true
@@ -69,9 +60,6 @@
     },
     "dashboard": {
       "source": "features/admin/dashboard/dashboard.component.scss"
-    },
-    "data-exchange": {
-      "source": "features/admin/data-exchange/data-exchange.component.scss"
     },
     "desk-checkin": {
       "source": "features/desk/checkin/desk-checkin.component.scss"
@@ -149,18 +137,11 @@
     "price-grid": {
       "source": "features/admin/catalogue/price-grid.component.scss"
     },
-    "pro-lock": {
-      "source": "shared/ui/pro-lock.component.ts",
-      "inline": true
-    },
     "pro-login": {
       "source": "features/auth/auth.component.scss"
     },
     "rail": {
       "source": "layout/rail/rail.component.scss"
-    },
-    "register": {
-      "source": "features/auth/auth.component.scss"
     },
     "reset-password": {
       "source": "features/auth/auth.component.scss"
@@ -189,9 +170,6 @@
     "settings-roles": {
       "source": "features/admin/settings/settings-roles.component.scss"
     },
-    "settings-shell": {
-      "source": "features/admin/settings/settings-shell.component.scss"
-    },
     "setup-progress": {
       "source": "features/auth/setup-progress.component.scss"
     },
@@ -214,14 +192,8 @@
       "source": "shared/components/status-badge.component.ts",
       "inline": true
     },
-    "subscription": {
-      "source": "features/admin/subscription/subscription.component.scss"
-    },
     "superadmin-company-detail": {
       "source": "features/superadmin/company-detail/company-detail.component.scss"
-    },
-    "superadmin-pricing": {
-      "source": "features/superadmin/pricing/pricing.component.scss"
     },
     "superadmin-support-tickets": {
       "source": "features/superadmin/support/support-tickets.component.scss"

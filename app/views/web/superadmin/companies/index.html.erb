@@ -1,26 +1,18 @@
-<%# The gyms (Web::DataTable): every salle on Fitora with its admin and
-    how to reach them, where it is, its account's access, trial and arrears, plan and price — searched by name,
-    city or admin, filtered on access and plan, sorted, paged. A row opens
-    the gym. The shut ones are counted at the toolbar's end, a click from
-    listing only them. %>
+<%# The gyms (Web::DataTable): every salle on Fitora with its admin and how to
+    reach them, where it is, where the account stands and suspending its access
+    — searched by name, city or admin, filtered on where it stands, sorted, paged.
+    A row opens the gym. Opening a new account is the page's own action. %>
 <% url = "/superadmin/companies" %>
 <% superadmin_crumbs [ ngt("superadmin.companies") ] %>
-<%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.companies_title"), desc: ngt("superadmin.console.companies_desc") } do %><% end %>
-
-<% closed = capture do %>
-  <% if @closed_count.to_i > 0 && @table.filter(:access) != "closed" %>
-    <a href="<%= url %>?access=closed" class="btn btn-sm btn-warning">
-      <i class="bi bi-lock-fill"></i> <%= ngt("superadmin.closed_access", count: @closed_count) %>
-    </a>
-  <% end %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: ngt("superadmin.companies_title"), desc: ngt("superadmin.console.companies_desc") } do %>
+  <a href="/superadmin/companies/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> <%= ngt("superadmin.create.cta") %></a>
 <% end %>
+
 <% filters = [
-     { name: "access", label: ngt("superadmin.console.filter_access"), default: "",
-       options: [ [ "", ngt("superadmin.console.any_access") ], [ "open", ngt("superadmin.access_open") ], [ "closed", ngt("superadmin.access_closed") ] ] },
-     { name: "plan", label: ngt("superadmin.plan_label"), default: "",
-       options: [ [ "", ngt("superadmin.console.any_plan") ], [ "starter", ngt("subscription.plan_starter") ], [ "pro", ngt("subscription.plan_pro") ], [ "none", ngt("superadmin.console.no_plan") ] ] }
+     { name: "activation", label: ngt("superadmin.console.filter_activation"), default: "",
+       options: [ [ "", ngt("superadmin.console.any_activation") ], [ "pending", ngt("superadmin.console.activation_pending") ], [ "active", ngt("superadmin.activation.active") ], [ "suspended", ngt("superadmin.activation.suspended") ] ] }
    ] %>
-<%= render layout: "web/superadmin/shared/table", locals: { table: @table, url: url, placeholder: ngt("superadmin.companies_search_placeholder"), filters: filters, extra: closed } do %>
+<%= render layout: "web/superadmin/shared/table", locals: { table: @table, url: url, placeholder: ngt("superadmin.companies_search_placeholder"), filters: filters } do %>
   <% if @companies.empty? %>
     <%= render "web/superadmin/shared/table_empty", table: @table, url: url, title: ngt("superadmin.no_companies"), icon: "bi-buildings" %>
   <% else %>
@@ -32,9 +24,8 @@
             <%= superadmin_sort_th @table, :admin, ngt("superadmin.admin"), url %>
             <th scope="col"><%= ngt("superadmin.console.location") %></th>
             <th scope="col"><%= ngt("common.status") %></th>
-            <th scope="col"><%= ngt("superadmin.plan_label") %></th>
-            <th scope="col" class="sa-num"><%= ngt("superadmin.total_month") %></th>
             <%= superadmin_sort_th @table, :created, ngt("superadmin.console.created"), url, css: "sa-nowrap" %>
+            <th scope="col"><%= ngt("superadmin.console.access") %></th>
             <th class="sa-col-go" aria-hidden="true"></th>
           </tr>
         </thead>

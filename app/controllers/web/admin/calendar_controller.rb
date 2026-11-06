@@ -10,7 +10,6 @@ module Web
     class CalendarController < BaseController
       before_action :refuse_unless_managing, only: %i[create move cancel stop_series book]
       before_action -> { refuse unless current_user.admin? || current_user.staff? }, only: %i[events schedule_pdf]
-      before_action -> { refuse unless pro_access? }, only: :schedule_pdf
       before_action -> { refuse unless capability?(:clients) }, only: :clients
       before_action :set_session, only: %i[move cancel book]
 
@@ -93,7 +92,7 @@ module Web
         render json: { clients: client_rows(Clients::ListQuery.new(current_company, params.permit(:search)).scope.limit(20)) }
       end
 
-      # GET …/calendar/schedule?from= — the week on screen as a PDF (Pro).
+      # GET …/calendar/schedule?from= — the week on screen as a PDF.
       def schedule_pdf
         pdf, week_start = planner.weekly_pdf(params[:from])
         send_data pdf, filename: "planning-#{week_start.strftime('%Y-%m-%d')}.pdf", type: "application/pdf", disposition: "inline"

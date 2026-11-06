@@ -1,6 +1,6 @@
 module Web
-  # Fitora's terms (CGU/CGV) and privacy policy — public, signed in or not,
-  # linked from the landing page, the sign-up form and the member's app. The
+  # Fitora's terms (CGU) and privacy policy — public, signed in or not,
+  # linked from the landing page, the first sign-in and the member's app. The
   # French text is the one that binds; the English one is a translation,
   # and an Arabic reader gets the French with a note saying so.
   class LegalController < BaseController
@@ -18,7 +18,7 @@ module Web
       locale_code.to_s == "en" ? "en" : "fr"
     end
 
-    # Who publishes Fitora, as its invoices name it (Superadmin → Billing).
+    # Who publishes Fitora (Superadmin → Identité).
     def issuer
       @issuer ||= PlatformSetting.current
     end

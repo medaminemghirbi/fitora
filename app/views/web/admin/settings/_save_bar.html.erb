@@ -1,0 +1,10 @@
+<%# The foot of a settings form (settings-dirty, on the form): what is unsaved,
+    and the way to save or drop it. data-save is the button the form's own
+    controller works while it saves. %>
+<div class="set-savebar" data-settings-dirty-target="bar">
+  <span class="set-savebar-state" role="status" data-settings-dirty-target="state"
+        data-none="<%= ngt("settings.no_changes") %>" data-one="<%= ngt("settings.unsaved_one") %>"
+        data-many="<%= Web::Translations.translate("settings.unsaved_many", {}, locale: I18n.locale) %>"><%= ngt("settings.no_changes") %></span>
+  <button type="button" class="set-savebar-cancel" hidden data-settings-dirty-target="cancel" data-action="settings-dirty#discard"><%= ngt("common.cancel") %></button>
+  <button type="submit" class="set-savebar-save" disabled data-save data-settings-dirty-target="save"><%= ngt("common.save") %></button>
+</div>

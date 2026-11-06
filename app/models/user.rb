@@ -6,22 +6,21 @@ class User < ApplicationRecord
   include TokenVersioned
   include TwoFactor
 
-  # A User is always staff: the Fitora-operator ("superadmin", manages every
-  # company's SaaS subscription via /superadmin) or an in-gym account
-  # (admin, or staff — the specific in-gym role lives on StaffMember).
+  # A User is always staff: the Fitora-operator ("superadmin", opens every
+  # company's account via /superadmin) or an in-gym account (admin, or staff —
+  # the specific in-gym role lives on StaffMember).
   # Clients are business records the gym creates, never Users — see Client.
   enum :role, { admin: 0, staff: 1, superadmin: 2 }
 
 
   # An admin runs as many salles as they like (each a fully independent
-  # tenant — its own clients, staff) under one subscription, the account's.
-  # active_company is which salle their session is currently scoped to —
-  # see #current_company and Api::V1::CompaniesController#switch.
+  # tenant — its own clients, staff). active_company is which salle their
+  # session is currently scoped to — see #current_company and
+  # Api::V1::CompaniesController#switch.
   has_many :companies, foreign_key: :admin_id, inverse_of: :admin, dependent: :destroy
-  # Everything across the salles an admin runs — what their account covers.
+  # Everything across the salles an admin runs.
   has_many :salle_memberships, through: :companies, source: :memberships
   has_many :salle_staff_members, through: :companies, source: :staff_members
-  has_one :subscription, foreign_key: :admin_id, inverse_of: :admin, dependent: :destroy
   belongs_to :active_company, class_name: "Company", optional: true
   # A staff login holds one record per salle it works in: a moderator the
   # admin posted to two salles has two, each with that salle's own role.
@@ -29,8 +28,13 @@ class User < ApplicationRecord
   has_many :staff_members, dependent: :destroy
   has_many :staffed_companies, through: :staff_members, source: :company
   has_many :notifications, as: :recipient, dependent: :destroy
+  has_many :mailing_recipients, dependent: :delete_all
 
   before_validation { self.email = email.to_s.downcase.strip }
+
+  # A password the person chose themselves is no longer the generated one,
+  # whichever screen it came through: first sign-in, a reset, settings, the API.
+  before_update(if: :will_save_change_to_password_digest?) { self.must_change_password = false unless @issuing_temporary_password }
 
   validates :first_name, :last_name, presence: true
   validates :email, presence: true, uniqueness: true,
@@ -41,17 +45,55 @@ class User < ApplicationRecord
   scope :active, -> { where(active: true) }
 
   # Who an account is, to the superadmin console's tables: its name and
-  # e-mail, its access (subscription) and its salles' names.
-  console_searchable attributes: %i[first_name last_name email], associations: %i[subscription companies]
+  # e-mail, whether it still has the generated password or is suspended, and
+  # its salles' names.
+  console_searchable attributes: %i[first_name last_name email must_change_password access_suspended_at], associations: %i[companies]
 
   def full_name
     "#{first_name} #{last_name}"
   end
 
-  # Signed up, and the address not confirmed yet: nothing past sign-up
-  # opens until it is. Admins only — see EmailVerifiable.
+  # Opened by a superadmin, and the address not confirmed yet: nothing opens
+  # until it is. Admins only — see EmailVerifiable.
   def email_confirmation_pending?
     admin? && !email_verified?
+  end
+
+  # Signed in, and still to choose a password of their own or to accept the
+  # terms (Web::FirstSignInsController): nothing else opens until they have.
+  # Admins only: staff logins are the admin's to hand out, under their terms.
+  def first_sign_in_pending?
+    admin? && (must_change_password? || terms_accepted_at.nil?)
+  end
+
+  # A superadmin closed this account's access (SuperadminActions.suspend_access):
+  # an admin's own account, or for staff the account of the salle they work in.
+  # SignIn refuses them; a member's login is not concerned.
+  def access_suspended?
+    return access_suspended_at.present? if admin?
+
+    staff_member&.company&.admin&.access_suspended_at.present?
+  end
+
+  # Where an account stands, for the superadmin: suspended, the address to
+  # confirm, the first sign-in to make, or done.
+  def activation_state
+    return :suspended if access_suspended_at.present?
+    return :awaiting_email if email_confirmation_pending?
+
+    first_sign_in_pending? ? :awaiting_first_sign_in : :active
+  end
+
+  # Gives the login a generated password, which it must replace on first
+  # sign-in, and returns it. Saves a new record, so it raises RecordInvalid
+  # like any save!. The password is only ever in the mail that carries it.
+  def issue_temporary_password!
+    generated = SecureRandom.base58(16)
+    @issuing_temporary_password = true
+    update!(password: generated, must_change_password: true)
+    generated
+  ensure
+    @issuing_temporary_password = false
   end
 
   # The salle this login is working in right now. An admin's is the one
@@ -97,13 +139,6 @@ class User < ApplicationRecord
     return false unless workplaces.exists?(company.id)
 
     update!(active_company: company)
-  end
-
-  # The first salle always opens (it opens the account); another needs an
-  # account that runs several (Subscription#multi_salle?). No subscription
-  # beside an existing salle is no plan at all.
-  def may_open_salle?
-    !companies.exists? || subscription&.multi_salle? || false
   end
 
   # ---- what this login can do ---------------------------------------------

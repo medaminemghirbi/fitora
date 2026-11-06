@@ -1,0 +1,9 @@
+<%# The admin shell, with a settings page inside the settings' own menu
+    (Web::SettingsPage). %>
+<% content_for :settings_mode, "1" %>
+<% content_for :settings_page do %>
+  <%= render layout: "web/admin/settings/frame" do %>
+    <%= yield %>
+  <% end %>
+<% end %>
+<%= render template: "layouts/web/admin" %>

@@ -1,12 +1,10 @@
 module Web
   module Desk
     # The desk's salle switcher (DeskShellComponent#switchSalle): the choice
-    # recorded as POST /api/v1/companies/:id/switch records it (Pro only,
-    # one of this login's own salles), then a full load of home there.
+    # recorded as POST /api/v1/companies/:id/switch records it (one of this
+    # login's own salles), then a full load of home there.
     class SallesController < BaseController
       def switch
-        return render(json: { error: "pro_required", message: "This feature comes with Fitora Pro." }, status: :forbidden) unless pro_access?
-
         target = salle_for(current_user, params[:id])
         return render(json: { error: "Resource not found" }, status: :not_found) if target.nil?
 

@@ -31,10 +31,9 @@ module Web
       go_home
     end
 
-    # Signing out lands on the sign-in page — or on the sign-up page, for the
-    # "wrong address? start over" of the confirmation screen. Inside an
-    # impersonation it ends the impersonation instead, back in the
-    # superadmin's console (AuthService#logout → #exitImpersonation).
+    # Signing out lands on the sign-in page. Inside an impersonation it ends
+    # the impersonation instead, back in the superadmin's console
+    # (AuthService#logout → #exitImpersonation).
     def destroy
       if current_impersonator
         exit_impersonation
@@ -44,8 +43,7 @@ module Web
       # The console's own door for the superadmin, who has no other.
       door = current_user&.superadmin? ? web_superadmin_sign_in_path : web_sign_in_path
       sign_out
-      to = params[:to] == "/inscription" ? "/inscription" : door
-      redirect_to to, status: :see_other
+      redirect_to door, status: :see_other
     end
 
     private
@@ -75,10 +73,9 @@ module Web
     end
 
     # B-02: the translated message the Angular page meant to show (its
-    # fallback), not the API's English. There is no translation for a member
-    # whose gym has no member app, so that one stays what Angular shows.
+    # fallback), not the API's English.
     def sign_in_error(error)
-      error == :member_app_not_included ? "member_app_not_included" : helpers.ngt("auth.invalid_credentials")
+      helpers.ngt({ no_gym: "auth.no_gym", access_suspended: "auth.access_suspended" }.fetch(error, "auth.invalid_credentials"))
     end
 
     # "Mercredi 14 octobre" on the panel's day card. In the platform's own

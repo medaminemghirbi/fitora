@@ -1,15 +1,15 @@
 module Api
   module V1
     class BaseController < ApplicationController
-      # The rules themselves (who may do what, in which salle, under which
-      # plan and lock) are TenantRules, shared with the web UI. What stays
-      # here is how the API says no: a JSON error and a status.
+      # The rules themselves (who may do what, in which salle) are TenantRules,
+      # shared with the web UI. What stays here is how the API says no: a JSON
+      # error and a status.
       include TenantRules
 
       before_action :authenticate_request!
       before_action :reject_member_token!
       before_action :require_confirmed_email!
-      before_action :enforce_trial_lock!
+      before_action :require_first_sign_in!
       # After authentication, so it knows whose gym this is.
       around_action :in_gym_time_zone
 
@@ -41,10 +41,10 @@ module Api
         render_forbidden
       end
 
-      # An admin who signed up and has not clicked the link yet reaches
-      # nothing here — not even naming their gym, which is where the trial
-      # starts. What they need meanwhile (who am I, send it again) lives in
-      # AuthController and EmailVerificationsController, outside this base.
+      # An admin who has not clicked the link in their credentials e-mail yet
+      # reaches nothing here. What they need meanwhile (who am I, send it again)
+      # lives in AuthController and EmailVerificationsController, outside this
+      # base.
       #
       # A superadmin impersonating them is let through: they are there to help,
       # and the address is not theirs to confirm.
@@ -57,22 +57,14 @@ module Api
         }, status: :forbidden
       end
 
-      # Which TenantRules::ADMIN_ALLOWED_WHEN_LOCKED area each controller is.
-      LOCK_AREAS = {
-        "Api::V1::SubscriptionController" => :subscription,
-        "Api::V1::InvoicesController" => :invoices,
-        "Api::V1::CompaniesController" => :companies
-      }.freeze
-      private_constant :LOCK_AREAS
-
-      def enforce_trial_lock!
-        subscription = locking_subscription(area: LOCK_AREAS[self.class.name], action: action_name)
-        return if subscription.nil?
+      # The first sign-in happens on the web: the terms are accepted there.
+      def require_first_sign_in!
+        return unless first_sign_in_required?
 
         render json: {
-          error: subscription.lock_reason.to_s,
-          message: lock_message(subscription)
-        }, status: :payment_required
+          error: "first_sign_in_required",
+          message: "Sign in on the web to choose your password and accept the terms."
+        }, status: :forbidden
       end
 
       # For a member's login: the gym named by ?company_id=, checked against
@@ -86,27 +78,11 @@ module Api
         end
       end
 
-      # The member app is a Pro feature: a member none of whose gyms is on
-      # a paid Pro period has nothing to open.
-      def require_member_app!
+      # A member who belongs to no gym any more has nothing to open.
+      def require_member_gym!
         return if member_companies.any?
 
-        render json: {
-          error: "member_app_not_included",
-          message: "Your gym's plan does not include the member app."
-        }, status: :forbidden
-      end
-
-      # Pro's tools (several salles, custom roles, branding, import / export):
-      # open on a paid Pro period, refused on Starter and the trial with a code
-      # the app turns into an upgrade prompt rather than a generic error.
-      def require_pro!
-        return if pro_access?
-
-        render json: {
-          error: "pro_required",
-          message: "This feature comes with Fitora Pro."
-        }, status: :forbidden
+        render json: { error: "no_gym", message: "You do not belong to a gym on Fitora." }, status: :forbidden
       end
 
       # 404 rather than 403: a gym the person has not joined should not even

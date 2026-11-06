@@ -2,7 +2,7 @@ require "rails_helper"
 
 # Module 9: the planning. openapi: false — the API calls are oracles.
 RSpec.describe "Web calendar", type: :request, openapi: false do
-  let(:company) { create(:company, :pro, setup_dismissed_at: Time.current) }
+  let(:company) { create(:company, setup_dismissed_at: Time.current) }
   let(:admin) { company.admin }
   let(:base) { "/admin/#{company.id}/calendar" }
   let(:api) { auth_headers(admin).merge("X-Company-Id" => company.id) }
@@ -97,7 +97,7 @@ RSpec.describe "Web calendar", type: :request, openapi: false do
     expect(response.location).not_to include("/admin/")
   end
 
-  it "prints the week (Pro), named as the page names it" do
+  it "prints the week, named as the page names it" do
     get "#{base}/schedule", params: { from: "2026-10-14" }
     expect(response.headers["Content-Disposition"]).to include("planning-2026-10-12.pdf")
   end

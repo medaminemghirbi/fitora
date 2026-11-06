@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe "Api::V1::Me", type: :request do
   let(:admin) { create(:user, :admin) }
   # The member app is a Pro feature — see "on a Starter account" below.
-  let(:company) { create(:company, :pro, admin: admin) }
+  let(:company) { create(:company, admin: admin) }
   let(:activity) { create(:activity, company: company) }
   let(:member) do
     create(:client, company: company, email: "member@example.test", password: "password123")
@@ -203,42 +203,23 @@ RSpec.describe "Api::V1::Me", type: :request do
     end
   end
 
-  describe "on a Starter account" do
-    let(:starter) { create(:company) }
-    let(:starter_member) { create(:client, company: starter, email: "starter@example.test", password: "password123") }
+  describe "a member who has left their last gym" do
+    let(:former) { create(:client, company: create(:company), email: "former@example.test", password: "password123") }
 
-    before { create(:subscription, company: starter) }
+    before { former.memberships.destroy_all }
 
-    it "refuses the member's sign-in: the member app comes with Pro" do
-      post "/api/v1/auth/login", params: { email: starter_member.email, password: "password123" }
+    it "refuses the sign-in, once the password has checked out" do
+      post "/api/v1/auth/login", params: { email: former.email, password: "password123" }
 
       expect(response).to have_http_status(:forbidden)
-      expect(response.parsed_body["error"]).to eq("member_app_not_included")
+      expect(response.parsed_body["error"]).to eq("no_gym")
     end
 
     it "refuses a token already issued" do
-      get "/api/v1/me/sessions", headers: auth_headers(starter_member)
+      get "/api/v1/me/sessions", headers: auth_headers(former)
 
       expect(response).to have_http_status(:forbidden)
-      expect(response.parsed_body["error"]).to eq("member_app_not_included")
-    end
-
-    it "keeps the app closed while the account is on its free trial: the app is Pro's" do
-      create(:invoice, :trial, company: starter)
-
-      post "/api/v1/auth/login", params: { email: starter_member.email, password: "password123" }
-
-      expect(response).to have_http_status(:forbidden)
-      expect(response.parsed_body["error"]).to eq("member_app_not_included")
-    end
-
-    it "shows a member of a Pro gym and a Starter gym only the Pro one" do
-      member.join!(starter)
-
-      get "/api/v1/me/profile", headers: auth_headers(member)
-
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body["gyms"].map { |g| g["id"] }).to eq([ company.id ])
+      expect(response.parsed_body["error"]).to eq("no_gym")
     end
   end
 end

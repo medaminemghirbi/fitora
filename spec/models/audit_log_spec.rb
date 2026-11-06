@@ -37,4 +37,8 @@ RSpec.describe AuditLog do
       expect(company.audit_logs.recent).to eq([ newer, older ])
     end
   end
+
+  it "keeps an entry about something the product no longer has, pointing at nothing" do
+    expect(described_class.new(auditable_type: "CashClosing", auditable_id: SecureRandom.uuid).auditable).to be_nil
+  end
 end

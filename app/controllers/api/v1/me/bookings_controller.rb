@@ -9,7 +9,7 @@ module Api
       # `module Client`, so "me" avoids the collision entirely.
       class BookingsController < BaseController
         before_action :require_client!
-        before_action :require_member_app!
+        before_action :require_member_gym!
         before_action :require_member_company!
         before_action :set_booking, only: [ :cancel ]
 

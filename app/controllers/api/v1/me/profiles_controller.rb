@@ -11,7 +11,7 @@ module Api
       # quotes back at them.
       class ProfilesController < BaseController
         before_action :require_client!
-        before_action :require_member_app!, only: [ :show ]
+        before_action :require_member_gym!, only: [ :show ]
         before_action :require_member_company!
 
         # GET /api/v1/me/profile?company_id=

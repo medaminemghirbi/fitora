@@ -1,10 +1,8 @@
 <%# ng: superadmin-company-detail %>
-<%# The gym itself, beside its money: its account — who runs it, how to
-    reach them (the e-mail it is billed at, a phone: the admin's, or else
-    the gym's), where it is, every salle one sale opens — how much it is really used,
-    the currency and language a superadmin sets for it (saved once
-    changed), and its access, apart, being the one switch that shuts every
-    salle on the account. %>
+<%# The gym itself: its account — who runs it, how to reach them (the e-mail,
+    a phone: the admin's, or else the gym's), where it is, every salle the admin
+    runs — and the currency and language a superadmin sets for it (saved once
+    changed). %>
 <section class="app-card">
   <div class="app-card-header"><h2><%= ngt("superadmin.console.account") %></h2></div>
   <div class="app-card-body">
@@ -54,26 +52,6 @@
   </ul>
 </section>
 
-<section class="app-card">
-  <div class="app-card-header">
-    <h2><%= ngt("superadmin.usage_title") %></h2>
-  </div>
-  <div class="sa-ministats">
-    <div class="sa-ministat"><strong><%= c.dig(:usage, :clients) %></strong><span><%= ngt("nav.clients") %></span></div>
-    <div class="sa-ministat"><strong><%= c.dig(:usage, :staff) %></strong><span><%= ngt("nav.team") %></span></div>
-    <div class="sa-ministat"><strong><%= c.dig(:usage, :activities) %></strong><span><%= ngt("nav.activities") %></span></div>
-    <div class="sa-ministat<%= " is-due" if c.dig(:usage, :sessions_last_30_days).zero? %>"><strong><%= c.dig(:usage, :sessions_last_30_days) %></strong><span><%= ngt("superadmin.usage_sessions_30") %></span></div>
-  </div>
-  <p class="sa-card-note">
-    <i class="bi bi-clock-history"></i>
-    <% if c.dig(:usage, :last_session_at) %>
-      <%= ngt("superadmin.usage_last_session") %> <%= ng_date(c.dig(:usage, :last_session_at), "d MMM y") %>
-    <% else %>
-      <%= ngt("superadmin.usage_never") %>
-    <% end %>
-  </p>
-</section>
-
 <section class="app-card" data-superadmin-company-target="settings" data-currency="<%= c[:currency] %>" data-locale="<%= c[:locale] %>">
   <div class="app-card-header">
     <div>
@@ -106,20 +84,4 @@
       </button>
     </div>
   </template>
-</section>
-
-<section class="app-card sa-danger">
-  <div class="app-card-header"><h2><i class="bi bi-shield-lock"></i> <%= ngt("superadmin.console.access_title") %></h2></div>
-  <div class="app-card-body">
-    <p class="sa-sub"><%= sub[:active] ? ngt("superadmin.console.access_suspend_desc") : ngt("superadmin.console.access_restore_desc") %></p>
-    <% if sub[:active] %>
-      <button type="button" class="btn btn-sm btn-outline-danger" data-action="superadmin-company#toggleAccess" data-superadmin-company-active-param="false">
-        <i class="bi bi-lock"></i> <%= ngt("superadmin.suspend_access") %>
-      </button>
-    <% else %>
-      <button type="button" class="btn btn-sm btn-primary" data-action="superadmin-company#toggleAccess" data-superadmin-company-active-param="true">
-        <i class="bi bi-unlock"></i> <%= ngt("superadmin.restore_access") %>
-      </button>
-    <% end %>
-  </div>
 </section>

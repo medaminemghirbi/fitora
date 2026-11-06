@@ -1,0 +1,57 @@
+<%# One mailing as it went out: the text, with its variables as written, and
+    every account it went to and how that went. While some are on their way, the
+    way to see where they have got to. %>
+<% m = @mailing; recipients = m.recipients.sort_by { |r| [ r.status == "failed" ? 0 : 1, r.user.full_name.downcase ] } %>
+<% tones = { "sent" => "active", "pending" => "pending", "failed" => "failed" } %>
+<% superadmin_crumbs [ ngt("superadmin.mailing.nav"), "/superadmin/mailings" ], [ m.subject ] %>
+<%= render layout: "web/superadmin/shared/page_head", locals: { title: m.subject, desc: ngt("superadmin.mailing.sent_by", name: m.sent_by&.full_name || "—", date: ng_date(m.created_at, "dd/MM/yyyy HH:mm")) } do %>
+  <% if recipients.any?(&:pending?) %>
+    <a href="/superadmin/mailings/<%= m.id %>" class="btn btn-outline-secondary"><i class="bi bi-arrow-clockwise"></i> <%= ngt("superadmin.mailing.refresh") %></a>
+  <% end %>
+<% end %>
+
+<div class="sa-record">
+  <div class="sa-record-main">
+    <section class="app-card">
+      <div class="app-card-header">
+        <h2><%= ngt("superadmin.mailing.recipients") %> (<%= recipients.size %>)</h2>
+        <%= render "web/superadmin/mailings/counts", recipients: recipients %>
+      </div>
+      <div class="sa-scroll">
+        <table class="table sa-grid">
+          <thead>
+            <tr>
+              <th scope="col"><%= ngt("superadmin.admin") %></th>
+              <th scope="col"><%= ngt("superadmin.console.email") %></th>
+              <th scope="col"><%= ngt("common.status") %></th>
+              <th scope="col"><%= ngt("superadmin.mailing.col_sent_at") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% recipients.each do |recipient| %>
+              <% salle = recipient.user.companies.min_by(&:created_at) %>
+              <tr>
+                <td>
+                  <% if salle %><a class="sa-lead-title" href="/superadmin/companies/<%= salle.id %>"><%= recipient.user.full_name %></a><% else %><%= recipient.user.full_name %><% end %>
+                  <% if salle %><div class="sa-sub"><%= salle.name %></div><% end %>
+                </td>
+                <td class="sa-sub" dir="ltr"><%= recipient.email %></td>
+                <td><app-status-badge><%= render layout: "web/shared/status_badge", locals: { status: tones.fetch(recipient.status) } do %><%= ngt("superadmin.mailing.status_#{recipient.status}") %><% end %></app-status-badge></td>
+                <td class="sa-nowrap sa-sub"><%= recipient.sent_at ? ng_date(recipient.sent_at, "dd/MM/yyyy HH:mm") : "—" %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+  <aside class="sa-record-aside">
+    <section class="app-card">
+      <div class="app-card-header"><h2><%= ngt("superadmin.mailing.message") %></h2></div>
+      <div class="app-card-body">
+        <p class="sa-mail-subject"><%= m.subject %></p>
+        <div class="sa-mail-body"><%= m.body %></div>
+      </div>
+    </section>
+  </aside>
+</div>

@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe "Enums set from a request" do
   {
     Session => :status, RecurringSchedule => :recurrence_type, Activity => :session_format,
-    ContractType => :billing_period, Payment => :payment_method, Subscription => :billing_period
+    ContractType => :billing_period, Payment => :payment_method
   }.each do |model, attribute|
     it "#{model.name}##{attribute} refuses an unknown value" do
       record = model.new
@@ -14,11 +14,5 @@ RSpec.describe "Enums set from a request" do
       record.validate
       expect(record.errors[attribute]).to include("is not included in the list")
     end
-  end
-
-  it "keeps a subscription without a billing period valid (the trial has none)" do
-    subscription = Subscription.new(billing_period: nil)
-    subscription.validate
-    expect(subscription.errors[:billing_period]).to be_empty
   end
 end

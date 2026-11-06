@@ -1,0 +1,91 @@
+<%# ng: reset-password %>
+<%# ng-host: reset-password %>
+<%# The first sign-in of an account a superadmin opened: the same form as a
+    reset, for the password that went by e-mail, and the terms, each shown only
+    while it is owed. The server checks again what the form checks. %>
+<% needs_password = current_user.must_change_password?; needs_terms = current_user.terms_accepted_at.nil? %>
+<% content_for :auth_panel do %>
+  <div authPanel class="auth-panel">
+    <span class="auth-panel-icon" aria-hidden="true"><i class="bi bi-shield-lock"></i></span>
+    <p class="auth-panel-title">
+      <%= ngt("auth.first_sign_in_panel_1") %>
+      <em><%= ngt("auth.first_sign_in_panel_2") %></em>
+    </p>
+    <p class="auth-panel-lead"><%= ngt("auth.first_sign_in_panel_lead") %></p>
+  </div>
+<% end %>
+<app-auth-pro-shell>
+  <%= render layout: "web/shared/auth_pro_shell", locals: { tone: "soft" } do %>
+    <h1 class="auth-title"><%= ngt("auth.first_sign_in_title") %></h1>
+    <p class="auth-subtitle"><%= ngt(needs_password ? "auth.first_sign_in_hint" : "auth.first_sign_in_hint_terms") %></p>
+
+    <form action="<%= web_first_sign_in_path %>" method="post" novalidate data-turbo="false"
+          data-controller="form-checks<%= " new-password" if needs_password %>" data-form-checks-scope-value="reset-password"
+          <%= raw(%(data-new-password-labels-value="#{h({ 1 => ngt("auth.strength_short"), 2 => ngt("auth.strength_fair"), 3 => ngt("auth.strength_good"), 4 => ngt("auth.strength_strong") }.to_json)}")) if needs_password %>
+          data-action="submit->form-checks#submit turbo:submit-start->form-checks#busy turbo:submit-end->form-checks#idle">
+      <% if @password_error %>
+        <div class="alert alert-danger" role="alert"><%= @password_error %></div>
+      <% end %>
+
+      <% if needs_password %>
+        <div class="mb-3">
+          <label for="password"><%= ngt("auth.new_password") %></label>
+          <div class="auth-password">
+            <input id="password" name="password" type="password" class="form-control" autocomplete="new-password" dir="ltr" aria-describedby="password-strength"
+                   data-password data-checks="required minlength:8" data-new-password-target="password" data-action="input->new-password#update" />
+            <button type="button" class="auth-eye" data-action="form-checks#togglePassword" data-form-checks-target="eye"
+                    data-show-label="<%= ngt("auth.show_password") %>" data-hide-label="<%= ngt("auth.hide_password") %>"
+                    aria-label="<%= ngt("auth.show_password") %>" aria-pressed="false">
+              <i class="bi bi-eye" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="password_confirmation"><%= ngt("auth.confirm_password") %></label>
+          <div class="auth-password">
+            <input id="password_confirmation" name="password_confirmation" type="password" class="form-control" autocomplete="new-password" dir="ltr"
+                   data-password data-checks="required matches:#password" data-new-password-target="confirmation" data-action="input->new-password#update" />
+            <button type="button" class="auth-eye" data-action="form-checks#togglePassword" data-form-checks-target="eye"
+                    data-show-label="<%= ngt("auth.show_password") %>" data-hide-label="<%= ngt("auth.hide_password") %>"
+                    aria-label="<%= ngt("auth.show_password") %>" aria-pressed="false">
+              <i class="bi bi-eye" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <ul class="auth-rules">
+          <li data-new-password-target="longEnough">
+            <i class="bi bi-circle" aria-hidden="true"></i>
+            <%= ngt("auth.password_min_length") %>
+          </li>
+          <li data-new-password-target="matches">
+            <i class="bi bi-circle" aria-hidden="true"></i>
+            <%= ngt("auth.passwords_match") %>
+          </li>
+        </ul>
+      <% end %>
+
+      <% if needs_terms %>
+        <div class="mb-3 form-check legal-consent">
+          <input id="first-terms" name="accept_terms" type="checkbox" value="1" class="form-check-input"<%= raw(" checked") if params[:accept_terms] == "1" %><%= raw(' aria-invalid="true" aria-describedby="first-terms-error"') if @terms_missing %> />
+          <label for="first-terms" class="form-check-label">
+            <%= ngt("legal.accept_before") %>
+            <a href="/cgu" target="_blank" rel="noopener"><%= ngt("legal.terms_title") %></a>
+            <%= ngt("legal.accept_and") %>
+            <a href="/confidentialite" target="_blank" rel="noopener"><%= ngt("legal.privacy_title") %></a>
+          </label>
+          <% if @terms_missing %>
+            <div id="first-terms-error" class="invalid-feedback d-block"><%= ngt("legal.accept_required") %></div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <button type="submit" class="btn btn-primary w-100" data-form-checks-target="submit">
+        <%= ngt("auth.first_sign_in_submit") %>
+      </button>
+      <input type="hidden" name="_method" value="patch">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+    </form>
+  <% end %>
+</app-auth-pro-shell>

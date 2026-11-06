@@ -1,8 +1,7 @@
 class Notification < ApplicationRecord
   # The admin's and the superadmin's kinds, then a member's own.
   KINDS = %w[
-    contract_expiring employee_birthday system_update invoice_issued
-    plan_changed access_suspended access_restored
+    contract_expiring employee_birthday system_update
     session_cancelled waitlist_promoted subscription_expiring session_reminder
   ].freeze
 
