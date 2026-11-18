@@ -39,7 +39,7 @@
           <dl class="ob-facts">
             <div><dt><%= ngt("settings.company_name") %></dt><dd><%= company[:name] %></dd></div>
             <div><dt><%= ngt("settings.currency") %></dt><dd><%= company[:currency] %></dd></div>
-            <div><dt><%= ngt("settings.timezone") %></dt><dd><%= company[:timezone] %></dd></div>
+            <div><dt><%= ngt("settings.timezone") %></dt><dd><%= settings_zone_label(company[:timezone]) %></dd></div>
             <div>
               <dt><%= ngt("settings.calendar") %></dt>
               <dd dir="ltr"><%= company[:business_hours_start] %> – <%= company[:business_hours_end] %></dd>

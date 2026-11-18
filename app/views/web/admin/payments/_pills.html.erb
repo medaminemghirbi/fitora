@@ -1,6 +1,10 @@
-<%# The status pills (StatusFilterComponent). %>
+<%# The status pills (StatusFilterComponent), once there is something other
+    than a paid receipt to tell apart: until a payment is refunded or
+    cancelled, every row is "paid" and the pills would only repeat the total. %>
 <app-status-filter id="pay-pills">
-  <%= render "web/shared/status_filter", name: "payment-status", legend: ngt("clients.filter_status"), value: filters[:status].to_s,
-             options: payment_statuses.map { |value, label, color| { value: value, label: ngt(label), count: counts[value.presence || "all"] || 0, color: color } },
-             filter: "status", action: "change->payments-list#setFilter" %>
+  <% if counts["refunded"].to_i.positive? || counts["cancelled"].to_i.positive? || filters[:status].present? %>
+    <%= render "web/shared/status_filter", name: "payment-status", legend: ngt("clients.filter_status"), value: filters[:status].to_s,
+               options: payment_statuses.map { |value, label, color| { value: value, label: ngt(label), count: counts[value.presence || "all"] || 0, color: color } },
+               filter: "status", action: "change->payments-list#setFilter" %>
+  <% end %>
 </app-status-filter>

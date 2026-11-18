@@ -31,7 +31,13 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  padding: var(--space-5);
+  // The whole width, with the same margins as every other page (.app-content):
+  // no gap beside the menu, no empty band on the right.
+  padding: var(--space-6) var(--space-6) var(--space-8);
+
+  @media (max-width: 767.98px) {
+    padding: var(--space-4) var(--space-4) var(--space-7);
+  }
 
   // the column's own gap does the spacing here
   .fx-page-header { margin-bottom: 0; }
@@ -132,10 +138,12 @@
 // ---- header search + the chip row ---------------------------------------
 // The status filter left the rail; a list page's whole filter surface is now
 // its header (search, the actions) and one row of pills above the table.
+// The search sits by the title it searches, wide enough for its hint; the
+// page's action closes the row (.lst-head .btn).
 .lst-head-search {
-  margin-inline-start: auto;
-  max-width: 260px;
-  width: 100%;
+  flex: 0 1 320px;
+  min-width: 0;
+  margin-inline-start: var(--space-3);
 }
 
 .lst-filters {
@@ -145,10 +153,44 @@
   gap: 0.5rem;
 }
 
+// A phone: the title and its action on the first line, the search on its own
+// full-width line under them.
 @media (max-width: 767.98px) {
+  .lst-head { flex-wrap: wrap; }
+
+  // The action, full width under the title, where a thumb finds it: not
+  // left alone at the end of a second line.
+  .lst-head .btn,
+  .lst-head .btn ~ .btn {
+    order: 2;
+    flex: 1 0 100%;
+    justify-content: center;
+    margin-inline-start: 0;
+  }
+
   .lst-head-search {
     order: 3;
-    max-width: none;
+    flex: 1 0 100%;
     margin-inline-start: 0;
+  }
+
+  // The pills and "Filtres" on one line that slides, rather than three
+  // stacked rows pushing the list off the screen.
+  .lst-filters,
+  .lst-filters .fx-chips {
+    flex-wrap: nowrap;
+  }
+
+  .lst-filters {
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  .lst-filters .fx-chip,
+  .lst-filters .btn {
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 }

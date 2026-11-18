@@ -11,7 +11,9 @@
 // ---------------------------------------------------------------------------
 // Page shell utilities
 // ---------------------------------------------------------------------------
-.fx-page { max-width: var(--content-max-width); margin-inline: auto; }
+// The whole width of the workspace: capped and centred, a wide screen showed a
+// gap beside the menu and an empty band on the right.
+.fx-page { width: 100%; }
 
 // Active-filter chips above a list
 .fx-active-filters {

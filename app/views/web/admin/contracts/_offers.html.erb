@@ -1,7 +1,11 @@
-<%# The offers on sale (Contracts::Offers), grouped by what they cover — an
-    activity, or a pack — one radio each: the formule, its length and
-    sessions, its price. `none`: a first choice that sells nothing (the
-    new-member wizard). %>
+<%# The offers on sale (Contracts::Offers), one block a formule — its name,
+    length and sessions, its price — as the desk thinks of them ("a monthly"),
+    then what it covers. A formule sold for one activity or pack is one card
+    to tick; one sold for several holds a pill for each, so four formules on
+    six activities read as four blocks, not twenty-four cards. Every pill and
+    card is the same radio as before (`name`, the offer's key), so the forms
+    that read them are unchanged. `none`: a first choice that sells nothing
+    (the new-member wizard). %>
 <div class="abo-offers" data-offers>
   <% if local_assigns[:none] %>
     <label class="abo-offer abo-offer--none">
@@ -9,22 +13,44 @@
       <span class="abo-offer-body"><span class="abo-offer-name"><%= none %></span></span>
     </label>
   <% end %>
-  <% offers.group_by { |o| o[:item] }.each_value do |group| %>
-    <div class="abo-offer-group" role="group" aria-label="<%= group.first[:group_label] %>">
-      <p class="abo-offer-group-head">
-        <span><%= group.first[:group_label] %></span>
-        <% if group.first[:group_sub].present? %><small><%= group.first[:group_sub] %></small><% end %>
-      </p>
-      <% group.each do |o| %>
-        <label class="abo-offer" style="--abo-offer-color: <%= o[:color] %>;">
-          <input type="radio" class="abo-offer-input" name="<%= name %>" value="<%= o[:key] %>" />
+  <% offers.group_by { |o| o[:contract_type_id] }.each_value do |group| %>
+    <% first = group.first %>
+    <% prices = group.map { |o| o[:price] }.uniq %>
+    <% if group.size == 1 %>
+      <label class="abo-offer" style="--abo-offer-color: <%= first[:color] %>;">
+        <input type="radio" class="abo-offer-input" name="<%= name %>" value="<%= first[:key] %>" />
+        <span class="abo-offer-body">
+          <span class="abo-offer-name"><%= first[:name] %></span>
+          <span class="abo-offer-meta"><%= first[:meta] %> · <%= first[:group_label] %></span>
+        </span>
+        <span class="abo-offer-price"><%= ng_money(first[:price], first[:currency]) %></span>
+      </label>
+    <% else %>
+      <% head_id = "#{name}-plan-#{first[:contract_type_id]}" %>
+      <div class="abo-plan" role="radiogroup" aria-labelledby="<%= head_id %>" style="--abo-offer-color: <%= first[:color] %>;">
+        <p class="abo-plan-head" id="<%= head_id %>">
           <span class="abo-offer-body">
-            <span class="abo-offer-name"><%= o[:name] %></span>
-            <span class="abo-offer-meta"><%= o[:meta] %></span>
+            <span class="abo-offer-name"><%= first[:name] %></span>
+            <span class="abo-offer-meta"><%= first[:meta] %></span>
           </span>
-          <span class="abo-offer-price"><%= ng_money(o[:price], o[:currency]) %></span>
-        </label>
-      <% end %>
-    </div>
+          <span class="abo-offer-price">
+            <% if prices.size == 1 %>
+              <%= ng_money(first[:price], first[:currency]) %>
+            <% else %>
+              <%= ngt("contracts.price_from", amount: ng_money(prices.min, first[:currency])) %>
+            <% end %>
+          </span>
+        </p>
+        <div class="abo-plan-items">
+          <% group.each do |o| %>
+            <label class="abo-chip"<%= raw(%( title="#{h(o[:group_sub])}")) if o[:group_sub].present? %>>
+              <input type="radio" class="abo-offer-input" name="<%= name %>" value="<%= o[:key] %>" />
+              <span><%= o[:group_label] %></span>
+              <% if prices.size > 1 %><small><%= ng_money(o[:price], o[:currency]) %></small><% end %>
+            </label>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
   <% end %>
 </div>

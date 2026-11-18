@@ -21,7 +21,7 @@
         <% group.sections.each do |s| %>
           <% active = s.path == current_settings_path %>
           <a href="<%= admin_page_path(s.target) %>" class="set-nav-item<%= " is-active" if active %>"<%= raw(' aria-current="page"') if active %>
-             data-settings-shell-target="item" data-search="<%= ngt(s.label_key) %> <%= ngt(s.keywords_key) %>">
+             data-settings-shell-target="item" data-search="<%= [ s, *sections.merged_into(s) ].map { |m| "#{ngt(m.label_key)} #{ngt(m.keywords_key)}" }.join(" ") %>">
             <span><%= ngt(s.label_key) %></span>
             <% if needs_attention?(s) %>
               <span class="set-dot" role="img" aria-label="<%= ngt("settings.to_complete") %>" title="<%= ngt("settings.to_complete") %>"></span>

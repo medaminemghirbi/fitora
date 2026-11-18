@@ -9,7 +9,7 @@
       <% if branding&.dig(:logo_url).present? %>
         <img src="<%= branding[:logo_url] %>" alt="" />
       <% else %>
-        <i class="bi bi-lightning-charge-fill"></i>
+        <%= render "web/shared/fitora_mark" %>
       <% end %>
     </span>
     <span class="rail-brand-text">Fitora</span>
@@ -45,7 +45,7 @@
       <% end %>
     <% end %>
 
-    <% nav.secondary.each do |item| %>
+    <% nav.rail_secondary.each do |item| %>
       <a href="<%= nav.path(item) %>" class="rail-item<%= " is-active" if shell_active?(item) %>"<%= raw(%( title="#{h(ngt(item.label_key))}")) if icons_only %>>
         <i class="bi <%= item.icon %>"></i>
         <%= ngt(item.label_key) %>

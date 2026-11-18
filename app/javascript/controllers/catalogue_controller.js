@@ -8,6 +8,10 @@ import { toast } from "../lib/toast"
 
 const TAB_FOR = { activity: "activites", plan: "formules", pack: "packs" }
 
+// The colours a new formule is given in turn, so that no two look alike
+// without anyone having to pick one.
+const PLAN_COLORS = ["#4f46e5", "#0ea5e9", "#16a34a", "#f59e0b", "#db2777", "#7c3aed", "#0d9488", "#dc2626"]
+
 // CAPACITY_BOUNDS (core/models/activity.model.ts) and each format's preset.
 const CAPACITY = { individual: { min: 1, max: 1, preset: 1 }, small_group: { min: 2, max: 9, preset: 6 }, collective: { min: 10, max: null, preset: 15 } }
 
@@ -405,7 +409,7 @@ export default class extends Controller {
     this.planInputs = { validity: f.validity_days, sessions: f.session_count }
     this.planInputs.validity.value = plan?.validity_days ?? ""
     this.planInputs.sessions.value = plan?.session_count ?? ""
-    f.color.value = plan?.color ?? "#4a2a8f"
+    f.color.value = plan?.color ?? this.freePlanColor()
     f.active.checked = plan ? plan.active : true
     for (const input of form.querySelectorAll("[data-activity-price]")) {
       const row = plan?.activity_prices.find((r) => r.activity_id === input.dataset.activityPrice)
@@ -415,6 +419,7 @@ export default class extends Controller {
       const row = (plan?.pack_prices ?? []).find((r) => r.pack_id === input.dataset.packPrice)
       input.value = row ? String(Number(row.price)) : ""
     }
+    this.fillPlanPrice(form, plan)
 
     const validity = form.querySelector("[data-validity-field]")
     const periodField = f.billing_period.closest(".mb-3")
@@ -439,6 +444,60 @@ export default class extends Controller {
   }
 
   // setUnlimited(): no limit, or a number of sessions — never both.
+  // ---- the formule's price: one price, or one per activity ---------------------
+  // The grid (data-activity-price, data-pack-price) is what is saved. One price
+  // is the grid with the same figure on every activity ticked: a formule opens
+  // that way when it is new, or when its rows already all say the same and no
+  // pack is priced; otherwise on the grid.
+
+  fillPlanPrice(form, plan) {
+    const simple = form.querySelector("[data-plan-simple]")
+    if (!simple) return
+    const rows = plan?.activity_prices ?? []
+    const prices = [...new Set(rows.map((r) => Number(r.price)))]
+    const oneFigure = !plan || (prices.length === 1 && !(plan.pack_prices ?? []).length)
+    form.querySelector("[data-same-price]").value = plan && prices.length === 1 ? String(prices[0]) : ""
+    for (const box of form.querySelectorAll("[data-sold-for]")) {
+      box.checked = !plan || rows.some((r) => r.activity_id === box.dataset.soldFor)
+    }
+    for (const button of form.querySelectorAll("[data-price-mode]")) {
+      button.addEventListener("click", () => this.setPriceMode(form, button.dataset.priceMode))
+    }
+    this.setPriceMode(form, oneFigure ? "simple" : "grid", { copy: false })
+  }
+
+  setPriceMode(form, mode, { copy = true } = {}) {
+    const simple = form.querySelector("[data-plan-simple]")
+    const grid = form.querySelector("[data-plan-grid]")
+    if (copy && mode === "grid") this.writeSamePrice(form)
+    if (copy && mode === "simple") {
+      const filled = [...form.querySelectorAll("[data-activity-price]")].filter((input) => input.value !== "")
+      if (filled.length) form.querySelector("[data-same-price]").value = filled[0].value
+      for (const box of form.querySelectorAll("[data-sold-for]")) {
+        box.checked = filled.some((input) => input.dataset.activityPrice === box.dataset.soldFor)
+      }
+    }
+    simple.hidden = mode !== "simple"
+    grid.hidden = mode !== "grid"
+    form.dataset.priceMode = mode
+  }
+
+  // One price → the grid: the figure on every activity ticked, nothing on the others.
+  writeSamePrice(form) {
+    if (form.dataset.priceMode !== "simple") return
+    const price = form.querySelector("[data-same-price]").value
+    for (const box of form.querySelectorAll("[data-sold-for]")) {
+      const input = form.querySelector(`[data-activity-price="${box.dataset.soldFor}"]`)
+      if (input) input.value = box.checked ? price : ""
+    }
+  }
+
+  // A new formule's colour: the first of these no formule wears yet.
+  freePlanColor() {
+    const used = new Set(this.dataValue.plans.map((p) => (p.color || "").toLowerCase()))
+    return PLAN_COLORS.find((color) => !used.has(color)) ?? PLAN_COLORS[this.dataValue.plans.length % PLAN_COLORS.length]
+  }
+
   setUnlimited(unlimited, form, render) {
     this.planState.unlimited = unlimited
     if (unlimited) {
@@ -460,6 +519,7 @@ export default class extends Controller {
     const sessions = sessionsInput.value === "" ? null : Number(sessionsInput.value)
     if (!this.planState.unlimited && !sessions) return showFormError(panel, this.labels["contract_types.needs_session_count"], "plans")
 
+    this.writeSamePrice(form)
     const priced = (selector, key) =>
       [...form.querySelectorAll(selector)]
         .filter((input) => input.value !== "" && !Number.isNaN(Number(input.value)) && Number(input.value) >= 0)

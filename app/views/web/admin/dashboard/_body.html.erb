@@ -13,9 +13,10 @@
    } %>
 <% attention = stats[:attention].select { |row| row[:count].positive? } %>
 <% all_clear = attention.empty? %>
+<%# Three figures. What is owed is already in "À traiter", and who came today
+    is on each row of the day's planning: neither is said twice. %>
 <% kpis = [ [ "total_clients", stats[:total_clients].to_s, "bi-people", "ok" ], [ "active_contracts", stats[:active_contracts].to_s, "bi-award", "brand" ],
-            [ "todays_bookings", stats[:todays_bookings].to_s, "bi-calendar3", "info" ], [ "todays_attendance", stats[:todays_attendance].to_s, "bi-check2-square", "accent" ] ]
-   kpis << [ "outstanding_payments", dashboard_money(stats[:outstanding_payments], company[:currency_symbol]), "bi-cash-coin", "warn" ] unless stats[:outstanding_payments].nil? %>
+            [ "todays_bookings", stats[:todays_bookings].to_s, "bi-calendar3", "info" ] ] %>
 <% current = stats[:todays_schedule].find { |s| s[:status] != "cancelled" && Time.iso8601(s[:starts_at]) <= now && Time.iso8601(s[:ends_at]) > now } %>
 <section class="dash-attn<%= " is-clear" if all_clear %>" aria-labelledby="dash-attention-h">
   <div class="dash-attn-head">

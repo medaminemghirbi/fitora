@@ -160,7 +160,7 @@ export default class extends Controller {
     const start = (meta.page - 1) * PER_PAGE
     for (const member of filtered.slice(start, start + PER_PAGE)) grid.append(this.card(member))
     const labels = this.labelsValue
-    const pager = pagination(meta, { unit: labels.results, page: labels.page, of: labels.of }, "team", "team-page#goToPage")
+    const pager = pagination(meta, { unit: labels.results, unitOne: labels.result, page: labels.page, of: labels.of }, "team", "team-page#goToPage")
     pager.dataset.teamRegion = ""
     main.append(grid, pager)
   }

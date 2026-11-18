@@ -56,7 +56,8 @@ module Clients
       end
     end
 
-    # When each member last turned up, for the whole page in one query.
+    # When each member last turned up, for the whole page in one query: the
+    # latest session already started, never one they have only booked.
     # Asking per member would be twenty aggregates for twenty rows — the kind
     # of N+1 that only shows up once a gym has real traffic.
     def last_visits_for(page)
@@ -65,6 +66,7 @@ module Clients
       Booking.confirmed
              .joins(:session)
              .where(client_id: page.map(&:id), sessions: { company_id: company.id })
+             .where(sessions: { starts_at: ..Time.current })
              .group(:client_id)
              .maximum("sessions.starts_at")
     end

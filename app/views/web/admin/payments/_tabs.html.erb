@@ -1,10 +1,12 @@
-<%# One tab per payment method, with how many receipts it holds. %>
+<%# One tab per payment method the gym has actually taken, with how many
+    receipts it holds: a method nobody has paid with is not a choice yet.
+    The one selected stays, so the filter can always be undone. %>
 <nav class="fx-cat-tabs" aria-label="<%= ngt("payments.method") %>" id="pay-tabs">
   <button type="button" class="fx-cat-tab<%= " is-active" if filters[:payment_method].to_s == "" %>" style="--fx-tab-color: var(--color-primary);"
           data-filter="payment_method" data-value="" data-action="payments-list#setFilter">
     <%= ngt("common.all") %> (<%= counts["all"] || 0 %>)
   </button>
-  <% payment_methods.each do |value, label, color| %>
+  <% payment_methods.select { |value, *| method_counts[value].to_i.positive? || filters[:payment_method].to_s == value }.each do |value, label, color| %>
     <button type="button" class="fx-cat-tab<%= " is-active" if filters[:payment_method].to_s == value %>" style="--fx-tab-color: <%= color %>;"
             data-filter="payment_method" data-value="<%= value %>" data-action="payments-list#setFilter">
       <%= ngt(label) %> (<%= method_counts[value] || 0 %>)

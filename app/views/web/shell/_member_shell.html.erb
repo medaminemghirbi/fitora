@@ -11,7 +11,7 @@
     <% if gyms.size > 1 %>
       <div class="dropdown-wrap">
         <button type="button" class="member-brand member-brand--switch" data-action="shell-menu#toggle" data-shell-menu-menu-param="gym">
-          <span class="member-brand-mark"><i class="bi bi-lightning-charge-fill"></i></span>
+          <span class="member-brand-mark"><%= render "web/shared/fitora_mark" %></span>
           <span class="member-brand-text"><%= gym&.name.presence || "Fitora" %></span>
           <i class="bi bi-chevron-down member-brand-caret" aria-hidden="true"></i>
         </button>
@@ -32,7 +32,7 @@
       </div>
     <% else %>
       <a href="<%= web_member_home_path %>" class="member-brand">
-        <span class="member-brand-mark"><i class="bi bi-lightning-charge-fill"></i></span>
+        <span class="member-brand-mark"><%= render "web/shared/fitora_mark" %></span>
         <span class="member-brand-text"><%= gym&.name.presence || "Fitora" %></span>
       </a>
     <% end %>

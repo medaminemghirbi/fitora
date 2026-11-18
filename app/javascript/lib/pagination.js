@@ -9,7 +9,7 @@ export function pagination(meta, labels, parent, action = "client-list#goToPage"
   const host = scoped(document.createElement("app-pagination"), parent, "pagination")
   const box = el("div", "app-pagination")
   const count = el("span", "app-pagination-count")
-  count.textContent = `${meta.total} ${labels.unit}`
+  count.textContent = `${meta.total} ${meta.total === 1 && labels.unitOne ? labels.unitOne : labels.unit}`
   box.append(count)
   if (meta.total_pages > 1) {
     const controls = el("div", "app-pagination-controls")

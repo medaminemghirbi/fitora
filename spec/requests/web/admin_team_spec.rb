@@ -30,7 +30,7 @@ RSpec.describe "Web team", type: :request, openapi: false do
 
     it "shows what a role lets someone do, and the moderator's seat as taken" do
       get base
-      expect(response.body).to include("Encaissement · Membres · Planning · Réservations · Pointage")
+      expect(response.body).to include("Paiements · Adhérents · Planning · Réservations · Pointage")
       expect(response.body).to include("team-seat-notice").or include("déjà attribué")
     end
 

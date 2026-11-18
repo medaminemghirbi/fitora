@@ -34,7 +34,10 @@
     letter-spacing: -0.02em;
   }
 
+  // The page's own action closes the title row; a second one sits beside it,
+  // not pushed apart from it (Équipe: "Rôles & permissions", then "Ajouter").
   .btn { margin-inline-start: auto; }
+  .btn ~ .btn { margin-inline-start: 0; }
 }
 
 .lst-head-count {

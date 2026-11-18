@@ -377,6 +377,27 @@
 
 .set-narrow { max-width: 760px; }
 
+// Where one subject of a merged page starts (Fiche de la salle → Légal &
+// région, Planning → Réservations, Mon compte → Affichage).
+.set-part-title {
+  margin: var(--space-6) 0 var(--space-3);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+// A back link where the note's box would be (the roles' grid, from Équipe).
+.set-note:has(> a) {
+  background: none;
+  padding-inline: 0;
+
+  a { display: inline-flex; align-items: center; gap: var(--space-2); }
+}
+
 // ---- the bar at the foot of a form --------------------------------------------------
 
 .set-savebar {

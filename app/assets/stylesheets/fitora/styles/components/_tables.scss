@@ -160,6 +160,15 @@
   .fx-col-seen { display: none; }
 }
 
+// A member's subscription and its state: two columns on a screen, one line
+// under the name on a phone (.fx-sub-inline), so the list never slides sideways.
+.fx-sub-inline { display: none; }
+
+@media (max-width: 767.98px) {
+  .fx-col-sub { display: none; }
+  .fx-sub-inline { display: block; }
+}
+
 // The chevron's column: as narrow as the glyph, and out of the way of the
 // figures beside it.
 .fx-col-go { width: 1px; text-align: end; color: var(--color-muted); }

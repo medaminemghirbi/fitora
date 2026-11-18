@@ -15,31 +15,31 @@
 
   <% if section.path == "company" %>
     <app-settings-company><%= render "web/admin/settings/company", company: @company %></app-settings-company>
-  <% elsif section.path == "legal" %>
-    <app-settings-company><%= render "web/admin/settings/legal", company: @company %></app-settings-company>
   <% elsif section.path == "branding" %>
-    <app-settings-branding data-controller="settings-branding" data-settings-branding-url-value="<%= admin_page_path("settings/company") %>" data-settings-branding-labels-value="<%= branding_labels %>"><%= render "web/admin/settings/branding", company: @company, part: "brand" %></app-settings-branding>
-  <% elsif section.path == "contracts" %>
+    <%# The logo and colour, then what the contract PDF prints: one form, part "all". %>
     <app-settings-branding data-controller="settings-branding settings-preview" data-settings-branding-url-value="<%= admin_page_path("settings/company") %>" data-settings-branding-labels-value="<%= branding_labels %>"
                            data-settings-preview-values-value="<%= settings_preview_values(@company).to_json %>"
-                           data-action="settings-branding:signature->settings-preview#signatureChanged input->settings-preview#update focusin->settings-preview#light focusout->settings-preview#dim"><%= render "web/admin/settings/branding", company: @company, part: "contracts" %></app-settings-branding>
+                           data-action="settings-branding:signature->settings-preview#signatureChanged input->settings-preview#update focusin->settings-preview#light focusout->settings-preview#dim"><%= render "web/admin/settings/branding", company: @company, part: "all" %></app-settings-branding>
   <% elsif section.path == "planning" %>
     <app-settings-planning><%= render "web/admin/settings/planning", company: @company %></app-settings-planning>
-  <% elsif section.path == "booking" %>
     <div class="set-narrow">
+      <h2 class="set-part-title" id="booking"><%= ngt("settings.nav_booking") %></h2>
       <p class="set-note"><i class="bi bi-check-lg" aria-hidden="true"></i> <%= ngt("settings.autosave_note") %></p>
       <app-settings-booking data-controller="settings-booking" data-settings-booking-url-value="<%= admin_page_path("settings/company") %>"
                             data-settings-booking-labels-value="<%= { saved: ngt("common.saved"), error: ngt("common.error_generic") }.to_json %>"><%= render "web/admin/settings/booking", company: @company %></app-settings-booking>
     </div>
   <% elsif section.path == "roles" %>
+    <p class="set-note"><a href="<%= admin_page_path("team") %>"><i class="bi bi-arrow-left" aria-hidden="true"></i> <%= ngt("nav.team") %></a></p>
     <app-settings-roles data-controller="settings-roles" data-settings-roles-url-value="<%= admin_page_path("settings/roles") %>"
                         data-settings-roles-labels-value="<%= roles_labels %>"><%= render "web/admin/settings/roles", data: @roles %></app-settings-roles>
   <% elsif section.path == "mobile-app" %>
     <app-settings-mobile-app data-controller="settings-mobile-app" data-settings-mobile-app-url-value="<%= admin_page_path("settings/mobile-app/regenerate") %>"
                              data-settings-mobile-app-labels-value="<%= { copied: ngt("settings.mobile_copied"), error: ngt("common.error_generic"), title: ngt("settings.mobile_regenerate_title"), body: ngt("settings.mobile_regenerate_body"), done: ngt("settings.mobile_regenerated") }.to_json %>"><%= render "web/admin/settings/mobile_app", keys: @keys %></app-settings-mobile-app>
-  <% elsif section.path == "appearance" %>
-    <div class="set-narrow"><app-settings-appearance><%= render "web/admin/settings/appearance" %></app-settings-appearance></div>
   <% elsif section.path == "account" %>
-    <div class="set-narrow"><app-change-password><%= render "web/shared/change_password" %></app-change-password></div>
+    <div class="set-narrow">
+      <app-change-password><%= render "web/shared/change_password" %></app-change-password>
+      <h2 class="set-part-title" id="appearance"><%= ngt("settings.appearance") %></h2>
+      <app-settings-appearance><%= render "web/admin/settings/appearance" %></app-settings-appearance>
+    </div>
   <% end %>
 </section>

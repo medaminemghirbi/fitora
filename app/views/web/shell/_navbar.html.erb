@@ -11,7 +11,7 @@
         <% if bootstrap.dig(:branding, :logo_url).present? %>
           <img src="<%= bootstrap.dig(:branding, :logo_url) %>" alt="" />
         <% else %>
-          <i class="bi bi-lightning-charge-fill"></i>
+          <%= render "web/shared/fitora_mark" %>
         <% end %>
       </span>
       <span class="d-none d-sm-inline">Fitora<% if (version = shell_version) %><small data-app-version="<%= version %>">v<%= version %></small><% end %></span>
@@ -30,7 +30,6 @@
     <button type="button" class="app-navbar-search" data-palette-open>
       <i class="bi bi-search"></i>
       <span class="d-none d-md-inline"><%= ngt("palette.trigger") %></span>
-      <kbd class="d-none d-md-inline">⌘K</kbd>
     </button>
 
     <% if nav.admin? %>
@@ -41,10 +40,6 @@
     <% end %>
 
     <app-notification-bell><%= render "web/shell/notification_bell" %></app-notification-bell>
-
-    <button type="button" class="icon-btn" data-action="navbar#toggleTheme" aria-label="<%= ngt("common.toggle_theme") %>">
-      <i class="bi <%= theme == "light" ? "bi-moon-stars" : "bi-sun" %>"></i>
-    </button>
 
     <% if companies %>
       <div class="dropdown-wrap d-none d-md-block">
