@@ -13,13 +13,13 @@ RSpec.describe "Web settings", type: :request, openapi: false do
     before { company.update!(tax_id: "1789456/K/A/M/000", phone: "+216 71 774 200", signatory_name: "Meriem Ben Ammar") }
 
     it "prints the gym's details as each PDF prints them" do
-      get "#{base}/legal"
+      get "#{base}/company"
       expect(response.body).to include("Matricule fiscal: 1789456/K/A/M/000", "Matricule fiscal : 1789456/K/A/M/000")
       expect(response.body).to include("Téléphone: +216 71 774 200", "Tél. : +216 71 774 200", "Représenté par : Meriem Ben Ammar")
     end
 
     it "shows only the contract next to the contract's own settings" do
-      get "#{base}/contracts"
+      get "#{base}/branding"
       expect(response.body).to include('data-doc="contract"')
       expect(response.body).not_to include('data-doc="receipt"')
     end
@@ -47,19 +47,47 @@ RSpec.describe "Web settings", type: :request, openapi: false do
     end
 
     it "renders every section" do
-      %w[company legal branding contracts planning booking roles mobile-app appearance account].each do |section|
+      %w[company branding planning roles mobile-app account].each do |section|
         get "#{base}/#{section}"
         expect(response).to have_http_status(:ok), section
         expect(response.body).to include("set-nav", "set-main-head", "is-settings-mode")
       end
     end
 
+    it "draws a merged section on its host's page, and its old address leads there" do
+      { "legal" => "company", "contracts" => "branding", "booking" => "planning", "appearance" => "account" }.each do |old, host|
+        get "#{base}/#{old}"
+        expect(response).to redirect_to("#{base}/#{host}"), old
+      end
+
+      get "#{base}/company"
+      expect(response.body).to include('name="tax_id"', 'name="timezone"', 'name="city"')
+      expect(response.body.scan('class="set-savebar"').size).to eq(1)
+      get "#{base}/branding"
+      expect(response.body).to include('id="br-logo"', 'id="br-signatory"')
+      get "#{base}/planning"
+      expect(response.body).to include("settings-planning", "settings-booking")
+      get "#{base}/account"
+      expect(response.body).to include("app-change-password", "theme-switch")
+    end
+
+    it "keeps the roles' grid out of the menu, one click from the team, which it lights up" do
+      get "/admin/#{company.id}/team"
+      expect(response.body).to include(%(href="#{base}/roles"))
+
+      get "#{base}/roles"
+      expect(response).to have_http_status(:ok)
+      menu = response.body[/<nav class="set-nav".*?<\/nav>/m]
+      expect(menu).not_to include(%(href="#{base}/roles"))
+      expect(menu).to include(%(href="/admin/#{company.id}/team" class="set-nav-item is-active"))
+    end
+
     it "lists the sections by what they are about, the login's own apart" do
       get "#{base}/company"
       expect(response.body.scan('data-settings-shell-target="group"').size).to eq(4)
       page = "/admin/#{company.id}"
-      order = [ "#{base}/company", "#{base}/legal", "#{base}/branding", "#{page}/salles", "#{base}/planning", "#{base}/booking", "#{page}/catalogue",
-                "#{base}/contracts", "#{page}/team", "#{base}/roles", "#{base}/mobile-app", "#{base}/account", "#{base}/appearance" ]
+      order = [ "#{base}/company", "#{base}/branding", "#{page}/salles", "#{base}/planning", "#{page}/catalogue",
+                "#{page}/team", "#{base}/mobile-app", "#{base}/account" ]
       menu = response.body[/<nav class="set-nav".*?<\/nav>/m]
       positions = order.map { |href| menu.index(%(href="#{href}")) }
       expect(positions).to all(be_present)
@@ -102,7 +130,7 @@ RSpec.describe "Web settings", type: :request, openapi: false do
       expect(response).to have_http_status(:ok)
       expect(response.body[/<app-rail.*?<\/app-rail>/m]).to include(%(href="/admin/#{company.id}/settings"))
       menu = response.body[/<nav class="set-nav".*?<\/nav>/m]
-      expect(menu).to include("/catalogue", "#{base}/account", "#{base}/appearance")
+      expect(menu).to include("/catalogue", "#{base}/account")
       expect(menu).not_to include("#{base}/company", "/team", "/salles", "#{base}/roles")
 
       staff.assigned_role.update!(permissions: %w[clients])
@@ -188,7 +216,7 @@ RSpec.describe "Web settings", type: :request, openapi: false do
 
   # No SMS in this version: the reminder goes out on the member's app only.
   it "offers no SMS reminder among the booking rules" do
-    get "#{base}/booking"
+    get "#{base}/planning"
     expect(response).to have_http_status(:ok)
     expect(response.body).not_to include('id="sb-reminder-sms"', 'data-rule="reminder_sms"')
   end

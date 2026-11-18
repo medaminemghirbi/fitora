@@ -77,6 +77,12 @@ module Web
       settings_pages.any? ? [ SETTINGS ] : []
     end
 
+    # The rail's foot: Settings only. "Nouveautés" is read now and then, not
+    # worked in, so it waits in the account menu with the rest of #secondary.
+    def rail_secondary
+      secondary.select { |i| i.equal?(SETTINGS) }
+    end
+
     def settings_pages
       SETTINGS_PAGES.select { |i| visible?(i) }
     end

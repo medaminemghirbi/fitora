@@ -8,8 +8,6 @@
 .abo-page {
   display: grid;
   gap: var(--space-4);
-  max-width: var(--content-max-width);
-  margin-inline: auto;
 }
 
 .abo-head {
@@ -421,6 +419,76 @@
   &--current { border-inline-start-color: var(--color-border-strong); }
 }
 
+// A formule sold for several activities: its card, then a pill for each.
+.abo-plan {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-inline-start: 4px solid var(--abo-offer-color, var(--color-border));
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+
+  &:has(.abo-offer-input:checked) {
+    border-color: var(--color-primary);
+    border-inline-start-color: var(--abo-offer-color, var(--color-primary));
+    background: var(--color-primary-soft);
+  }
+}
+
+.abo-plan-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.abo-plan-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.abo-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  background: var(--color-surface);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+
+  // The radio is the pill itself: kept for the keyboard and screen readers.
+  .abo-offer-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  small { color: var(--color-text-secondary); font-weight: 500; }
+
+  &:hover { background: var(--color-surface-hover); }
+
+  &:has(.abo-offer-input:checked) {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-on-primary, #fff);
+
+    small { color: inherit; }
+  }
+
+  &:has(.abo-offer-input:focus-visible) { box-shadow: var(--shadow-focus); }
+}
+
 .abo-offer-input {
   flex: none;
   width: 1rem;
@@ -596,4 +664,43 @@
   display: grid;
   justify-items: end;
   gap: var(--space-1);
+}
+
+// ---- the formule form's price (catalogue/_plan_modal) -----------------------------
+// One price and the activities it is sold for, before the per-activity grid.
+.plan-simple {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.plan-simple-price {
+  max-width: 14rem;
+
+  label { display: block; margin-bottom: var(--space-1); }
+}
+
+// Colour, description, on sale: there when wanted, out of the way otherwise.
+.plan-more {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+
+  > summary {
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+.plan-simple > [data-price-mode] { justify-self: start; }
+
+// With one price, "Prix" names the block: the fieldset's "Tarifs" is for the
+// screen reader only, and shows again over the grid.
+[data-price-mode="simple"] .plan-prices-legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

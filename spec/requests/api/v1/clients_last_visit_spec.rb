@@ -51,6 +51,17 @@ RSpec.describe "Api::V1::Clients last visit", type: :request do
     expect(response.parsed_body["clients"].first["last_visit_at"]).to be_nil
   end
 
+  it "ignores a session still to come — booked is not came" do
+    member = create(:client, company: company)
+    attended!(member, 4.days.ago)
+    attended!(member, 3.days.from_now)
+
+    get "/api/v1/clients", headers: auth_headers(admin)
+
+    row = response.parsed_body["clients"].first
+    expect(Time.zone.parse(row["last_visit_at"])).to be_within(1.minute).of(4.days.ago)
+  end
+
   it "never counts a visit to another gym" do
     other_company = create(:company)
     person = create(:client, company: company)

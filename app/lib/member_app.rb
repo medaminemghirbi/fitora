@@ -22,7 +22,8 @@ module MemberApp
     scope = scope.for_date(date) if date
     scope = scope.includes(:activity, :coach, :space)
 
-    sessions = scope.map { |s| PublicSessionSerializer.new(s, current_client: client).as_json }
+    contracts = client.contracts.currently_active.where(company_id: company_ids).includes(:contract_type, :pack).to_a
+    sessions = scope.map { |s| PublicSessionSerializer.new(s, current_client: client, contracts: contracts).as_json }
     # A one-to-one slot someone else has taken is not a session this member
     # could ever join — it is another person's appointment, and listing it
     # as "full" would only bury the free slots.

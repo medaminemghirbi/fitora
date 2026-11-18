@@ -37,9 +37,8 @@
                 <i class="bi <%= clients_sort_icon(filters, "name") %>"></i>
               </button>
             </th>
-            <th class="fx-col-contact"><%= ngt("auth.email") %></th>
-            <th><%= ngt("contract_types.plan") %></th>
-            <th><%= ngt("common.status") %></th>
+            <th class="fx-col-sub"><%= ngt("contract_types.plan") %></th>
+            <th class="fx-col-sub"><%= ngt("common.status") %></th>
             <th class="fx-col-seen"><%= ngt("clients.last_visit") %></th>
             <th aria-sort="<%= clients_aria_sort(filters, "joined") %>" class="<%= "is-sorted " if clients_sort(filters) == "joined" %>fx-col-seen">
               <button type="button" class="fx-th-sort" data-action="clients-list#sortBy" data-column="joined">
@@ -64,19 +63,19 @@
                     <% if client[:phone].present? %>
                       <div class="fx-cell-lead-sub" dir="ltr"><%= ng_highlight(client[:phone], filters[:search]) %></div>
                     <% end %>
+                    <%# A phone has no room for the two columns: their gist, under the name. %>
+                    <div class="fx-cell-lead-sub fx-sub-inline">
+                      <% if contract %>
+                        <%= contract.dig(:plan, :name) %> · <span class="lst-sub-state" data-tone="<%= clients_contract_tone(client) %>"><%= clients_contract_state(client) %></span>
+                      <% else %>
+                        <span class="lst-sub-state is-link"><%= ngt("clients.no_contract") %></span>
+                      <% end %>
+                    </div>
                   </div>
                 </div>
               </td>
 
-              <td class="fx-col-contact">
-                <% if client[:email].present? %>
-                  <span dir="ltr"><%= ng_highlight(client[:email], filters[:search]) %></span>
-                <% else %>
-                  <span class="fx-muted">—</span>
-                <% end %>
-              </td>
-
-              <td>
+              <td class="fx-col-sub">
                 <% if contract %>
                   <span class="fx-plan-tag">
                     <span class="fx-dot" style="background: <%= contract.dig(:plan, :color) %>;"></span>
@@ -87,7 +86,7 @@
                 <% end %>
               </td>
 
-              <td>
+              <td class="fx-col-sub">
                 <% if contract %>
                   <span class="lst-sub-state" data-tone="<%= clients_contract_tone(client) %>"><%= clients_contract_state(client) %></span>
                 <% else %>

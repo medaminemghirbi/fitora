@@ -3,6 +3,18 @@ module Web
   module SettingsHelper
     PREVIEW_FIELDS = %i[name address city phone email tax_id signatory_name contract_terms].freeze
 
+    # A time zone as the settings' picker names it (lib/places.js): its city
+    # and today's offset, "Tunis (UTC+1)", never the "Africa/Tunis" id.
+    def settings_zone_label(timezone)
+      zone = ActiveSupport::TimeZone[timezone.to_s]
+      return timezone.to_s if zone.nil?
+
+      seconds = zone.now.utc_offset
+      hours, rest = seconds.abs.divmod(3600)
+      offset = "UTC#{seconds.negative? ? '-' : '+'}#{hours}#{format(':%02d', rest / 60) unless rest.zero?}"
+      "#{timezone.to_s.split('/').last.tr('_', ' ')} (#{offset})"
+    end
+
     def settings_preview_values(company)
       company.slice(*PREVIEW_FIELDS)
     end

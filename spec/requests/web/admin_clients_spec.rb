@@ -151,9 +151,16 @@ RSpec.describe "Web members page", type: :request, openapi: false do
         expect(rows).to eq(expected["clients"].pluck("id"))
         counts = response.body[%r{<span class="lst-head-count" id="cl-head-count">(\d+)</span>}, 1].to_i
         expect(counts).to eq(expected["counts"]["all"])
-        %w[active inactive contract_active contract_expired no_contract].each do |status|
-          pill = response.body[%r{for="client-status-#{status}"[^>]*>[^<]*<span class="fx-chip-count">(\d+)</span>}, 1].to_i
-          expect(pill).to eq(expected["counts"][status]), "#{status} pill"
+        pill = ->(status) { response.body[%r{for="client-status-#{status}"[^>]*>[^<]*<span class="fx-chip-count">(\d+)</span>}, 1] }
+        %w[contract_active contract_expired no_contract].each do |status|
+          expect(pill.(status).to_i).to eq(expected["counts"][status]), "#{status} pill"
+        end
+        # "Active" is everyone but the archived: no pill. "Inactive" once someone is, or when asked for.
+        expect(pill.("active")).to be_nil
+        if expected["counts"]["inactive"].positive? || params[:status] == "inactive"
+          expect(pill.("inactive").to_i).to eq(expected["counts"]["inactive"])
+        else
+          expect(pill.("inactive")).to be_nil
         end
         if expected["meta"]["total_pages"] > 1
           expect(response.body).to include("#{expected['meta']['total']} résultats")

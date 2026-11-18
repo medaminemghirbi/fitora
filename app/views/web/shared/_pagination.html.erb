@@ -3,7 +3,7 @@
 <% unit = local_assigns.fetch(:unit, "common.results") %>
 <% if meta %>
   <div class="app-pagination">
-    <span class="app-pagination-count"><%= meta[:total] %> <%= ngt(unit) %></span>
+    <span class="app-pagination-count"><%= meta[:total] %> <%= ngt(meta[:total] == 1 && unit == "common.results" ? "common.result" : unit) %></span>
     <% if meta[:total_pages] > 1 %>
       <div class="app-pagination-controls">
         <span class="text-muted-token">

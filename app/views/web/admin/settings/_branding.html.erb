@@ -1,6 +1,6 @@
 <%# ng: settings-branding %>
-<%# One half of a gym's look and papers: "brand" (logo, colour, identifier, Pro)
-    or "contracts" (signature, signatory, terms, every plan). One form
+<%# A gym's look and papers: "brand" (logo, colour, identifier), "contracts"
+    (signature, signatory, terms), or "all" of it on one page. One form
     underneath, saved by settings-branding (on the host, which the shell
     writes); the half not shown is left as it is. %>
 <% logo = company[:logo_url] %>
@@ -8,7 +8,7 @@
 <div class="set-layout">
   <div data-settings-branding-target="body">
     <form class="set-form" novalidate data-controller="settings-dirty" data-settings-branding-target="form" data-action="submit->settings-branding#submit">
-      <% if part == "brand" %>
+      <% if part.in?(%w[brand all]) %>
         <div class="set-row">
           <div>
             <label class="set-row-title" for="br-logo"><%= ngt("settings.branding_logo") %></label>
@@ -40,7 +40,11 @@
           </div>
           <input id="br-slug" class="form-control" name="slug" value="<%= company[:slug] %>" dir="ltr" placeholder="power-gym" />
         </div>
-      <% else %>
+      <% end %>
+      <% if part.in?(%w[contracts all]) %>
+        <% if part == "all" %>
+          <h2 class="set-part-title" id="contracts"><%= ngt("settings.nav_contracts") %></h2>
+        <% end %>
         <div class="set-row">
           <div>
             <span class="set-row-title" id="br-signature-label"><%= ngt("settings.signature") %></span>
@@ -105,7 +109,7 @@
       </div>
       <div class="branding-preview-bar" style="--preview-color: <%= company[:primary_color].presence || "#4a2a8f" %>;" data-settings-branding-target="previewBar">
         <span class="branding-preview-mark" data-settings-branding-target="previewMark">
-          <% if logo.present? %><img src="<%= logo %>" alt="" /><% else %><i class="bi bi-lightning-charge-fill"></i><% end %>
+          <% if logo.present? %><img src="<%= logo %>" alt="" /><% else %><%= render "web/shared/fitora_mark" %><% end %>
         </span>
         <span class="fw-semibold small"><%= ngt("settings.branding_preview_label") %></span>
       </div>

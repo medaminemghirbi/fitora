@@ -23,8 +23,9 @@ module Web
       def show
         return redirect_to(admin_page_path(sections.flat.first.target)) if section.nil?
         return redirect_to(admin_page_path(section.target)) if section.page
+        return redirect_to(admin_page_path("settings/#{section.merged_into}")) if section.merged_into
 
-        @company = CompanySerializer.new(current_company).as_json if %w[company legal branding contracts planning booking].include?(section.path)
+        @company = CompanySerializer.new(current_company).as_json if %w[company branding planning].include?(section.path)
         case section.path
         when "roles" then @roles = roles_json
         when "mobile-app" then @keys = MobileAppKeys.as_json(current_company)
@@ -89,7 +90,7 @@ module Web
       end
 
       def current_settings_path
-        section&.path
+        section&.menu_path || section&.path
       end
 
       # The admin, or a login that may manage something here (activities,

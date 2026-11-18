@@ -27,7 +27,7 @@ module Web
 
     # The menu's dot: what the gym's own documents still lack.
     def needs_attention?(item)
-      item.path == "contracts" && !current_company.signature.attached?
+      item.path == "branding" && !current_company.signature.attached?
     end
   end
 end

@@ -67,6 +67,24 @@ RSpec.describe "Api::V1::Me", type: :request do
       expect(by_id.values.count { |s| s["already_booked"] }).to eq(1)
     end
 
+    it "says which sessions their subscription lets them into, by the rule booking applies" do
+      theirs = session_at(2.days.from_now)
+      other_activity = create(:session, company: company, activity: create(:activity, company: company),
+                                        starts_at: 3.days.from_now, ends_at: 3.days.from_now + 1.hour)
+
+      get "/api/v1/me/sessions", headers: auth_headers(member)
+      expect(response.parsed_body["sessions"].pluck("covered")).to all(be false)
+
+      subscribe!
+      get "/api/v1/me/sessions", headers: auth_headers(member)
+      by_id = response.parsed_body["sessions"].index_by { |s| s["id"] }
+      expect(by_id[theirs.id]["covered"]).to be true
+      expect(by_id[other_activity.id]["covered"]).to be false
+
+      post "/api/v1/me/bookings", params: { session_id: other_activity.id }, headers: auth_headers(member), as: :json
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
     it "never shows another gym's schedule" do
       elsewhere = create(:company)
       create(:session, company: elsewhere, activity: create(:activity, company: elsewhere),

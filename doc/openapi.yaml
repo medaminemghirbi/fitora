@@ -9449,6 +9449,8 @@ paths:
                           type: boolean
                         already_booked:
                           type: boolean
+                        covered:
+                          type: boolean
                       required:
                       - id
                       - company_id
@@ -9463,6 +9465,7 @@ paths:
                       - spots_left
                       - full
                       - already_booked
+                      - covered
                 required:
                 - sessions
         '401':

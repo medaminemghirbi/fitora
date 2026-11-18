@@ -5,9 +5,12 @@
 # — a price, a client, an internal note — would silently reach members here.
 # This one can only ever show what is listed below.
 class PublicSessionSerializer
-  def initialize(session, current_client: nil)
+  # `contracts`: the member's running subscriptions, when a list loads them
+  # once for every session it serializes; otherwise looked up here.
+  def initialize(session, current_client: nil, contracts: nil)
     @session = session
     @current_client = current_client
+    @contracts = contracts
   end
 
   def as_json(*)
@@ -28,13 +31,24 @@ class PublicSessionSerializer
       # trains here is the gym's business and theirs.
       spots_left: [ session.capacity - session.confirmed_bookings_count, 0 ].max,
       full: session.confirmed_bookings_count >= session.capacity,
-      already_booked: already_booked?
+      already_booked: already_booked?,
+      # Whether one of their running subscriptions lets them in: the app can
+      # say "not in your subscription" before they try, not after.
+      covered: covered?
     }
   end
 
   private
 
   attr_reader :session, :current_client
+
+  # Contract#usable_for?, the rule Session#book! applies to a member.
+  def covered?
+    return false if current_client.nil?
+
+    @contracts ||= current_client.contracts.currently_active.includes(:contract_type, :pack).to_a
+    @contracts.any? { |contract| contract.company_id == session.company_id && contract.usable_for?(activity: session.activity) }
+  end
 
   def already_booked?
     return false if current_client.nil?

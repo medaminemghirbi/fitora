@@ -5,7 +5,7 @@
     25, all in the browser (team-page) — the create drawer, and the coach,
     role and mobile-login modals. %>
 <% labels = {
-     results: ngt("common.results"), page: ngt("common.page"), of: ngt("common.of"),
+     results: ngt("common.results"), result: ngt("common.result"), page: ngt("common.page"), of: ngt("common.of"),
      save: ngt("common.save"), saving: ngt("common.saving"), create: ngt("common.create"), creating: ngt("common.creating"),
      error: ngt("common.error_generic"), mobile_needs_credentials: ngt("team.mobile_needs_credentials"), email_type_full: ngt("common.email_type_full"),
      login_set: ngt("coaches.login_set"), deactivate: ngt("common.deactivate"),
@@ -29,6 +29,10 @@
         <input type="search" class="form-control form-control-sm" placeholder="<%= ngt("team.search_placeholder") %>" aria-label="<%= ngt("team.search_placeholder") %>"
                data-team-page-target="search" data-action="input->team-page#search" />
       </div>
+      <%# The roles' grid is a rarer errand than the team itself: reached from here, not from the menu. %>
+      <a href="<%= admin_page_path("settings/roles") %>" class="btn btn-outline-secondary" title="<%= ngt("team.roles_link_hint") %>">
+        <i class="bi bi-shield-check"></i> <%= ngt("team.roles_link") %>
+      </a>
       <button type="button" class="btn btn-primary" data-action="team-page#openCreate" data-kind="coach">
         <i class="bi bi-plus-lg"></i> <%= ngt("team.new") %>
       </button>

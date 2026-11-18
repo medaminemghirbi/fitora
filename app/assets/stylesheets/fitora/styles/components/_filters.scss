@@ -228,6 +228,15 @@ mark.fx-hl {
   align-items: center;
   gap: 0.4rem;
 
+  // Beside the status pills it is one more of them, same height and shape.
+  .lst-filters & {
+    padding: 0.4375rem 0.8125rem;
+    border-radius: 999px;
+    font-size: 0.78125rem;
+    font-weight: 600;
+    line-height: inherit;
+  }
+
   &.is-on {
     border-color: var(--color-primary);
     color: var(--color-primary);
